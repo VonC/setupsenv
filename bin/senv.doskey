@@ -1,0 +1,34 @@
+cdu=cd /d %USERPROFILE%
+cdh=cd /d %HOME%
+cds=cd /d %PRGS%
+cdb=cd /d "%HOME%\bin"
+cdg=cd /d %USERPROFILE%\git
+cdgg=cd /d %USERPROFILE%\git\git
+cdd=cd /d %PROG%
+cdl=cd /d %USERPROFILE%\Downloads
+
+pz=%pz%\peazip.exe $*
+pzx=%sz% x -aos -o$2 -pdefault -sccUTF-8 ^"$1^"
+pzc=%sz% a -tzip -mm=Deflate -mmt=on -mx5 -w "$2" "$1"
+senv=call "%HOME%\bin\senv.bat"
+
+vscode="%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd" $*
+
+gl=git lg -10
+gla=git lg --all
+glab=git lg --all --branches
+gcie=git commit --allow-empty -m "Initial empty commit"
+gcam=git commit --amend --no-edit
+ga=git add .
+gs=git st
+gp= git push
+
+aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
+aliase="%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
+
+clear=cls
+e.=explorer .
+ls=ls --show-control-chars -F --color $*
+l=ls -alrth  --show-control-chars -F --color $*
+vi=vim $*
+

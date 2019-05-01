@@ -1,0 +1,4 @@
+!*.ori
+/*custom*/
+/setups/
+*.local.*
