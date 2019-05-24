@@ -1,5 +1,5 @@
 cdu=cd /d %USERPROFILE%
-cdh=cd /d %HOME%
+cdh=cd /d %HOME%\
 cds=cd /d %PRGS%
 cdb=cd /d "%HOME%\bin"
 cdg=cd /d %USERPROFILE%\git
