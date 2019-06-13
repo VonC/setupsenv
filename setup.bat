@@ -11,8 +11,6 @@ set "bc=%script_dir%\batcolors"
 call %bc%\echos_macros.bat
 %_info% "script_dir='%script_dir%'"
 
-if not exist "%USERPROFILE%\git" ( mkdir "%USERPROFILE%\git" )
-
 rem cd setups || %_fatal% "fatal!" && echo "nope." && exit /b 1
 rem %_ok% "ok..."
 rem goto:eof
@@ -37,7 +35,9 @@ doskey senv=
 %_info% "PRGS='%PRGS%'"
 %_info% "HOME='%HOME%'"
 %_info% "PROG='%PROG%'"
-goto:eof
+
+if not exist "%PROG%\git" ( mkdir "%PROG%\git" )
+
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
     copy "%script_dir%\bin\*" "%HOME%\bin"
