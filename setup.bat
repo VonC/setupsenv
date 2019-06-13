@@ -23,14 +23,8 @@ set NLM=^
 
 set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 
-if not exist custom ( mkdir custom )
-if not exist custom\setup.ini.bat (
-    echo @echo off%NL%set PRGS=%NL%set HOME=%NL%> custom\setup.ini.bat
-    %_warning% "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)"
-    goto:eof
-)
-
-call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat missing" && exit /b 1
+if not exist custom\setup.ini.bat ( %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1 )
+call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat error" 2
 
 if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 if "%HOME%"=="" ( %_fatal% "HOME must be defined in custom/setup.ini.bat" && exit /b 1 )
