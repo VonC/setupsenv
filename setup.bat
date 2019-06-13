@@ -5,16 +5,13 @@ set "prgtoinstall=%1"
 rem echo "prgtoinstall='%prgtoinstall%'"
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-rem call "%script_dir%\echos.bat" :info "script_dir='%script_dir%'"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
+
+set "bc=%script_dir%\batcolors"
+call %bc%\echos_macros.bat
+%_info% "script_dir='%script_dir%'"
+
 if not exist "%USERPROFILE%\git" ( mkdir "%USERPROFILE%\git" )
-set "bc=%USERPROFILE%\git\batcolors"
-if not exist "%USERPROFILE%\git\batcolors" ( mkdir "%bc%" )
-if not exist "%bc%\echos.bat"  (copy "batcolors\echos.bat" "%bc%" )
-if not exist "%bc%\echos_macros.bat"  (copy "batcolors\echos_macros.bat" "%bc%" )
-rem https://stackoverflow.com/questions/16623780/how-to-get-windows-batchs-parent-folder
-for %%i in ("%bc%\..") do set "script_bcdir=%%~fi"
-call  "%bc%\echos_macros.bat"
 
 rem cd setups || %_fatal% "fatal!" && echo "nope." && exit /b 1
 rem %_ok% "ok..."
