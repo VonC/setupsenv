@@ -23,7 +23,6 @@ set NLM=^
 
 set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 
-if not exist setups ( mkdir setups )
 if not exist custom ( mkdir custom )
 if not exist custom\setup.ini.bat (
     echo @echo off%NL%set PRGS=%NL%set HOME=%NL%> custom\setup.ini.bat
