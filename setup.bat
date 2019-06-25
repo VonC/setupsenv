@@ -8,7 +8,7 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 
 set "bc=%script_dir%\batcolors"
-call %bc%\echos_macros.bat
+call "%bc%\echos_macros.bat"
 %_info% "script_dir='%script_dir%'"
 
 rem cd setups || %_fatal% "fatal!" && echo "nope." && exit /b 1
