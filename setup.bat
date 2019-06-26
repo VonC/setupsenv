@@ -45,7 +45,8 @@ if not exist "%HOME%\bin" (
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
-if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set PRGS=%PRGS%%NL%set HOME=%HOME%%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
+if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set PRGS=%PRGS%%NL%set PROG=%PROG%%NL%set HOME=%HOME%%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
+if exist custom\setup.senv.local.pre.bat ( call custom\setup.senv.local.pre.bat )
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
 if not exist "%HOME%\bin\gsenv.local.bat" ( echo @echo off%NL%%NL%REM Custom gsenv settings go here> "%HOME%\bin\gsenv.local.bat")
 if not exist "%HOME%\.gitconfig" ( copy "%script_dir%\.gitconfig" "%HOME%\.gitconfig" )
