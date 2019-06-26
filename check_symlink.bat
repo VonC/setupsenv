@@ -21,9 +21,9 @@ if not exist "%PRGS%\%f%\%sln%" (
     goto:create
 )
 rem @echo on
-for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|grep current') do (set s=%%a)
+for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr current') do (set s=%%a)
 rem echo "s='%s%'"
-echo "%s%" | grep "%p%" 1>NUL: 2>NUL:
+echo "%s%" | C:\Windows\System32\findstr "%p%" 1>NUL: 2>NUL:
 if errorlevel 1 (
     %_info% "Must update '%sln%' to reference '%p%'"
     rmdir "%PRGS%\%f%\%sln%"
