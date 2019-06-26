@@ -28,8 +28,8 @@ if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom
 if "%HOME%"=="" ( %_fatal% "HOME must be defined in custom/setup.ini.bat" && exit /b 1 )
 if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 
-echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv2.bat"
-echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv2.bat"
+echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
+echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
 doskey senv=
 
 %_info% "PRGS='%PRGS%'"
