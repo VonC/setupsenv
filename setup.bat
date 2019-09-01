@@ -21,6 +21,10 @@ set NLM=^
 
 set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 
+if not exist custom (
+    mkdir custom
+    copy custom_example\* custom
+)
 if not exist custom\setup.ini.bat ( %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1 )
 call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat error" 2
 
