@@ -2,8 +2,8 @@ cdu=cd /d %USERPROFILE%
 cdh=cd /d %HOME%\
 cds=cd /d %PRGS%
 cdb=cd /d "%HOME%\bin"
-cdg=cd /d %USERPROFILE%\git
-cdgg=cd /d %USERPROFILE%\git\git
+cdg=cd /d %PROG%\git
+cdgg=cd /d %PROG%\git\git
 cdd=cd /d %PROG%
 cdl=cd /d %USERPROFILE%\Downloads
 
