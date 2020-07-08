@@ -7,7 +7,7 @@ for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 call "%script_dir_bin%\senv.local.pre.bat"
 if "%PRGS%"=="" ( echo "PRGS (installation folder) must be defined" && exit /b 1 )
 if "%HOME%"=="" ( echo "HOME must be defined" && exit /b 1 )
-if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined" && exit /b 1 )
+if "%PROG%"=="" ( %_fatal% "PROG (data folder) must be defined" && exit /b 1 )
 
 set GH=%PRGS%\gits\current
 set PATH=%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%PATH%
