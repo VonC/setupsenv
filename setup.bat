@@ -21,11 +21,15 @@ set NLM=^
 
 set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 
+if not exist setups ( mkdir setups )
 if not exist custom (
     mkdir custom
     copy custom_example\* custom
 )
-if not exist custom\setup.ini.bat ( %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1 )
+if not exist custom\setup.ini.bat (
+    echo @echo off%NL%set PRGS=%NL%set HOME=%NL%> custom\setup.ini.bat
+    %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1
+)
 call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat error" 2
 
 if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
@@ -40,8 +44,6 @@ doskey senv=
 %_info% "HOME='%HOME%'"
 %_info% "PROG='%PROG%'"
 
-if not exist "%PROG%\git" ( mkdir "%PROG%\git" )
-
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
     copy "%script_dir%\bin\*" "%HOME%\bin"
@@ -54,6 +56,11 @@ if exist custom\setup.senv.local.pre.bat ( call custom\setup.senv.local.pre.bat 
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
 if not exist "%HOME%\bin\gsenv.local.bat" ( echo @echo off%NL%%NL%REM Custom gsenv settings go here> "%HOME%\bin\gsenv.local.bat")
 if not exist "%HOME%\.gitconfig" ( copy "%script_dir%\.gitconfig" "%HOME%\.gitconfig" )
+
+if not exist "%PROG%\git" ( mkdir "%PROG%\git" )
+set "bc=%PROG%\git\batcolors"
+if not exist "%PROG%\git\batcolors" ( mkdir "%bc%" )
+if not exist "%bc%\echos_macros.bat"  (copy "batcolors\*" "%bc%" )
 
 rem @echo on
 set "locald=%PROG%\senv_setup"
