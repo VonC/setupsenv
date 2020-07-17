@@ -74,7 +74,7 @@ if not exist "%PROG%\git\batcolors" ( mkdir "%bc%" )
 if not exist "%bc%\echos_macros.bat"  (copy "batcolors\*" "%bc%" )
 
 rem @echo on
-set "locald=%PROG%\senv_setup"
+set "locald=%PROG%\senv_setups"
 set "setupsdir=%script_dir%\setups"
 call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
