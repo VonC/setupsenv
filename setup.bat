@@ -132,7 +132,11 @@ rem https://stackoverflow.com/questions/3215501/batch-remove-file-extension
 for /F "usebackq" %%i in (`dir /OD /B "%setupsdir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
 rem echo "fname='%fname%'"
 rem echo "pname='%pname%'"
-if "%pname%"=="" (
+if "%pname%"=="" ("%setupsdir%\%p%"
+    if exist "%setupsdir%\_%f%" (
+        %_warning% "Skip '%f%' installation (test found)"
+        goto:eof
+    )
     %_fatal% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'" && exit /b 1
 )
 %_info% "--------------"
