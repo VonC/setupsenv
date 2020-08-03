@@ -58,7 +58,7 @@ copy /Y "%script_dir%\bin\*" . > NUL:
 copy /Y "%script_dir%\bin\senv.doskey" . > NUL: 
 if exist s.bat ( del s.bat > NUL: )
 if exist setup.bat ( del setup.bat > NUL: )
-copy /Y "%script_dir%\custom\*.custom.*" "%HOME%\bin" > NUL:
+copy /Y "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL: 2>NUL:
 copy /Y "%script_dir%\custom\bin\*" "%HOME%\bin" > NUL:
 
 git config --local user.name>NUL
