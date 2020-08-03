@@ -162,7 +162,7 @@ if not exist "%PRGS%\setup\" (
 )
 if not exist "%PRGS%\setup\%fname%" (
     %_info% "Copying '%fname%' from '%setupsdir%'"
-    copy "%setupsdir%\%fname%" "%PRGS%\setup\" || ( %_fatal% "Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
+    robocopy "%setupsdir%" "%PRGS%\setup" "%fname%" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS || ( %_fatal% "Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
     %_ok% "Setup '%fname%' copied locally"
 )
 set install_ok=false
