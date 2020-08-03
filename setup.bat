@@ -197,7 +197,7 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 cd /d "%PRGS%\%f%"
-%_info% "Uncompressing with 7z '%fname%' to '%tpath%'"
+%_info% "Uncompressing with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\setup\%fname%"
 if errorlevel 1 ( %_fatal% "Error on 7z uncompression"&& exit /b 1 )
 %_ok% "'%fname%' uncompressed (7z) to '%tpath%'"
