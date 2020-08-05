@@ -88,7 +88,7 @@ if not exist "%script_dir%\custom\install.list" (
 %_info% "=========="
 %_info% "processing custom installation list '%profil%'"
 @echo off
-for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\install.list"') do (
+for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%profil%"') do (
   set fnpl=%%a
   set fl=%%b
   call:install "!fnpl!" "!fl!" || exit /b 1
@@ -97,7 +97,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\install.list"') 
 if not exist "%locald%\install.list" ( goto:alldone )
 set "setupsdir=%locald%\setups"
 %_info% "=========="
-%_info% "processing local installation list in %locald%"
+%_info% "processing local installation list in %locald%\install.list"
 for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
   set fnpl=%%a
   set fl=%%b
