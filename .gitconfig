@@ -17,3 +17,7 @@
 	version = 2
 [gc]
 	writeCommitGraph = true
+[credential "helperselector"]
+	selected = manager-core
+[credential]
+	helper = manager-core
