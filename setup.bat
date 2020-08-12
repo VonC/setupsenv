@@ -32,7 +32,6 @@ set NLM=^
 
 set NL=^^^%NLM%%NLM%^%NLM%%NLM%
 
-if not exist setups ( mkdir setups )
 if not exist custom (
     mkdir custom
     copy custom_example\* custom
