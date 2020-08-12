@@ -76,14 +76,16 @@ rem @echo on
 set "locald=%PROG%\senv_setups"
 if "%setupsdir%" == "" (
     if exist "%script_dir%\setups" (
-    set "setupsdir=%script_dir%\setups"
+        set "setupsdir=%script_dir%\setups"
     ) else if exist "%script_dir%\custom\setupsdir.bat" (
+        %_info% "call '%script_dir%\custom\setupsdir.bat'"
         call "%script_dir%\custom\setupsdir.bat"
     )
-    if "%setupsdir%" == "" (
+    if "!setupsdir!" == "" (
         %_fatal% "Define '%script_dir%\custom\setupsdir.bat' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
     )
 )
+%_info% "setupsdir='%setupsdir%'"
 call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
