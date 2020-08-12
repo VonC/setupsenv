@@ -1,5 +1,6 @@
 !*.ori
 /*custom*/
 /setups/
+/setups_example/
 *.local.*
 /setups.ori
