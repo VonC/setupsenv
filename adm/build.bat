@@ -17,8 +17,7 @@ if not exist "%script_dir%\%s%" (
     %_fatal% "setupsdir script '%s%' does not exist" 2
 )
 
-copy /Y "%script_dir%\%s%" "%script_dir%\setupsdir.bat"
-copy /Y "%script_dir%\install_%1.list" "%script_dir%\install.list"
+echo %1>profile
 
 git config --unset user.name
 git config --unset user.email
@@ -33,8 +32,7 @@ cd ..
 if not exist senv (
     %_fatal% "custom must be in senv folder" 1
 )
-del senv_%1.zip
-del senv_%1.zip.exe
+
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
 %sz% a -sfx7z.sfx senv_%1-zip.exe senv
