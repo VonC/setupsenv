@@ -8,7 +8,7 @@ set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir='%script_dir%'"
 
-@echo on
+@echo off
 set "prgtoinstall=%1"
 set profil="install.list"
 if /i "%prgtoinstall:~0,1%"=="_" (
