@@ -16,6 +16,11 @@ if /i "%prgtoinstall:~0,1%"=="_" (
     set profile=!prgtoinstall:~1!
     set instlist=install_!profile!.list
     set "prgtoinstall=%2"
+) else (
+    if exist "%script_dir%\profile" (
+        for /f "delims=" %%x in (%script_dir%\profile) do set profile=%%x
+    )
+    set instlist=install_!profile!.list
 )
 %_info% "profile='%profile%', instlist='%instlist%' prgtoinstall='%prgtoinstall%'"
 if not exist custom\%instlist% (
@@ -74,16 +79,20 @@ if not exist "%PROG%\git\batcolors" ( mkdir "%bc%" )
 if not exist "%bc%\echos_macros.bat"  (copy "batcolors\*" "%bc%" )
 
 rem @echo on
+set setupsdirbat="setupsdir.bat"
+if not "%profile%" == "" (
+    set setupsdirbat="setupsdir_%profile%.bat"
+)
 set "locald=%PROG%\senv_setups"
 if "%setupsdir%" == "" (
     if exist "%script_dir%\setups" (
         set "setupsdir=%script_dir%\setups"
-    ) else if exist "%script_dir%\custom\setupsdir.bat" (
-        %_info% "call '%script_dir%\custom\setupsdir.bat'"
-        call "%script_dir%\custom\setupsdir.bat"
+    ) else if exist "%script_dir%\custom\%setupsdirbat%" (
+        %_info% "call '%script_dir%\custom\%setupsdirbat%'"
+        call "%script_dir%\custom\%setupsdirbat%"
     )
     if "!setupsdir!" == "" (
-        %_fatal% "Define '%script_dir%\custom\setupsdir.bat' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
+        %_fatal% "Define '%script_dir%\custom\%setupsdirbat%' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
     )
 )
 %_info% "setupsdir='%setupsdir%'"
