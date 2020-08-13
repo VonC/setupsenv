@@ -10,15 +10,16 @@ call "%bc%\echos_macros.bat"
 
 @echo off
 set "prgtoinstall=%1"
-set profil="install.list"
+set instlist="install.list"
 if /i "%prgtoinstall:~0,1%"=="_" (
     %info ""
-    set profil=!prgtoinstall:~1!.list
+    set profile=!prgtoinstall:~1!
+    set instlist=install_!profile!.list
     set "prgtoinstall=%2"
 )
-%_info% "profil='%profil%' prgtoinstall='%prgtoinstall%'"
-if not exist custom\%profil% (
-    %_fatal% "Installation profil '%profil%' does not exist in '%script_dir%\custom" 1
+%_info% "profile='%profile%', instlist='%instlist%' prgtoinstall='%prgtoinstall%'"
+if not exist custom\%instlist% (
+    %_fatal% "Installation instlist '%instlist%' does not exist in '%script_dir%\custom" 1
 )
 rem echo "prgtoinstall='%prgtoinstall%'"
 
@@ -94,9 +95,9 @@ if not exist "%script_dir%\custom\install.list" (
     goto:alldone
 )
 %_info% "=========="
-%_info% "processing custom installation list '%profil%'"
+%_info% "processing custom installation list '%instlist%'"
 @echo off
-for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%profil%"') do (
+for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do (
   set fnpl=%%a
   set fl=%%b
   call:install "!fnpl!" "!fl!" || exit /b 1
