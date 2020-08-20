@@ -40,5 +40,3 @@ cd senv
 call gcuvc
 cd custom
 call gcu
-
-git restore install.list
