@@ -98,7 +98,7 @@ if "%setupsdir%" == "" (
     )
 )
 %_info% "setupsdir='%setupsdir%'"
-# goto:alldone
+rem goto:alldone
 call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
