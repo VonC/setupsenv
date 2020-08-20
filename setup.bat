@@ -98,6 +98,7 @@ if "%setupsdir%" == "" (
     )
 )
 %_info% "setupsdir='%setupsdir%'"
+# goto:alldone
 call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
@@ -131,9 +132,22 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 cd /d "%script_dir%"
 ENDLOCAL
 call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat still missing" && exit /b 1
-echo "HOME='%HOME%'"
+echo HOME='%HOME%'
 call "%HOME%\bin\senv.bat"
+set "script_dir=%cd%"
+sed -- "/^cdi=/d" "%HOME%\bin\senv.local.doskey" > tmp
+echo cdi=cd /d "%script_dir%">> tmp
+for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
+set "setupsdirbat=setupsdir_%profile%.bat"
+call "%script_dir%\custom\%setupsdirbat%"
+sed -- "/^cdis=/d" tmp > "%HOME%\bin\senv.local.doskey"
+echo cdis=cd /d "%setupsdir%">> "%HOME%\bin\senv.local.doskey"
+del tmp
 
+set script_dir=
+set profile=
+set setupsdirbat=
+set setupsdir=
 
 goto:eof
 
