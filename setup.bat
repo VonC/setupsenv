@@ -7,7 +7,11 @@ cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir='%script_dir%'"
-
+set profile=
+set profil=
+set script_dir_bin=
+set setupsdir=
+set setupsdirbat=
 set "prgtoinstall=%1"
 set instlist="install.list"
 if /i "%prgtoinstall:~0,1%"=="_" (
