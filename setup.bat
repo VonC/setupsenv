@@ -102,7 +102,7 @@ call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
 call:install "VSCodeUserSetup-x64-*" "vscodes" || exit /b 1
-if not exist "%script_dir%\custom\install.list" (
+if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
 )
 %_info% "=========="
