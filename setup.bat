@@ -83,7 +83,7 @@ if not exist "%bc%\echos_macros.bat"  (copy "batcolors\*" "%bc%" )
 rem @echo on
 set setupsdirbat="setupsdir.bat"
 if not "%profile%" == "" (
-    set setupsdirbat="setupsdir_%profile%.bat"
+    set "setupsdirbat=setupsdir_%profile%.bat"
 )
 set "locald=%PROG%\senv_setups"
 if "%setupsdir%" == "" (
