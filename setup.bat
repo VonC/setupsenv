@@ -19,8 +19,8 @@ if /i "%prgtoinstall:~0,1%"=="_" (
     set instlist=install_!profile!.list
     set "prgtoinstall=%2"
 ) else (
-    if exist "%script_dir%\profile" (
-        for /f "delims=" %%x in (%script_dir%\profile) do set profile=%%x
+    if exist "%script_dir%\custom\profile" (
+        for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
     )
     set instlist=install_!profile!.list
 )
