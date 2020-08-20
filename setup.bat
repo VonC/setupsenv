@@ -133,14 +133,13 @@ cd /d "%script_dir%"
 ENDLOCAL
 call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat still missing" && exit /b 1
 echo HOME='%HOME%'
-call "%HOME%\bin\senv.bat"
 set "script_dir=%cd%"
-sed -- "/^cdi=/d" "%HOME%\bin\senv.local.doskey" > tmp
+findstr /V "cdi=" "%HOME%\bin\senv.local.doskey" > tmp
 echo cdi=cd /d "%script_dir%">> tmp
 for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
 set "setupsdirbat=setupsdir_%profile%.bat"
 call "%script_dir%\custom\%setupsdirbat%"
-sed -- "/^cdis=/d" tmp > "%HOME%\bin\senv.local.doskey"
+findstr /V "cdis=" tmp > "%HOME%\bin\senv.local.doskey"
 echo cdis=cd /d "%setupsdir%">> "%HOME%\bin\senv.local.doskey"
 del tmp
 
@@ -148,6 +147,7 @@ set script_dir=
 set profile=
 set setupsdirbat=
 set setupsdir=
+call "%HOME%\bin\senv.bat"
 
 goto:eof
 
