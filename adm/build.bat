@@ -36,7 +36,23 @@ if not exist senv (
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
 %sz% a -sfx7z.sfx senv_%1-zip.exe senv
+if not "%ERRORLEVEL%" == "0" (
+     %_fatal% "Unable 7z '%script_dir%\..\..\senv' to '%CD%' 'senv_%1-zip.exe'" && exit /b 1
+)
+
 cd senv
 call gcuvc
 cd custom
 call gcu
+
+call setupsdir_%1.bat
+%_info% "setupsdir='%setupsdir%'"
+%_warning% "Update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
+set OK="KO"
+(robocopy "%script_dir%\..\.." "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 (
+    SET "OK=ok"
+) else (
+    set OK=%ERRORLEVEL%
+)
+REM echo "OK='%OK%' '!OK!'"
+if not "%OK%" == "ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
