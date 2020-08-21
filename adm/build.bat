@@ -40,12 +40,13 @@ if not "%ERRORLEVEL%" == "0" (
      %_fatal% "Unable 7z '%script_dir%\..\..\senv' to '%CD%' 'senv_%1-zip.exe'" && exit /b 1
 )
 
+set profile=%1
 cd senv
 call gcuvc
 cd custom
 call gcu
 
-call setupsdir_%1.bat
+call setupsdir_%profile%.bat
 %_info% "setupsdir='%setupsdir%'"
 %_warning% "Update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
 set OK="KO"
