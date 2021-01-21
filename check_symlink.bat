@@ -16,6 +16,17 @@ set "f=%~2"
 set "sln=%~3"
 if "%sln%"=="" ( set "sln=current" )
 
+set drive=%PRGS:~0,1%
+if not drive=="C" (
+    if not drive=="c" (
+        if not drive=="D" (
+            if not drive=="d" (
+                goto:network
+            )
+        )
+    )
+)
+
 if not exist "%PRGS%\%f%\%sln%" (
     %_info% "Must create '%sln%' to reference '%p%'"
     goto:create
@@ -32,6 +43,58 @@ if errorlevel 1 (
 goto:eof
 
 :create
+call :check_subdir
+mklink /J "%PRGS%\%f%\%sln%" "!tpath!"
+if errorlevel 1 (
+    %_warning% "Unable to create %sln% symlink for '%f%\%p%' (!tpath!)"
+)
+goto:eof
+
+
+:network
+%_warning% "Check if '%p%' exists on network drive '%drive%' (%PRGS%)"
+if exist "%PRGS%\%f%\%p%" (
+    if exist "%PRGS%\%f%\%sln%" (
+        call :is_directory "%PRGS%\%f%\%p%"
+                                            rem echo errorlevel = '!errorlevel!'
+            if "!errorlevel!" == "0" (
+            %_warning% "Must delete '%sln%' before renaming '%p%' to '%sln%'"
+            rmdir /S /Q "%PRGS%\%f%\%sln%"
+            if errorlevel 1 (
+                %_fatal% "Must delete '%sln%' in folder '%f%', needed to rename '%p%' to '%sln%'" 1
+            )
+        ) else (
+            %_ok% "Symlink '%sln%' already reference program '%p%'"
+            goto:eof
+        )
+    )
+    call :check_subdir
+    %_warning% "Must rename program '%p%' (!tpath!) to '%sln%'"
+    rem %_fatal% "stop" 1
+    move "!tpath!" "%PRGS%\%f%\%sln%"
+    if errorlevel 1 (
+        %_fatal% "Unable to rename program '%p%' to '%sln%' in folder '%f%'" 2
+    )
+    if exist "%p%" (
+        rmdir "%p%"
+        if errorlevel 1 (
+            %_fatal% "Unable to delete empty directory '%p%' in folder '%f%'" 6
+        )
+    )
+    echo "%p%"> "%PRGS%\%f%\%p%"
+                            if errorlevel 1 (
+        %_fatal% "Unable to create file '%p%' in folder '%f%'" 5
+    )
+) else (
+    if not exist "%PRGS%\%f%\%sln%" (
+        %_fatal% "'%sln%' as well as program '%p%' are missing in folder '%f%'" 3
+    )
+    %_fatal% "'%p%' is missing in folder '%f%'" 3
+)
+goto:eof
+
+
+:check_subdir
 REM https://stackoverflow.com/questions/11004045/batch-file-counting-number-of-files-in-folder-and-storing-in-a-variable
 REM https://stackoverflow.com/questions/25702814/code-to-determine-target-of-remote-junction
 rem if not target=="%pname% (
@@ -50,11 +113,23 @@ if "%cnt%"=="0 " ( if "%cntd%"=="3 " (
 call :Trim tpath %tpath%
 rem set stpath=%tpath:~0,-1%
 rem echo "final tpath='%tpath%'"
-mklink /J "%PRGS%\%f%\%sln%" "%tpath%"
-if errorlevel 1 (
-    %_warning% "Unable to create %sln% symlink for '%f%\%p%'"
-)
-goto:eof
+EndLocal & set tpath=%tpath%
+exit /b
+GOTO :EOF
+
+:is_directory
+    SETLOCAL
+    ECHO Test if '%1' is a directory
+    type %1 1>NUL: 2>NUL:
+    IF errorlevel 1 (
+        ECHO '%1' is a directory
+        exit /b 0
+    ) ELSE (
+        ECHO '%1' is NOT a directory
+        exit /b 1
+    )
+    ENDLOCAL
+    GOTO :EOF
 
 REM https://stackoverflow.com/questions/3001999/how-to-remove-trailing-and-leading-whitespace-for-user-provided-input-in-a-batch
 rem not needed if SET tpath=%tpath:~0,-1%x
