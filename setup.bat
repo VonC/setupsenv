@@ -183,6 +183,14 @@ call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
 if "%pre_ok%"=="true" (
     %_ok% "pre-check ok for %f%: nothing more to do"&& exit /b 0
 )
+set "tpath=%PRGS%\%f%\_%pname%"
+if exist "%tpath%" (
+    %_ok% "Program '%pname%' already installed in '%PRGS%\%f%'"
+    call "%script_dir%\check_symlink.bat" "%pname%" "%f%"
+    call:check_post "%f%" || exit /b 1
+    cd /d "%script_dir%"
+    goto:eof
+)
 set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
     %_ok% "Program '%pname%' already installed in '%PRGS%\%f%'"
