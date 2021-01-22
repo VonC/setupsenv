@@ -53,43 +53,43 @@ goto:eof
 
 :network
 %_warning% "Check if '%p%' exists on network drive '%drive%' (%PRGS%)"
-if exist "%PRGS%\%f%\%p%" (
-    if exist "%PRGS%\%f%\%sln%" (
-        call :is_directory "%PRGS%\%f%\%p%"
-                                            rem echo errorlevel = '!errorlevel!'
-            if "!errorlevel!" == "0" (
-            %_warning% "Must delete '%sln%' before renaming '%p%' to '%sln%'"
-            rmdir /S /Q "%PRGS%\%f%\%sln%"
-            if errorlevel 1 (
-                %_fatal% "Must delete '%sln%' in folder '%f%', needed to rename '%p%' to '%sln%'" 1
-            )
-        ) else (
-            %_ok% "Symlink '%sln%' already reference program '%p%'"
-            goto:eof
-        )
-    )
-    call :check_subdir
-    %_warning% "Must rename program '%p%' (!tpath!) to '%sln%'"
-    rem %_fatal% "stop" 1
-    move "!tpath!" "%PRGS%\%f%\%sln%"
-    if errorlevel 1 (
-        %_fatal% "Unable to rename program '%p%' to '%sln%' in folder '%f%'" 2
-    )
-    if exist "%p%" (
-        rmdir "%p%"
+if exist "%PRGS%\%f%\%sln%" (
+    if not exist "%PRGS%\%f%\_%p%" (
+        %_warning% "Must delete '%sln%' before renaming '%p%' to '%sln%'"
+        rmdir /S /Q "%PRGS%\%f%\%sln%"
         if errorlevel 1 (
-            %_fatal% "Unable to delete empty directory '%p%' in folder '%f%'" 6
+            %_fatal% "Must delete '%sln%' in folder '%f%', needed to rename '%p%' to '%sln%'" 1
         )
+        ping 127.0.0.1 -n 4 > nul
+    ) else (
+        %_ok% "Symlink '%sln%' already reference program '%p%'"
+        goto:eof
     )
-    echo "%p%"> "%PRGS%\%f%\%p%"
-                            if errorlevel 1 (
-        %_fatal% "Unable to create file '%p%' in folder '%f%'" 5
-    )
-) else (
-    if not exist "%PRGS%\%f%\%sln%" (
-        %_fatal% "'%sln%' as well as program '%p%' are missing in folder '%f%'" 3
-    )
+)
+if not exist "%PRGS%\%f%\%p%" (
     %_fatal% "'%p%' is missing in folder '%f%'" 3
+)
+call :check_subdir
+%_warning% "Must rename program '%p%' (!tpath!) to '%sln%'"
+rem %_fatal% "stop" 1
+move "!tpath!" "%PRGS%\%f%\%sln%"
+if errorlevel 1 (
+    %_fatal% "Unable to rename program '%p%' to '%sln%' in folder '%f%'" 2
+)
+ping 127.0.0.1 -n 4 > nul
+if exist "%p%" (
+    rmdir "%p%"
+    if errorlevel 1 (
+        %_warning% "Unable to delete empty directory '%p%' in folder '%f%'" 6
+    )
+    ping 127.0.0.1 -n 4 > nul
+)
+echo "%p%"> "%PRGS%\%f%\_%p%"
+if errorlevel 1 (
+    %_fatal% "Unable to create file '%p%' in folder '%f%'" 5
+)
+if not exist "%PRGS%\%f%\%sln%" (
+    %_fatal% "'%sln%' is still missing in folder '%f%'" 3
 )
 goto:eof
 
