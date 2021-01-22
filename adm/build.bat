@@ -57,3 +57,20 @@ set OK="KO"
 )
 REM echo "OK='%OK%' '!OK!'"
 if not "%OK%" == "ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
+
+copy /Y "%script_dir%\echos_macros.bat" "%setupsdir%\..\echos_macros.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'echos_macros.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
+
+copy /Y "%script_dir%\remote_setup.bat" "%setupsdir%\..\remote_setup.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'remote_setup.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
+
+if "%setupsdirsenv%" == "" (
+    %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
+)
+
+echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdirsenv%\s.bat
+echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
