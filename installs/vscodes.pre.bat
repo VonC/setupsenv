@@ -18,7 +18,6 @@ if exist "%vscodei%" (
     set pre_ok=true
 	if "%1"=="" (
 		%_ok% "VSCode already installed in '%vscodei%"
-		call "%script_dir%\installs\vscodes.post.bat"
 	)
 	exit /b 0
 )
