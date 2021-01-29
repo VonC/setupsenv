@@ -5,7 +5,8 @@ call %script_dir_bin%\senv.bat
 <nul set /p =VSCode...
 tasklist /FI "IMAGENAME eq Code.exe" /FO CSV|grep Code.exe >NUL
 IF ERRORLEVEL 1 (
-	call "%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd"
+	call "%PRGS%\senv\installs\vscodes.pre.bat" "check"
+	call "%vscodei%bin\code.cmd"
 	echo VSCode launched
 ) else (
 		echo already launched
