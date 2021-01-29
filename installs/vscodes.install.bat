@@ -6,4 +6,4 @@ set install_ok=true
 "%PRGS%\setup\%fs%" /DIR="%PRGS%\vscode" /VERYSILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /MERGETASKS=!runcode
 if errorlevel 1 ( %_fatal% "Issue when installing vscode"&& exit /b 1 )
 call "%script_dir%\installs\vscodes.pre.bat"
-call "%script_dir%\installs\vscodes.post.bat"
+call "%script_dir%\installs\vscodes.post.bat" "update"
