@@ -3,9 +3,9 @@ rem VSCodeSetup-1.10.1.exe /VERYSILENT /MERGETASKS=!runcode
 
 %_info% "Check vscode path '%vscodei%'"
 
-if exist "%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd" ( %_ok% "Standard path"&& exit /b 0 )
+if exist "%vscodei%bin\code.cmd" ( %_ok% "Standard path"&& exit /b 0 )
 if "%vscodei%"=="" ( %_warning% "No VSCode Installation path detected"&& exit /b 0 )
-if not exist "%vscodei%" ( %_warning% "VSCode Installation path does not exist"&& exit /b 0 )
+if not exist "%vscodei%" ( %_warning% "VSCode Installation path '%vscodei%' does not exist"&& exit /b 0 )
 set "f=%HOME%\bin\senv.local.doskey"
 if not exist "%f%"  ( %_warning% "VSCode alias: no '%f%' alias file present"&& exit /b 0 )
 grep vscode "%f%">NUL
