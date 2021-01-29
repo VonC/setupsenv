@@ -16,7 +16,9 @@ rem echo vv='%vv%' '%vscodei%'
 
 if exist "%vscodei%" (
     set pre_ok=true
-    %_ok% "VSCode already installed in '%vscodei%"
-	call "%script_dir%\installs\vscodes.post.bat"
+	if "%1"=="" (
+		%_ok% "VSCode already installed in '%vscodei%"
+		call "%script_dir%\installs\vscodes.post.bat"
+	)
 	exit /b 0
 )
