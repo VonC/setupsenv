@@ -129,11 +129,14 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 
 :alldone
 %_ok% "All done"
-cd /d "%script_dir%"
 ENDLOCAL
-call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat still missing" && exit /b 1
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+cd /d "%script_dir%"
+cd
+call custom\setup.ini.bat "set" || %_fatal% "custom/setup.ini.bat still missing" && exit /b 1
 echo HOME='%HOME%'
-set "script_dir=%cd%"
+echo script_dir='%script_dir%'
+rem set "script_dir=%cd%"
 findstr /V "cdi=" "%HOME%\bin\senv.local.doskey" > tmp
 echo cdi=cd /d "%script_dir%">> tmp
 for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
