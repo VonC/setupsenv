@@ -17,7 +17,7 @@ set "sln=%~3"
 if "%sln%"=="" ( set "sln=current" )
 
 set "drive=%PRGS:~0,1%"
-%_info% "drive '%drive%'" 1
+rem %_info% "drive '%drive%'" 1
 if not "%drive%"=="C" (
     if not "%drive%"=="c" (
         if not "%drive%"=="D" (
