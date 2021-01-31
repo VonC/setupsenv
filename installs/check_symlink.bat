@@ -16,11 +16,12 @@ set "f=%~2"
 set "sln=%~3"
 if "%sln%"=="" ( set "sln=current" )
 
-set drive=%PRGS:~0,1%
-if not drive=="C" (
-    if not drive=="c" (
-        if not drive=="D" (
-            if not drive=="d" (
+set "drive=%PRGS:~0,1%"
+%_info% "drive '%drive%'" 1
+if not "%drive%"=="C" (
+    if not "%drive%"=="c" (
+        if not "%drive%"=="D" (
+            if not "%drive%"=="d" (
                 goto:network
             )
         )
