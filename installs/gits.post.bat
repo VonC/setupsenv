@@ -1,10 +1,12 @@
 %_info% "~~~~~~~~~~~~"
 %_info% " Checking/updating '%HOME%\bin' content"
 call "%HOME%\bin\senv.bat"
+%_info% "   [senv called]"
 cd /d "%HOME%\bin"
 set FIRSTNAME=
 set LASTNAME=
 call %HOME%\bin\senv.local.pre.bat
+%_info% "   [senv.local.pre.bat called]"
 grep FIRSTNAME "%HOME%\bin\senv.local.pre.bat">NUL
 if "%ERRORLEVEL%"=="0" ( goto:userset )
 if "%FIRSTNAME%"=="" (
@@ -47,31 +49,63 @@ if not "%prgtoinstall%"=="" (
 
 if not exist .git ( git init . && call gcu.bat )
 if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
+
+call:check_gitdate
+%_info% "   [nomodif='%nomodif%' '!nomodif!']"
+if "%nomodif%"=="1" ( goto:skipfirststatus)
+%_info% "   [Calling first git status --porcelain in '%HOME%\bin']"
 set st=
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%" == "" (
     %_info% "Save local modification of '%HOME%\bin'"
+    rem %_fatal% "no local save" 111
     git add .
     git commit -m "pre-update"
 )
+:skipfirststatus
+%_info% "   [copy bin in '%HOME%\bin']"
 copy /Y "%script_dir%\bin\*" . > NUL:
+%_info% "   [Copy senv.doskey in '%HOME%\bin']"
 copy /Y "%script_dir%\bin\senv.doskey" . > NUL: 
+%_info% "   [Delete s.bat in '%HOME%\bin']"
 if exist s.bat ( del s.bat > NUL: )
 if exist setup.bat ( del setup.bat > NUL: )
+%_info% "   [Copy custom\*.custom in '%HOME%\bin']"
 copy /Y "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL: 2>NUL:
+%_info% "   [Copy custom\bin in '%HOME%\bin']"
 copy /Y "%script_dir%\custom\bin\*" "%HOME%\bin" > NUL:
 
+%_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
 git config --local user.name>NUL
 if errorlevel 1 ( call gcu.bat )
 
+call:check_gitdate
+%_info% "   [nomodif(2)='%nomodif%' '!nomodif!']"
+if "%nomodif%"=="1" ( goto:skipsecondstatus)
+%_info% "   [Calling Second git status --porcelain in '%HOME%\bin']"
 set st=
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%" == "" (
     %_info% "Save new updates of '%HOME%\bin'"
+    rem %_fatal% "no new update save" 112
     git add --renormalize .
     git commit -m "post-update"
 )
+:skipsecondstatus
+touch .git\COMMIT_EDITMSG
 %_info% "~~~~~~~~~~~~"
 
 if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
 exit /b 0
+goto:eof
+
+:check_gitdate
+set nomodif=
+set newest=
+if not exist .git\COMMIT_EDITMSG (goto:eof)
+copy .git\COMMIT_EDITMSG . >NUL
+for /f "tokens=*" %%a in ('dir /b /od') do set newest=%%a
+%_info% "newest=%newest% !newest!"
+if "%newest%"=="COMMIT_EDITMSG" ( set "nomodif=1" )
+set newest=
+del COMMIT_EDITMSG
