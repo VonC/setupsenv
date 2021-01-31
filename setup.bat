@@ -48,6 +48,8 @@ if not exist custom\setup.ini.bat (
     echo @echo off%NL%set PRGS=%NL%set HOME=%NL%> custom\setup.ini.bat
     %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1
 )
+
+%_info% "senv_noconfirm='%senv_noconfirm%' '!senv_noconfirm!'"
 call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat error" 2
 
 if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
@@ -66,6 +68,19 @@ if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
     copy "%script_dir%\bin\*" "%HOME%\bin"
     copy "%script_dir%\custom\*.custom.*" "%HOME%\bin"
+)
+
+if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
+    if not exist "%HOME%\bin\_senv.custom.%profile%.doskey" (
+        copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin"
+        %_info% "Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
+        type "%script_dir%\custom\senv.custom.%profile%.doskey" >> "%HOME%\bin\senv.custom.doskey"
+        copy "%script_dir%\custom\senv.custom.%profile%.doskey" "%HOME%\bin\_senv.custom.%profile%.doskey"
+    ) else (
+        %_info% "Profile alias alias already updated: flag '%HOME%\bin\_senv.custom.%profile%.doskey' present"
+    )
+) else (
+    %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
