@@ -68,6 +68,11 @@ if errorlevel 1 (
     %_fatal% "Unable to copy 'remote_setup.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
 )
 
+copy /Y "%script_dir%\setup.ini.bat" "%setupsdir%\..\setup.ini.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'setup.ini.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
+
 if "%setupsdirsenv%" == "" (
     %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
 )
