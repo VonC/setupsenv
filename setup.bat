@@ -211,7 +211,7 @@ if exist "%tpath%" (
 )
 set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
-    %_ok% "Program '%pname%' already installed in '%PRGS%\%f%'"
+    %_ok% "Program '%pname%' already installed2 in '%PRGS%\%f%'"
     call "%script_dir%\check_symlink.bat" "%pname%" "%f%"
     call:check_post "%f%" || exit /b 1
     cd /d "%script_dir%"
