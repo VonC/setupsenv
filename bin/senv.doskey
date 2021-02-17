@@ -21,7 +21,8 @@ gcie=git commit --allow-empty -m "Initial empty commit"
 gcam=git commit --amend --no-edit
 ga=git add .
 gs=git st
-gp= git push
+gp=git push
+grc=cmd /V /C "set "GIT_EDITOR=true" && git rebase --continue"
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 aliase="%LOCALAPPDATA%\Programs\Microsoft VS Code\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
