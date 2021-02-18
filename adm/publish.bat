@@ -37,10 +37,11 @@ if errorlevel 1 (
 )
 
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
+set COUNT=0
 for /F "tokens=*" %%N in (a) do set /a COUNT+=1
 if not "%count%" == "1" (
         type a
-        del a
+        del a 2>NUL
         %_fatal%  "'%count%' (More than one match) in '%sfound%' for pattern '%1'" 7
 )
 for /F "delims=" %%f in (a) do ( set fname=%%f )
