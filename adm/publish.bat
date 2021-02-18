@@ -64,6 +64,7 @@ rem @echo on
 set "name=%2"
 if not "%name%" == "" ( goto:execrbcs )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
+if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
