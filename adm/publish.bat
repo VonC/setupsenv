@@ -77,8 +77,9 @@ for /L %%n in (1 1 !output_cnt!) DO (
     if errorlevel 1 (
         %_error% "Target path '!spath!' not accessible: skipped"
     ) else (
-        grep %name% install_!profile!.list
-        if errorlevel 1 (
+        call:check_name
+        rem %_info% "name_ok2='!name_ok!'"
+        if "!name_ok!" == "false" (
             %_warning% "Name '%name%' not part of intall_!profile!.list: skip copy"
             if exist "!spath!\%fname%" (
                 %_warning% "Must delete '%fname%' in '!spath!'"
@@ -92,6 +93,17 @@ for /L %%n in (1 1 !output_cnt!) DO (
         )
     )
 )
+goto:eof
+
+:check_name
+set "name_ok=false"
+grep "%name%" "install_!profile!.list"
+if not errorlevel 1 (
+    set "name_ok=true"
+) else if "%name%" == "gits" (
+    set "name_ok=true"
+)
+rem %_info% "name_ok='%name_ok%'"
 goto:eof
 
 :rbc
