@@ -79,3 +79,4 @@ if "%setupsdirsenv%" == "" (
 
 echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdirsenv%\s.bat
 echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
+echo deep>profile
