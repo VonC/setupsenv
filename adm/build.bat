@@ -62,6 +62,10 @@ copy /Y "%script_dir%\echos_macros.bat" "%setupsdir%\..\echos_macros.bat"
 if errorlevel 1 (
     %_fatal% "Unable to copy 'echos_macros.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
 )
+copy /Y "%script_dir%\echos.bat" "%setupsdir%\..\echos.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'echos.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
 
 copy /Y "%script_dir%\remote_setup.bat" "%setupsdir%\..\remote_setup.bat"
 if errorlevel 1 (
