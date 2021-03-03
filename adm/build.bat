@@ -76,6 +76,15 @@ copy /Y "%script_dir%\setup.ini.bat" "%setupsdir%\..\setup.ini.bat"
 if errorlevel 1 (
     %_fatal% "Unable to copy 'setup.ini.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
 )
+copy /Y "%script_dir%\detection_VDI.bat" "%setupsdir%\..\detection_VDI.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'detection_VDI.bat' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
+copy /Y "%script_dir%\ss.bat" "%setupsdir%\s.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 's.bat' from '%script_dir%' to '%setupsdir%'" && exit /b 1)
+)
+
 
 if "%setupsdirsenv%" == "" (
     %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
