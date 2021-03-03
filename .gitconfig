@@ -21,3 +21,5 @@
 	selected = manager-core
 [credential]
 	helper = manager-core
+[init]
+	defaultBranch = main
