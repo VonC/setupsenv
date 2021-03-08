@@ -44,6 +44,13 @@ if not exist custom (
     mkdir custom
     copy custom_example\* custom
 )
+if not "%HOME%"=="" (
+    if not "%PRGS%"=="" (
+        if not "%PROG%"=="" (
+            set senv_noconfirm=1
+        )
+    )
+)
 if not exist custom\setup.ini.bat (
     echo @echo off%NL%set PRGS=%NL%set HOME=%NL%> custom\setup.ini.bat
     %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1
