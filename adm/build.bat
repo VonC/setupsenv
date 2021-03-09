@@ -90,6 +90,6 @@ if "%setupsdirsenv%" == "" (
     %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
 )
 
-echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdirsenv%\s.bat
-echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
+echo call remote_setup.bat %1>%setupsdirsenv%\s.bat
+rem echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
 echo deep>profile
