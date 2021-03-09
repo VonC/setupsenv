@@ -13,6 +13,8 @@
 	autostash = true
 [pull]
 	rebase = true
+[push]
+	default = upstream
 [protocol]
 	version = 2
 [gc]
