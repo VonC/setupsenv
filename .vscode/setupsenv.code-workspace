@@ -1,8 +1,10 @@
 {
 	"folders": [
 		{
-			"path": "..",
 			"path": "..\\custom"
+		},
+		{
+			"path": ".."
 		}
 	],
 	"settings": {
