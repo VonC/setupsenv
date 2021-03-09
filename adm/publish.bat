@@ -53,7 +53,7 @@ if "%sfound%" == "Downloads" (
     call:rbc ..\..\setup ..\..\dl
 )
 
-call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i HLD| grep \\setup|cut -d . -f 1|cut -d _ -f 2"
+call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i setupsdir=| grep \\\\|cut -d . -f 1|cut -d _ -f 2"
 for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile exec(%%n)='!output[%%n]!'"
     set "profiles[%%n]=!output[%%n]!"
@@ -63,12 +63,19 @@ for /L %%n in (1 1 !output_cnt!) DO (
 rem @echo on
 set "name=%2"
 if not "%name%" == "" ( goto:execrbcs )
-if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
+if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
+if not "%fname:ZoomIt-=%" == "%fname%" ( set "name=zis" )
+if not "%fname:ProcessExplorer-=%" == "%fname%" ( set "name=pes" )
+if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
+if not "%fname:putty-=%" == "%fname%" ( set "name=puttys" )
+if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
+if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
+if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
-call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i HLD|cut -d = -f 2| grep setups"
+call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i setupsdir=|cut -d = -f 2| grep \\\\"
 for /L %%n in (1 1 !output_cnt!) DO (
     set "spath=!output[%%n]!"
     set "spath=!spath:"=!"
@@ -102,6 +109,8 @@ grep "%name%" "install_!profile!.list"
 if not errorlevel 1 (
     set "name_ok=true"
 ) else if "%name%" == "gits" (
+    set "name_ok=true"
+) else if "%name%" == "vscodes" (
     set "name_ok=true"
 )
 rem %_info% "name_ok='%name_ok%'"
