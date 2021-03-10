@@ -1,13 +1,19 @@
-%_info% "pre: vscode"
+echo pre: vscode
 for /f "tokens=3*" %%a in ('reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| grep -i code') do (
     set "vscodei=%%a"
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b" )
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c" )
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d" )
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e" )
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e %%f" )
+	rem echo vscodei 0 '%vscodei%' '!vscodei!'
+	if not exist "!vscodei!" ( set "vscodei=%%a %%b")
+	rem echo vscodei 1 '%vscodei%' '!vscodei!'
+	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c")
+	rem echo vscodei 2 '%vscodei%' '!vscodei!'
+	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d")
+	rem echo vscodei 3 '%vscodei%' '!vscodei!'
+	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e")
+	rem echo vscodei 4 '%vscodei%' '!vscodei!'
+	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e %%f")
+	rem echo vscodei 5 '%vscodei%' '!vscodei!'
 )
-rem echo "vscodei 2='%vscodei%'"
+rem echo vscodei final='%vscodei%' '!vscodei!'
 
 for /f  %%a in ('alias vscode') do (
 	set vv=%%a
