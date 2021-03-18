@@ -71,6 +71,12 @@ if not exist %HOME%\senv.bat (
 if not exist %HOME%\gsenv.bat (
     echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOME%\gsenv.bat"
 )
+if not exist %HOMEDRIVE%\senv.bat (
+    echo @echo off%NL%call %HOME%\bin\senv.bat> "%HOMEDRIVE%\senv.bat"
+)
+if not exist %HOMEDRIVE%\gsenv.bat (
+    echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOMEDRIVE%\gsenv.bat"
+)
 doskey senv=
 
 %_info% "PRGS='%PRGS%'"
