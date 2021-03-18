@@ -112,7 +112,7 @@ if not exist "%HOME%\.gitconfig" ( copy "%script_dir%\.gitconfig" "%HOME%\.gitco
 if not exist "%PROG%\git" ( mkdir "%PROG%\git" )
 set "bc=%PROG%\git\batcolors"
 if not exist "%PROG%\git\batcolors" ( mkdir "%bc%" )
-if not exist "%bc%\echos_macros.bat"  (copy "batcolors\*" "%bc%" )
+if not exist "%bc%\echos_macros.bat"  (copy "%script_dir%\batcolors\*" "%bc%" )
 
 rem @echo on
 set setupsdirbat="setupsdir.bat"
