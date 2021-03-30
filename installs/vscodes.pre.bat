@@ -1,4 +1,7 @@
+@echo off
 echo pre: vscode
+set "vscodei="
+setlocal enabledelayedexpansion
 for /f "tokens=3*" %%a in ('reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| grep -i code') do (
     set "vscodei=%%a"
 	rem echo vscodei 0 '%vscodei%' '!vscodei!'
@@ -14,6 +17,7 @@ for /f "tokens=3*" %%a in ('reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVer
 	rem echo vscodei 5 '%vscodei%' '!vscodei!'
 )
 rem echo vscodei final='%vscodei%' '!vscodei!'
+endlocal & set vscodei=%vscodei%
 
 for /f  %%a in ('alias vscode') do (
 	set vv=%%a
