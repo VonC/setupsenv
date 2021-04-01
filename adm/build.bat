@@ -33,6 +33,21 @@ if not exist senv (
     %_fatal% "custom must be in senv folder" 1
 )
 
+for /f "delims=" %%x in ('git -C "%script_dir%" status --porcelain') do set "st=%%x"
+if not "%st%" == "" (
+    %_fatal% "Not a clean git status in '%script_dir%'" 1
+    rem %_error% "Not a clean git status in '%script_dir%'" 1
+)
+for /f "delims=" %%x in ('git -C "%script_dir%\.." status --porcelain') do set "st=%%x"
+if not "%st%" == "" (
+    %_fatal% "Not a clean git status in '%script_dir%\..'" 1
+    rem %_error% "Not a clean git status in '%script_dir%\..'" 1
+)
+for /f "tokens=* delims=" %%i in ('git -C "%script_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
+for /f "tokens=* delims=" %%i in ('git -C "%script_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
+echo %vcsenv%>"%script_dir%\version"
+%_fatal% "stop for now" 1
+
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
 %sz% a -sfx7z.sfx senv_%1-zip.exe senv
