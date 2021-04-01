@@ -46,7 +46,7 @@ if not "%st%" == "" (
 for /f "tokens=* delims=" %%i in ('git -C "%script_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
 for /f "tokens=* delims=" %%i in ('git -C "%script_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
 echo %vcsenv%>"%script_dir%\version"
-%_fatal% "stop for now" 1
+rem %_fatal% "stop for now" 1
 
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
@@ -72,6 +72,11 @@ set OK="KO"
 )
 REM echo "OK='%OK%' '!OK!'"
 if not "%OK%" == "ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
+
+copy /Y "%script_dir%\version" "%setupsdir%\..\version"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'version' from '%script_dir%' to '%setupsdir%\..'" && exit /b 1)
+)
 
 copy /Y "%script_dir%\echos_macros.bat" "%setupsdir%\..\echos_macros.bat"
 if errorlevel 1 (
