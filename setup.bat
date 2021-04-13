@@ -89,6 +89,10 @@ if not exist "%HOME%\bin" (
     copy "%script_dir%\custom\*.custom.*" "%HOME%\bin"
 )
 
+if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
+if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
+if not exist "%HOME%\.config\git\config" ( copy "%script_dir%\.config.git.config" "%HOME%\.config\git\config" )
+
 if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
     if not exist "%HOME%\bin\_senv.custom.%profile%.doskey" (
         copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin"
