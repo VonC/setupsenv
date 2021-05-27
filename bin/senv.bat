@@ -41,9 +41,9 @@ endlocal & set usernamel=%_STRING%
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
 
-call %HOME%\bin\setvscodei.bat
 call %HOME%\bin\senv.custom.bat
 call %HOME%\bin\senv.local.bat
+call %HOME%\bin\setvscodei.bat
 
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
