@@ -1,4 +1,9 @@
 @echo off
+
+if exist "%vscodei%" (
+    rem %_info% "VScode is supposed to be installed at '%vscodei%'"
+    goto:eof
+)
 set "vscodei="
 setlocal enabledelayedexpansion
 for /f "tokens=3*" %%a in ('reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| grep -i code') do (
@@ -24,5 +29,5 @@ for /f  %%a in ('alias vscode') do (
 rem echo vv='%vv%' '%vscodei%'
 
 if not exist "%vscodei%" (
-	%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation'" 13
+	%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation'. Try and set env var 'vscodei' to the right path in User environment variable" 13
 )
