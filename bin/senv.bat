@@ -21,10 +21,6 @@ set PATH=%script_dir_bin%;%PATH%
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 
-DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
-DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
-DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
-
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 
 if exist "%USERPROFILE%\usernamel" goto:setusernamel
@@ -45,5 +41,10 @@ endlocal & set usernamel=%_STRING%
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
 
+call %HOME%\bin\setvscodei.bat
 call %HOME%\bin\senv.custom.bat
 call %HOME%\bin\senv.local.bat
+
+DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
+DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
+DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
