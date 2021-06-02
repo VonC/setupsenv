@@ -1,6 +1,8 @@
 %_info% "~~~~~~~~~~~~"
 %_info% " Checking/updating '%HOME%\bin' content"
+set ignorevscode=1
 call "%HOME%\bin\senv.bat"
+set ignorevscode=
 %_info% "   [senv called]"
 cd /d "%HOME%\bin"
 set FIRSTNAME=
