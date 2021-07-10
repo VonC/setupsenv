@@ -4,6 +4,10 @@ setlocal enabledelayedexpansion
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 
+if not "%echoon%" == "" (
+  @echo on
+)
+
 set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir='%script_dir%'"
