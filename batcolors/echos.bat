@@ -13,36 +13,50 @@ if "%1"=="" ( goto :test )
 call %*
 exit /b
 
+:restoreon
+if not "%echoon%" == "" (
+  @echo on
+)
+goto:eof
+
 :ok
 if not "%NOCOLORS%"=="" goto:oknc
 echo %ASCII27%[42;97m OK    %ASCII27%[0m: %~1%
+goto:restoreon
 goto:eof
 :oknc
 echo  OK    : %~1% 1>&2
+goto:restoreon
 goto:eof
 
 :info
 if not "%NOCOLORS%"=="" goto:infonc
 echo %ASCII27%[106;30m INFO  %ASCII27%[0m: %~1%
+goto:restoreon
 goto:eof
 :infonc
 echo  INFO  : %~1% 1>&2
+goto:restoreon
 goto:eof
 
 :warning
 if not "%NOCOLORS%"=="" goto:warningnc
 echo %ASCII27%[103;30m WARN  %ASCII27%[0m: %~1%
+goto:restoreon
 goto:eof
 :warningnc
 echo  WARN  : %~1% 1>&2
+goto:restoreon
 goto:eof
 
 :error
 if not "%NOCOLORS%"=="" goto:errornc
 echo %ASCII27%[101;97m ERROR %ASCII27%[0m: %~1% 1>&2
+goto:restoreon
 goto:eof
 :errornc
 echo  ERROR : %~1% 1>&2
+goto:restoreon
 goto:eof
 
 :fatal
