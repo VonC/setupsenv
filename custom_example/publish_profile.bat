@@ -69,6 +69,7 @@ if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
 if not "%fname:putty-=%" == "%fname%" ( set "name=puttys" )
 if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
 if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
+if not "%fname:VSCode-win32-x64=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
