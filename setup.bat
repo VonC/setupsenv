@@ -175,14 +175,15 @@ call custom\setup.ini.bat "set" || %_fatal% "custom/setup.ini.bat still missing"
 echo HOME='%HOME%'
 echo script_dir='%script_dir%'
 rem set "script_dir=%cd%"
-findstr /V "cdi=" "%HOME%\bin\senv.local.doskey" > tmp
-echo cdi=cd /d "%script_dir%">> tmp
+findstr /V "cdi=" "%HOME%\bin\senv.local.doskey" > "%script_dir%\tmp"
+echo cdi=cd /d "%script_dir%">> "%script_dir%\tmp"
 for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
 set "setupsdirbat=setupsdir_%profile%.bat"
 call "%script_dir%\custom\%setupsdirbat%"
-findstr /V "cdis=" tmp > "%HOME%\bin\senv.local.doskey"
+findstr /V "cdis=" "%script_dir%\tmp" > "%HOME%\bin\senv.local.doskey"
 echo cdis=cd /d "%setupsdir%">> "%HOME%\bin\senv.local.doskey"
-del tmp
+cd /d "%script_dir%"
+del "%script_dir%\tmp" 2>NUL
 
 set script_dir=
 set profile=
