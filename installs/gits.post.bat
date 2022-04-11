@@ -55,6 +55,8 @@ if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 call:check_gitdate
 %_info% "   [nomodif='%nomodif%' '!nomodif!']"
 if "%nomodif%"=="1" ( goto:skipfirststatus)
+if exist "%HOME%\bin\.git\index.lock" (sleep 1)
+if exist "%HOME%\bin\.git\index.lock" (%_fatal% "%HOME%\bin used by other Git process (close VSCode if opened) and relaunch setup" 11)
 %_info% "   [Calling first git status --porcelain in '%HOME%\bin']"
 set st=
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
