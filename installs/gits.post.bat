@@ -96,6 +96,7 @@ if not "%st%" == "" (
 :skipsecondstatus
 touch .git\COMMIT_EDITMSG
 %_info% "~~~~~~~~~~~~"
+call "%script_dir%\installs\gits.config.utils.bat" :restore_gitconfig system gits.post.bat
 
 if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
 exit /b 0
