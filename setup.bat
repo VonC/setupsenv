@@ -219,6 +219,9 @@ if "%pname%"=="" ("%setupsdir%\%p%"
 %_info% "--------------"
 %_info% "'%f%': '%pname%'"
 %_info% "--------------"
+if exist "%HOME%\.gitconfig" (
+    call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
+)
 set pre_ok=false
 call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
 if "%pre_ok%"=="true" (
