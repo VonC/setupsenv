@@ -16,7 +16,7 @@ goto:eof
 
 :save_gitconfig
 cat %HOME%\.gitconfig >NUL
-grep "email = " %HOME%\.gitconfig >NUL
+grep "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "Unable to read %HOME%\.gitconfig: content corrupted (%*)" 666
 )
@@ -28,7 +28,7 @@ if errorlevel 1 (
 goto:eof
 
 :restore_gitconfig
-grep "email = " %HOME%\.gitconfig.ori >NUL
+grep "st = status" %HOME%\.gitconfig.ori >NUL
 if errorlevel 1 (
   %_fatal% "Unable to read %HOME%\.gitconfig.ori: content corrupted (%*)" 668
 )
@@ -36,7 +36,7 @@ copy /Y %HOME%\.gitconfig.ori %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "Unable to copy %HOME%\.gitconfig.ori: content corrupted (%*)" 669
 )
-grep "email = " %HOME%\.gitconfig >NUL
+grep "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "Unable to confirm read %HOME%\.gitconfig: content corrupted (%*)" 670
 )
