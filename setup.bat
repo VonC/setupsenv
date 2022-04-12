@@ -105,9 +105,6 @@ if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
 ) else (
     %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
 )
-if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
-    type "%script_dir%\custom\senv.custom.%profile%.bat" >> "%HOME%\bin\senv.custom.bat"
-)
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
 if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set PRGS=%PRGS%%NL%set PROG=%PROG%%NL%set HOME=%HOME%%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
@@ -143,6 +140,17 @@ rem goto:alldone
 call:install "peazip_portable-*" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
+
+REM installs\gits.post.bat has overridden home\bin files: update senv.custom.bat if needed
+if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
+    findstr "REM add custom %profile% settings" "%HOME%\bin\senv.custom.bat"
+    if errorlevel 1 (
+        echo.>> "%HOME%\bin\senv.custom.bat"
+        echo REM add custom %profile% settings>> "%HOME%\bin\senv.custom.bat"
+        type "%script_dir%\custom\senv.custom.%profile%.bat" >> "%HOME%\bin\senv.custom.bat"
+    )
+)
+
 call:install "VSCodeUserSetup-x64-*" "vscodes" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
