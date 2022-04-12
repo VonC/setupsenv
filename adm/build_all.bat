@@ -12,6 +12,8 @@ cd ../custom || %_fatal% "Unable to access custom folder" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
 %_info% "Custom folder full path: '%cpwd%'"
 
+if exist ..\..\build.pre.bat ( call ..\..\build.pre.bat )
+
 call:execcmd "ls -1 setupsdir*_*|cut -d _ -f 2|cut -d . -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile exec(%%n)='!output[%%n]!'"
@@ -24,6 +26,10 @@ for /L %%n in (1 1 !output_cnt!) DO (
     %_info% "profile='!profile!'"
     call build.bat !profile!
 )
+
+cd /d "%script_dir%" || echo "unable to cd2 to '%script_dir%'"&& exit /b 1
+if exist ..\..\build.post.bat ( call ..\..\build.post.bat )
+
 goto:eof
 
 :execcmd
