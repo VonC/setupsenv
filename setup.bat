@@ -105,6 +105,9 @@ if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
 ) else (
     %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
 )
+if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
+    type "%script_dir%\custom\senv.custom.%profile%.bat" >> "%HOME%\bin\senv.custom.bat"
+)
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
 if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set PRGS=%PRGS%%NL%set PROG=%PROG%%NL%set HOME=%HOME%%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
