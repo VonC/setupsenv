@@ -50,6 +50,8 @@ for /f "tokens=* delims=" %%i in ('git -C "%script_dir%\.." describe --long --al
 echo %vcsenv%>"%script_dir%\version"
 rem %_fatal% "stop for now" 1
 
+if exist "%script_dir%\..\..\build.pre.bat" ( call "%script_dir%\..\..\build.pre.bat" )
+
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
 %sz% a -sfx7z.sfx senv_%1-zip.exe senv
@@ -114,3 +116,5 @@ if "%setupsdirsenv%" == "" (
 echo call remote_setup.bat %1>%setupsdirsenv%\s.bat
 rem echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
 echo deep>profile
+
+if exist "%script_dir%\..\..\build.post.bat" ( call "%script_dir%\..\..\build.post.bat" )
