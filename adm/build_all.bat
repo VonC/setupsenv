@@ -25,9 +25,6 @@ for /L %%n in (1 1 !output_cnt!) DO (
     call build.bat !profile!
 )
 
-cd /d "%script_dir%" || echo "unable to cd2 to '%script_dir%'"&& exit /b 1
-if exist "%script_dir%\..\..\build.post.bat" ( call "%script_dir%\..\..\build.post.bat" )
-
 goto:eof
 
 :execcmd
