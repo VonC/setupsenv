@@ -34,6 +34,7 @@ if not exist senv (
 )
 
 for /f "delims=" %%x in ('git -C "%script_dir%" status --porcelain') do set "st=%%x"
+rem goto:skipcl
 if not "%st%" == "" (
     %_fatal% "Not a clean git status in '%script_dir%'" 1
     rem %_error% "Not a clean git status in '%script_dir%'" 1
@@ -43,6 +44,7 @@ if not "%st%" == "" (
     %_fatal% "Not a clean git status in '%script_dir%\..'" 1
     rem %_error% "Not a clean git status in '%script_dir%\..'" 1
 )
+:skipcl
 for /f "tokens=* delims=" %%i in ('git -C "%script_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
 for /f "tokens=* delims=" %%i in ('git -C "%script_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
 echo %vcsenv%>"%script_dir%\version"
@@ -60,8 +62,7 @@ cd senv
 call gcuvc
 cd custom
 call gcu
-
-call setupsdir_%profile%.bat
+call "%script_dir%\setupsdir_%profile%.bat"
 %_info% "setupsdir='%setupsdir%'"
 %_warning% "Update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
 set OK="KO"
