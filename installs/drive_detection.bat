@@ -15,12 +15,21 @@ for /f "tokens=* delims=" %%i in ('net use') do (
         set "dr=%%i"
         rem echo possible drive='!dr!'
         rem @echo on
-        for /f "tokens=1,2 delims= " %%j in ('echo !dr!') do (
-            rem cho drletter='%%j'
-            rem echo 'drpath ='%%k'
-            if "%%k" == "%driveUNCPath%" (
-                set "driveLetter=%%j"
-                goto:found
+        for /f "tokens=1,2,3 delims= " %%j in ('echo !dr!') do (
+            rem echo drletter='%%j'
+            set "f=%%j"
+            if not "!f::=!" == "%%j" (
+                rem echo 'drpath ='%%k'
+                if "%%k" == "%driveUNCPath%" (
+                    set "driveLetter=%%j"
+                    goto:found
+                )
+            ) else (
+                rem echo 'drpath ='%%k'
+                if "%%l" == "%driveUNCPath%" (
+                    set "driveLetter=%%k"
+                    goto:found
+                )
             )
         )
         rem @echo off
