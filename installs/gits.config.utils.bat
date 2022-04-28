@@ -34,6 +34,10 @@ if errorlevel 1 (
 goto:eof
 
 :restore_gitconfig
+if not exist "%HOME%\.gitconfig.ori" (
+  %_info% "skip  gits.config.utils restore_gitconfig: no .gitconfig.ori"
+  goto:eof
+)
 grep "st = status" %HOME%\.gitconfig.ori >NUL
 if errorlevel 1 (
   %_fatal% "Unable to read %HOME%\.gitconfig.ori: content corrupted (%*)" 668
