@@ -1,5 +1,11 @@
 REM Git global config utils
 
+where cat 2>NUL
+if errorlevel 1 (
+  %_info% "Skip gits.config.utils: cat non available in path"
+  goto:eof
+)
+
 if "%1" == ":save_gitconfig" (
     call :save_gitconfig %*
     goto:eof
