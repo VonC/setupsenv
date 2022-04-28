@@ -101,6 +101,15 @@ touch .git\COMMIT_EDITMSG
 call "%script_dir%\installs\gits.config.utils.bat" :restore_gitconfig system gits.post.bat
 
 if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
+
+if exist "%setupsdir%\gitcred.exe" (
+    %_info% "Copy/update %HOME%\bin\gitcred.exe from %setupsdir%"
+    (robocopy "%setupsdir%" "%HOME%\bin" "gitcred.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
+    if not "%ERRORLEVEL%" == "0" ( %_warning% "Unable to copy '%setupsdir%\gitcred.exe' to '%HOME%\bin\'" && exit /b 0)
+    copy /Y "%HOME%\bin\gitcred.exe" "%HOME%\bin\git-cred.exe"
+    %_ok% "'gitcred.exe' in '%HOME%\bin\' updated from '%setupsdir%'"
+)
+
 exit /b 0
 goto:eof
 
