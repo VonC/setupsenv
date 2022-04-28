@@ -1,6 +1,6 @@
 REM Git global config utils
 
-where cat 2>NUL
+where cat > NUL 2>NUL
 if errorlevel 1 (
   %_info% "Skip gits.config.utils: cat non available in path"
   goto:eof
