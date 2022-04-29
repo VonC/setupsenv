@@ -34,7 +34,10 @@ if not exist "%fprofile%" (
 
 set "spath="
 set "fsetupsdir=setupsdir_%profile%.bat"
-for /F "delims=" %%f in ('grep "set setupsdir=\\\\" %fsetupsdir%^|cut -d="=" -f 2') do ( set spath=%%f)
+set "UNCPathOnly=1"
+call "%fsetupsdir%"
+set "UNCPathOnly="
+set "spath=!setupsdir!"
 if "%spath%"=="" (
     %_fatal% "No target spath found in '%fsetupsdir%'" 111
 )
@@ -63,6 +66,7 @@ set "name="
 if not "%name%" == "" ( goto:execrbcs )
 if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
+if not "%fname:gitcred=%" == "%fname%" ( set "name=gits" )
 if not "%fname:ZoomIt-=%" == "%fname%" ( set "name=zis" )
 if not "%fname:ProcessExplorer-=%" == "%fname%" ( set "name=pes" )
 if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
