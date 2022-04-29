@@ -9,7 +9,7 @@ call "%bc%\echos_macros.bat"
 %_info% "script_dir(publish)='%script_dir%'"
 
 cd ../custom || %_fatal% "Unable to access custom folder" 1
-for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
+for /F "delims=" %%f in ('cd') do ( set cpwd=%%f)
 %_info% "Custom folder full path: '%cpwd%'"
 
 dir ..\..\setup > NUL
@@ -44,7 +44,7 @@ if not "%count%" == "1" (
         del a 2>NUL
         %_fatal%  "'%count%' (More than one match) in '%sfound%' for pattern '%1'" 7
 )
-for /F "delims=" %%f in (a) do ( set fname=%%f )
+for /F "delims=" %%f in (a) do ( set fname=%%f)
 %_info% "One match found in '%sfound%': '%fname%'"
 del a
 
