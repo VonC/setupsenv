@@ -53,7 +53,7 @@ if "%sfound%" == "Downloads" (
     call:rbc ..\..\setup ..\..\dl
 )
 
-call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i setupsdir=| grep \\\\|cut -d . -f 1|cut -d _ -f 2"
+call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f 2|cut -d'.' -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile exec(%%n)='!output[%%n]!'"
     set "profiles[%%n]=!output[%%n]!"
@@ -65,6 +65,7 @@ set "name=%2"
 if not "%name%" == "" ( goto:execrbcs )
 if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
+if not "%fname:gitcred=%" == "%fname%" ( set "name=gits" )
 if not "%fname:ZoomIt-=%" == "%fname%" ( set "name=zis" )
 if not "%fname:ProcessExplorer-=%" == "%fname%" ( set "name=pes" )
 if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
@@ -76,12 +77,23 @@ if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
-call:execcmd "ls -1 s*_*|xargs grep setupsdir|grep -i setupsdir=|cut -d = -f 2| grep \\\\"
+call:execcmd "ls -1 setupsdir*_*"
+%_info% "output_cnt='%output_cnt%' or '!output_cnt!'"
+if "%output_cnt%" == "0" (
+    cd
+    %_fatal% "No s*_* detected in custom" 1
+)
+
 for /L %%n in (1 1 !output_cnt!) DO (
-    set "spath=!output[%%n]!"
-    set "spath=!spath:"=!"
+    set "sc=!output[%%n]!"
+    set "UNCPathOnly=1"
+    rem dir %cpwd%\!sc!
+    rem echo call "%cpwd%\!sc!"
+    call "%cpwd%\!sc!"
+    set "UNCPathOnly="
+    set "spath=!setupsdir!"
     set "profile=!profiles[%%n]!"
-    %_info% "profile='!profile!', name='%name%', spath='!spath!'"
+    %_info% "sc='!sc!', profile='!profile!', name='%name%', spath='!spath!'"
     dir "!spath!" > NUL
     if errorlevel 1 (
         %_error% "Target path '!spath!' not accessible: skipped"
