@@ -45,6 +45,7 @@ if "%spath%"=="" (
 
 call:publishOne "peazip_portable-"
 call:publishOne "PortableGit"
+call:publishOne "gitcred"
 call:publishOne "VSCode"
 call:publishOne "ZoomIt-"
 call:publishOne "ProcessExplorer-"
