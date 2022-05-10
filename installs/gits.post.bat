@@ -49,6 +49,7 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 if not exist .git ( git init . && call gcu.bat )
 if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 
@@ -59,10 +60,12 @@ if exist "%HOME%\bin\.git\index.lock" (sleep 1)
 if exist "%HOME%\bin\.git\index.lock" (%_fatal% "%HOME%\bin used by other Git process (close VSCode if opened) and relaunch setup" 11)
 %_info% "   [Calling first git status --porcelain in '%HOME%\bin']"
 set st=
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%" == "" (
     %_info% "Save local modification of '%HOME%\bin'"
     rem %_fatal% "no local save" 111
+    "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     git add .
     git commit -m "pre-update"
 )
@@ -80,6 +83,7 @@ copy /Y "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL: 2>NUL:
 copy /Y "%script_dir%\custom\bin\*" "%HOME%\bin" > NUL:
 
 %_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 git config --local user.name>NUL
 if errorlevel 1 ( call gcu.bat )
 
@@ -88,10 +92,12 @@ call:check_gitdate
 if "%nomodif%"=="1" ( goto:skipsecondstatus)
 %_info% "   [Calling Second git status --porcelain in '%HOME%\bin']"
 set st=
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%" == "" (
     %_info% "Save new updates of '%HOME%\bin'"
     rem %_fatal% "no new update save" 112
+    "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     git add --renormalize .
     git commit -m "post-update"
 )
