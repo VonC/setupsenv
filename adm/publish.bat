@@ -75,6 +75,7 @@ if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
 if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:WinSCP=%" == "%fname%" ( set "name=winscps" )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
+if not "%fname:m2_=%" == "%fname%" ( set "name=mavens" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
