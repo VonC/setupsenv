@@ -65,13 +65,13 @@ if not exist .git\config (
     %_info% "Initialize git repository in %HOME%\bin"
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     git init .
-    if not exist .git\objects (
-        mkdir .git\objects
-    )
-    grep bare .git\config 1>NUL 2>NUL
-    if errorlevel 1 (
-        copy /Y "%script_dir%\bin\.git_config" .git\config
-    )
+)
+if not exist .git\objects (
+    mkdir .git\objects
+)
+grep bare .git\config 1>NUL 2>NUL
+if errorlevel 1 (
+    copy /Y "%script_dir%\bin\.git_config" .git\config
 )
 if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 
