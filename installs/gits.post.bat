@@ -111,6 +111,11 @@ copy /Y "%script_dir%\custom\bin\*" "%HOME%\bin" > NUL:
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 git config --local user.name>NUL
 if errorlevel 1 ( call gcu.bat )
+%_info% "   [Check 'git config --local user.email' in '%HOME%\bin']"
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
+git config --local user.email>NUL
+if errorlevel 1 ( call gcu.bat )
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 
 call:check_gitdate
 %_info% "   [nomodif(2)='%nomodif%' '!nomodif!']"
