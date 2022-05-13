@@ -37,4 +37,7 @@ for /f "tokens=* delims=" %%i in ('net use') do (
 )
 :found
 %_info% "Drive found for '%driveUNCPath%': '%driveLetter%'"
+
+echo @echo off>"%script_dir:\custom=%\driverLetter.bat"
+echo set "driveLetter=%driveLetter%">>"%script_dir:\custom=%\driverLetter.bat"
 endlocal & set driveLetter=%driveLetter%
