@@ -40,12 +40,16 @@ for /f "tokens=* delims=" %%i in ('net use') do (
             )
             rem set "res=!dr::=" & set "res=!!"
             call :substr "!dr!" "!drl!"
+            set "eeee=!eeee:"=!"
+            rem echo "eeee1='!eeee!'"
+            set "eeee=!eeee:Microsoft Windows Network=!"
+            rem echo "eeee2='!eeee!'"
             call :trimSpace "!eeee!"
             rem echo xxxx2 xxxx '!eeee!'
             set "drp=!eeee!"
         )
         rem @echo off
-        rem echo drl='!drl!', drp='!drp!' ^(drRefresh='!drRefresh!'^)
+        rem echo drl='!drl!', drp='!drp!' ^(drRefresh='!drRefresh!'^) vs driveUNCPath '%driveUNCPath%'
         if "!drp!" == "%driveUNCPath%" (
             set "driveLetter=!drl!"
             goto:found
