@@ -75,6 +75,17 @@ if errorlevel 1 (
 )
 if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 
+%_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
+git config --local user.name>NUL
+if errorlevel 1 ( call "%HOME%\bin\gcu.bat" )
+%_info% "   [Check 'git config --local user.email' in '%HOME%\bin']"
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
+git config --local user.email>NUL
+if errorlevel 1 ( call "%HOME%\bin\gcu.bat" )
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
+
 call:check_gitdate
 %_info% "   [nomodif='%nomodif%' '!nomodif!']"
 if "%nomodif%"=="1" ( goto:skipfirststatus)
@@ -106,16 +117,6 @@ copy /Y "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL: 2>NUL:
 %_info% "   [Copy custom\bin in '%HOME%\bin']"
 copy /Y "%script_dir%\custom\bin\*" "%HOME%\bin" > NUL:
 
-%_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
-"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
-"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
-git config --local user.name>NUL
-if errorlevel 1 ( call gcu.bat )
-%_info% "   [Check 'git config --local user.email' in '%HOME%\bin']"
-"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
-git config --local user.email>NUL
-if errorlevel 1 ( call gcu.bat )
-"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 
 call:check_gitdate
 %_info% "   [nomodif(2)='%nomodif%' '!nomodif!']"
@@ -161,3 +162,5 @@ for /f "tokens=*" %%a in ('dir /b /od') do set newest=%%a
 if "%newest%"=="COMMIT_EDITMSG" ( set "nomodif=1" )
 set newest=
 del COMMIT_EDITMSG
+goto:eof
+
