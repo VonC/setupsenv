@@ -1,6 +1,11 @@
 @echo off
 setlocal enabledelayedexpansion
 
+if "%script_dir%" == "" (
+    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+    call !script_dir!\..\batcolors\echos_macros.bat
+)
+
 :detect_drive
 set "driveUNCPath=%1"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
@@ -71,10 +76,8 @@ if not "%drRefresh%" == "" (
     %_ok% "Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
 )
 
-if not "%script_dir%" == "" (
-    echo @echo off>"%script_dir:\custom=%\driverLetter.bat"
-    echo set "driveLetter=%driveLetter%">>"%script_dir:\custom=%\driverLetter.bat"
-)
+echo @echo off>"%script_dir:\custom=%\driverLetter.bat"
+echo set "driveLetter=%driveLetter%">>"%script_dir:\custom=%\driverLetter.bat"
 endlocal & set driveLetter=%driveLetter%
 
 goto:eof
