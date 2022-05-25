@@ -23,7 +23,7 @@ if errorlevel 1 (
 )
 
 if "%1"=="" (
-    %_fatal%  "Usage: publish xxx (pattern to search for in Downloads or setup)" 4
+    %_fatal%  "Usage: publish xxx [profile] (pattern to search for in Downloads or setup). No profile means publish to all." 4
 )
 
 set "sfound=setup"
@@ -53,6 +53,11 @@ if "%sfound%" == "Downloads" (
     call:rbc ..\..\setup ..\..\dl
 )
 
+if not "%2"=="" (
+    set "team=%2"
+    %_task% "Must publish '%fname% only for team name '!team!'"
+)
+
 call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f 2|cut -d'.' -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile exec(%%n)='!output[%%n]!'"
@@ -61,7 +66,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
 )
 
 rem @echo on
-set "name=%2"
+set "name="
 if not "%name%" == "" ( goto:execrbcs )
 if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
@@ -76,6 +81,8 @@ if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:WinSCP=%" == "%fname%" ( set "name=winscps" )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
 if not "%fname:m2_=%" == "%fname%" ( set "name=mavens" )
+if not "%fname:eclipse-=%" == "%fname%" ( set "name=eclipses" )
+if not "%fname:.jks=%" == "%fname%" ( set "name=eclipses" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
@@ -95,11 +102,27 @@ for /L %%n in (1 1 !output_cnt!) DO (
     set "UNCPathOnly="
     set "spath=!setupsdir!"
     set "profile=!profiles[%%n]!"
-    %_info% "sc='!sc!', profile='!profile!', name='%name%', spath='!spath!'"
-    dir "!spath!" > NUL
-    if errorlevel 1 (
-        %_error% "Target path '!spath!' not accessible: skipped"
+    set "skip="
+    %_info% "sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
+    if not "%team%"=="" (
+        if not "%team%"=="!profile!" (
+            %_warning% "Team '%team%' does not match profile '!profile!': skipping."
+            set "skip=1"
+        ) else (
+            %_ok% "Team matches profile"
+        )
     ) else (
+        %_info% "Empty team"
+    )
+    if "!skip!"=="" (
+        dir "!spath!" > NUL
+        if errorlevel 1 (
+            %_error% "Target path '!spath!' not accessible: skipped"
+            set "skip=1"
+        )
+    )
+    if "!skip!"=="" (
+        %_task% "Check name"
         call:check_name
         rem %_info% "name_ok2='!name_ok!'"
         if "!name_ok!" == "false" (
