@@ -76,6 +76,9 @@ if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
 if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:VSCode-win32-x64=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
+if not "%fname:m2_=%" == "%fname%" ( set "name=mavens" )
+if not "%fname:eclipse-=%" == "%fname%" ( set "name=eclipses" )
+if not "%fname:.jks=%" == "%fname%" ( set "name=eclipses" )
 if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
