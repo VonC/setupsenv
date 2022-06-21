@@ -79,11 +79,11 @@ if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 git config --local user.name>NUL
-if errorlevel 1 ( call "%HOME%\bin\gcu.bat" )
+if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL && call "%HOME%\bin\gcu.bat" )
 %_info% "   [Check 'git config --local user.email' in '%HOME%\bin']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 git config --local user.email>NUL
-if errorlevel 1 ( call "%HOME%\bin\gcu.bat" )
+if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL && call "%HOME%\bin\gcu.bat" )
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 
 call:check_gitdate
