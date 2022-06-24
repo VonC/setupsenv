@@ -52,6 +52,7 @@ call:publishOne "ProcessExplorer-"
 call:publishOne "px-"
 call:publishOne "putty-"
 call:publishOne "shellcheck-"
+call:publishOne "WinSCP-"
 endlocal
 goto:eof
 
@@ -74,6 +75,7 @@ if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
 if not "%fname:putty-=%" == "%fname%" ( set "name=puttys" )
 if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
 if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
+if not "%fname:WinSCP-=%" == "%fname%" ( set "name=winscps" )
 if not "%fname:VSCode-win32-x64=%" == "%fname%" ( set "name=vscodes" )
 if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
 if not "%fname:m2_=%" == "%fname%" ( set "name=mavens" )
