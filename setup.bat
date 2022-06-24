@@ -65,18 +65,10 @@ if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined in custom
 
 echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
 echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
-if not exist %HOME%\senv.bat (
-    echo @echo off%NL%call %HOME%\bin\senv.bat> "%HOME%\senv.bat"
-)
-if not exist %HOME%\gsenv.bat (
-    echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOME%\gsenv.bat"
-)
-if not exist %HOMEDRIVE%\senv.bat (
-    echo @echo off%NL%call %HOME%\bin\senv.bat> "%HOMEDRIVE%\senv.bat"
-)
-if not exist %HOMEDRIVE%\gsenv.bat (
-    echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOMEDRIVE%\gsenv.bat"
-)
+echo @echo off%NL%call "%%USERPROFILE%%\senv.bat"> "%HOME%\senv.bat"
+echo @echo off%NL%call "%%USERPROFILE%%\gsenv.bat"> "%HOME%\gsenv.bat"
+echo @echo off%NL%call "%%USERPROFILE%%\senv.bat"> "%HOMEDRIVE%\senv.bat"
+echo @echo off%NL%call "%%USERPROFILE%%\gsenv.bat"> "%HOMEDRIVE%\gsenv.bat"
 doskey senv=
 
 %_info% "PRGS='%PRGS%'"
