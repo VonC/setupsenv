@@ -49,8 +49,8 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
-for /f "delims=" %%x in ('git config --system credential.helper') do set "credhelp=%%x"
-if not "%credhelp%" == "helper-selector" ( goto:skipcredhelp)
+git config --system credential.helper | grep "helper-selector" 1>NUL 2>NUL
+if errorlevel 1 ( goto:skipcredhelp )
 set "credhelp=%PRGS%\gits\current\mingw64/bin/git-credential-manager-core.exe"
 set "credhelp=%credhelp:\=/%
 set "credhelp=%credhelp:c:=C:%"
