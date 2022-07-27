@@ -11,6 +11,7 @@ set "driveUNCPath=%1"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 set driveUNCPath=%driveUNCPath:"=%
 set "driveUNCPathEsc=%driveUNCPath:\=\\%"
+set "driveUNCPathEsc=%driveUNCPathEsc:$=\$%"
 rem echo driveUNCPath='%driveUNCPath%', driveUNCPathEsc='%driveUNCPathEsc%'
 
 set "driveLetter="
