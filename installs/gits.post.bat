@@ -50,13 +50,31 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
-git config --system credential.helper | grep "helper-selector" 1>NUL 2>NUL
-if errorlevel 1 ( goto:skipcredhelp )
-set "credhelp=%PRGS%\gits\current\mingw64/bin/git-credential-manager-core.exe"
-set "credhelp=%credhelp:\=/%
-set "credhelp=%credhelp:c:=C:%"
-git config --system credential.helper !\"%credhelp%\"
-:skipcredhelp
+
+git config --system credential.helper 1>NUL 2>NUL
+if errorlevel 1 (
+    git config --system credential.helper manager-core
+) else (
+    git config --system credential.helper | grep "credential-manager" 1>NUL 2>NUL
+    if errorlevel 0 (
+        git config --system credential.helper manager-core
+    ) else (
+        git config --system credential.helper | grep "bin" 1>NUL 2>NUL
+        if errorlevel 0 (
+            git config --system credential.helper manager-core
+        ) else (
+            git config --system credential.helper | grep "git-core" 1>NUL 2>NUL
+            if errorlevel 0 (
+                git config --system credential.helper manager-core
+            )
+        )
+    )
+)
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
+git config --global credential.helper manager-core
+"%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
+git config --global credential.helperselector.selected manager-core
+
 
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL 2>NUL
