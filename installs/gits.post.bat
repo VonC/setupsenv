@@ -5,6 +5,7 @@ call "%HOME%\bin\senv.bat"
 set ignorevscode=
 %_info% "   [senv called]"
 cd /d "%HOME%\bin"
+if errorlevel 1 (%_fatal% "Unable to cd to %HOME%\bin" 111)
 set FIRSTNAME=
 set LASTNAME=
 call %HOME%\bin\senv.local.pre.bat
@@ -83,6 +84,8 @@ if errorlevel 1 (
 )
 if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 
+cd /d "%HOME%\bin"
+if errorlevel 1 (%_fatal% "Unable to cd to %HOME%\bin" 111)
 %_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
