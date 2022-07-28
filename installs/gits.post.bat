@@ -60,8 +60,8 @@ git config --system credential.helper !\"%credhelp%\"
 
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL 2>NUL
-if exist .git\config (
-    grep bare .git\config 1>NUL 2>NUL
+if exist "%HOME%\bin\.git\config" (
+    grep bare "%HOME%\bin\.git\config" 1>NUL 2>NUL
     if errorlevel 1 (
         %_warning% "%HOME%\bin\.git\config incomplete: delete and redo"
         del /Q .git\config
@@ -70,30 +70,30 @@ if exist .git\config (
         )
     )
 )
-if not exist .git\config (
+if not exist "%HOME%\bin\.git\config" (
     %_info% "Initialize git repository in %HOME%\bin"
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
-    git init .
+    git init "%HOME%\bin"
 )
-if not exist .git\objects (
-    mkdir .git\objects
+if not exist "%HOME%\bin\.git\objects" (
+    mkdir "%HOME%\bin\.git\objects"
 )
-grep bare .git\config 1>NUL 2>NUL
+grep bare "%HOME%\bin\.git\config" 1>NUL 2>NUL
 if errorlevel 1 (
-    copy /Y "%script_dir%\bin\.git_config" .git\config
+    copy /Y "%script_dir%\bin\.git_config" "%HOME%\bin\.git\config"
 )
-if not exist .gitignore (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
+if not exist "%HOME%\bin\.gitignore" (  copy "%script_dir%\bin\.gitignore" "%HOME%\bin" )
 
 cd /d "%HOME%\bin"
 if errorlevel 1 (%_fatal% "Unable to cd to %HOME%\bin" 111)
 %_info% "   [Check 'git config --local user.name' in '%HOME%\bin']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
-git config --local user.name>NUL
+git -C "%HOME%\bin" config --local user.name>NUL
 if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL && call "%HOME%\bin\gcu.bat" )
 %_info% "   [Check 'git config --local user.email' in '%HOME%\bin']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
-git config --local user.email>NUL
+git -C "%HOME%\bin" config --local user.email>NUL
 if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL && call "%HOME%\bin\gcu.bat" )
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 
