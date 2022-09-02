@@ -55,17 +55,22 @@ git config --system credential.helper 1>NUL 2>NUL
 if errorlevel 1 (
     git config --system credential.helper manager-core
 ) else (
-    git config --system credential.helper | grep "credential-manager" 1>NUL 2>NUL
+    git config --system credential.helper | grep -i "selector" 1>NUL 2>NUL
     if errorlevel 0 (
         git config --system credential.helper manager-core
     ) else (
-        git config --system credential.helper | grep "bin" 1>NUL 2>NUL
+        git config --system credential.helper | grep "credential-manager" 1>NUL 2>NUL
         if errorlevel 0 (
             git config --system credential.helper manager-core
         ) else (
-            git config --system credential.helper | grep "git-core" 1>NUL 2>NUL
+            git config --system credential.helper | grep "bin" 1>NUL 2>NUL
             if errorlevel 0 (
                 git config --system credential.helper manager-core
+            ) else (
+                git config --system credential.helper | grep "git-core" 1>NUL 2>NUL
+                if errorlevel 0 (
+                    git config --system credential.helper manager-core
+                )
             )
         )
     )
