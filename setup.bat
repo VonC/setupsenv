@@ -143,6 +143,11 @@ if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
     )
 )
 
+if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
+    %_info% "REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
+    type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
+)
+
 call:install "VSCodeUserSetup-x64-*" "vscodes" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
