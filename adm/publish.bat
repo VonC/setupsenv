@@ -152,6 +152,8 @@ if not errorlevel 1 (
     set "name_ok=true"
 ) else if "%name%" == "vscodes" (
     set "name_ok=true"
+) else if "%name%" == "peazips" (
+    set "name_ok=true"
 )
 rem %_info% "name_ok='%name_ok%'"
 goto:eof
