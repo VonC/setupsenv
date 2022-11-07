@@ -128,7 +128,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
         call:check_name
         rem %_info% "name_ok2='!name_ok!'"
         if "!name_ok!" == "false" (
-            %_warning% "Name '%name%' not part of intall_!profile!.list: skip copy"
+            %_warning% "Name '%name%' not part of install_!profile!.list: skip copy"
             if exist "!spath!\%fname%" (
                 %_warning% "Must delete '%fname%' in '!spath!'"
                 del "!spath!\%fname%"
