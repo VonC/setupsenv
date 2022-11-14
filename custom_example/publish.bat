@@ -70,6 +70,8 @@ set "name="
 if not "%name%" == "" ( goto:execrbcs )
 if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
+if not "%fname:node-v10.=%" == "%fname%" ( set "name=nodes" )
+if not "%fname:node-v14.=%" == "%fname%" ( set "name=nodes14" )
 if not "%fname:gitcred=%" == "%fname%" ( set "name=gits" )
 if not "%fname:syncprompt=%" == "%fname%" ( set "name=syncprompts" )
 if not "%fname:ZoomIt-=%" == "%fname%" ( set "name=zis" )
