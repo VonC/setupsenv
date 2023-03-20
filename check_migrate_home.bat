@@ -19,7 +19,7 @@ if "%HOME%"=="%LOCAL_HOME%" (
     %_task% "HOME '%HOME%' must be migrated to is '%LOCAL_HOME%'"
 )
 mkdir "%LOCAL_HOME%" 2>NUL:
-set "REMOTE_HOME=%HOME%\home_senv.git"
+set "REMOTE_HOME=%HOME%"
 call:get_state
 if not "%state%"=="%state:_copied_=%" (
     %_info% "Skip copy/update '%HOME%' to '%LOCAL_HOME%' because state '%state%'"
@@ -28,11 +28,11 @@ if not "%state%"=="%state:_copied_=%" (
 
 %_info% "Copy/update '%HOME%' to '%LOCAL_HOME%'"
 rem echo robocopy "%HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS
-(robocopy "%HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL=0
+(robocopy "%REMOTE_HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL=0
 if not "%ERRORLEVEL%" == "0" ( 
-    %_fatal% "Unable to copy '%HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1 
+    %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1 
 )
-echo %state%_copied_ > "%HOME%\state
+echo %state%_copied_ > "%REMOTE_HOME%\state
 
 cd "%LOCAL_HOME%" || echo "unable to cd to LOCAL_HOME '%LOCAL_HOME%'"&& exit /b 1
 
@@ -65,22 +65,38 @@ if not exist "%LOCAL_HOME%\.git" (
     )
 )
 
-if not exist "%REMOTE_HOME%" (
-    %_task% "Create remote home '%REMOTE_HOME%' bare repository"
-    git init --bare "%REMOTE_HOME%" 2>NUL:
-    if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to create remote home '%REMOTE_HOME%' bare Git repository" 1 )
+set "REMOTE_HOME_REPO=%REMOTE_HOME%\home_senv.git"
+if not exist "%REMOTE_HOME_REPO%" (
+    %_task% "Create remote home '%REMOTE_HOME_REPO%' bare repository"
+    git init --bare "%REMOTE_HOME_REPO%" 2>NUL:
+    if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to create remote home '%REMOTE_HOME_REPO%' bare Git repository" 1 )
 ) else (
-    %_ok% "Remote home '%REMOTE_HOME%' already exists"
+    %_ok% "Remote home '%REMOTE_HOME_REPO%' already exists"
 )
+
+if exist "%REMOTE_HOME%\bin" (
+    %_task% "REMOTE_HOME '%REMOTE_HOME%' must be cleaned out" 1
+    if not exist "%REMOTE_HOME%\old" (
+        mkdir "%REMOTE_HOME%\old"
+        if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to create remote home old '%REMOTE_HOME%\old' folder" 1 )
+        %_ok% "Remote home old '%REMOTE_HOME%\old' folder created"
+    ) else (
+        %_ok% "Remote home old '%REMOTE_HOME%\old' folder already exists"
+    )
+) else (
+    %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
+)
+
+call "%script_dir%\replace_or_add_line_in_file.bat" "%HOME%\bin\senv.local.pre.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"'
 
 goto:eof
 
 :get_state
 REM read %HOME%\state file content, store it in %state% local environment variable
 set "state="
-if not exist "%HOME%\state" (
-    echo._none_> "%HOME%\state"
+if not exist "%REMOTE_HOME%\state" (
+    echo._none_> "%REMOTE_HOME%\state"
 )
-for /f "delims=" %%i in (%HOME%\state) do set "state=!state! %%i"
-echo The content of '%HOME%\state' is: '%state%'
+for /f "delims=" %%i in (%REMOTE_HOME%\state) do set "state=!state! %%i"
+echo The content of '%REMOTE_HOME%\state' is: '%state%'
 goto:eof
