@@ -44,6 +44,8 @@ if not exist custom (
     mkdir custom
     copy custom_example\* custom
 )
+call check_migrate_home.bat
+exit /b 0
 if not "%HOME%"=="" (
     if not "%PRGS%"=="" (
         if not "%PROG%"=="" (
@@ -62,6 +64,7 @@ call custom\setup.ini.bat || %_fatal% "custom/setup.ini.bat error" 2
 if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 if "%HOME%"=="" ( %_fatal% "HOME must be defined in custom/setup.ini.bat" && exit /b 1 )
 if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
+if "%REMOTE_HOME%"=="" ( %_fatal% "REMOTE_HOME (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 
 echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
 echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
@@ -99,7 +102,7 @@ if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
-if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set PRGS=%PRGS%%NL%set PROG=%PROG%%NL%set HOME=%HOME%%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
+if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set "PRGS=%PRGS"%%NL%set "PROG=%PROG%"%NL%set "REMOTE_HOME=%REMOTE_HOME%"%NL%set "HOME=%HOME%"%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
 if exist custom\setup.senv.local.pre.bat ( call custom\setup.senv.local.pre.bat )
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
 if not exist "%HOME%\bin\gsenv.local.bat" ( echo @echo off%NL%%NL%REM Custom gsenv settings go here> "%HOME%\bin\gsenv.local.bat")
