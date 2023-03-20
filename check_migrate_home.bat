@@ -87,7 +87,8 @@ if exist "%REMOTE_HOME%\bin" (
     %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
 )
 
-call "%script_dir%\replace_or_add_line_in_file.bat" "%HOME%\bin\senv.local.pre.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"'
+@echo on
+call "%script_dir%\replace_or_add_line_in_file.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"' "%HOME%\bin\senv.local.pre.bat"
 
 goto:eof
 
