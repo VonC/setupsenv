@@ -74,6 +74,10 @@ if not exist "%REMOTE_HOME_REPO%" (
     %_ok% "Remote home '%REMOTE_HOME_REPO%' already exists"
 )
 
+@echo on
+call "%script_dir%\replace_or_add_line_in_file.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"' "%HOME%\bin\senv.local.pre.bat"
+goto:eof
+
 if exist "%REMOTE_HOME%\bin" (
     %_task% "REMOTE_HOME '%REMOTE_HOME%' must be cleaned out" 1
     if not exist "%REMOTE_HOME%\old" (
@@ -87,8 +91,6 @@ if exist "%REMOTE_HOME%\bin" (
     %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
 )
 
-@echo on
-call "%script_dir%\replace_or_add_line_in_file.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"' "%HOME%\bin\senv.local.pre.bat"
 
 goto:eof
 
