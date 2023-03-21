@@ -21,6 +21,7 @@ if not exist "%filename%" (
     "%_ok%" "filename '%filename%' does not exist, nothing to do"
     goto :eof
 )
+@echo on
 
 set found=false
 set found_new=false
