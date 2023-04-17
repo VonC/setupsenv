@@ -34,12 +34,10 @@ if not "%ERRORLEVEL%" == "0" (
 )
 echo %state%_copied_ > "%REMOTE_HOME%\state
 
-cd "%LOCAL_HOME%" || echo "unable to cd to LOCAL_HOME '%LOCAL_HOME%'"&& exit /b 1
-
 :nocopy
-REM make sure senv.local.pre.bat include the correct HOME path, as well as REMOTE_HOME
 
-
+REM Check if LOCAL_HOME is a Git repository
+cd "%LOCAL_HOME%" || echo "unable to cd to LOCAL_HOME '%LOCAL_HOME%'"&& exit /b 1
 if not exist "%LOCAL_HOME%\.git" (
     %_task% "Initialize git in '%LOCAL_HOME%'"
     git init
@@ -50,12 +48,14 @@ if not exist "%LOCAL_HOME%\.git" (
     %_ok% "Git repository initialized in local HOME '%LOCAL_HOME%\bin' with first commmit done"
 ) else (
     %_ok% "git already initialized in '%LOCAL_HOME%'"
+    cd
     REM Check if there is any file to be added to existing Git repository
     for /f "tokens=* delims=" %%a in ('git status --porcelain') do (
         set "gitstatus=!gitstatus!%%a"
     )
     if not "!gitstatus!"=="" (
-        %_task% "Must update '%LOCAL_HOME%' Git repository"
+        %_task% "Must update '%LOCAL_HOME%' Git repository because gitstatus='!gitstatus!'"
+        set gitstatus=
         git add .
         git commit -m "Update '%LOCAL_HOME%' Git repository"
         if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to add commit in local HOME '%LOCAL_HOME%\bin'" 1 )
@@ -65,6 +65,7 @@ if not exist "%LOCAL_HOME%\.git" (
     )
 )
 
+REM Make sure the REMOTE_HOME bare repository is ready
 set "REMOTE_HOME_REPO=%REMOTE_HOME%\home_senv.git"
 if not exist "%REMOTE_HOME_REPO%" (
     %_task% "Create remote home '%REMOTE_HOME_REPO%' bare repository"
