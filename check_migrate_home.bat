@@ -125,5 +125,5 @@ if not exist "%REMOTE_HOME%\state" (
     echo._none_> "%REMOTE_HOME%\state"
 )
 for /f "delims=" %%i in (%REMOTE_HOME%\state) do set "state=!state! %%i"
-echo The content of '%REMOTE_HOME%\state' is: '%state%'
+%_info% "The content of '%REMOTE_HOME%\state' is: '!state!'"
 goto:eof
