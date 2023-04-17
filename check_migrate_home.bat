@@ -99,12 +99,6 @@ if not "%ERRORLEVEL%" == "0" (
     )
 )
 
-call "%script_dir%\replace_or_add_line_in_file.bat" "set #HOME=#%REMOTE_HOME%#" "set #HOME=%LOCAL_HOME%#" "%LOCAL_HOME%\bin\senv.local.pre.bat"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1
-)
-echo %state%_updated_ > "%REMOTE_HOME%\state
-
 :noupdate
 goto:eof
 
