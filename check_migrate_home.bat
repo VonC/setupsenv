@@ -80,8 +80,32 @@ if not exist "%REMOTE_HOME_REPO%" (
     %_ok% "Remote home '%REMOTE_HOME_REPO%' already exists"
 )
 
-@echo on
-call "%script_dir%\replace_or_add_line_in_file.bat" "set HOME=%REMOTE_HOME%" 'set "HOME=%LOCAL_HOME%"' "%HOME%\bin\senv.local.pre.bat"
+rem @echo on
+call:get_state
+if not "%state%"=="%state:_updated_=%" (
+    %_info% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+    goto :noupdate
+)
+REM make sure senv.local.pre.bat include the correct HOME path, as well as REMOTE_HOME
+grep -q "set \"HOME=%LOCAL_HOME%:\=\\\\\"" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+if not "%ERRORLEVEL%" == "0" (
+    grep -Eq "set.*HOME.*%REMOTE_HOME:\=\\\\%" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    if not "%ERRORLEVEL%" == "0" (
+        %_task% "Must add to find LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        echo set "HOME=%LOCAL_HOME%" >> "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    ) else (
+        %_task% "Must replace REMOTE_HOME '%REMOTE_HOME%' by LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        sed -i "s/set.*HOME.*%REMOTE_HOME:\=\\\\%/set \"HOME=%LOCAL_HOME%\"/" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    )
+)
+
+call "%script_dir%\replace_or_add_line_in_file.bat" "set #HOME=#%REMOTE_HOME%#" "set #HOME=%LOCAL_HOME%#" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+if not "%ERRORLEVEL%" == "0" (
+    %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1
+)
+echo %state%_updated_ > "%REMOTE_HOME%\state
+
+:noupdate
 goto:eof
 
 if exist "%REMOTE_HOME%\bin" (
