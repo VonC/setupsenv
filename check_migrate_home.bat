@@ -8,6 +8,11 @@ set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(check_migrate_home)='%script_dir%'"
 
+where grep >nul 2>&1
+if not "%ERRORLEVEL%" == "0" (
+    %_fatal% "check_migrate_home: grep.exe is not referenced in the PATH" 1
+)
+
 set "LOCAL_HOME=%USERPROFILE%\home_senv"
 if "%HOME%"=="%LOCAL_HOME%" (
     %_ok% "HOME is already set to local private folder '%HOME%'"    
