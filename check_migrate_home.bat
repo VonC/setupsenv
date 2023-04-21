@@ -86,18 +86,40 @@ if not "%state%"=="%state:_updated_=%" (
     %_info% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
     goto :noupdate
 )
+
 REM make sure senv.local.pre.bat include the correct HOME path, as well as REMOTE_HOME
-grep -q "set \"HOME=%LOCAL_HOME%:\=\\\\\"" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+set "escLOCAL_HOME=%LOCAL_HOME:\=\\\\%"
+grep -q "set \"HOME=%escLOCAL_HOME%" "%LOCAL_HOME%\bin\senv.local.pre.bat"
 if not "%ERRORLEVEL%" == "0" (
-    grep -Eq "set.*HOME.*%REMOTE_HOME:\=\\\\%" "%LOCAL_HOME%\bin\senv.local.pre.bat"
-    if not "%ERRORLEVEL%" == "0" (
-        %_task% "Must add to find LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
-        echo set "HOME=%LOCAL_HOME%" >> "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    grep -Eq "set.*\"?HOME\s*?=" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    if not "!ERRORLEVEL!" == "0" (
+        %_task% "Must add LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        echo. >> "%LOCAL_HOME%\bin\senv.local.pre.bat" & echo set "HOME=%LOCAL_HOME%" >> "%LOCAL_HOME%\bin\senv.local.pre.bat"
+        if not "!ERRORLEVEL!" == "0" (
+            %_fatal% "Unable to add LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'" 1
+        ) else (
+            %_ok% "LOCAL_HOME '%LOCAL_HOME%' added in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        )
     ) else (
         %_task% "Must replace REMOTE_HOME '%REMOTE_HOME%' by LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
-        sed -i "s/set.*HOME.*%REMOTE_HOME:\=\\\\%/set \"HOME=%LOCAL_HOME%\"/" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+        sed -i "s/set\s*HOME=.*/set \"HOME=%escLOCAL_HOME%\"/" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+        set "el=!ERRORLEVEL!"
+        sed -i "s/set\s*\"HOME=.*/set \"HOME=%escLOCAL_HOME%\"/" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+        set "el="!el!!ERRORLEVEL!"
+        if "!el!" == "11" (
+            %_fatal% "Unable to replace REMOTE_HOME '%REMOTE_HOME%' by LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'" 1
+        ) else (
+            %_ok% "REMOTE_HOME '%REMOTE_HOME%' replaced by LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        )
+    )
+) else (
+    %_ok% "HOME is correctly set to LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+)
+
     )
 )
+
+echo %state%_updated_ > "%REMOTE_HOME%\state
 
 :noupdate
 goto:eof
