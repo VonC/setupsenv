@@ -44,12 +44,14 @@ if not exist custom (
     mkdir custom
     copy custom_example\* custom
 )
-call check_migrate_home.bat
-exit /b 0
 if not "%HOME%"=="" (
     if not "%PRGS%"=="" (
         if not "%PROG%"=="" (
             set senv_noconfirm=1
+            where grep >nul 2>&1
+            if "!ERRORLEVEL!" == "0" (
+                call check_migrate_home
+            )
         )
     )
 )
