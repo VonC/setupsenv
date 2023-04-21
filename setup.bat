@@ -203,7 +203,7 @@ set profile=
 set setupsdirbat=
 set setupsdir=
 call "%HOME%\bin\senv.bat"
-
+%_ok% "senv.bat called: You are good to go"
 goto:eof
 
 :install
