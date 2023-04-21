@@ -77,8 +77,9 @@ if not "%drRefresh%" == "" (
     %_ok% "Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
 )
 
-echo @echo off>"%script_dir:\custom=%\driverLetter.bat"
-echo set "driveLetter=%driveLetter%">>"%script_dir:\custom=%\driverLetter.bat"
+set "dl=%script_dir:\custom=%\driverLetter.bat"
+echo @echo off>"%dl%"
+echo set "driveLetter=%driveLetter%">>"%dl%"
 endlocal & set driveLetter=%driveLetter%
 
 goto:eof
