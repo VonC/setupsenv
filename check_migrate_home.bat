@@ -116,12 +116,41 @@ if not "%ERRORLEVEL%" == "0" (
     %_ok% "HOME is correctly set to LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
 )
 
+set "escREMOTE_HOME=%REMOTE_HOME:\=\\\\%"
+grep -q "set \"REMOTE_HOME=%escREMOTE_HOME%" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+if not "%ERRORLEVEL%" == "0" (
+    %_task% "Must add REMOTE_HOME '%REMOTE_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+    echo. >> "%LOCAL_HOME%\bin\senv.local.pre.bat" & echo set "REMOTE_HOME=%REMOTE_HOME%" >> "%LOCAL_HOME%\bin\senv.local.pre.bat"
+    if not "!ERRORLEVEL!" == "0" (
+        %_fatal% "Unable to add REMOTE_HOME '%REMOTE_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'" 1
+    ) else (
+        %_ok% "REMOTE_HOME '%REMOTE_HOME%' added in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
     )
 )
 
 echo %state%_updated_ > "%REMOTE_HOME%\state
 
 :noupdate
+
+call:get_state
+if not "%state%"=="%state:_nosenvupdate_=%" (
+    %_info% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+    goto :nosenvupdate
+)
+rem @echo on
+set "escLOCAL_HOME=%LOCAL_HOME:\=\\\\%"
+grep -q "call \"%escLOCAL_HOME%\\\\bin\\\\senv.bat" "%USERPROFILE%\senv.bat"
+if not "%ERRORLEVEL%" == "0" (
+        %_task% "Must replace REMOTE_HOME '%REMOTE_HOME%' path by LOCAL_HOME '%LOCAL_HOME%' path in '%USERPROFILE%\senv.bat'"
+        sed -i "s/call.*/call \"%escLOCAL_HOME%\\\\bin\\\\senv.bat\"/" "%USERPROFILE%\senv.bat"
+) else (
+    %_ok% "'%USERPROFILE%\senv.bat' already references senv.bat from LOCAL_HOME '%LOCAL_HOME%\bin'"
+)
+
+echo %state%_nosenvupdate_ > "%REMOTE_HOME%\state
+
+:nosenvupdate
+
 goto:eof
 
 if exist "%REMOTE_HOME%\bin" (
