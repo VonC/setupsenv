@@ -30,7 +30,7 @@ mkdir "%LOCAL_HOME%" 2>NUL:
 set "REMOTE_HOME=%HOME%"
 call:get_state
 if not "%state%"=="%state:_copied_=%" (
-    %_info% "Skip copy/update '%HOME%' to '%LOCAL_HOME%' because state '%state%'"
+    %_ok% "Skip copy/update '%HOME%' to '%LOCAL_HOME%' because state '%state%'"
     goto :nocopy 
 )
 
@@ -86,7 +86,7 @@ if not exist "%REMOTE_HOME_REPO%" (
 rem @echo on
 call:get_state
 if not "%state%"=="%state:_updated_=%" (
-    %_info% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+    %_ok% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
     goto :noupdate
 )
 
@@ -137,7 +137,7 @@ echo %state%_updated_ > "%REMOTE_HOME%\state
 
 call:get_state
 if not "%state%"=="%state:_nosenvupdate_=%" (
-    %_info% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+    %_ok% "Skip env update '%LOCAL_HOME%\bin\senv.local.pre.bat'"
     goto :nosenvupdate
 )
 rem @echo on
