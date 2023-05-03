@@ -19,7 +19,10 @@ if "%HOME%"=="%LOCAL_HOME%" (
     if "%REMOTE_HOME%" == "" (
         %_fatal% "REMOTE_HOME is not defined" 1
     )
-    goto:eof
+    REM if FORCE is not set, end the program right there
+    if "%FORCE%" == "" (
+        goto:eof
+    )
 ) else (
     %_task% "HOME '%HOME%' must be migrated to is '%LOCAL_HOME%'"
 )
