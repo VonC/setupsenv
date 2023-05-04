@@ -27,7 +27,16 @@ if "%HOME%"=="%LOCAL_HOME%" (
     %_task% "HOME '%HOME%' must be migrated to is '%LOCAL_HOME%'"
 )
 mkdir "%LOCAL_HOME%" 2>NUL:
-set "REMOTE_HOME=%HOME%"
+
+rem if REMOTE_HOME is not defined or empty, set it to home which is still a remote one
+if "%REMOTE_HOME%" == "" (
+    set "REMOTE_HOME=%HOME%"
+)
+rem At this point, REMOTE_HOME mut NOT be equal to LOCAL_HOME
+if "%REMOTE_HOME%" == "%LOCAL_HOME%" (
+    %_fatal% "REMOTE_HOME '%REMOTE_HOME%' must not be equal to LOCAL_HOME '%LOCAL_HOME%'" 1
+)
+
 call:get_state
 if not "%state%"=="%state:_copied_=%" (
     %_ok% "Skip copy/update '%HOME%' to '%LOCAL_HOME%' because state '%state%'"
