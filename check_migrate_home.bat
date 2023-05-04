@@ -49,7 +49,7 @@ rem echo robocopy "%HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:1
 if not "%ERRORLEVEL%" == "0" ( 
     %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1 
 )
-echo %state%_copied_ > "%REMOTE_HOME%\state
+call:set_state _copied_
 
 :nocopy
 
@@ -139,8 +139,7 @@ if not "%ERRORLEVEL%" == "0" (
         %_ok% "REMOTE_HOME '%REMOTE_HOME%' added in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
     )
 )
-
-echo %state%_updated_ > "%REMOTE_HOME%\state
+call:set_state _updated_
 
 :noupdate
 
@@ -158,8 +157,7 @@ if not "%ERRORLEVEL%" == "0" (
 ) else (
     %_ok% "'%USERPROFILE%\senv.bat' already references senv.bat from LOCAL_HOME '%LOCAL_HOME%\bin'"
 )
-
-echo %state%_nosenvupdate_ > "%REMOTE_HOME%\state
+call:set_state _nosenvupdate_
 
 :nosenvupdate
 
@@ -173,7 +171,7 @@ if not "%state%"=="%state:_cleaned_=%" (
 
 if not exist "%REMOTE_HOME%\bin" (
     %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
-    echo %state%_cleaned_ > "%REMOTE_HOME%\state
+    call:set_state _cleaned_
     goto :cleandone
 )
 %_task% "REMOTE_HOME '%REMOTE_HOME%' must be cleaned out" 1
@@ -189,7 +187,7 @@ if not "%OKRC%" == "0" (
     %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%OKRC%'" 1
 )
 %_ok% "REMOTE_HOME '%REMOTE_HOME%' cleaned out"
-echo %state%_cleaned_ > "%REMOTE_HOME%\state
+call:set_state _cleaned_
 
 :cleandone
 goto:eof
