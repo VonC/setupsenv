@@ -195,7 +195,7 @@ echo %state%_cleaned_ > "%REMOTE_HOME%\state
 goto:eof
 
 :get_state
-REM read %HOME%\state file content, store it in %state% local environment variable
+REM read %REMOTE_HOME%\state file content, store it in %state% local environment variable
 set "state="
 if not exist "%REMOTE_HOME%\state" (
     echo._none_> "%REMOTE_HOME%\state"
@@ -203,3 +203,8 @@ if not exist "%REMOTE_HOME%\state" (
 for /f "delims=" %%i in (%REMOTE_HOME%\state) do set "state=!state! %%i"
 %_info% "The content of '%REMOTE_HOME%\state' is: '!state!'"
 goto:eof
+
+:set_state
+REM write the current local %state% environment variable to %REMOTE_HOME%\state, after having removed any space in it.
+set "state=%state: =%%1"
+echo %state%> "%REMOTE_HOME%\state
