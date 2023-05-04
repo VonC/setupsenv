@@ -163,22 +163,35 @@ echo %state%_nosenvupdate_ > "%REMOTE_HOME%\state
 
 :nosenvupdate
 
-goto:eof
-
-if exist "%REMOTE_HOME%\bin" (
-    %_task% "REMOTE_HOME '%REMOTE_HOME%' must be cleaned out" 1
-    if not exist "%REMOTE_HOME%\old" (
-        mkdir "%REMOTE_HOME%\old"
-        if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to create remote home old '%REMOTE_HOME%\old' folder" 1 )
-        %_ok% "Remote home old '%REMOTE_HOME%\old' folder created"
-    ) else (
-        %_ok% "Remote home old '%REMOTE_HOME%\old' folder already exists"
-    )
-) else (
-    %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
+call:get_state
+if not "%state%"=="%state:_cleaned_=%" (
+    %_ok% "Skip cleaning out REMOTE_HOME '%REMOTE_HOME%' because state '%state%'"
+    goto :cleandone
 )
 
+%_info% "Check cleanup REMOTE_HOME '%REMOTE_HOME%'"
 
+if not exist "%REMOTE_HOME%\bin" (
+    %_ok% "REMOTE_HOME '%REMOTE_HOME%' is clean"
+    echo %state%_cleaned_ > "%REMOTE_HOME%\state
+    goto :cleandone
+)
+%_task% "REMOTE_HOME '%REMOTE_HOME%' must be cleaned out" 1
+if not exist "%REMOTE_HOME%\old" (
+    mkdir "%REMOTE_HOME%\old"
+    if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to create remote home old '%REMOTE_HOME%\old' folder" 1 )
+    %_ok% "Remote home old '%REMOTE_HOME%\old' folder created"
+) else (
+    %_ok% "Remote home old '%REMOTE_HOME%\old' folder already exists"
+)
+(robocopy "%REMOTE_HOME%" "%REMOTE_HOME%\old" /E /MOVE /XF state /XD old /XD home_senv.git /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET OKRC=0 else set OKRC=%ERRORLEVEL%
+if not "%OKRC%" == "0" (
+    %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%OKRC%'" 1
+)
+%_ok% "REMOTE_HOME '%REMOTE_HOME%' cleaned out"
+echo %state%_cleaned_ > "%REMOTE_HOME%\state
+
+:cleandone
 goto:eof
 
 :get_state
