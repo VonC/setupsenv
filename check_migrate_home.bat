@@ -44,8 +44,8 @@ if not "%state%"=="%state:_copied_=%" (
 )
 
 %_info% "Copy/update '%HOME%' to '%LOCAL_HOME%'"
-rem echo robocopy "%HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS
-(robocopy "%REMOTE_HOME%" "%LOCAL_HOME%" /XD "*.git" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL=0
+rem echo robocopy "%HOME%" "%LOCAL_HOME%" /XD "*.git"  /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS
+(robocopy "%REMOTE_HOME%" "%LOCAL_HOME%" /XD "*.git" /XD "old" /E /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL=0
 if not "%ERRORLEVEL%" == "0" ( 
     %_fatal% "Unable to copy REMOTE_HOME '%REMOTE_HOME%' to '%LOCAL_HOME%': errorlevel '%ERRORLEVEL%'" 1 
 )
