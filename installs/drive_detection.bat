@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 if "%script_dir%" == "" (
     for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\..\batcolors\echos_macros.bat
+    call !script_dir!\..\batcolors\echos_macros.bat export
 )
 
 :detect_drive
@@ -14,6 +14,7 @@ set "driveUNCPathEsc=%driveUNCPath:\=\\%"
 set "driveUNCPathEsc=%driveUNCPathEsc:$=\$%"
 rem echo driveUNCPath='%driveUNCPath%', driveUNCPathEsc='%driveUNCPathEsc%'
 
+:search_driveLetter
 set "driveLetter="
 set "drRefresh="
 for /f "tokens=* delims=" %%i in ('net use') do (
@@ -63,9 +64,21 @@ for /f "tokens=* delims=" %%i in ('net use') do (
     )
 )
 :found
-if "%driveLetter%" == "" (
-    %_fatal% "No drive letter found for driveUNCPath '%driveUNCPath%'" 119
+if not "%driveLetter%" == "" ( goto:drive_found )
+%_warning% "No drive letter found for driveUNCPath '%driveUNCPath%'"
+:: Test if UNC path is accessible by using dir command
+dir /b "%unc_path%" >nul 2>nul || ( %_fatal% "Directory '%driveUNCPath%' is not accessible." 119 )
+%_task% "Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
+net use * "%driveUNCPath%" >nul 2>nul
+set "NEEL=%ERRORLEVEL%"
+if "%NEEL%"=="0" (
+    %_ok% "Drive mapped successfully for driveUNCPath '%driveUNCPath%'."
+    goto:search_driveLetter
+) else (
+    %_fatal% "Failed to map drive for driveUNCPath '%driveUNCPath%'. Exiting..." %NEEL%
 )
+
+:drive_found
 %_info% "Drive found for '%driveUNCPath%': '%driveLetter%'"
 if not "%drRefresh%" == "" (
     %_task% "Must refresh '%driveLetter%'"
