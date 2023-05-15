@@ -90,7 +90,9 @@ if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
 if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
 if not exist "%HOME%\.config\git\config" ( copy "%script_dir%\.config.git.config" "%HOME%\.config\git\config" )
 
-if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
+if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
+    %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
+) else (
     if not exist "%HOME%\bin\_senv.custom.%profile%.doskey" (
         copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin"
         %_info% "Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
@@ -99,13 +101,16 @@ if exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
     ) else (
         %_info% "Profile alias alias already updated: flag '%HOME%\bin\_senv.custom.%profile%.doskey' present"
     )
-) else (
-    %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
 if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set "PRGS=%PRGS"%%NL%set "PROG=%PROG%"%NL%set "REMOTE_HOME=%REMOTE_HOME%"%NL%set "HOME=%HOME%"%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
-if exist custom\setup.senv.local.pre.bat ( call custom\setup.senv.local.pre.bat )
+if not exist "%script_dir%\custom\setup.senv.local.pre.bat" (
+    %_info% "No '%script_dir%\custom\setup.senv.local.pre.bat' found"
+) else (
+    %_info% "Call "%script_dir%\custom\setup.senv.local.pre.bat"
+    call "%script_dir%\custom\setup.senv.local.pre.bat"
+)
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
 if not exist "%HOME%\bin\gsenv.local.bat" ( echo @echo off%NL%%NL%REM Custom gsenv settings go here> "%HOME%\bin\gsenv.local.bat")
 if not exist "%HOME%\.gitconfig" ( copy "%script_dir%\.gitconfig" "%HOME%\.gitconfig" )
