@@ -10,7 +10,7 @@ cdl=cd /d %USERPROFILE%\Downloads
 pz=%pz%\peazip.exe $*
 pzx=%sz% x -aos -o$2 -pdefault -sccUTF-8 ^"$1^"
 pzc=%sz% a -tzip -mm=Deflate -mmt=on -mx5 -w "$2" "$1"
-senv=call "%HOME%\bin\senv.bat"
+senv=call "%USERPROFILE%\senv.bat"
 
 vscode="%vscodei%\bin\code.cmd" $*
 
