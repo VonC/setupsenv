@@ -8,7 +8,7 @@ set "bc=%script_dir%\..\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(bundle)='%script_dir%'"
 
-if "%1" == "" (
+if "%1"=="" (
     %_fatal% "Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
 )
 
@@ -35,12 +35,12 @@ if not exist senv (
 
 for /f "delims=" %%x in ('git -C "%script_dir%" status --porcelain') do set "st=%%x"
 rem goto:skipcl
-if not "%st%" == "" (
+if not "%st%"=="" (
     %_fatal% "Not a clean git status in '%script_dir%'" 1
     rem %_error% "Not a clean git status in '%script_dir%'" 1
 )
 for /f "delims=" %%x in ('git -C "%script_dir%\.." status --porcelain') do set "st=%%x"
-if not "%st%" == "" (
+if not "%st%"=="" (
     %_fatal% "Not a clean git status in '%script_dir%\..'" 1
     rem %_error% "Not a clean git status in '%script_dir%\..'" 1
 )
@@ -55,7 +55,7 @@ if exist "%script_dir%\..\..\build.pre.bat" ( call "%script_dir%\..\..\build.pre
 del senv_%1-zip.exe
 %_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
 %sz% a -sfx7z.sfx senv_%1-zip.exe senv
-if not "%ERRORLEVEL%" == "0" (
+if not "%ERRORLEVEL%"=="0" (
      %_fatal% "Unable 7z '%script_dir%\..\..\senv' to '%CD%' 'senv_%1-zip.exe'" && exit /b 1
 )
 
@@ -74,7 +74,7 @@ set OK="KO"
     set OK=%ERRORLEVEL%
 )
 REM echo "OK='%OK%' '!OK!'"
-if not "%OK%" == "ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
+if not "%OK%"=="ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
 
 copy /Y "%script_dir%\version" "%setupsdir%\..\version"
 if errorlevel 1 (
@@ -109,7 +109,7 @@ if errorlevel 1 (
 )
 
 
-if "%setupsdirsenv%" == "" (
+if "%setupsdirsenv%"=="" (
     %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
 )
 
