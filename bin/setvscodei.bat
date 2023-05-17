@@ -29,7 +29,7 @@ for /f  %%a in ('alias vscode') do (
 rem echo vv='%vv%' '%vscodei%'
 
 if not exist "%vscodei%" (
-	if "%ignorevscode%" == "" (
+	if "%ignorevscode%"=="" (
 		%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation'. Try and set env var 'vscodei' to the right path in User environment variable" 13
 	)
 )

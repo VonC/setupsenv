@@ -130,7 +130,7 @@ set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
-if not "%st%" == "" (
+if not "%st%"=="" (
     %_info% "Save local modification of '%HOME%\bin'"
     rem %_fatal% "no local save" 111
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
@@ -160,7 +160,7 @@ set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\bin\.git\config" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
-if not "%st%" == "" (
+if not "%st%"=="" (
     %_info% "Save new updates of '%HOME%\bin'"
     rem %_fatal% "no new update save" 112
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
@@ -178,7 +178,7 @@ if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
 if exist "%setupsdir%\gitcred.exe" (
     %_info% "Copy/update %HOME%\bin\gitcred.exe from %setupsdir%"
     (robocopy "%setupsdir%" "%HOME%\bin" "gitcred.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-    if not "%ERRORLEVEL%" == "0" ( %_warning% "Unable to copy '%setupsdir%\gitcred.exe' to '%HOME%\bin\'" && exit /b 0)
+    if not "%ERRORLEVEL%"=="0" ( %_warning% "Unable to copy '%setupsdir%\gitcred.exe' to '%HOME%\bin\'" && exit /b 0)
     copy /Y "%HOME%\bin\gitcred.exe" "%HOME%\bin\git-cred.exe"
     %_ok% "'gitcred.exe' in '%HOME%\bin\' updated from '%setupsdir%'"
 )

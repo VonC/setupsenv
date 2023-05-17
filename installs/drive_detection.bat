@@ -1,7 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
 
-if "%script_dir%" == "" (
+if "%script_dir%"=="" (
     for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
     call !script_dir!\..\batcolors\echos_macros.bat export
 )
@@ -31,18 +31,18 @@ for /f "tokens=* delims=" %%i in ('net use') do (
             set "drl=%%j"
             set "drp=%%k"
             set "drRefresh="
-            if "!f!" == "Non" (
+            if "!f!"=="Non" (
                 set "drRefresh=1"
                 set "drl=%%l"
                 set "drp=%%m"
             ) else (
-                if "!f::=!" == "%%j" (
+                if "!f::=!"=="%%j" (
                     set "drRefresh=1"
                     set "drl=%%k"
                     set "drp=%%l"
                 )
             )
-            if "%%j" == "OK" (
+            if "%%j"=="OK" (
                 set "drRefresh="
             )
             rem set "res=!dr::=" & set "res=!!"
@@ -57,14 +57,14 @@ for /f "tokens=* delims=" %%i in ('net use') do (
         )
         rem @echo off
         rem echo drl='!drl!', drp='!drp!' ^(drRefresh='!drRefresh!'^) vs driveUNCPath '%driveUNCPath%'
-        if "!drp!" == "%driveUNCPath%" (
+        if "!drp!"=="%driveUNCPath%" (
             set "driveLetter=!drl!"
             goto:found
         )
     )
 )
 :found
-if not "%driveLetter%" == "" ( goto:drive_found )
+if not "%driveLetter%"=="" ( goto:drive_found )
 %_warning% "No drive letter found for driveUNCPath '%driveUNCPath%'"
 :: Test if UNC path is accessible by using dir command
 dir /b "%unc_path%" >nul 2>nul || ( %_fatal% "Directory '%driveUNCPath%' is not accessible." 119 )
@@ -80,7 +80,7 @@ if "%NEEL%"=="0" (
 
 :drive_found
 %_info% "Drive found for '%driveUNCPath%': '%driveLetter%'"
-if not "%drRefresh%" == "" (
+if not "%drRefresh%"=="" (
     %_task% "Must refresh '%driveLetter%'"
     call :ActivateMappedNetworkDrive "%driveLetter%"
     dir "%driveLetter%" 1>NUL 2>NUL

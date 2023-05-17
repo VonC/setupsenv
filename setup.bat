@@ -49,7 +49,7 @@ if not "%HOME%"=="" (
         if not "%PROG%"=="" (
             set senv_noconfirm=1
             where grep >nul 2>&1
-            if "!ERRORLEVEL!" == "0" (
+            if "!ERRORLEVEL!"=="0" (
                 call check_migrate_home
             )
         )
@@ -122,18 +122,18 @@ if not exist "%bc%\echos_macros.bat"  (copy "%script_dir%\batcolors\*" "%bc%" )
 
 rem @echo on
 set setupsdirbat="setupsdir.bat"
-if not "%profile%" == "" (
+if not "%profile%"=="" (
     set "setupsdirbat=setupsdir_%profile%.bat"
 )
 set "locald=%PROG%\senv_setups"
-if "%setupsdir%" == "" (
+if "%setupsdir%"=="" (
     if exist "%script_dir%\setups" (
         set "setupsdir=%script_dir%\setups"
     ) else if exist "%script_dir%\custom\%setupsdirbat%" (
         %_info% "call '%script_dir%\custom\%setupsdirbat%'"
         call "%script_dir%\custom\%setupsdirbat%"
     )
-    if "!setupsdir!" == "" (
+    if "!setupsdir!"=="" (
         %_fatal% "Define '%script_dir%\custom\%setupsdirbat%' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
     )
 )
@@ -268,7 +268,7 @@ if not exist "%PRGS%\setup\" (
 if not exist "%PRGS%\setup\%fname%" (
     %_info% "Copying '%fname%' from '%setupsdir%'"
     (robocopy "%setupsdir%" "%PRGS%\setup" "%fname%" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-    if not "%ERRORLEVEL%" == "0" ( %_fatal% "Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
+    if not "%ERRORLEVEL%"=="0" ( %_fatal% "Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
     %_ok% "Setup '%fname%' copied locally"
 )
 set install_ok=false

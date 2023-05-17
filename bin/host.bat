@@ -6,7 +6,7 @@ for /F "delims=" %%i in ('hostname') do set "hostname=%%i"
 rem echo hostname='%hostname%'
 
 for /F "delims=" %%i in ('ping -4 -n 1 %hostname%') do (
-    if "!fhostname!" == "" (
+    if "!fhostname!"=="" (
         set "fhostname=%%i"
     )
 )

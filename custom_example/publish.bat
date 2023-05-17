@@ -39,7 +39,7 @@ if errorlevel 1 (
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
 set COUNT=0
 for /F "tokens=*" %%N in (a) do set /a COUNT+=1
-if not "%count%" == "1" (
+if not "%count%"=="1" (
         type a
         del a 2>NUL
         %_fatal%  "'%count%' (More than one match) in '%sfound%' for pattern '%1'" 7
@@ -48,7 +48,7 @@ for /F "delims=" %%f in (a) do ( set fname=%%f)
 %_info% "One match found in '%sfound%': '%fname%'"
 del a
 
-if "%sfound%" == "Downloads" (
+if "%sfound%"=="Downloads" (
     %_info% "Must copy match '%fname%' from Downloads to setup"
     call:rbc ..\..\setup ..\..\dl
 )
@@ -67,32 +67,32 @@ for /L %%n in (1 1 !output_cnt!) DO (
 
 rem @echo on
 set "name="
-if not "%name%" == "" ( goto:execrbcs )
-if not "%fname:peazip_portable-=%" == "%fname%" ( set "name=peazips" )
-if not "%fname:PortableGit-=%" == "%fname%" ( set "name=gits" )
-if not "%fname:node-v10.=%" == "%fname%" ( set "name=nodes" )
-if not "%fname:node-v14.=%" == "%fname%" ( set "name=nodes14" )
-if not "%fname:gitcred=%" == "%fname%" ( set "name=gits" )
-if not "%fname:syncprompt=%" == "%fname%" ( set "name=syncprompts" )
-if not "%fname:ZoomIt-=%" == "%fname%" ( set "name=zis" )
-if not "%fname:ProcessExplorer-=%" == "%fname%" ( set "name=pes" )
-if not "%fname:px-=%" == "%fname%" ( set "name=pxs" )
-if not "%fname:putty-=%" == "%fname%" ( set "name=puttys" )
-if not "%fname:shellcheck-=%" == "%fname%" ( set "name=shellchecks" )
-if not "%fname:VSCodeUserSetup=%" == "%fname%" ( set "name=vscodes" )
-if not "%fname:WinSCP-=%" == "%fname%" ( set "name=winscps" )
-if not "%fname:MobaXterm=%" == "%fname%" ( set "name=moba" )
-if not "%fname:VSCode-win32-x64=%" == "%fname%" ( set "name=vscodes" )
-if not "%fname:go1=%" == "%fname%" ( set "name=gos" )
-if not "%fname:m2_=%" == "%fname%" ( set "name=mavens" )
-if not "%fname:eclipse-=%" == "%fname%" ( set "name=eclipses" )
-if not "%fname:.jks=%" == "%fname%" ( set "name=eclipses" )
-if "%name%" == "" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
+if not "%name%"=="" ( goto:execrbcs )
+if not "%fname:peazip_portable-=%"=="%fname%" ( set "name=peazips" )
+if not "%fname:PortableGit-=%"=="%fname%" ( set "name=gits" )
+if not "%fname:node-v10.=%"=="%fname%" ( set "name=nodes" )
+if not "%fname:node-v14.=%"=="%fname%" ( set "name=nodes14" )
+if not "%fname:gitcred=%"=="%fname%" ( set "name=gits" )
+if not "%fname:syncprompt=%"=="%fname%" ( set "name=syncprompts" )
+if not "%fname:ZoomIt-=%"=="%fname%" ( set "name=zis" )
+if not "%fname:ProcessExplorer-=%"=="%fname%" ( set "name=pes" )
+if not "%fname:px-=%"=="%fname%" ( set "name=pxs" )
+if not "%fname:putty-=%"=="%fname%" ( set "name=puttys" )
+if not "%fname:shellcheck-=%"=="%fname%" ( set "name=shellchecks" )
+if not "%fname:VSCodeUserSetup=%"=="%fname%" ( set "name=vscodes" )
+if not "%fname:WinSCP-=%"=="%fname%" ( set "name=winscps" )
+if not "%fname:MobaXterm=%"=="%fname%" ( set "name=moba" )
+if not "%fname:VSCode-win32-x64=%"=="%fname%" ( set "name=vscodes" )
+if not "%fname:go1=%"=="%fname%" ( set "name=gos" )
+if not "%fname:m2_=%"=="%fname%" ( set "name=mavens" )
+if not "%fname:eclipse-=%"=="%fname%" ( set "name=eclipses" )
+if not "%fname:.jks=%"=="%fname%" ( set "name=eclipses" )
+if "%name%"=="" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
 
 :execrbcs
 call:execcmd "ls -1 setupsdir*_*"
 %_info% "output_cnt='%output_cnt%' or '!output_cnt!'"
-if "%output_cnt%" == "0" (
+if "%output_cnt%"=="0" (
     cd
     %_fatal% "No s*_* detected in custom" 1
 )
@@ -129,7 +129,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
         %_task% "Check name"
         call:check_name
         rem %_info% "name_ok2='!name_ok!'"
-        if "!name_ok!" == "false" (
+        if "!name_ok!"=="false" (
             %_warning% "Name '%name%' not part of install_!profile!.list: skip copy"
             if exist "!spath!\%fname%" (
                 %_warning% "Must delete '%fname%' in '!spath!'"
@@ -150,11 +150,11 @@ set "name_ok=false"
 grep "%name%" "install_!profile!.list"
 if not errorlevel 1 (
     set "name_ok=true"
-) else if "%name%" == "gits" (
+) else if "%name%"=="gits" (
     set "name_ok=true"
-) else if "%name%" == "vscodes" (
+) else if "%name%"=="vscodes" (
     set "name_ok=true"
-) else if "%name%" == "peazips" (
+) else if "%name%"=="peazips" (
     set "name_ok=true"
 )
 rem %_info% "name_ok='%name_ok%'"
@@ -163,7 +163,7 @@ goto:eof
 :rbc
 set "dst=%1"
 set "src=%2"
-if "%src%" == "" ( set "src=..\..\setup" )
+if "%src%"=="" ( set "src=..\..\setup" )
 %_info% Robocopy '%fname%' from '%src%' to '%dst%'
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 goto:eof

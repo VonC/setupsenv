@@ -6,11 +6,11 @@ if errorlevel 1 (
   goto:eof
 )
 
-if "%1" == ":save_gitconfig" (
+if "%1"==":save_gitconfig" (
     call :save_gitconfig %*
     goto:eof
 )
-if "%1" == ":restore_gitconfig" (
+if "%1"==":restore_gitconfig" (
     call :restore_gitconfig %*
     goto:eof
 )
