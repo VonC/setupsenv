@@ -11,6 +11,12 @@ rem https://stackoverflow.com/questions/28810194/how-to-pass-a-list-of-strings-t
 rem @SET ASCII27=← 
 if "%1"=="" ( goto:eof )
 
+if "%script_dir%"=="" (
+    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+    call !script_dir!\batcolors\echos_macros.bat export
+)
+rem @echo on
+
 set "p=%~1"
 set "f=%~2"
 set "sln=%~3"
