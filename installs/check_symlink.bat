@@ -22,6 +22,8 @@ set "f=%~2"
 set "sln=%~3"
 if "%sln%"=="" ( set "sln=current" )
 
+if "%PRGS%"=="" ( %_fatal% "No PRGS defined" 1 )
+
 set "drive=%PRGS:~0,1%"
 rem %_info% "drive '%drive%'" 1
 if not "%drive%"=="C" (
