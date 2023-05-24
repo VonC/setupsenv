@@ -12,12 +12,14 @@ if "%1"=="" (
     %_fatal% "Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
 )
 
-set s="setupsdir_%1.bat"
+set "profile=%1"
+
+set s="setupsdir_%profile%.bat"
 if not exist "%script_dir%\%s%" (
     %_fatal% "setupsdir script '%s%' does not exist" 2
 )
 
-echo %1>profile
+echo %profile%>profile
 
 git config --unset user.name
 git config --unset user.email
@@ -52,20 +54,36 @@ rem %_fatal% "stop for now" 1
 
 if exist "%script_dir%\..\..\build.pre.bat" ( call "%script_dir%\..\..\build.pre.bat" )
 
-del senv_%1-zip.exe
-%_info% "zip '%script_dir%\..\..\senv' to 'senv_%1.zip'"
-%sz% a -sfx7z.sfx senv_%1-zip.exe senv
-if not "%ERRORLEVEL%"=="0" (
-     %_fatal% "Unable 7z '%script_dir%\..\..\senv' to '%CD%' 'senv_%1-zip.exe'" && exit /b 1
-)
-
-set profile=%1
 cd senv
 call gcuvc
 cd custom
 call gcu
 call "%script_dir%\setupsdir_%profile%.bat"
 %_info% "setupsdir='%setupsdir%'"
+if not exist "%setupsdir%\..\version" (
+    %_ok% "New publication"
+    goto:build_and_publish
+)
+for /f "delims=" %%a in ('type "%setupsdir%\..\version"') do (
+    if "%%a"=="%vcsenv%" (
+        %_ok% "Already published senv '%profile%' with '%vcsenv%'"
+        goto:eof
+    ) else (
+        %_task% "Update senv '%profile%' with '%vcsenv%' (from '%%a')"
+    )
+    goto :build_and_publish
+)
+
+:build_and_publish
+cd "%script_dir%\..\.."
+del "senv_%profile%-zip.exe"
+%_info% "zip '%script_dir%\..\..\senv' to 'senv_%profile%.zip'"
+%sz% a -sfx7z.sfx senv_%profile%-zip.exe senv
+if not "%ERRORLEVEL%"=="0" (
+     %_fatal% "Unable 7z '%script_dir%\..\..\senv' to '%CD%' 'senv_%profile%-zip.exe'" && exit /b 1
+)
+cd "%script_dir%"
+
 %_warning% "Update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
 set OK="KO"
 (robocopy "%script_dir%\..\.." "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 (
@@ -110,11 +128,11 @@ if errorlevel 1 (
 
 
 if "%setupsdirsenv%"=="" (
-    %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%1.bat'" && exit /b 1)
+    %_fatal% "setupsdirsenv empty. Check '%script_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
 
-echo call remote_setup.bat %1>%setupsdirsenv%\s.bat
-rem echo call %setupsdirsenv%\remote_setup.bat %1>%setupsdir%\s.bat
+echo call remote_setup.bat %profile%>%setupsdirsenv%\s.bat
+rem echo call %setupsdirsenv%\remote_setup.bat %profile%>%setupsdir%\s.bat
 echo deep>profile
 
 if exist "%script_dir%\..\..\build.post.bat" ( call "%script_dir%\..\..\build.post.bat" )
