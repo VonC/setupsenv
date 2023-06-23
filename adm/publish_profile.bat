@@ -56,6 +56,8 @@ call:publishOne "WinSCP-"
 call:publishOne "MobaXterm"
 call:publishOne "node-v10."
 call:publishOne "node-v14."
+call:publishOne "node-v14."
+call:publishOne "ideaIC"
 endlocal
 goto:eof
 
