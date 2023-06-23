@@ -103,6 +103,14 @@ set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=..\..\setup" )
 %_info% "Robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+REM Explain the robocopy options:
+REM /Z: copy in restartable mode (survive network glitches)
+REM /R:5: retry 5 times
+REM /W:5: wait 5 seconds between retries
+REM /TBD: wait for sharenames to be defined (useful for network drives)
+REM /MT:16: use 16 threads
+REM /NJH: no job header
+REM /NJS: no job summary
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 goto:eof
 
