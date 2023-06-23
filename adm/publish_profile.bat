@@ -67,28 +67,9 @@ for /F "delims=" %%f in ('dir /OD /b ..\..\setup^|findstr %pattern%^|tail -1') d
 %_info% "fname: '%fname%'"
 if "%fname%"=="" ( %_fatal% "Unknown name pattern '%pattern%'" 23 )
 
-
-rem @echo on
 set "name="
-if not "%fname:peazip_portable-=%"=="%fname%" ( set "name=peazips" )
-if not "%fname:PortableGit-=%"=="%fname%" ( set "name=gits" )
-if not "%fname:node-v10.=%"=="%fname%" ( set "name=nodes" )
-if not "%fname:node-v14.=%"=="%fname%" ( set "name=nodes14" )
-if not "%fname:gitcred=%"=="%fname%" ( set "name=gits" )
-if not "%fname:ZoomIt-=%"=="%fname%" ( set "name=zis" )
-if not "%fname:ProcessExplorer-=%"=="%fname%" ( set "name=pes" )
-if not "%fname:px-=%"=="%fname%" ( set "name=pxs" )
-if not "%fname:putty-=%"=="%fname%" ( set "name=puttys" )
-if not "%fname:shellcheck-=%"=="%fname%" ( set "name=shellchecks" )
-if not "%fname:VSCodeUserSetup=%"=="%fname%" ( set "name=vscodes" )
-if not "%fname:WinSCP-=%"=="%fname%" ( set "name=winscps" )
-if not "%fname:MobaXterm=%"=="%fname%" ( set "name=mobas" )
-if not "%fname:VSCode-win32-x64=%"=="%fname%" ( set "name=vscodes" )
-if not "%fname:go1=%"=="%fname%" ( set "name=gos" )
-if not "%fname:m2_=%"=="%fname%" ( set "name=mavens" )
-if not "%fname:eclipse-=%"=="%fname%" ( set "name=eclipses" )
-if not "%fname:.jks=%"=="%fname%" ( set "name=eclipses" )
-if "%name%"=="" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
+call %script_dir%\publish_setname.bat
+if "%name%"=="" ( %_fatal% "Unknown name for fname: '%fname%'" 222 )
 
 :execrbcs
 if exist "!spath!\%fname%" (
