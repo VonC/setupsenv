@@ -62,13 +62,14 @@ goto:eof
 :publishOne
 set "pattern=%1"
 
+set "fname="
 for /F "delims=" %%f in ('dir /OD /b ..\..\setup^|findstr %pattern%^|tail -1') do ( set fname=%%f)
 %_info% "fname: '%fname%'"
+if "%fname%"=="" ( %_fatal% "Unknown name pattern '%pattern%'" 23 )
 
 
 rem @echo on
 set "name="
-if not "%name%"=="" ( goto:execrbcs )
 if not "%fname:peazip_portable-=%"=="%fname%" ( set "name=peazips" )
 if not "%fname:PortableGit-=%"=="%fname%" ( set "name=gits" )
 if not "%fname:node-v10.=%"=="%fname%" ( set "name=nodes" )
