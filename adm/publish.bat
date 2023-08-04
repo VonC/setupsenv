@@ -56,6 +56,8 @@ if "%sfound%"=="Downloads" (
 if not "%2"=="" (
     set "team=%2"
     %_task% "Must publish '%fname% only for team name '!team!'"
+) else (
+    %_task% "Must publish '%fname%' for all teams"
 )
 
 call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f 2|cut -d'.' -f 1"
@@ -96,8 +98,6 @@ for /L %%n in (1 1 !output_cnt!) DO (
         ) else (
             %_ok% "Team matches profile"
         )
-    ) else (
-        %_info% "Empty team"
     )
     if "!skip!"=="" (
         dir "!spath!" > NUL
