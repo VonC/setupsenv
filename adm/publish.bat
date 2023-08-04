@@ -60,7 +60,8 @@ if not "%2"=="" (
     %_task% "Must publish '%fname%' for all teams"
 )
 
-call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f 2|cut -d'.' -f 1"
+REM https://stackoverflow.com/questions/4956873/how-to-cut-first-n-and-last-n-columns/51005303#51005303
+call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f2-|cut -d'.' -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile exec(%%n)='!output[%%n]!'"
     set "profiles[%%n]=!output[%%n]!"
