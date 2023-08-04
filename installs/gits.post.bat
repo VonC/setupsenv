@@ -56,35 +56,56 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
+@echo off
+set "mgrname=manager"
+:: The command to get the version string
+for /f "tokens=2 delims= " %%a in ('type "%PRGS%\gits\current\etc\package-versions.txt" ^| findstr "mingw-w64-x86_64-git-doc-html"') do (
+    set "fullversion=%%a"
+)
+:: Extract the major and minor version numbers
+for /f "tokens=1,2 delims=." %%b in ("!fullversion!") do (
+    set "major=%%b"
+    set "minor=%%c"
+)
+
+if !major! LEQ 2 (
+    if !minor! LEQ 39 (
+        %_info% "Install: Keep 'manager-core' as credential helper for Git !major!.!minor!"
+        set "mgrname=manager-core"
+    )
+)
+if "%mgrname%"=="manager" (
+    %_info% "Install: Keep 'manager' as credential helper for Git !major!.!minor!"
+)
 
 git config --system credential.helper 1>NUL 2>NUL
 if errorlevel 1 (
-    git config --system credential.helper manager-core
+    git config --system credential.helper %mgrname%
 ) else (
     git config --system credential.helper | grep -i "selector" 1>NUL 2>NUL
     if errorlevel 0 (
-        git config --system credential.helper manager-core
+        git config --system credential.helper %mgrname%
     ) else (
         git config --system credential.helper | grep "credential-manager" 1>NUL 2>NUL
         if errorlevel 0 (
-            git config --system credential.helper manager-core
+            git config --system credential.helper %mgrname%
         ) else (
             git config --system credential.helper | grep "bin" 1>NUL 2>NUL
             if errorlevel 0 (
-                git config --system credential.helper manager-core
+                git config --system credential.helper %mgrname%
             ) else (
                 git config --system credential.helper | grep "git-core" 1>NUL 2>NUL
                 if errorlevel 0 (
-                    git config --system credential.helper manager-core
+                    git config --system credential.helper %mgrname%
                 )
             )
         )
     )
 )
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
-git config --global credential.helper manager-core
+git config --global credential.helper %mgrname%
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
-git config --global credential.helperselector.selected manager-core
+git config --global credential.helperselector.selected %mgrname%
 
 
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
