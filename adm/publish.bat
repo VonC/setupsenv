@@ -80,9 +80,9 @@ if "%output_cnt%"=="0" (
     cd
     %_fatal% "No s*_* detected in custom" 1
 )
-
 for /L %%n in (1 1 !output_cnt!) DO (
     set "sc=!output[%%n]!"
+    rem set "sc=setupsdir_calx_tesys.bat"
     set "UNCPathOnly=1"
     rem dir %cpwd%\!sc!
     rem echo call "%cpwd%\!sc!"
@@ -90,6 +90,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
     set "UNCPathOnly="
     set "spath=!setupsdir!"
     set "profile=!profiles[%%n]!"
+    rem set "profile=calx_tesys"
     set "skip="
     %_info% "sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
     if not "%team%"=="" (
@@ -121,9 +122,31 @@ for /L %%n in (1 1 !output_cnt!) DO (
                 )
             )
         ) else (
+            rem Check if file exists
+            if exist "!spath!\%fname%" (
+                %_ok% "File '%fname%' already exists in '!spath!'"
+                rem Check if remote file size is the same as the local one
+                :: Get the file sizes
+                for %%A in ("..\..\setup\%fname%") do set "size1=%%~zA"
+                for %%A in ("!spath!\%fname%") do set "size2=%%~zA"
+                :: Compare size
+                if !size1! EQU !size2! (
+                    %_ok% "The files are the same size."
+                    goto:continue
+                )
+                %_warning% "The files are different sizes."
+                %_warning% "Must delete '%fname%' in '!spath!'"
+                del "!spath!\%fname%"
+                if errorlevel 1 (
+                    %_fatal% "Unable to delete '!spath!\%fname%'" 23
+                )
+            )
+            %_task% "Must copy '%name%' to '!spath!'"
             call:rbc "!spath!"
         )
     )
+    :continue
+    rem goto:eof
 )
 goto:eof
 
