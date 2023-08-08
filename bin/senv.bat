@@ -48,3 +48,11 @@ call %HOME%\bin\setvscodei.bat
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
+if exist "%script_dir_bin%\profile" (
+   for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
+)
+if exist "%script_dir_bin%\profile" (
+   if exist "%HOME%\bin\senv.custom.%senv_profile%.doskey" (
+      DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
+   )
+)
