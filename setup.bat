@@ -82,8 +82,14 @@ doskey senv=
 
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
-    copy "%script_dir%\bin\*" "%HOME%\bin"
-    copy "%script_dir%\custom\*.custom.*" "%HOME%\bin"
+)
+copy "%script_dir%\bin\*" "%HOME%\bin" 1>NUL:
+if errorlevel 1 (
+    %_fatal% "Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
+)
+copy "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL:
+if errorlevel 1 (
+    %_fatal% "Unable to copy '%script_dir%\custom\*.custom.*' to '%HOME%\bin'" 231
 )
 
 if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
