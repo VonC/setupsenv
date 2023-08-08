@@ -105,6 +105,16 @@ if exist "%script_dir%\custom\profile" (
     %_ok% "Profile custom aliases updated '%HOME%\bin\profile'"
 )
 
+if not exist "%script_dir%\custom\senv.custom.doskey" (
+    %_info% "No Custom alias file '%script_dir%\custom\senv.custom.doskey'"
+) else (
+    %_task% "Copy/Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.doskey'"
+    copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin" 1>NUL:
+    if errorlevel 1 (
+        %_fatal% "Unable to copy '%script_dir%\custom\senv.custom.doskey' to '%HOME%\bin'" 23
+    )
+    %_ok% "Profile custom aliases updated '%HOME%\bin\senv.custom.doskey'"
+)
 
 if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
     %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
