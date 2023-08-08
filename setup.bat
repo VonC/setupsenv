@@ -96,6 +96,16 @@ if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
 if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
 if not exist "%HOME%\.config\git\config" ( copy "%script_dir%\.config.git.config" "%HOME%\.config\git\config" )
 
+if exist "%script_dir%\custom\profile" (
+    %_task% "Copy/Update '%HOME%\bin\profile' with '%script_dir%\custom\profile'"
+    copy /Y "%script_dir%\custom\profile" "%HOME%\bin" 1>NUL:
+    if errorlevel 1 (
+        %_fatal% "Unable to copy '%script_dir%\custom\profile' to '%HOME%\bin'" 23
+    )
+    %_ok% "Profile custom aliases updated '%HOME%\bin\profile'"
+)
+
+
 if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
     %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
 ) else (
