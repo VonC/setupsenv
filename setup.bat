@@ -169,7 +169,7 @@ call:install "PortableGit-*" "gits" || exit /b 1
 
 REM installs\gits.post.bat has overridden home\bin files: update senv.custom.bat if needed
 if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
-    findstr "REM add custom %profile% settings" "%HOME%\bin\senv.custom.bat"
+    findstr "REM add custom %profile% settings" "%HOME%\bin\senv.custom.bat" 1>NUL: 2>NUL:
     if errorlevel 1 (
         echo.>> "%HOME%\bin\senv.custom.bat"
         echo REM add custom %profile% settings>> "%HOME%\bin\senv.custom.bat"
@@ -212,7 +212,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 ENDLOCAL
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%"
-cd
+rem cd
 call custom\setup.ini.bat "set" || %_fatal% "custom/setup.ini.bat still missing" && exit /b 1
 echo HOME='%HOME%'
 echo script_dir='%script_dir%'
@@ -245,13 +245,14 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
+rem echo Check path in setupsdir/p: '%setupsdir%'\'%p%'
 set pname=
 rem echo "p='%p%', f='%f%'"
 rem http://steve-jansen.github.io/guides/windows-batch-scripting/part-2-variables.html
 rem https://stackoverflow.com/questions/3215501/batch-remove-file-extension
 for /F "usebackq" %%i in (`dir /OD /B "%setupsdir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
-rem echo "fname='%fname%'"
-rem echo "pname='%pname%'"
+rem echo fname='%fname%'
+rem echo pname='%pname%'
 if "%pname%"=="" ("%setupsdir%\%p%"
     if exist "%setupsdir%\_%f%" (
         %_warning% "Skip '%f%' installation (test found)"
