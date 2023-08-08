@@ -117,16 +117,14 @@ if not exist "%script_dir%\custom\senv.custom.doskey" (
 )
 
 if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
-    %_info% "No profile alias file in '%script_dir%\custom\senv.custom.%profile%.doskey'"
+    %_info% "No Custom alias file '%script_dir%\custom\senv.custom.%profile%.doskey'"
 ) else (
-    if not exist "%HOME%\bin\_senv.custom.%profile%.doskey" (
-        copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin"
-        %_info% "Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
-        type "%script_dir%\custom\senv.custom.%profile%.doskey" >> "%HOME%\bin\senv.custom.doskey"
-        copy "%script_dir%\custom\senv.custom.%profile%.doskey" "%HOME%\bin\_senv.custom.%profile%.doskey"
-    ) else (
-        %_info% "Profile alias alias already updated: flag '%HOME%\bin\_senv.custom.%profile%.doskey' present"
+    %_task% "Copy/Update '%HOME%\bin\senv.custom.%profile%.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
+    copy /Y "%script_dir%\custom\senv.custom.%profile%.doskey" "%HOME%\bin" 1>NUL:
+    if errorlevel 1 (
+        %_fatal% "Unable to copy '%script_dir%\custom\senv.custom.%profile%.doskey' to '%HOME%\bin'" 23
     )
+    %_ok% "Profile custom '%profile%' aliases updated '%HOME%\bin\senv.custom.%profile%.doskey'"
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
