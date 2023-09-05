@@ -109,8 +109,9 @@ REM https://stackoverflow.com/questions/25702814/code-to-determine-target-of-rem
 rem if not target=="%pname% (
 set "tpath=%PRGS%\%f%\%p%"
 rem dir "%tpath%"
-for /f %%A in ('dir "%tpath%" ^| C:\Windows\System32\find "(s)"') do (
-    if "!cnt!"=="" ( set cnt=%%A ) else ( set cntd=%%A )
+for /f %%A in ('dir "%tpath%" ^| C:\Windows\System32\find " "') do (
+    set "cnt=!cntd!"
+    set "cntd=%%A"
 )
 rem echo "File count = '%cnt%'"
 rem echo "Dir. count = '%cntd%'"
