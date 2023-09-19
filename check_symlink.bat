@@ -115,11 +115,15 @@ for /f %%A in ('dir "%tpath%" ^| C:\Windows\System32\find " "') do (
 )
 rem echo "File count = '%cnt%'"
 rem echo "Dir. count = '%cntd%'"
-if "%cnt%"=="0 " ( if "%cntd%"=="3 " (
+set "subdir="
+if "%cnt%"=="0" ( if "%cntd%"=="3" (
     for /f "tokens=*" %%A in ('dir /B "%tpath%"') do ( set subdir=%%A )
     rem echo "subdir='!subdir!'"
-    set "tpath=%tpath%\!subdir!"
 ) )
+if not "%subdir%"=="" (
+    set "tpath=%tpath%\!subdir!"
+)
+rem echo "path with subdir='%tpath%'"
 call :Trim tpath %tpath%
 rem set stpath=%tpath:~0,-1%
 rem echo "final tpath='%tpath%'"
