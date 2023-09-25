@@ -125,6 +125,10 @@ copy /Y "%script_dir%\ss.bat" "%setupsdir%\s.bat"
 if errorlevel 1 (
     %_fatal% "Unable to copy 's.bat' from '%script_dir%' to '%setupsdir%'" && exit /b 1)
 )
+copy /Y "%script_dir%\..\check_migrate_home.bat" "%setupsdir%\check_migrate_home.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'check_migrate_home.bat' from '%script_dir%\..' to '%setupsdir%'" && exit /b 1)
+)
 
 
 if "%setupsdirsenv%"=="" (
