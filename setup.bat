@@ -78,16 +78,18 @@ if not exist %HOME%\gsenv.bat (
     echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOME%\gsenv.bat"
 )
 if not exist %HOMEDRIVE%\senv.bat (
-    echo @echo off%NL%call %HOME%\bin\senv.bat> "%HOMEDRIVE%\senv.bat"
+    echo @echo off%NL%call %HOME%\bin\senv.bat> "%HOMEDRIVE%\senv.bat" >NUL
 )
 if not exist %HOMEDRIVE%\gsenv.bat (
-    echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOMEDRIVE%\gsenv.bat"
+    echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%HOMEDRIVE%\gsenv.bat" >NUL
 )
 doskey senv=
 
 %_info% "PRGS='%PRGS%'"
 %_info% "HOME='%HOME%'"
 %_info% "PROG='%PROG%'"
+
+%_fatal% "Stop for now" 1
 
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
