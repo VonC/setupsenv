@@ -20,6 +20,13 @@ rem @echo on
 set "p=%~1"
 set "f=%~2"
 set "sln=%~3"
+
+if exist "%script_dir%\installs\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('"%script_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+)
+if exist "%script_dir%\custom\installs\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('"%script_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+)
 if "%sln%"=="" ( set "sln=current" )
 
 if "%PRGS%"=="" ( %_fatal% "No PRGS defined" 1 )
