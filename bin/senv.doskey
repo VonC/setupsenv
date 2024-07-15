@@ -34,3 +34,10 @@ ls=ls --show-control-chars -F --color $*
 l=ls -alrth  --show-control-chars -F --color $*
 vi=vim $*
 
+dlc=dwlchrome.bat
+dlg=dwlgit.bat
+dlf=dwlfirefox.bat
+dlgh=dwlgh.bat
+dllg=dwllg.bat
+dlgum=dwlgum.bat
+gum="%PRGS%\gums\gum.exe" $*
