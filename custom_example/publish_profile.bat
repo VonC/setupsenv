@@ -56,8 +56,11 @@ call:publishOne "WinSCP-"
 call:publishOne "MobaXterm"
 call:publishOne "node-v10."
 call:publishOne "node-v14."
-call:publishOne "node-v14."
+call:publishOne "sqldeveloper-"
 call:publishOne "ideaIC"
+call:publishOne "jdk-8"
+call:publishOne "OpenJDK17"
+call:publishOne "OpenJDK11"
 endlocal
 goto:eof
 
@@ -75,7 +78,7 @@ if "%name%"=="" ( %_fatal% "Unknown name for fname: '%fname%'" 222 )
 
 :execrbcs
 if exist "!spath!\%fname%" (
-    %_warning% "Skip '%name% '%fname%': already in '%fsetupsdir%'"
+    %_warning% "Skip '%name% '%fname%': already in '!spath!'"
 ) else (
     call:rbc "!spath!"
 )
