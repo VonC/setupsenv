@@ -111,13 +111,15 @@ git config --global credential.helperselector.selected %mgrname%
 set "GITPATH=%HOME%"
 set "GITNOPATH=%HOMEBIN%"
 
-REM Get the first three characters of PATH
-set "firstThree=%PATH:~0,3%"
+REM Get the first two characters of PATH
+set "firstTwo=%PATH:~0,2%"
 
-REM Check if it starts with C:\ or c:\
-if not /I "%firstThree%"=="C:\" (
-    set "GITPATH=%HOMEBIN%"
-    set "GITNOPATH=%HOME%"
+REM Check if it starts with C: or c:
+if not "%firstTwo%"=="C:" (
+    if not "%firstTwo%"=="c:" (
+        set "GITPATH=%HOMEBIN%"
+        set "GITNOPATH=%HOME%"
+    )
 )
 
 if exist "%GITNOPATH%\.git\config" (
