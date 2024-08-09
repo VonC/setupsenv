@@ -24,7 +24,7 @@ for /f "tokens=*" %%a in ('%gum% choose %PYTHON_VERSIONS%') do set SELECTED_VERS
 
 :clean_path
 rem set "SELECTED_VERSION=python3.7.5"
-set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%
+set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%"
 set "current_path="
 echo PATH='%PATH%'
 rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set "newPath=%%a" )
