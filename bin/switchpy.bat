@@ -32,7 +32,7 @@ rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set 
 set newPath=
 for %%a in ("%PATH:;=" "%") do (
     set "current_path=%%~a"
-    echo !current_path! | findstr /C:"%PRGS%\python" >nul
+    echo !current_path!| findstr /C:"%PRGS%\python" >nul
     if not !errorlevel! equ 0 (
         if "!newPath!" == "" (
             set "newPath=!current_path!"
