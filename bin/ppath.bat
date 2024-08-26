@@ -3,7 +3,14 @@ setlocal enabledelayedexpansion
 
 if "%script_dir%"=="" (
     for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\batcolors\echos_macros.bat export
+    if exist !script_dir!\..\batcolors (
+      call !script_dir!\..\batcolors\echos_macros.bat export
+    ) else if exist !script_dir!\batcolors (
+      call !script_dir!\batcolors\echos_macros.bat export
+    ) else (
+      echo "batcolor not found in script_dir '!script_dir!'" >&2
+      exit /b 1
+    )
 )
 
 if "%~1"=="/i" (
