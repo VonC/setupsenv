@@ -14,9 +14,9 @@ if errorlevel 1 (
 )
 
 if not "%1" == "" (
-    echo %1| findstr /r "^mvn[0-9].[0-9].[0-9]$" >nul
+    echo %1| findstr /r "^[0-9].[0-9].[0-9]$" >nul
     if errorlevel 1 (
-        %_fatal% "First argument '%1' must be mvnx.y.z, like mvn3.3.9 or mvn3.6.0" 2
+        %_fatal% "First argument '%1' must be x.y.z, like 3.3.9 or 3.6.0 or 3.9.9" 2
     )
 )
 
@@ -31,7 +31,7 @@ for /d %%f in (mvn*) do (
     if not errorlevel 1 (
         set "MAVEN_VERSIONS=!MAVEN_VERSIONS! %%f"
         set /a count+=1
-        if "%%f" == "%1" (
+        if "%%f" == "mvn%1" (
             set "SELECTED_VERSION=%%f"
         )
     )
@@ -40,7 +40,7 @@ popd
 
 if "%SELECTED_VERSION%" == "" (
     if not "%1" == "" (
-        %_warning% "Your Maven version argument '%1' was NOT found in '%MAVENS_ROOT%'"
+        %_warning% "Your Maven version argument '%1' was NOT found in MAVENS_ROOT '%MAVENS_ROOT%'" 4
     )
 )
 
@@ -60,7 +60,12 @@ if "%SELECTED_VERSION%" == "" (
     set "gum=%PRGS%\gums\current\gum.exe"
     for /f "tokens=*" %%a in ('!gum! choose %MAVEN_VERSIONS%') do set SELECTED_VERSION=%%a
 )
+
 :selected
+
+if "%SELECTED_VERSION%" == "" (
+    %_fatal% "No Maven version selected for MAVENS_ROOT '%MAVENS_ROOT%'" 3
+)
 %_ok% "Maven version chosen: '%SELECTED_VERSION%'"
 
 

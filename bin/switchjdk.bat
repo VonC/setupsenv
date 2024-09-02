@@ -14,9 +14,9 @@ if errorlevel 1 (
 )
 
 if not "%1" == "" (
-    echo %1| findstr /r "^jdk[0-9][0-9]*$" >nul
+    echo %1| findstr /r "^[0-9][0-9]*$" >nul
     if errorlevel 1 (
-        %_fatal% "First argument '%1' must be jdkxx, like jdk8 or jdk17" 2
+        %_fatal% "First argument '%1' must be a jdk version, like 8 or 17" 2
     )
 )
 
@@ -31,7 +31,7 @@ for /d %%f in (jdk*) do (
     if not errorlevel 1 (
         set "JAVA_VERSIONS=!JAVA_VERSIONS! %%f"
         set /a count+=1
-        if "%%f" == "%1" (
+        if "%%f" == "jdk%1" (
             set "SELECTED_VERSION=%%f"
         )
     )
@@ -40,7 +40,7 @@ popd
 
 if "%SELECTED_VERSION%" == "" (
     if not "%1" == "" (
-        %_warning% "Your Java version argument '%1' was NOT found in '%JAVA_ROOT%'"
+        %_warning% "Your Java version argument '%1' was NOT found in JAVA_ROOT '%JAVA_ROOT%'"
     )
 )
 
@@ -64,7 +64,12 @@ if "%SELECTED_VERSION%" == "" (
     set "gum=%PRGS%\gums\current\gum.exe"
     for /f "tokens=*" %%a in ('!gum! choose %JAVA_VERSIONS%') do set SELECTED_VERSION=%%a
 )
+
 :selected
+
+if "%SELECTED_VERSION%" == "" (
+    %_fatal% "No Java version selected for JAVA_ROOT '%JAVA_ROOT%'" 3
+)
 %_ok% "Java version chosen: '%SELECTED_VERSION%'"
 
 
