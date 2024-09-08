@@ -18,10 +18,16 @@ gl=git lg -10
 gla=git lg --all
 glab=git lg --all --branches
 gcie=git commit --allow-empty -m "Initial empty commit"
+gc=git commit $*
 gcam=git commit --amend --no-edit
+gca=git commit --amend
+gcamm=git commit --amend -m "$*"
+gcm=git commit -m "$*"
+gcma=git commit --amend -m "$*"
 ga=git add .
 gs=git st
 gp=git push
+gpft=git push --follow-tags $*
 grc=cmd /V /C "set "GIT_EDITOR=true" && git rebase --continue"
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
@@ -31,7 +37,7 @@ senve="%vscodei%\bin\code.cmd" "%HOME%\bin\senv.local.bat"
 clear=cls
 e.=explorer .
 ls=ls --show-control-chars -F --color $*
-l=ls -alrth  --show-control-chars -F --color $*
+ll=ls -alrth  --show-control-chars -F --color $*
 vi=vim $*
 
 dlc=dwlchrome.bat
