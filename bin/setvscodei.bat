@@ -6,7 +6,21 @@ if exist "%vscodei%" (
 )
 set "vscodei="
 setlocal enabledelayedexpansion
-for /f "tokens=3*" %%a in ('reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i code') do (
+set reg=HKCU
+reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i code 1>NUL
+if not errorlevel 1 (
+		rem %_info% "VSCode is installed"
+) else (
+		rem %_info% "VSCode is NOT installed"
+		set reg=HKLM
+)
+reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i code 1>NUL
+if not errorlevel 1 (
+		rem %_info% "VSCode is installed"
+) else (
+		%_fatal% "VSCode is NOT installed" 1
+)
+for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i code') do (
     set "vscodei=%%a"
 	rem echo vscodei 0 '%vscodei%' '!vscodei!'
 	if not exist "!vscodei!" ( set "vscodei=%%a %%b")
@@ -30,6 +44,6 @@ rem echo vv='%vv%' '%vscodei%'
 
 if not exist "%vscodei%" (
 	if "%ignorevscode%"=="" (
-		%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation'. Try and set env var 'vscodei' to the right path in User environment variable" 13
+		%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM). Try and set env var 'vscodei' to the right path in User environment variable" 13
 	)
 )
