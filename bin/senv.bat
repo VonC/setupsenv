@@ -36,7 +36,7 @@ for /l %%a in (0,1,25) do (
    call set "_STRING=%%_STRING:!_FROM!=!_TO!%%
 )
 echo %_STRING%>"%USERPROFILE%\usernamel"
-endlocal & set usernamel=%_STRING%
+endlocal & set usernamel=%_STRING% & set "senv_dir=%script_dir_bin%"
 
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
@@ -56,3 +56,4 @@ if exist "%script_dir_bin%\profile" (
       DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
    )
 )
+%_ok% "senv activated2: senv_dir='%senv_dir%'"
