@@ -53,6 +53,10 @@ if %count% equ 1 (
     goto:selected
 )
 
+if %count% equ 0 (
+    %_fatal% "No Java version found in '%JAVA_ROOT%'" 3
+)
+
 rem %_info% "JAVA_VERSIONS='%JAVA_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 if "%SELECTED_VERSION%" == "" (
     %_task% "Select Java version amongst '%count%' available"
