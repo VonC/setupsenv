@@ -44,6 +44,7 @@ rem echo vv='%vv%' '%vscodei%'
 
 if not exist "%vscodei%" (
 	if "%ignorevscode%"=="" (
-		%_fatal% "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM). Try and set env var 'vscodei' to the right path in User environment variable" 13
+		echo "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM). Try and set env var 'vscodei' to the right path in User environment variable"
+		exit /b 13
 	)
 )
