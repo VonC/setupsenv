@@ -22,7 +22,7 @@ set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
-
+set "senv_dir=%script_dir_bin%"
 if exist "%USERPROFILE%\usernamel" goto:setusernamel
 setlocal enabledelayedexpansion
 
@@ -36,7 +36,7 @@ for /l %%a in (0,1,25) do (
    call set "_STRING=%%_STRING:!_FROM!=!_TO!%%
 )
 echo %_STRING%>"%USERPROFILE%\usernamel"
-endlocal & set usernamel=%_STRING% & set "senv_dir=%script_dir_bin%"
+endlocal & set usernamel=%_STRING%
 
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
@@ -56,4 +56,10 @@ if exist "%script_dir_bin%\profile" (
       DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
    )
 )
-%_ok% "senv activated2: senv_dir='%senv_dir%'"
+set "script_dir_bin="
+setlocal enabledelayedexpansion
+set "script_dir=%~dp0"
+call "%senv_dir%\batcolors\echos_macros.bat"
+rem echo senv activated: senv_dir='%senv_dir%'
+%_ok% "senv activated: senv_dir='%senv_dir%'"
+endlocal
