@@ -86,6 +86,7 @@ doskey senv=
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
 )
+
 copy "%script_dir%\bin\*" "%HOME%\bin" 1>NUL:
 if errorlevel 1 (
     %_fatal% "Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
@@ -166,7 +167,10 @@ if "%setupsdir%"=="" (
 )
 %_info% "setupsdir='%setupsdir%'"
 rem goto:alldone
-call:install "peazip_portable-*" "peazips" || exit /b 1
+findstr /i "peazips" "%instlist%" >nul
+if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=peazip_portable-*" )
+call:install "%pattern%" "peazips" || exit /b 1
+goto:eof
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
 
@@ -248,6 +252,7 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
+if "%p%"=="system" ( set "pname=system" && goto:info )
 rem echo Check path in setupsdir/p: '%setupsdir%'\'%p%'
 set pname=
 rem echo "p='%p%', f='%f%'"
@@ -263,9 +268,11 @@ if "%pname%"=="" ("%setupsdir%\%p%"
     )
     %_fatal% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'" && exit /b 1
 )
+:info
 %_info% "--------------"
-%_info% "'%f%': '%pname%'"
+%_info% "folder: '%f%': pattern '%pname%'"
 %_info% "--------------"
+goto:eof
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
 )
