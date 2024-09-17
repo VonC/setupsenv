@@ -12,14 +12,16 @@ if not errorlevel 1 (
 		rem %_info% "VSCode is installed"
 ) else (
 		rem %_info% "VSCode is NOT installed"
-		set reg=HKLM
+		set reg=
 )
+if not "%reg%"=="" ( goto:forfind)
 reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i code 1>NUL
 if not errorlevel 1 (
 		rem %_info% "VSCode is installed"
 ) else (
-		%_fatal% "VSCode is NOT installed" 1
+		%_fatal% "VSCode is NOT installed in HKCU or HKLM" 1
 )
+:forfind
 for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i code') do (
     set "vscodei=%%a"
 	rem echo vscodei 0 '%vscodei%' '!vscodei!'
