@@ -272,7 +272,6 @@ if "%pname%"=="" ("%setupsdir%\%p%"
 %_info% "--------------"
 %_info% "folder: '%f%': pattern '%pname%'"
 %_info% "--------------"
-goto:eof
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
 )
