@@ -170,7 +170,6 @@ rem goto:alldone
 findstr /i "peazips" "%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=peazip_portable-*" )
 call:install "%pattern%" "peazips" || exit /b 1
-goto:eof
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
 
