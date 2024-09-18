@@ -87,14 +87,18 @@ if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
 )
 
+%_task% "Must copy script_dir\bin '%script_dir%\bin\' to HOME\bin '%HOME%\bin'"
 copy "%script_dir%\bin\*" "%HOME%\bin" 1>NUL:
 if errorlevel 1 (
     %_fatal% "Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
 )
+%_ok% "script_dir\bin '%script_dir%\bin\' COPIED to HOME\bin '%HOME%\bin'"
+%_task% "Must copy script_dir\custom\ custom-files '%script_dir%\custom\' to HOME\bin '%HOME%\bin'"
 copy "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL:
 if errorlevel 1 (
     %_fatal% "Unable to copy '%script_dir%\custom\*.custom.*' to '%HOME%\bin'" 231
 )
+%_ok% "'%script_dir%\custom\*.custom.*' COPIED to '%HOME%\bin'"
 
 if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
 if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
