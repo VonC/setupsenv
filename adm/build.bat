@@ -58,7 +58,7 @@ cd senv
 call gcuvc
 cd custom
 call gcu
-call "%script_dir%\setupsdir_%profile%.bat"
+call "%script_dir%\setupsdir_%profile%.bat" %2
 %_info% "setupsdir='%setupsdir%'"
 if not exist "%setupsdir%\..\version" (
     %_ok% "New publication"
