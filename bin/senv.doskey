@@ -6,6 +6,7 @@ cdg=cd /d %PROG%\git
 cdgg=cd /d %PROG%\git\git
 cdd=cd /d %PROG%
 cdl=cd /d %USERPROFILE%\Downloads
+cdi=cd /d "%PRGS%\senv"
 
 pz=%pz%\peazip.exe $*
 pzx=%sz% x -aos -o$2 -pdefault -sccUTF-8 ^"$1^"
