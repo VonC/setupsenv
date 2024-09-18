@@ -1,3 +1,4 @@
+*.git/
 old/
 hooks/
 info/
