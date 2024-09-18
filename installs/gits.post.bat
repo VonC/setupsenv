@@ -3,10 +3,12 @@ if "%script_dir%"=="" (
     setlocal enabledelayedexpansion
     for %%i in ("%~dp0..") do SET "script_dir=%%~fi"
     call "!script_dir!\custom\echos_macros.bat"
+    set "prgtoinstall=test"
+    set "f=test"
 )
 %_info% "~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
-%_info% " Checking/updating '%HOMEBIN%' content"
+%_info% " Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
 set ignorevscode=1
 call "%HOMEBIN%\senv.bat"
 set ignorevscode=
@@ -108,6 +110,7 @@ git config --global credential.helper %mgrname%
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 git config --global credential.helperselector.selected %mgrname%
 
+:gitpath
 set "GITPATH=%HOME%"
 set "GITNOPATH=%HOMEBIN%"
 
@@ -121,6 +124,8 @@ if not "%firstTwo%"=="C:" (
         set "GITNOPATH=%HOME%"
     )
 )
+
+%_info% "GITPATH='%GITPATH%' (no Git repo in GITNOPATH='%GITNOPATH%', firstTwo='%firstTwo%')"
 
 if exist "%GITNOPATH%\.git\config" (
     %_warning% "Git repository in '%GITNOPATH%' instead of '%GITPATH%'"
@@ -191,7 +196,12 @@ if not "%st%"=="" (
     git commit -m "pre-update"
 )
 :skipfirststatus
-%_info% "   [copy bin in '%HOMEBIN%']"
+%_task% "Must update HOMEBIN '%HOMEBIN%'"
+cd /d "%HOMEBIN%"
+if errorlevel 1 (
+    %_fatal% "Unable to access HOMEBIN '%HOMEBIN%'" 111
+)
+%_info% "   [copy script_dir\bin '%script_dir%\bin\*' in HOMEBIN '%HOMEBIN%']"
 copy /Y "%script_dir%\bin\*" . > NUL:
 %_info% "   [Copy senv.doskey in '%HOMEBIN%']"
 copy /Y "%script_dir%\bin\senv.doskey" . > NUL: 
