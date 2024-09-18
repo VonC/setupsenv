@@ -84,7 +84,7 @@ if not "%ERRORLEVEL%"=="0" (
 )
 cd "%script_dir%"
 
-%_warning% "Update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
+%_task% "Must update 'senv_%profile%-zip.exe' from '%script_dir%\..\..' to '%setupsdir%'"
 set OK="KO"
 (robocopy "%script_dir%\..\.." "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 (
     SET "OK=ok"
@@ -93,6 +93,7 @@ set OK="KO"
 )
 REM echo "OK='%OK%' '!OK!'"
 if not "%OK%"=="ok" ( %_fatal% "Unable to robocopy '%script_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && exit /b 1)
+%_ok% "senv_%profile%-zip.exe updated from '%script_dir%\..\..' to '%setupsdir%'"
 
 copy /Y "%script_dir%\version" "%setupsdir%\..\version"
 if errorlevel 1 (
