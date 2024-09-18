@@ -1,1 +1,11 @@
+old/
+hooks/
+info/
+refs/
+HEAD
+logs/
+objects/
+index
+.gitold/
+*.exe
 !*.ori
