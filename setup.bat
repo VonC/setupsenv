@@ -236,7 +236,7 @@ call "%script_dir%\custom\%setupsdirbat%"
 findstr /V "cdis=" "%script_dir%\tmp" > "%HOME%\bin\senv.local.doskey"
 echo cdis=cd /d "%setupsdir%">> "%HOME%\bin\senv.local.doskey"
 cd /d "%script_dir%"
-del "%script_dir%\tmp" 2>NUL
+del /F "%script_dir%\tmp" 2>NUL
 
 set script_dir=
 set profile=
