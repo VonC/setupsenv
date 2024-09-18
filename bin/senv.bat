@@ -61,7 +61,19 @@ if exist "%script_dir_bin%\profile" (
 set "script_dir_bin="
 setlocal enabledelayedexpansion
 set "script_dir=%~dp0"
-call "%senv_dir%\batcolors\echos_macros.bat"
-rem echo senv activated: senv_dir='%senv_dir%'
-%_ok% "senv activated: senv_dir='%senv_dir%'"
+set "batdetected=false"
+if exist "%senv_dir%\batcolors" (
+   call "%senv_dir%\batcolors\echos_macros.bat"
+   set "batdetected=true"
+)
+if "%batdetected%"=="false" (
+   if exist "%senv_dir%\echos_macros.bat" (
+      call "%senv_dir%\echos_macros.bat"
+      set "batdetected=true"
+   )
+)
+if "%batdetected%"=="true" (
+   rem echo senv activated: senv_dir='%senv_dir%'
+   %_ok% "senv activated: senv_dir='%senv_dir%'"
+)
 endlocal
