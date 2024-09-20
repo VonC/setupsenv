@@ -177,15 +177,6 @@ call:install "%pattern%" "peazips" || exit /b 1
 set szdone="true"
 call:install "PortableGit-*" "gits" || exit /b 1
 
-REM installs\gits.post.bat has overridden home\bin files: update senv.custom.bat if needed
-if exist "%script_dir%\custom\senv.custom.%profile%.bat" (
-    findstr "REM add custom %profile% settings" "%HOME%\bin\senv.custom.bat" 1>NUL: 2>NUL:
-    if errorlevel 1 (
-        echo.>> "%HOME%\bin\senv.custom.bat"
-        echo REM add custom %profile% settings>> "%HOME%\bin\senv.custom.bat"
-        type "%script_dir%\custom\senv.custom.%profile%.bat" >> "%HOME%\bin\senv.custom.bat"
-    )
-)
 
 if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
     %_info% "REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
