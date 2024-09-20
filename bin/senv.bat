@@ -43,6 +43,12 @@ for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
 
 call %HOME%\bin\senv.custom.bat
 call %HOME%\bin\senv.local.bat
+
+if exist "%script_dir_bin%\profile" (
+   if exist "%HOME%\bin\senv.custom.%senv_profile%.bat" (
+      call %HOME%\bin\senv.custom.%senv_profile%.bat"
+   )
+)
 if "%ignorevscode%"=="" (
    call %HOME%\bin\setvscodei.bat
 )
