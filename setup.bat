@@ -218,20 +218,16 @@ call custom\setup.ini.bat "set" || %_fatal% "custom/setup.ini.bat still missing"
 echo HOME='%HOME%'
 echo script_dir='%script_dir%'
 rem set "script_dir=%cd%"
-findstr /V "cdi=" "%HOME%\bin\senv.local.doskey" > "%script_dir%\tmp"
-:: Check if the last line of tmp is empty
-for /f "tokens=* delims=" %%a in ('type "%script_dir%\tmp"') do set "lastLine=%%a"
-:: If the last line is not empty, append an empty line
-if not "%lastLine%"=="" echo.>> "%script_dir%\tmp"
-:: Now append the new line
-echo cdi=cd /d "%script_dir%">> "%script_dir%\tmp"
+findstr /V "cdi= cdis=" "%HOME%\bin\senv.local.doskey" > "%script_dir%\tmp"
+echo cdi=cd /d %script_dir%>> "%script_dir%\tmp"
 for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
 set "setupsdirbat=setupsdir_%profile%.bat"
 call "%script_dir%\custom\%setupsdirbat%"
-findstr /V "cdis=" "%script_dir%\tmp" > "%HOME%\bin\senv.local.doskey"
-echo cdis=cd /d "%setupsdir%">> "%HOME%\bin\senv.local.doskey"
+echo cdis=cd /d %setupsdir%>> "%script_dir%\tmp"
+del "%HOME%\bin\senv.local.doskey"
+move "%script_dir%\tmp" "%HOME%\bin\senv.local.doskey"
 cd /d "%script_dir%"
-del /F "%script_dir%\tmp" 2>NUL
+rem del /F "%script_dir%\tmp" 2>NUL
 
 set script_dir=
 set profile=
