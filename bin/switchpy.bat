@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 rem goto:clean_path
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir_bin%\echos_macros.bat
+call %script_dir%\echos_macros.bat
 
 :: Find Python 3.x.y folders
 set PYTHON_ROOT=%PRGS%\pythons

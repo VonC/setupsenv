@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir_bin%\echos_macros.bat
+call %script_dir%\echos_macros.bat
 rem goto:dr
 %_info% "Check latest Git version"
 rem @echo on

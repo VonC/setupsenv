@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir_bin%\echos_macros.bat
+call %script_dir%\echos_macros.bat
 %_info% "Check latest chrome version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/Hibbiki/chromium-win64/releases/latest"

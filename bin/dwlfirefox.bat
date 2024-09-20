@@ -2,7 +2,7 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir_bin%\echos_macros.bat
+call %script_dir%\echos_macros.bat
 %_info% "Check latest Firefox version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://softaro.net/download-file/21759/?version=English 2^>^&1"
