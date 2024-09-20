@@ -17,9 +17,12 @@ rem echo driveUNCPath='%driveUNCPath%', driveUNCPathEsc='%driveUNCPathEsc%'
 :search_driveLetter
 set "driveLetter="
 set "drRefresh="
-for /f "tokens=* delims=" %%i in ('net use') do (
+net use > "%script_dir%\tmp_drive"
+for /f "tokens=* delims=" %%i in ('type "%script_dir%\tmp_drive"') do (
     set "drRefresh="
-    echo %%i | findstr "%driveUNCPathEsc% " > NUL
+    echo %%i > "%script_dir%\tmp_drive_echo"
+    :: Use findstr to search for the string in the temporary file
+    findstr "%driveUNCPathEsc%" "%script_dir%\tmp_drive_echo"  > NUL
     if not errorlevel 1 (
         rem @echo on
         set "dr=%%i"
@@ -64,6 +67,9 @@ for /f "tokens=* delims=" %%i in ('net use') do (
     )
 )
 :found
+echo done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'
+del "%script_dir%\tmp_drive"
+del "%script_dir%\tmp_drive_echo"
 if not "%driveLetter%"=="" ( goto:drive_found )
 %_warning% "No drive letter found for driveUNCPath '%driveUNCPath%'"
 :: Test if UNC path is accessible by using dir command
