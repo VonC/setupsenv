@@ -32,7 +32,8 @@ rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set 
 set newPath=
 for %%a in ("%PATH:;=" "%") do (
     set "current_path=%%~a"
-    echo !current_path!| findstr /C:"%PRGS%\python" >nul
+    echo !current_path! > "%script_dir%\tmp_switchpy"
+    findstr /C:"%PRGS%\python" "%script_dir%\tmp_switchpy" >nul
     if not !errorlevel! equ 0 (
         if "!newPath!" == "" (
             set "newPath=!current_path!"
@@ -41,12 +42,13 @@ for %%a in ("%PATH:;=" "%") do (
         )
     )
 )
+del "%script_dir%\tmp_switchpy"
 rem echo newPath='%newPath%'
 set "newPath=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%newPath%"
 set "current_path="
 endlocal & set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%" & set "PATH=%newPath%" & set "PYTHON_VERSION=3%SELECTED_VERSION:*3=%"
 echo PYTHON_HOME='%PYTHON_HOME%'
-echo PATH='%PATH%'
+echo CLEANED PATH='%PATH%'
 set PYTHON_ROOT=%PRGS%\pythons
 mkdir "%PYTHON_ROOT%\venvs" 2>nul
 pushd %PYTHON_ROOT%\venvs
