@@ -1,1 +1,3 @@
-*.bat	text eol=crlf
+*.bat	    text eol=crlf
+*.doskey	text eol=crlf
+*.vbs	    text eol=crlf
