@@ -15,20 +15,22 @@ if "%script_dir%"=="" (
     for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
     call !script_dir!\batcolors\echos_macros.bat export
 )
-rem @echo on
 
 set "p=%~1"
 set "f=%~2"
 set "sln=%~3"
 
+rem %_info% "Check symlink with p='%p%', f='%f%' and sln='%sln%'"
+rem @echo on
+
 if exist "%script_dir%\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('"%script_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+    for /f "tokens=*" %%i in ('call "%script_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
 if exist "%script_dir%\custom\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('"%script_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+    for /f "tokens=*" %%i in ('call "%script_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
 if "%sln%"=="" ( set "sln=current" )
-
+rem @echo off
 if "%PRGS%"=="" ( %_fatal% "No PRGS defined" 1 )
 
 set "drive=%PRGS:~0,1%"
