@@ -7,5 +7,5 @@ if "%script_dir%"=="" (
 )
 
 set "p=%~1"
-if not "%p:node-v10.=%" == "%p%" ( echo node10 )
-if not "%p:node-v14.=%" == "%p%" ( echo node14 )
+if not "%p:node-v10.=%" == "%p%" ( echo node10)
+if not "%p:node-v14.=%" == "%p%" ( echo node14)

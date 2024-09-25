@@ -7,6 +7,6 @@ if "%script_dir%"=="" (
 )
 
 set "p=%~1"
-if not "%p:jdk-8u=%" == "%p%" ( echo jdk8 )
-if not "%p:hotspot_11.=%" == "%p%" ( echo jdk11 )
-if not "%p:hotspot_17.=%" == "%p%" ( echo jdk17 )
+if not "%p:jdk-8u=%" == "%p%" ( echo jdk8)
+if not "%p:hotspot_11.=%" == "%p%" ( echo jdk11)
+if not "%p:hotspot_17.=%" == "%p%" ( echo jdk17)
