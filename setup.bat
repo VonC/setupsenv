@@ -194,7 +194,6 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   set fnpl=%%a
   set fl=%%b
   call:install "!fnpl!" "!fl!" || exit /b 1
-  if "%prgtoinstall%"=="!fl!" ( goto:alldone )
 )
 if not exist "%locald%\install.list" ( goto:alldone )
 set "setupsdir=%locald%\setups"
@@ -204,7 +203,6 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
   set fnpl=%%a
   set fl=%%b
   call:install "!fnpl!" "!fl!" || exit /b 1
-  if "%prgtoinstall%"=="!fl!" ( goto:alldone )
 )
 
 
