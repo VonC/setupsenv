@@ -59,6 +59,9 @@ call gcuvc
 cd custom
 call gcu
 call "%script_dir%\setupsdir_%profile%.bat" %2
+if errorlevel 1 (
+    %_error% "Unable to call '%script_dir%\setupsdir_%profile%.bat'" && exit /b 1)
+)
 %_info% "setupsdir='%setupsdir%'"
 if not exist "%setupsdir%\..\version" (
     %_ok% "New publication"
