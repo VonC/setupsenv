@@ -238,6 +238,7 @@ goto:eof
 :install
 set "p=%~1"
 set "f=%~2"
+set "sys=%~3"
 if not "%prgtoinstall%"=="" (
     if not "%prgtoinstall%"=="%f%" (
         %_warning% "Skip '%f%' installation (for '%prgtoinstall%')"
@@ -263,7 +264,7 @@ if "%pname%"=="" ("%setupsdir%\%p%"
 )
 :info
 %_info% "--------------"
-%_info% "folder: '%f%': pattern '%pname%'"
+%_info% "folder: '%f%': pattern '%pname%' system: '%sys%'"
 %_info% "--------------"
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
