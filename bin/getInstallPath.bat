@@ -2,8 +2,10 @@
 
 setlocal enabledelayedexpansion
 
+set "standaloneGetInstallPath="
 if "%script_dir%"=="" (
     for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+		set "standaloneGetInstallPath=true"
 )
 if exist !script_dir!\..\batcolors (
 	call !script_dir!\..\batcolors\echos_macros.bat export
@@ -17,53 +19,69 @@ if exist !script_dir!\..\batcolors (
 set "prgname=%~1"
 set "prgpattern=%~2"
 %_task% "Must get installation path 'instpath' of '%prgname%' pattern '%prgpattern%'"
+rem @echo on
 if "%prgname%"=="" (
-	%_fatal% "prgname must be provided" 1
+	%_fatal% "prgname must be provided (ex: VSCode)" 1
 )
 if "%prgpattern%"=="" (
-	%_fatal% "prgpattern must be provided" 2
+	%_fatal% "prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
-goto:eof
 
 set reg=HKCU
-reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i code 1>NUL
+reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "VSCode is installed"
+		rem %_info% "%prgname% is installed"
 ) else (
-		rem %_info% "VSCode is NOT installed"
+		rem %_info% "%prgname% is NOT installed"
 		set reg=HKLM
 )
-reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i code 1>NUL
+reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "VSCode is installed"
+		rem %_info% "%prgname% is installed"
 ) else (
-		%_fatal% "VSCode is NOT installed" 1
+		%_fatal% "%prgname% is NOT installed for pattern '%prgpattern%'" 1
 )
-for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i code') do (
-    set "vscodei=%%a"
-	rem echo vscodei 0 '%vscodei%' '!vscodei!'
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b")
-	rem echo vscodei 1 '%vscodei%' '!vscodei!'
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c")
-	rem echo vscodei 2 '%vscodei%' '!vscodei!'
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d")
-	rem echo vscodei 3 '%vscodei%' '!vscodei!'
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e")
-	rem echo vscodei 4 '%vscodei%' '!vscodei!'
-	if not exist "!vscodei!" ( set "vscodei=%%a %%b %%c %%d %%e %%f")
-	rem echo vscodei 5 '%vscodei%' '!vscodei!'
+for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i %prgpattern%') do (
+    set "instPath=%%a"
+	rem echo instPath 0 '%instPath%' '!instPath!'
+	if not exist "!instPath!" ( set "instPath=%%a %%b")
+	rem echo instPath 1 '%instPath%' '!instPath!'
+	if not exist "!instPath!" ( set "instPath=%%a %%b %%c")
+	rem echo instPath 2 '%instPath%' '!instPath!'
+	if not exist "!instPath!" ( set "instPath=%%a %%b %%c %%d")
+	rem echo instPath 3 '%instPath%' '!instPath!'
+	if not exist "!instPath!" ( set "instPath=%%a %%b %%c %%d %%e")
+	rem echo instPath 4 '%instPath%' '!instPath!'
+	if not exist "!instPath!" ( set "instPath=%%a %%b %%c %%d %%e %%f")
+	rem echo instPath 5 '%instPath%' '!instPath!'
 )
-rem echo vscodei final='%vscodei%' '!vscodei!'
-endlocal & set vscodei=%vscodei%
+rem echo instPath final='%instPath%' '!instPath!'
+endlocal & set "instPath=%instPath%" & set "standaloneGetInstallPath=%standaloneGetInstallPath%"
 
-for /f  %%a in ('alias vscode') do (
-	set vv=%%a
-)
-rem echo vv='%vv%' '%vscodei%'
+rem for /f  %%a in ('alias vscode') do (
+rem 	set vv=%%a
+rem )
+rem echo vv='%vv%' '%instPath%'
 
-if not exist "%vscodei%" (
-	if "%ignorevscode%"=="" (
-		echo "VSCode '%vscodei%' incorrect path, as determined by '%HOME%\bin\setvscodei.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM). Try and set env var 'vscodei' to the right path in User environment variable"
-		exit /b 13
+if not exist "%instPath%" (
+	if "%ignoreNoInstPath%"=="" (
+		set "instPath="
+		set "standaloneGetInstallPath="
+		%_fatal% "%prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'." 13
+	) else (
+		if "%standaloneGetInstallPath%"=="true" (
+			%_error% "%prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'."
+		)
 	)
+)
+
+set ASCII27=
+rem set ASCII27=← 
+
+if "%standaloneGetInstallPath%"=="true" (
+
+	echo %ASCII27%[106;30m INFO  %ASCII27%[0m: instPath='%instPath%'
+	set "instPath="
+	set "standaloneGetInstallPath="
+	set "ASCII27="
 )
