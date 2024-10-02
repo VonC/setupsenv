@@ -21,6 +21,9 @@ set PATH=%script_dir_bin%;%PATH%
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 
+set "EDITOR=%PRGS%\vscodes\current\bin\code.cmd"
+
+
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 set "senv_dir=%script_dir_bin%"
 if exist "%USERPROFILE%\usernamel" goto:setusernamel
