@@ -85,6 +85,7 @@ if "%batdetected%"=="true" (
    %_ok% "senv activated: senv_dir='%senv_dir%'"
 )
 endlocal
+set "senv_dir="
 set "_ok="
 set "_info="
 set "_task="
