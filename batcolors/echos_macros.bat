@@ -3,6 +3,7 @@ rem https://ss64.com/nt/syntax-macros.html
 
 
 if "%1"=="export" ( goto:start_bc )
+if "%1"=="unset" ( goto:unset )
 
 if not "%1"=="" (
     call:unset
