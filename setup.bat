@@ -183,7 +183,7 @@ if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
     type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
 )
 
-call:install "VSCodeUserSetup-x64-*" "vscodes" "system" || exit /b 1
+call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
 )
@@ -243,6 +243,7 @@ set "sys=%~3"
 if not "%prgtoinstall%"=="" (
     if not "%prgtoinstall%"=="%f%" (
         %_warning% "Skip '%f%' installation (for '%prgtoinstall%')"
+        rem @echo on
         goto:eof
     )
 )
