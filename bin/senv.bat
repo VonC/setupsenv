@@ -49,9 +49,8 @@ if exist "%script_dir_bin%\profile" (
       call %HOME%\bin\senv.custom.%senv_profile%.bat"
    )
 )
-if "%ignorevscode%"=="" (
-   call %HOME%\bin\setvscodei.bat
-)
+
+set "vscodei="
 
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
@@ -83,3 +82,9 @@ if "%batdetected%"=="true" (
    %_ok% "senv activated: senv_dir='%senv_dir%'"
 )
 endlocal
+set "_ok="
+set "_info="
+set "_task="
+set "_warning="
+set "_fatal="
+set "_error="
