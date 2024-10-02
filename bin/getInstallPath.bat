@@ -15,10 +15,13 @@ if exist !script_dir!\..\batcolors (
 	echo "batcolor not found in script_dir '!script_dir!'" >&2
 	exit /b 1
 )
-
+@echo on
 set "prgname=%~1"
 set "prgpattern=%~2"
-%_task% "Must get installation path 'instpath' of '%prgname%' pattern '%prgpattern%'"
+if "%standaloneGetInstallPath%"=="" (
+	set "standaloneGetInstallPath=%~3"
+)
+%_task% "Must get installation path instpath of '%prgname%' pattern '%prgpattern%' standaloneGetInstallPath '%standaloneGetInstallPath%'"
 rem @echo on
 if "%prgname%"=="" (
 	%_fatal% "prgname must be provided (ex: VSCode)" 1
@@ -84,3 +87,4 @@ if "%standaloneGetInstallPath%"=="true" (
 	set "ASCII27="
 )
 set "standaloneGetInstallPath="
+echo RES instPath='%instPath%'
