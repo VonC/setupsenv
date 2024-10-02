@@ -5,11 +5,12 @@ if "%script_dir%"=="" (
 		set "empty_pre_ok=true"
 )
 call %script_dir%\batcolors\echos_macros.bat export
-%_info% "pre: vscode"
+%_info% "vscodes.pre: vscode"
 
 set "pre_ok="
 call %script_dir%\bin\getInstallPath.bat VSCode code
-%_info% "pre: instPath='%instPath%'"
+%_info% "vscodes.pre: instPath='%instPath%'"
+rem @echo on
 if exist "%instPath%\bin\code.cmd" (
   set "pre_ok=true"
 	if "%1"=="" (
