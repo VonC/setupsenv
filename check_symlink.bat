@@ -40,6 +40,7 @@ if not "%p:system-=%"=="%p%" (
         %_fatal% "Pre-check 'system' empty instaPath unable to get installation for '%f%' pattern '!ipattern!'" 33
     )
     set "msgp='!p!' (system)"
+    set "instPath="
 )
 
 if not "%sln:system-=%"=="%p%" (
