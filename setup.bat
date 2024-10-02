@@ -187,6 +187,7 @@ call:install "VSCodeUserSetup-x64-*" "vscodes" "system" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
 )
+goto:alldone
 %_info% "=========="
 %_info% "processing custom installation list '%instlist%'"
 @echo off
@@ -272,6 +273,7 @@ if exist "%HOME%\.gitconfig" (
 set pre_ok=false
 call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
 if "%pre_ok%"=="true" (
+    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
     %_ok% "pre-check ok for %f%: nothing more to do"&& exit /b 0
 )
 set "tpath=%PRGS%\%f%\_%pname%"
