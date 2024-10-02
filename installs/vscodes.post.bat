@@ -1,26 +1,32 @@
+@echo off
+setlocal enabledelayedexpansion
+
 rem https://stackoverflow.com/questions/42582230/how-to-install-visual-studio-code-silently-without-auto-open-when-installation
 rem VSCodeSetup-1.10.1.exe /VERYSILENT /MERGETASKS=!runcode
 
-%_info% "Check vscode path '%vscodei%'"
+if "%script_dir%"=="" (
+    for %%i in ("%~dp0..") do SET "script_dir=%%~fi"
+)
+call %script_dir%\batcolors\echos_macros.bat export
+call %script_dir%\bin\getInstallPath.bat VSCode code
+%_info% "Check vscode path '%instPath%\'"
 
-if exist "%vscodei%bin\code.cmd" (
+if exist "%instPath%\bin\code.cmd" (
     if not "%1"=="update" (
-        %_ok% "Standard path" exit /b 0
+        %_ok% "Standard path"
+        goto:eoflocal
     )
 )
-if "%vscodei%"=="" ( %_warning% "No VSCode Installation path detected"&& exit /b 0 )
-if not exist "%vscodei%" ( %_warning% "VSCode Installation path '%vscodei%' does not exist"&& exit /b 0 )
+if "%instPath%"=="" ( %_warning% "No VSCode Installation path detected"&& exit /b 0 )
+if not exist "%instPath%" ( %_warning% "VSCode Installation path '%instPath%' does not exist"&& goto:eoflocal )
 set "f=%HOME%\bin\senv.local.doskey"
-if not exist "%f%"  ( %_warning% "VSCode alias: no '%f%' alias file present"&& exit /b 0 )
-grep vscode "%f%">NUL
-if errorlevel 1 (
-    %_info% "Add VSCode alias to '%f%'"
-    echo vscode="%vscodei%bin\code.cmd" $*>>"%f%"
-    echo aliase="%vscodei%bin\code.cmd" "%HOME%\bin\senv.local.doskey">>"%f%"
-) else (
-    %_info% "Update VSCode alias to '%f%'"
+if not exist "%f%"  ( goto:eoflocal )
+grep vscodes "%f%">NUL
+if not errorlevel 1 (
+    %_info% "Make sure '%f%' does not have vscode or aliase aliases"
     sed -i "/^vscode=.*$/d" "%f%"
     sed -i "/^aliase=.*$/d" "%f%"
-    echo vscode="%vscodei%bin\code.cmd" $*>>"%f%"
-    echo aliase="%vscodei%bin\code.cmd" "%HOME%\bin\senv.local.doskey">>"%f%"
 )
+:eoflocal
+endlocal
+exit /b 0
