@@ -259,12 +259,12 @@ if exist "%setupsdir%\%p%" (
 )
 rem echo fname='%fname%'
 rem echo pname='%pname%'
-if "%pname%"=="" ("%setupsdir%\%p%"
+if "%pname%"=="" (
     if exist "%setupsdir%\_%f%" (
         %_warning% "Skip '%f%' installation (test found)"
         goto:eof
     )
-    %_fatal% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'" && exit /b 1
+    %_fatal% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'" 112
 )
 :info
 %_info% "--------------"
