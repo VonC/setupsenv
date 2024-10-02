@@ -13,7 +13,7 @@ pzx=%sz% x -aos -o$2 -pdefault -sccUTF-8 ^"$1^"
 pzc=%sz% a -tzip -mm=Deflate -mmt=on -mx5 -w "$2" "$1"
 senv=call "%USERPROFILE%\senv.bat"
 
-vscode="%vscodei%\bin\code.cmd" $*
+vscode="%PRGS%\vscodes\current\bin\code.cmd" $*
 
 gl=git lg -10
 gla=git lg --all
@@ -32,8 +32,8 @@ gpft=git push --follow-tags $*
 grc=cmd /V /C "set "GIT_EDITOR=true" && git rebase --continue"
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
-aliase="%vscodei%\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
-senve="%vscodei%\bin\code.cmd" "%HOME%\bin\senv.local.bat"
+aliase="%PRGS%\vscodes\current\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
+senve="%PRGS%\vscodes\current\bin\code.cmd" "%HOME%\bin\senv.local.bat"
 
 clear=cls
 e.=explorer .
