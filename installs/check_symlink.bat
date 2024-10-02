@@ -50,11 +50,11 @@ if not "%sln:system-=%"=="%p%" (
     if errorlevel 1 (
         %_fatal% "Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
     )
-    set "sln=!instPath!"
-    if "!sln!"=="" (
+    set "sln=current"
+    if "!instPath!"=="" (
         %_fatal% "Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
     )
-    set "msgsln='!sln!' (system)"
+    set "msgsln='!sln!' (system to instPath '!instPath!')"
 )
 
 %_info% "Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
