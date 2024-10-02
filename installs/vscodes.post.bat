@@ -9,7 +9,7 @@ if "%script_dir%"=="" (
 )
 call %script_dir%\batcolors\echos_macros.bat export
 call %script_dir%\bin\getInstallPath.bat VSCode code
-%_info% "Check vscode path '%instPath%\'"
+%_info% "vscodes.post: Check vscode path '%instPath%'"
 
 if exist "%instPath%\bin\code.cmd" (
     if not "%1"=="update" (
