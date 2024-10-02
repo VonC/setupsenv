@@ -254,7 +254,9 @@ set pname=
 rem echo "p='%p%', f='%f%'"
 rem http://steve-jansen.github.io/guides/windows-batch-scripting/part-2-variables.html
 rem https://stackoverflow.com/questions/3215501/batch-remove-file-extension
-for /F "usebackq" %%i in (`dir /OD /B "%setupsdir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
+if exist "%setupsdir%\%p%" (
+    for /F "usebackq" %%i in (`dir /OD /B "%setupsdir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
+)
 rem echo fname='%fname%'
 rem echo pname='%pname%'
 if "%pname%"=="" ("%setupsdir%\%p%"
