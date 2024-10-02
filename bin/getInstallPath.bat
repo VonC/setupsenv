@@ -15,7 +15,7 @@ if exist !script_dir!\..\batcolors (
 	echo "batcolor not found in script_dir '!script_dir!'" >&2
 	exit /b 1
 )
-@echo on
+rem @echo on
 set "prgname=%~1"
 set "prgpattern=%~2"
 if "%standaloneGetInstallPath%"=="" (
@@ -87,4 +87,4 @@ if "%standaloneGetInstallPath%"=="true" (
 	set "ASCII27="
 )
 set "standaloneGetInstallPath="
-echo RES instPath='%instPath%'
+rem echo RES instPath='%instPath%'
