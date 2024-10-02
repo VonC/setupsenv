@@ -56,12 +56,6 @@ for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVe
 	rem echo instPath 5 '%instPath%' '!instPath!'
 )
 rem echo instPath final='%instPath%' '!instPath!'
-endlocal & set "instPath=%instPath%" & set "standaloneGetInstallPath=%standaloneGetInstallPath%"
-
-rem for /f  %%a in ('alias vscode') do (
-rem 	set vv=%%a
-rem )
-rem echo vv='%vv%' '%instPath%'
 
 if not exist "%instPath%" (
 	if "%ignoreNoInstPath%"=="" (
@@ -74,7 +68,11 @@ if not exist "%instPath%" (
 		)
 	)
 )
-
+endlocal & set "instPath=%instPath%" & set "standaloneGetInstallPath=%standaloneGetInstallPath%"
+rem if instPath ends with a trailing backslash, remove trailing backslash
+if "%instPath:~-1%"=="\" ( set "instPath=%instPath:~0,-1%" )
+rem echo getInstallPath: instPath='%instPath%'
+rem echo getInstallPath: standaloneGetInstallPath='%standaloneGetInstallPath%'
 set ASCII27=
 rem set ASCII27=← 
 
@@ -85,3 +83,4 @@ if "%standaloneGetInstallPath%"=="true" (
 	set "standaloneGetInstallPath="
 	set "ASCII27="
 )
+set "standaloneGetInstallPath="
