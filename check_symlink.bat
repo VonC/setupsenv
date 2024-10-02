@@ -17,10 +17,46 @@ if "%script_dir%"=="" (
 )
 
 set "p=%~1"
+set "msgp='%p%'"
 set "f=%~2"
 set "sln=%~3"
+set "msgsln='%sln%'"
 
-rem %_info% "Check symlink with p='%p%', f='%f%' and sln='%sln%'"
+if "%p%"=="system" (
+    %_fatal% "Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
+)
+if "%sln%"=="system" (
+    %_fatal% "Post-check symlink 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 32
+)
+if not "%p:system-=%"=="%p%" (
+    set "ipattern=%p:system-=%"
+    %_task% "check_symlink (p): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
+    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    if errorlevel 1 (
+        %_fatal% "Pre-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 32
+    )
+    set "p=%instPath%"
+    if "!p!"=="" (
+        %_fatal% "Pre-check 'system' empty instaPath unable to get installation for '%f%' pattern '!ipattern!'" 33
+    )
+    set "msgp='!p!' (system)"
+)
+
+if not "%sln:system-=%"=="%p%" (
+    set "ipattern=%sln:system-=%"
+    %_task% "check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
+    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    if errorlevel 1 (
+        %_fatal% "Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
+    )
+    set "sln=!instPath!"
+    if "!sln!"=="" (
+        %_fatal% "Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
+    )
+    set "msgsln='!sln!' (system)"
+)
+
+%_info% "Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
 rem @echo on
 
 if exist "%script_dir%\installs\%f%.sln.bat" (
