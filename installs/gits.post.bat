@@ -160,7 +160,7 @@ if not exist "%GITPATH%\.git\objects" (
 )
 grep bare "%GITPATH%\.git\config" 1>NUL 2>NUL
 if errorlevel 1 (
-    copy /Y "%script_dir%\bin\.git_config" "%GITPATH%\.git\config"
+    copy /Y "%script_dir%\.gitconfig" "%GITPATH%\.git\config"
 )
 if not exist "%GITPATH%\.gitignore" (  copy "%script_dir%\bin\.gitignore" "%GITPATH%" )
 
