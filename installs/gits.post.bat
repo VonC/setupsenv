@@ -9,9 +9,9 @@ if "%script_dir%"=="" (
 %_info% "~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
 %_info% " Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
-set ignorevscode=1
+set "internalsenvcall=1"
 call "%HOMEBIN%\senv.bat"
-set ignorevscode=
+set "internalsenvcall="
 %_info% "   [senv called]"
 cd /d "%HOMEBIN%"
 if errorlevel 1 (%_fatal% "Unable to cd to %HOMEBIN%" 111)
