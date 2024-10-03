@@ -175,7 +175,9 @@ findstr /i "peazips" "%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=peazip_portable-*" )
 call:install "%pattern%" "peazips" || exit /b 1
 set szdone="true"
-call:install "PortableGit-*" "gits" || exit /b 1
+findstr /i "gits" "%instlist%" >nul
+if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=PortableGit-*" )
+call:install "%pattern%" "gits" || exit /b 1
 
 
 if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
