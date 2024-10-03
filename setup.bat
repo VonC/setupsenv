@@ -170,12 +170,14 @@ if "%setupsdir%"=="" (
     )
 )
 %_info% "setupsdir='%setupsdir%'"
+cd /d "%script_dir%"
 rem goto:alldone
-findstr /i "peazips" "%instlist%" >nul
+findstr /i "peazips" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=peazip_portable-*" )
 call:install "%pattern%" "peazips" || exit /b 1
 set szdone="true"
-findstr /i "gits" "%instlist%" >nul
+cd /d "%script_dir%"
+findstr /i "gits" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=PortableGit-*" )
 call:install "%pattern%" "gits" || exit /b 1
 
@@ -184,7 +186,7 @@ if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
     %_info% "REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
     type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
 )
-
+cd /d "%script_dir%"
 call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
