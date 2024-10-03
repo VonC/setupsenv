@@ -91,6 +91,19 @@ if not "%drive%"=="C" (
     )
 )
 
+if not "%instPath%"=="" (
+    %_info% "For system installation, change p '%p%' to '%instPath%'"
+    set "p=%instPath%"
+)
+
+if not exist "%PRGS%\%f%\" (
+    %_task% "Must create '%PRGS%\%f%' for '%sln%' to reference '%p%'"
+    mkdir "%PRGS%\%f%"
+    if errorlevel 1 (
+        %_fatal% "Unable to create '%PRGS%\%f%' for '%sln%' to reference '%p%'" 1
+    )
+)
+
 if not exist "%PRGS%\%f%\%sln%" (
     %_info% "Must create '%sln%' to reference '%p%'"
     goto:create
