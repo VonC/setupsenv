@@ -23,10 +23,12 @@ set "sln=%~3"
 set "msgsln='%sln%'"
 
 if "%p%"=="system" (
-    %_fatal% "Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
+    rem %_fatal% "Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
+    set "p=system-%f:~0,-1%"
 )
 if "%sln%"=="system" (
-    %_fatal% "Post-check symlink 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 32
+    rem %_fatal% "Post-check symlink 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 32
+    set "sln=system-%f:~0,-1%"
 )
 if not "%p:system-=%"=="%p%" (
     set "ipattern=%p:system-=%"
