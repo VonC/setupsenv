@@ -67,6 +67,9 @@ if exist "%script_dir_bin%\profile" (
    )
 )
 set "script_dir_bin="
+if "%internalsenvcall%"=="1" (
+   goto:eof
+)
 setlocal enabledelayedexpansion
 set "script_dir=%~dp0"
 set "batdetected=false"
