@@ -320,6 +320,9 @@ if "%f%"=="vscodes" (
 )
 if not exist "%PRGS%\setup" ( mkdir "%PRGS%\setup")
 if not exist "%PRGS%\%f%" ( mkdir "%PRGS%\%f%" )
+if not "%pname:system=%"=="%pname%" (
+    goto:postinstall
+)
 
 rem https://stackoverflow.com/questions/17546016/how-can-you-zip-or-unzip-from-the-script-using-only-windows-built-in-capabiliti/26843122#26843122
 rem powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('foo.zip', 'bar'); }"
@@ -345,6 +348,7 @@ if errorlevel 1 (
     %_fatal% "Error on 7z uncompression" 1
 )
 %_ok% "'%fname%' uncompressed (7z) to '%tpath%'"
+:postinstall
 call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
 call:check_post "%f%" || exit /b 1
 cd /d "%script_dir%"
