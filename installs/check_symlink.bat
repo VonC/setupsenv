@@ -45,8 +45,14 @@ if not "%p:system-=%"=="%p%" (
     rem %_fatal% "instPath='!instPath!',p='!p!', msgp='!msgp!'" 320
     rem set "instPath="
 )
-
-if not "%sln:system-=%"=="%p%" (
+echo sln='%sln%', p='%p%'
+rem %_fatal% "instPath='%instPath%',sln='%sln%', msgsln='%msgsln%'" 321
+rem @echo on
+rem echo sln minus system='%sln:system-=%'
+rem echo sln='%sln%'
+if "%sln%"=="" ( set "sln=current" )
+set "msgsln='%sln%'"
+if not "%sln:system-=%"=="%sln%" (
     set "ipattern=%sln:system-=%"
     %_task% "check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
     call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
@@ -57,7 +63,7 @@ if not "%sln:system-=%"=="%p%" (
     if "!instPath!"=="" (
         %_fatal% "Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
     )
-    set "msgsln='!sln!' (system to instPath '!instPath!')"
+    set "msgsln='!sln!' [system to instPath '!instPath!']"
 )
 
 %_info% "Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
