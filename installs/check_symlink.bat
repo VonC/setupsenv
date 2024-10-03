@@ -120,7 +120,11 @@ if errorlevel 1 (
 goto:eof
 
 :create
-call :check_subdir
+if "%instPath%"=="" (
+    call :check_subdir
+) else (
+    set "tpath=%p%"
+)
 mklink /J "%PRGS%\%f%\%sln%" "!tpath!"
 if errorlevel 1 (
     %_warning% "Unable to create %sln% symlink for '%f%\%p%' (!tpath!)"
