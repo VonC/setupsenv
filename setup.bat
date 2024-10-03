@@ -234,8 +234,8 @@ set script_dir=
 set profile=
 set setupsdirbat=
 set setupsdir=
+%_ok% "calling senv.bat: You are good to go"
 call "%HOME%\bin\senv.bat"
-%_ok% "senv.bat called: You are good to go"
 goto:eof
 
 :install
