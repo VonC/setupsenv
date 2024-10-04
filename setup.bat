@@ -191,7 +191,7 @@ call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
 if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
 )
-goto:alldone
+
 %_info% "=========="
 %_info% "processing custom installation list '%instlist%'"
 @echo off
