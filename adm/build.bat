@@ -64,14 +64,15 @@ if not "%st%"=="" (
         %_fatal% "Not a clean git status in senv '%senv_dir%' (%sbem%)" 1
     )
 )
-goto:eof
+@echo on
+
 :skipcl
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
 echo %vcsenv%>"%custom_dir%\version"
 rem %_fatal% "stop for now" 1
 
-if exist "%custom_dir%\..\..\build.pre.bat" ( call "%custom_dir%\..\..\build.pre.bat" )
+if exist "%builds_dir%\build.pre.bat" ( call "%builds_dir%\build.pre.bat" )
 
 cd senv
 call gcuvc
