@@ -1,12 +1,12 @@
 @echo off
 setlocal enabledelayedexpansion
 
-for %%i in ("%~dp0.") do SET "script_dir=%%~fi\custom"
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 
 set "bc=%script_dir%\..\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "script_dir(publish)='%script_dir%'"
+%_info% "script_dir(build_all)='%script_dir%'"
 
 cd ../custom || %_fatal% "Unable to access custom folder" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
