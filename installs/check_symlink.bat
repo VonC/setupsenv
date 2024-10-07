@@ -22,6 +22,9 @@ set "f=%~2"
 set "sln=%~3"
 set "msgsln='%sln%'"
 
+set "orig_p=%p%"
+set "orig_sln=%sln%"
+
 if "%p%"=="system" (
     rem %_fatal% "Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
     set "p=system-%f:~0,-1%"
@@ -45,7 +48,7 @@ if not "%p:system-=%"=="%p%" (
     rem %_fatal% "instPath='!instPath!',p='!p!', msgp='!msgp!'" 320
     rem set "instPath="
 )
-echo sln='%sln%', p='%p%'
+rem echo sln='%sln%', p='%p%'
 rem %_fatal% "instPath='%instPath%',sln='%sln%', msgsln='%msgsln%'" 321
 rem @echo on
 rem echo sln minus system='%sln:system-=%'
@@ -64,6 +67,13 @@ if not "%sln:system-=%"=="%sln%" (
         %_fatal% "Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
     )
     set "msgsln='!sln!' [system to instPath '!instPath!']"
+)
+
+if not "%p%"=="%orig_p%" (
+    set "msgp=%msgp% (orig: '%orig_p%')"
+)
+if not "%sln%"=="%orig_sln%" (
+    set "msgsln=%msgsln% (orig: '%orig_sln%')"
 )
 
 %_info% "Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
@@ -110,17 +120,33 @@ if not exist "%PRGS%\%f%\%sln%" (
     %_info% "Must create '%sln%' to reference '%p%'"
     goto:create
 )
-%_task% "Must check if symlink '%sln%' does reference p '%p%'"
-rem @echo on
-for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr %sln%') do (set s=%%a)
-rem echo "s='%s%'"
-echo "%s%" | C:\Windows\System32\findstr "%p%" 1>NUL: 2>NUL:
-if errorlevel 1 (
-    %_info% "Must update '%sln%' to reference '%p%'"
-    rmdir "%PRGS%\%f%\%sln%"
-    goto:create
+set "slnpath=%p%"
+if not "%p%"=="%instPath%" (
+    if not "%instPath%"=="" (
+        set "slnpath=%instPath%"
+        set "slnpathmsg= (instead of p='%p%')"
+    )
 )
-%_ok% "symlink '%sln%' already exist, and references p '%p%'"
+%_task% "Must check if symlink '%sln%' does reference p '%slnpath%'%slnpathmsg%"
+rem @echo on
+for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr.exe %sln%') do (set s=%%a)
+set "s=%s:~0,-1%"
+echo "s='%s%' vs slnpath='%slnpath%'"
+if not "%slnpath::=%"=="%slnpath%" (
+    rem This is an absolute path: test for equality
+    if not "%s%"=="%slnpath%" (
+        %_info% "Must update '%sln%' to reference absolute path '%slnpath%'%slnpathmsg%, instead of s '%s%'"
+        rmdir "%PRGS%\%f%\%sln%"
+        goto:create
+    )
+) else (
+    echo %s% | C:\Windows\System32\findstr "\%slnpath%" 1>NUL: 2>NUL: || (
+        %_info% "Must update '%sln%' to reference '%slnpath%'%slnpathmsg%, instead of s '%s%'"
+        rmdir "%PRGS%\%f%\%sln%"
+        goto:create
+    )
+)
+%_ok% "symlink '%sln%' already exist, and references p '%slnpath%'"
 goto:eof
 
 :create
