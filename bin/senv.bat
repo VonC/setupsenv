@@ -1,16 +1,29 @@
 @echo off
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
+for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
+set "admPath="
+if exist "%script_dir_bin%\..\adm" (
+   for %%i in ("%script_dir_bin%\..\adm") do (
+      set "admPath=%%~fi;"
+   )
+)
+if not exist "%script_dir_bin%\senv.local.pre.bat" (
+   set "script_dir_bin=%HOME%\bin"
+)
+if not exist "%script_dir_bin%\senv.local.pre.bat" (
+   echo "script_dir_bin '%script_dir_bin%' must be reference senv.local.pre.bat" && exit /b 1
+)
 set PRGS=
 set HOME=
-for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 call "%script_dir_bin%\senv.local.pre.bat"
 if "%PRGS%"=="" ( echo "PRGS (installation folder) must be defined" && exit /b 1 )
 if "%HOME%"=="" ( echo "HOME must be defined" && exit /b 1 )
 if "%PROG%"=="" ( echo "PROG (data folder) must be defined" && exit /b 1 )
 
 set GH=%PRGS%\gits\current
-set PATH=%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%
+set PATH=%admPath%%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%
+set "admPath="
 
 set LANG=en_US.UTF-8
 set LC_ALL=C.UTF-8
