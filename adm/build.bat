@@ -22,7 +22,6 @@ cd "%custom_dir%" || %_fatal% "Unable to access custom folder" 1
 for /F "delims=" %%f in ('cd') do ( set custom_dir=%%f)
 %_info% "Custom folder full path: '%custom_dir%'"
 
-goto:eof
 set s="setupsdir_%profile%.bat"
 if not exist "%custom_dir%\%s%" (
     %_fatal% "setupsdir script '%s%' does not exist" 2
@@ -30,21 +29,19 @@ if not exist "%custom_dir%\%s%" (
 
 echo %profile%>profile
 
-git config --unset user.name
-git config --unset user.email
-
 cd ..
 if not exist custom (
     %_fatal% "current folder must be named custom" 1
 )
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
 %_info% "senv folder full path: '%senv_dir%'"
-git config --unset user.name
-git config --unset user.email
-cd ..
-if not exist senv (
-    %_fatal% "custom must be in senv folder" 1
+
+if not exist builds (
+    %_fatal% "builds must be in senv folder" 1
 )
+set "builds_dir=%senv_dir%\builds"
+%_info% "builds folder full path: '%builds_dir%'"
+
 
 for /f "delims=" %%x in ('git -C "%custom_dir%" status --porcelain') do set "st=%%x"
 rem goto:skipcl
