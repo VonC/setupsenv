@@ -102,12 +102,15 @@ if not exist "%PRGS%\%f%\" (
     if errorlevel 1 (
         %_fatal% "Unable to create '%PRGS%\%f%' for '%sln%' to reference '%p%'" 1
     )
+) else (
+    %_ok% "Folder '%f%' already exists"
 )
 
 if not exist "%PRGS%\%f%\%sln%" (
     %_info% "Must create '%sln%' to reference '%p%'"
     goto:create
 )
+%_task% "Must check if symlink '%sln%' does reference p '%p%'"
 rem @echo on
 for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr %sln%') do (set s=%%a)
 rem echo "s='%s%'"
@@ -117,6 +120,7 @@ if errorlevel 1 (
     rmdir "%PRGS%\%f%\%sln%"
     goto:create
 )
+%_ok% "symlink '%sln%' already exist, and references p '%p%'"
 goto:eof
 
 :create
