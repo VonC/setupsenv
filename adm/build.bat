@@ -74,15 +74,16 @@ rem %_fatal% "stop for now" 1
 
 if exist "%builds_dir%\build.pre.bat" ( call "%builds_dir%\build.pre.bat" )
 
-cd senv
+cd %senv_dir%
 call gcuvc
-cd custom
-call gcu
+cd %custom_dir%
+call gcuu
 call "%custom_dir%\setupsdir_%profile%.bat" %2
 if errorlevel 1 (
     %_error% "Unable to call '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
 %_info% "setupsdir='%setupsdir%'"
+goto:eof
 if not exist "%setupsdir%\..\version" (
     %_ok% "New publication"
     goto:build_and_publish
