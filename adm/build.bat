@@ -42,18 +42,29 @@ if not exist builds (
 set "builds_dir=%senv_dir%\builds"
 %_info% "builds folder full path: '%builds_dir%'"
 
-
+set "sbem=SENV_BUILD_ERROR_MODE='%SENV_BUILD_ERROR_MODE%'"
 for /f "delims=" %%x in ('git -C "%custom_dir%" status --porcelain') do set "st=%%x"
 rem goto:skipcl
 if not "%st%"=="" (
-    %_fatal% "Not a clean git status in '%custom_dir%'" 1
-    rem %_error% "Not a clean git status in '%custom_dir%'" 1
+    if "%SENV_BUILD_ERROR_MODE%"=="custom" (
+        %_error% "Not a clean git status in custom '%custom_dir%' (%sbem%)"
+    ) else if "%SENV_BUILD_ERROR_MODE%"=="both" (
+        %_error% "Not a clean git status in custom '%custom_dir%' (%sbem%)"
+    ) else (
+        %_fatal% "Not a clean git status in custom '%custom_dir%' (%sbem%)" 1
+    )
 )
-for /f "delims=" %%x in ('git -C "%custom_dir%\.." status --porcelain') do set "st=%%x"
+for /f "delims=" %%x in ('git -C "%senv_dir%" status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
-    %_fatal% "Not a clean git status in '%custom_dir%\..'" 1
-    rem %_error% "Not a clean git status in '%custom_dir%\..'" 1
+    if "%SENV_BUILD_ERROR_MODE%"=="senv" (
+        %_error% "Not a clean git status in senv '%senv_dir%' (%sbem%)"
+    ) else if "%SENV_BUILD_ERROR_MODE%"=="both" (
+        %_error% "Not a clean git status in senv '%senv_dir%' (%sbem%)"
+    ) else (
+        %_fatal% "Not a clean git status in senv '%senv_dir%' (%sbem%)" 1
+    )
 )
+goto:eof
 :skipcl
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
