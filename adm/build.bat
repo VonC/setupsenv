@@ -64,7 +64,7 @@ if not "%st%"=="" (
         %_fatal% "Not a clean git status in senv '%senv_dir%' (%sbem%)" 1
     )
 )
-@echo on
+rem @echo on
 
 :skipcl
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
