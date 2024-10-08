@@ -1,10 +1,13 @@
 @echo off
 setlocal enabledelayedexpansion
 
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\..\batcolors\echos_macros.bat export
-)
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
+cd ..
+for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
+call %senv_dir%\batcolors\echos_macros.bat
+set "custom_dir=%senv_dir%\custom"
+
 
 :detect_drive
 set "driveUNCPath=%1"
@@ -96,7 +99,7 @@ if not "%drRefresh%"=="" (
     %_ok% "Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
 )
 
-set "dl=%script_dir:\custom=%\driverLetter.bat"
+set "dl=%custom_dir%\driverLetter.bat"
 echo @echo off>"%dl%"
 echo set "driveLetter=%driveLetter%">>"%dl%"
 endlocal & set driveLetter=%driveLetter%
