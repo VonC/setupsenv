@@ -33,7 +33,7 @@ if "%HOME%"=="" ( echo "HOME must be defined" && exit /b 1 )
 if "%PROG%"=="" ( echo "PROG (data folder) must be defined" && exit /b 1 )
 
 set GH=%PRGS%\gits\current
-set "PATH=%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
 
 set LANG=en_US.UTF-8
 set LC_ALL=C.UTF-8
