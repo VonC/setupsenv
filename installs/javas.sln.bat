@@ -1,12 +1,27 @@
 @echo off
 setlocal enabledelayedexpansion
 
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\..\batcolors\echos_macros.bat export
+set "p=%~1"
+set "res="
+if not "%p:jdk-=%" == "%p%" ( 
+    set "res=%p:jdk-=%"
+)
+for /f "tokens=1 delims=u" %%a in ("%res%") do (
+    set "res=%%a"
+)
+if not "%res%"=="" (
+    echo jdk%res%
+    endlocal
+    goto:eof
 )
 
-set "p=%~1"
-if not "%p:jdk-8u=%" == "%p%" ( echo jdk8)
-if not "%p:hotspot_11.=%" == "%p%" ( echo jdk11)
-if not "%p:hotspot_17.=%" == "%p%" ( echo jdk17)
+if "%p:OpenJDK=%" == "%p%" ( endlocal && goto:eof )
+set "p=%p:OpenJDK=%"
+for /f "tokens=1 delims=U" %%a in ("%p%") do (
+    set "firstToken=%%a"
+)
+
+if not "%firstToken%"=="" (
+    echo jdk%firstToken%
+)
+endlocal

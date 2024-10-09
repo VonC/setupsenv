@@ -1,11 +1,14 @@
 @echo off
 setlocal enabledelayedexpansion
 
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\..\batcolors\echos_macros.bat export
-)
-
 set "p=%~1"
-if not "%p:node-v10.=%" == "%p%" ( echo node10)
-if not "%p:node-v14.=%" == "%p%" ( echo node14)
+if "%p:node-v=%" == "%p%" ( endlocal && goto:eof )
+
+set "p=%p:node-v=%"
+for /f "tokens=1 delims=." %%a in ("%p%") do (
+    set "firstToken=%%a"
+)
+if not "%firstToken%"=="" (
+    echo node%firstToken%
+)
+endlocal
