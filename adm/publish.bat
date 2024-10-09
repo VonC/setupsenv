@@ -3,33 +3,29 @@ setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
-
-set "bc=%script_dir%\..\batcolors"
+cd ..
+for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
+set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(publish)='%script_dir%'"
 
-cd ../custom || %_fatal% "Unable to access custom folder" 1
-for /F "delims=" %%f in ('cd') do ( set cpwd=%%f)
-%_info% "Custom folder full path: '%cpwd%'"
+cd "%senv_dir%\..\setup" || %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3
+for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
+cd "%senv_dir%\..\dl" || %_fatal% "Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
+for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
-dir ..\..\setup > NUL
-if errorlevel 1 (
-    %_fatal%  "../../setup unavailable" 3
-)
-
-dir ..\..\dl > NUL
-if errorlevel 1 (
-    %_fatal%  "../../dl unavailable (should symlink to C:\%USERNAME%\Downloads)" 5
-)
+set "custom_dir=%senv_dir%\custom"
+cd "%custom_dir%" || %_fatal% "Unable to access custom folder" 1
+%_info% "Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if "%1"=="" (
-    %_fatal%  "Usage: publish xxx [profile] (pattern to search for in Downloads or setup). No profile means publish to all." 4
+    %_fatal%  "Usage: publish xxx [profile/local/all] (pattern to search for in Downloads or setup). No profile means publish to local only." 4
 )
 
 set "sfound=setup"
-dir /b ..\..\setup|findstr %1 > a
+dir /b "%setup_dir%"|findstr %1 > a
 if errorlevel 1 (
-    dir /b ..\..\dl|findstr %1 > a
+    dir /b "%dl_dir%"|findstr %1 > a
     if errorlevel 1 (
         %_fatal%  "No '%1' pattern found in setup or Downloads" 6
     )
@@ -50,14 +46,22 @@ del a
 
 if "%sfound%"=="Downloads" (
     %_info% "Must copy match '%fname%' from Downloads to setup"
-    call:rbc ..\..\setup ..\..\dl
+    call:rbc "%setup_dir%" "%dl_dir%"
 )
 
 if not "%2"=="" (
     set "team=%2"
-    %_task% "Must publish '%fname% only for team name '!team!'"
 ) else (
+    set "team=local"
+)
+if "%team%"=="local" (
+    %_ok% "'%fname% published only for local setup '%setup_dir%'"
+    goto:eof
+)
+if "%team%"=="all" (
     %_task% "Must publish '%fname%' for all teams"
+) else (
+    %_task% "Must publish '%fname%' for team '%team%'"
 )
 
 REM https://stackoverflow.com/questions/4956873/how-to-cut-first-n-and-last-n-columns/51005303#51005303
@@ -93,7 +97,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
     rem set "profile=calx_tesys"
     set "skip="
     %_info% "sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
-    if not "%team%"=="" (
+    if not "%team%"=="all" (
         if not "%team%"=="!profile!" (
             %_warning% "Team '%team%' does not match profile '!profile!': skipping."
             set "skip=1"
