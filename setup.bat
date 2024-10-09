@@ -280,13 +280,13 @@ if exist "%HOME%\.gitconfig" (
 set pre_ok=false
 call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
 if "%pre_ok%"=="true" (
-    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+    call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     %_ok% "pre-check ok for %f%: nothing more to do"&& exit /b 0
 )
 set "tpath=%PRGS%\%f%\_%pname%"
 if exist "%tpath%" (
     %_ok% "Program '%pname%' already installed in '%PRGS%\%f%'"
-    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+    call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
@@ -294,7 +294,7 @@ if exist "%tpath%" (
 set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
     %_ok% "Program '%pname%' already installed2 in '%PRGS%\%f%'"
-    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+    call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
@@ -314,7 +314,7 @@ if "%install_ok%"=="true" (
     %_ok% "install ok for %f%: nothing more to do"&& exit /b 0
 )
 if "%install_ok%"=="check_symlink" (
-    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+    call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     exit /b 0
 )
 if "%f%"=="vscodes" (
@@ -335,7 +335,7 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     powershell.exe -nologo -noprofile -ExecutionPolicy UnRestricted; $var = "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('%PRGS%\setup\%fname%', '%tpath%'); $res=$?; Write-Host \"LASTEXITCODE='$res'\";if (-not $res) { return 1; }; return 0;}"; exit $var
     if errorlevel 1 ( %_fatal% "Error on powershell uncompression"&& exit /b 1 )
     %_ok% "'%fname%' uncompressed (powershell) to '%tpath%'"
-    call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+    call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
@@ -351,7 +351,7 @@ if errorlevel 1 (
 )
 %_ok% "'%fname%' uncompressed (7z) to '%tpath%'"
 :postinstall
-call "%script_dir%\check_symlink.bat" "%pname%" "%f%" "%sys%"
+call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
 call:check_post "%f%" || exit /b 1
 cd /d "%script_dir%"
 goto:eof
