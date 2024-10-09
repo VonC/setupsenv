@@ -3,12 +3,15 @@ setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
-
-set "bc=%script_dir%\..\batcolors"
+cd ..
+for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
+set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(build_all)='%script_dir%'"
+set "custom_dir=%senv_dir%\custom"
+set "builds_dir=%senv_dir%\builds"
 
-cd ../custom || %_fatal% "Unable to access custom folder" 1
+cd "%custom_dir%" || %_fatal% "Unable to access custom folder '%custom_dir%'" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
 %_info% "Custom folder full path: '%cpwd%'"
 
@@ -19,23 +22,24 @@ for /L %%n in (1 1 !output_cnt!) DO (
     rem %_info% "profile stored(%%n)='!profiles[%%n]!'"
 )
 
-del /F "%script_dir%"\build_all.log 2>NUL
+set "build_all_log=%builds_dir%\build_all.log"
+del /F "%build_all_log%" 2>NUL
 for /L %%n in (1 1 !output_cnt!) DO (
     set "profile=!profiles[%%n]!"
     %_info% "profile='!profile!'"
     call build.bat !profile!
     if errorlevel 1 (
-        %_error% "build.bat !profile! failed" >> "%script_dir%"\build_all.log
+        %_error% "build.bat !profile! failed">> "%build_all_log%"
     )
 )
 
-if not exist "%script_dir%"\build_all.log (
+if not exist "%build_all_log%" (
     %_ok "Builds All done"
     goto:eof
 )
 
 %_warning% "Some Build failed:"
-type "%script_dir%"\build_all.log
+type "%build_all_log%"
 
 goto:eof
 
