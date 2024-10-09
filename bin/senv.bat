@@ -5,8 +5,19 @@ for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 set "admPath="
 if exist "%script_dir_bin%\..\adm" (
    for %%i in ("%script_dir_bin%\..\adm") do (
-      set "admPath=%%~fi;"
+      set "admPath=%%~fi"
    )
+)
+if exist "%script_dir_bin%\..\adm" (
+   set "admPath=%admPath%;%script_dir_bin%"
+)
+if exist "%script_dir_bin%\..\adm" (
+   for %%i in ("%script_dir_bin%\..\installs") do (
+      set "admPath=%admPath%;%%~fi"
+   )
+)
+if not "%admPath%"=="" (
+   set "admPath=%admPath%;"
 )
 if not exist "%script_dir_bin%\senv.local.pre.bat" (
    set "script_dir_bin=%HOME%\bin"
@@ -22,14 +33,11 @@ if "%HOME%"=="" ( echo "HOME must be defined" && exit /b 1 )
 if "%PROG%"=="" ( echo "PROG (data folder) must be defined" && exit /b 1 )
 
 set GH=%PRGS%\gits\current
-set PATH=%admPath%%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%
-set "admPath="
+set "PATH=%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
 
 set LANG=en_US.UTF-8
 set LC_ALL=C.UTF-8
 set TERM=msys
-
-set PATH=%script_dir_bin%;%PATH%
 
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
@@ -65,6 +73,9 @@ if exist "%script_dir_bin%\profile" (
       call %HOME%\bin\senv.custom.%senv_profile%.bat"
    )
 )
+
+set "PATH=%admPath%%PATH%"
+set "admPath="
 
 set "vscodei="
 
