@@ -29,7 +29,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
     %_info% "profile='!profile!'"
     call build.bat !profile!
     if errorlevel 1 (
-        %_error% "build.bat !profile! failed">> "%build_all_log%"
+        echo build.bat !profile! failed>> "%build_all_log%"
     )
 )
 
