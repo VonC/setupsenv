@@ -1,16 +1,17 @@
 @echo off
 setlocal enabledelayedexpansion
 
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    if exist !script_dir!\..\batcolors (
-      call !script_dir!\..\batcolors\echos_macros.bat export
-    ) else if exist !script_dir!\batcolors (
-      call !script_dir!\batcolors\echos_macros.bat export
-    ) else (
-      echo "batcolor not found in script_dir '!script_dir!'" >&2
-      exit /b 1
-    )
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+if exist %script_dir%\..\batcolors (
+  call %script_dir%\..\batcolors\echos_macros.bat
+) else if exist %script_dir%\batcolors (
+  call %script_dir%\batcolors\echos_macros.bat
+) else if exist %script_dir%\echos_macros.bat (
+  call %script_dir%\echos_macros.bat
+) else (
+  echo "batcolor not found in script_dir '%script_dir%'" >&2
+  endlocal
+  exit /b 1
 )
 
 if "%~1"=="/i" (
