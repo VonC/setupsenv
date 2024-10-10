@@ -7,6 +7,10 @@ cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "script_dir='%script_dir%'"
+set "senv_dir=%script_dir%"
+cd "%senv_dir%\..\setup" || %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3
+for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
+cd /d "%script_dir%" || echo "unable to cd again to '%script_dir%'"&& exit /b 2
 set profile=
 set profil=
 set script_dir_bin=
@@ -265,10 +269,21 @@ rem echo fname='%fname%'
 rem echo pname='%pname%'
 if "%pname%"=="" (
     if exist "%setupsdir%\_%f%" (
-        %_warning% "Skip '%f%' installation (test found)"
+        %_warning% "Skip '%f%' installation (test found) in '%setupsdir%\_%f%'"
         goto:eof
     )
-    %_fatal% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'" 112
+    %_error% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'"
+) else ( goto:info )
+%_task% "Must check if '%f%', pattern '%p%' is in local setup dir '%setup_dir%'"
+if exist "%setup_dir%\%p%" (
+    for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
+)
+if "%pname%"=="" (
+    if exist "%setup_dir%\_%f%" (
+        %_warning% "Skip '%f%' installation (test found) in local '%setup_dir%\_%f%'"
+        goto:eof
+    )
+    %_fatal% "No setup file found in local '%setup_dir%' for '%f%', pattern '%p%'" 112
 )
 :info
 %_info% "--------------"
