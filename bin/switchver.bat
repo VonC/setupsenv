@@ -78,7 +78,7 @@ for /d %%f in (%prg_prefix%*) do (
     if not errorlevel 1 (
         set "PRG_VERSIONS=!PRG_VERSIONS! %%f"
         set /a count+=1
-        if "%%f" == "jdk%prg_version%" (
+        if "%%f" == "%prg_prefix%%prg_version%" (
             set "SELECTED_VERSION=%%f"
         )
     )
@@ -129,7 +129,7 @@ for /f "tokens=*" %%j in ('where %prg_exe%') do (
 )
 
 if not "%newPath%" == "" (
-    %_ok% "Java '%SELECTED_VERSION%' already in PATH"
+    %_ok% "%prg_name% '%SELECTED_VERSION%' already in PATH"
     goto:skip_clean_path
 )
 
