@@ -20,7 +20,7 @@ if not "%admPath%"=="" (
    set "admPath=%admPath%;"
 )
 if not exist "%script_dir_bin%\senv.local.pre.bat" (
-   set "script_dir_bin=%HOME%\bin"
+   set "script_dir_bin=%USERPROFILE%\home_senv\bin"
 )
 if not exist "%script_dir_bin%\senv.local.pre.bat" (
    echo "script_dir_bin '%script_dir_bin%' must be reference senv.local.pre.bat" && exit /b 1
