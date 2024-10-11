@@ -31,7 +31,7 @@ if "%LASTNAME%"=="" (
     set "LASTNAME=%USERNAME%"
 )
 call "%script_dir%\bin\check_trailing_newline.bat" "%HOMEBIN%\senv.local.pre.bat"
-if %ERRORLEVEL% eq 2 ( echo.>> "%HOMEBIN%\senv.local.pre.bat" )
+if "%ERRORLEVEL%"=="2" ( echo.>> "%HOMEBIN%\senv.local.pre.bat" )
 echo set ^"FIRSTNAME=%FIRSTNAME%^"%NL%set ^"LASTNAME=%LASTNAME%^"%NL%>> "%HOMEBIN%\senv.local.pre.bat"
 set "FULLNAME=%LASTNAME%"
 if not "%FIRSTNAME%"=="" (
@@ -174,7 +174,7 @@ if not errorlevel 1 (
 )
 %_task% "Must add '/batcolors/' in '%GITPATH%\.gitignore'"
 call "%script_dir%\bin\check_trailing_newline.bat" "%GITPATH%\.gitignore"
-if %ERRORLEVEL% eq 2 ( echo.>> "%GITPATH%\.gitignore" )
+if "%ERRORLEVEL%"=="2" ( echo.>> "%GITPATH%\.gitignore" )
 echo /batcolors>>"%GITPATH%\.gitignore"
 echo /batcolors/>>"%GITPATH%\.gitignore"
 

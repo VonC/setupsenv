@@ -227,7 +227,7 @@ echo script_dir='%script_dir%'
 rem set "script_dir=%cd%"
 findstr /V "cdi= cdis=" "%HOME%\bin\senv.local.doskey" > "%script_dir%\tmp"
 call "%script_dir%\bin\check_trailing_newline.bat" "%script_dir%\tmp"
-if %ERRORLEVEL% eq 2 ( echo.>> "%script_dir%\tmp" )
+if "%ERRORLEVEL%"=="2" ( echo.>> "%script_dir%\tmp" )
 echo cdi=cd /d %script_dir%>> "%script_dir%\tmp"
 for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
 set "setupsdirbat=setupsdir_%profile%.bat"
