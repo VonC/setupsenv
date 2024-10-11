@@ -106,6 +106,8 @@ if not "%ERRORLEVEL%"=="0" (
     grep -Eq "set.*\"?HOME\s*?=" "%LOCAL_HOME%\bin\senv.local.pre.bat"
     if not "!ERRORLEVEL!"=="0" (
         %_task% "Must add LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'"
+        call "%script_dir%\bin\check_trailing_newline.bat" "%LOCAL_HOME%\bin\senv.local.pre.bat"
+        if %ERRORLEVEL% eq 2 ( echo.>> "%LOCAL_HOME%\bin\senv.local.pre.bat" )
         echo. >> "%LOCAL_HOME%\bin\senv.local.pre.bat" & echo set "HOME=%LOCAL_HOME%" >> "%LOCAL_HOME%\bin\senv.local.pre.bat"
         if not "!ERRORLEVEL!"=="0" (
             %_fatal% "Unable to add LOCAL_HOME '%LOCAL_HOME%' in '%LOCAL_HOME%\bin\senv.local.pre.bat'" 1

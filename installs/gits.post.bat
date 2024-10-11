@@ -30,6 +30,8 @@ if "%LASTNAME%"=="" (
 if "%LASTNAME%"=="" (
     set "LASTNAME=%USERNAME%"
 )
+call "%script_dir%\bin\check_trailing_newline.bat" "%HOMEBIN%\senv.local.pre.bat"
+if %ERRORLEVEL% eq 2 ( echo.>> "%HOMEBIN%\senv.local.pre.bat" )
 echo set ^"FIRSTNAME=%FIRSTNAME%^"%NL%set ^"LASTNAME=%LASTNAME%^"%NL%>> "%HOMEBIN%\senv.local.pre.bat"
 set "FULLNAME=%LASTNAME%"
 if not "%FIRSTNAME%"=="" (
