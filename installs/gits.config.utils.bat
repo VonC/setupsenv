@@ -1,4 +1,11 @@
 REM Git global config utils
+@echo off
+setlocal enabledelayedexpansion
+for %%i in ("%~dp0") do SET "script_dir=%%~fi"
+cd ..
+for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
+cd /d "%script_dir%"
+call %senv_dir%\batcolors\echos_macros.bat
 
 where cat > NUL 2>NUL
 if errorlevel 1 (
