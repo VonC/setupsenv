@@ -259,6 +259,13 @@ if exist "%setupsdir%\gitcred.exe" (
     copy /Y "%HOMEBIN%\gitcred.exe" "%HOMEBIN%\git-cred.exe"
     %_ok% "'gitcred.exe' in '%HOMEBIN%\' updated from '%setupsdir%'"
 )
+rem script_dir
+%_info% "Copy/update '%HOME%\batcolors\' from %script_dir%"
+if not exist "%HOME%\batcolors" ( mkdir "%HOME%\batcolors" )
+(robocopy "%script_dir%\batcolors " "%HOME%\batcolors" /e /dcopy:T /mt /r:5 /NJH /NJS /NFL) ^& set rbc_errorlevel=%ERRORLEVEL%
+IF %rbc_errorlevel% LSS 8 SET rbc_errorlevel = 0
+if not "%rbc_errorlevel%"=="0" ( %_error% "Unable to copy '%script_dir%\batcolors' to '%HOME%\': rbc_errorlevel='%rbc_errorlevel%'" && exit /b 0)
+%_ok% "'batcolors/' in '%HOME%\' updated from '%script_dir%'"
 
 exit /b 0
 goto:eof
