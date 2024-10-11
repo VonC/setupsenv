@@ -164,8 +164,21 @@ grep bare "%GITPATH%\.git\config" 1>NUL 2>NUL
 if errorlevel 1 (
     copy /Y "%script_dir%\.gitconfig" "%GITPATH%\.git\config"
 )
-if not exist "%GITPATH%\.gitignore" (  copy "%script_dir%\bin\.gitignore" "%GITPATH%" )
+if not exist "%GITPATH%\.gitignore" (
+    copy "%script_dir%\bin\.gitignore" "%GITPATH%" )
+%_task% "Must check if '/batcolors/' is in '%GITPATH%\.gitignore'"
+findstr /BC:/batcolors/ "%GITPATH%\.gitignore" 1>NUL 2>NUL
+if not errorlevel 1 (
+    %_ok% "'/batcolors/' already in '%GITPATH%\.gitignore'"
+    goto:cd_gitpath
+)
+%_task% "Must add '/batcolors/' in '%GITPATH%\.gitignore'"
+call "%script_dir%\bin\check_trailing_newline.bat" "%GITPATH%\.gitignore"
+if %ERRORLEVEL% eq 2 ( echo.>> "%GITPATH%\.gitignore" )
+echo /batcolors>>"%GITPATH%\.gitignore"
+echo /batcolors/>>"%GITPATH%\.gitignore"
 
+:cd_gitpath
 cd /d "%GITPATH%"
 if errorlevel 1 (%_fatal% "Unable to cd to '%GITPATH%'" 111)
 %_info% "   [Check 'git config --local user.name' in '%GITPATH%']"
