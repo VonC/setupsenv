@@ -30,6 +30,9 @@ gs=git st
 gp=git push
 gpft=git push --follow-tags $*
 grc=cmd /V /C "set "GIT_EDITOR=true" && git rebase --continue"
+gdni=git diff --no-index --color-words=. $*
+gd=git diff --color-words=. $*
+gdc=git diff --cached --color-words=. $*
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 aliase="%PRGS%\vscodes\current\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
