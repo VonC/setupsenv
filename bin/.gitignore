@@ -10,3 +10,5 @@ index
 .gitold/
 *.exe
 !*.ori
+/batcolors
+/batcolors/
