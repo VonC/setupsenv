@@ -66,11 +66,14 @@ rem %_fatal% "prgs_name='%prgs_name%' vs. prg_name=%prg_name%'" 1
 
 pushd %PRGS_ROOT% || %_fatal% "unable to cd to PRGS_ROOT '%PRGS_ROOT%'" 1
 %_info% "Switch Ver from PRGS_ROOT '%PRGS_ROOT%'"
-@echo on
+rem @echo on
 rem Initialize counter
 set count=0
 set SELECTED_VERSION=
 set PRG_VERSIONS=
+:: on suspended process, see
+:: https://superuser.com/questions/1469567/executable-gets-suspended-when-called-from-batch-script
+:: https://www.dostips.com/forum/viewtopic.php?t=8940
 for /d %%f in (%prg_prefix%*) do (
     set "dirname=%%~nxf"
     rem %_info% "dirname='!dirname!'"
@@ -85,7 +88,7 @@ for /d %%f in (%prg_prefix%*) do (
 )
 popd
 echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
-goto:eof
+
 if not "%SELECTED_VERSION%" == "" ( goto:selected )
 if not "%prg_version%" == "" (
     %_warning% "Your %prg_name% version argument '%prg_version%' was NOT found in PRGS_ROOT '%PRGS_ROOT%'"
