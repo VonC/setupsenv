@@ -5,7 +5,6 @@ for %%i in ("%~dp0") do SET "script_dir=%%~fi"
 cd /d "%script_dir%"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
-set _
 set "custom_dir=%senv_dir%\custom"
 set "bin_dir=%senv_dir%\bin"
 set "installs_dir=%senv_dir%\installs"
