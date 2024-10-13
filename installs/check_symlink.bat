@@ -35,7 +35,7 @@ if "%sln%"=="system" (
 if not "%p:system-=%"=="%p%" (
     set "ipattern=%p:system-=%"
     %_task% "[%~nx0] check_symlink (p): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
-    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
         %_fatal% "[%~nx0] Pre-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 32
     )
@@ -57,7 +57,7 @@ set "msgsln='%sln%'"
 if not "%sln:system-=%"=="%sln%" (
     set "ipattern=%sln:system-=%"
     %_task% "[%~nx0] check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
-    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
         %_fatal% "[%~nx0] Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
     )
@@ -78,11 +78,11 @@ if not "%sln%"=="%orig_sln%" (
 %_info% "[%~nx0] Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
 rem @echo on
 
-if exist "%script_dir%\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('call "%script_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+if exist "%senv_dir%\installs\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('call "%senv_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
-if exist "%script_dir%\custom\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('call "%script_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+if exist "%senv_dir%\custom\installs\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('call "%senv_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
 if "%sln%"=="" ( set "sln=current" )
 rem @echo off
