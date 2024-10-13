@@ -95,31 +95,23 @@ if exist "%script_dir_bin%\profile" (
    )
 )
 set "script_dir_bin="
-if "%internalsenvcall%"=="1" (
-   goto:eof
-)
-setlocal enabledelayedexpansion
-set "script_dir=%~dp0"
-set "batdetected=false"
-if exist "%senv_dir%\batcolors" (
-   call "%senv_dir%\batcolors\echos_macros.bat"
-   set "batdetected=true"
-)
-if "%batdetected%"=="false" (
-   if exist "%senv_dir%\echos_macros.bat" (
-      call "%senv_dir%\echos_macros.bat"
-      set "batdetected=true"
-   )
-)
-if "%batdetected%"=="true" (
-   rem echo senv activated: senv_dir='%senv_dir%'
-   %_ok% "senv activated: senv_dir='%senv_dir%'"
-)
-endlocal
-set "senv_dir="
 set "_ok="
 set "_info="
 set "_task="
 set "_warning="
 set "_fatal="
 set "_error="
+if "%internalsenvcall%"=="1" (
+   set "senv_dir="
+   goto:eof
+)
+if defined NOCOLORS ( goto:oknc )
+set ASCII27=
+rem set ASCII27=← 
+echo %ASCII27%[42;97m OK    %ASCII27%[0m: senv activated: senv_dir='%senv_dir%'
+set "senv_dir="
+set ASCII27=
+goto:eof
+:oknc
+echo  OK    : senv activated: senv_dir='%senv_dir%' 1>&2
+set "senv_dir="
