@@ -279,12 +279,11 @@ goto:eof
 :check_gitdate
 set nomodif=
 set newest=
-if not exist .git\COMMIT_EDITMSG (goto:eof)
-copy .git\COMMIT_EDITMSG . >NUL
-for /f "tokens=*" %%a in ('dir /b /od') do set newest=%%a
+if not exist "%HOME%\.git\COMMIT_EDITMSG" (goto:eof)
+copy "%HOME%\.git\COMMIT_EDITMSG" "%HOMEBIN%" >NUL
+for /f "tokens=*" %%a in ('dir /b /od "%HOMEBIN%"') do set newest=%%a
 %_info% "[%~nx0] newest=%newest% !newest!"
 if "%newest%"=="COMMIT_EDITMSG" ( set "nomodif=1" )
 set newest=
-del COMMIT_EDITMSG
+del "%HOMEBIN%\COMMIT_EDITMSG"
 goto:eof
-
