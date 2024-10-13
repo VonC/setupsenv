@@ -104,7 +104,7 @@ for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
 )
 
 :build_and_publish
-cd "%custom_dir%\..\.."
+cd "%builds_dir%"
 del "senv_%profile%-zip.exe"
 %_info% "zip '%custom_dir%\..\..\senv' to 'senv_%profile%.zip'"
 %sz% a -sfx7z.sfx senv_%profile%-zip.exe senv
@@ -113,10 +113,10 @@ if not "%ERRORLEVEL%"=="0" (
 )
 cd "%custom_dir%"
 
-%_task% "Must update 'senv_%profile%-zip.exe' from '%custom_dir%\..\..' to '%setupsdir%'"
+%_task% "Must update 'senv_%profile%-zip.exe' from '%builds_dir%' to '%setupsdir%'"
 rem @echo on
 set OK="KO"
-robocopy "%custom_dir%\..\.." "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:2 /W:2 /TBD /MT:16 /NJH /NJS 
+robocopy "%builds_dir%" "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:2 /W:2 /TBD /MT:16 /NJH /NJS
 IF %ERRORLEVEL% LSS 8 (
     echo "ERRORLEVEL='%ERRORLEVEL%'"
     SET "OK=ok"
@@ -170,6 +170,5 @@ if "%setupsdirsenv%"=="" (
 
 echo call remote_setup.bat %profile%>%setupsdirsenv%\s.bat
 rem echo call %setupsdirsenv%\remote_setup.bat %profile%>%setupsdir%\s.bat
-echo deep>profile
 
-if exist "%custom_dir%\..\..\build.post.bat" ( call "%custom_dir%\..\..\build.post.bat" )
+if exist "%builds_dir%\build.post.bat" ( call "%builds_dir%\build.post.bat" )
