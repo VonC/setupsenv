@@ -1,16 +1,22 @@
 @echo off
-if "%script_dir%"=="" (
-    setlocal enabledelayedexpansion
-    for %%i in ("%~dp0..") do SET "script_dir=%%~fi"
-    call "!script_dir!\custom\echos_macros.bat"
-    set "prgtoinstall=test"
-    set "f=test"
-)
+
+setlocal enabledelayedexpansion
+for %%i in ("%~dp0") do SET "script_dir=%%~fi"
+cd /d "%script_dir%"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+set _
+set "custom_dir=%senv_dir%\custom"
+set "bin_dir=%senv_dir%\bin"
+set "installs_dir=%senv_dir%\installs"
+
 %_info% "[%~nx0] ~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
 %_info% "[%~nx0]  Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
 set "internalsenvcall=1"
 call "%HOMEBIN%\senv.bat"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
 set "internalsenvcall="
 %_info% "[%~nx0]    [senv called]"
 cd /d "%HOMEBIN%"
@@ -30,7 +36,7 @@ if "%LASTNAME%"=="" (
 if "%LASTNAME%"=="" (
     set "LASTNAME=%USERNAME%"
 )
-call "%script_dir%\bin\check_trailing_newline.bat" "%HOMEBIN%\senv.local.pre.bat"
+call "%bin_dir%\check_trailing_newline.bat" "%HOMEBIN%\senv.local.pre.bat"
 if "%ERRORLEVEL%"=="2" ( echo.>> "%HOMEBIN%\senv.local.pre.bat" )
 echo set ^"FIRSTNAME=%FIRSTNAME%^"%NL%set ^"LASTNAME=%LASTNAME%^"%NL%>> "%HOMEBIN%\senv.local.pre.bat"
 set "FULLNAME=%LASTNAME%"
@@ -162,10 +168,10 @@ if not exist "%GITPATH%\.git\objects" (
 )
 grep bare "%GITPATH%\.git\config" 1>NUL 2>NUL
 if errorlevel 1 (
-    copy /Y "%script_dir%\.gitconfig" "%GITPATH%\.git\config"
+    copy /Y "%senv_dir%\.gitconfig" "%GITPATH%\.git\config"
 )
 if not exist "%GITPATH%\.gitignore" (
-    copy "%script_dir%\bin\.gitignore" "%GITPATH%" )
+    copy "%bin_dir%\.gitignore" "%GITPATH%" )
 %_task% "[%~nx0] Must check if '/batcolors/' is in '%GITPATH%\.gitignore'"
 findstr /BC:/batcolors/ "%GITPATH%\.gitignore" 1>NUL 2>NUL
 if not errorlevel 1 (
@@ -173,7 +179,7 @@ if not errorlevel 1 (
     goto:cd_gitpath
 )
 %_task% "[%~nx0] Must add '/batcolors/' in '%GITPATH%\.gitignore'"
-call "%script_dir%\bin\check_trailing_newline.bat" "%GITPATH%\.gitignore"
+call "%bin_dir%\check_trailing_newline.bat" "%GITPATH%\.gitignore"
 if "%ERRORLEVEL%"=="2" ( echo.>> "%GITPATH%\.gitignore" )
 echo /batcolors>>"%GITPATH%\.gitignore"
 echo /batcolors/>>"%GITPATH%\.gitignore"
@@ -216,17 +222,17 @@ cd /d "%HOMEBIN%"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to access HOMEBIN '%HOMEBIN%'" 111
 )
-%_info% "[%~nx0]    [copy script_dir\bin '%script_dir%\bin\*' in HOMEBIN '%HOMEBIN%']"
-copy /Y "%script_dir%\bin\*" . > NUL:
+%_info% "[%~nx0]    [copy senv_dir\bin '%bin_dir%\*' in HOMEBIN '%HOMEBIN%']"
+copy /Y "%bin_dir%\*" . > NUL:
 %_info% "[%~nx0]    [Copy senv.doskey in '%HOMEBIN%']"
-copy /Y "%script_dir%\bin\senv.doskey" . > NUL: 
+copy /Y "%bin_dir%\senv.doskey" . > NUL: 
 %_info% "[%~nx0]    [Delete s.bat in '%HOMEBIN%']"
 if exist s.bat ( del s.bat > NUL: )
 if exist setup.bat ( del setup.bat > NUL: )
 %_info% "[%~nx0]    [Copy custom\*.custom in '%HOMEBIN%']"
-copy /Y "%script_dir%\custom\*.custom.*" "%HOMEBIN%" 1>NUL: 2>NUL:
+copy /Y "%custom_dir%\*.custom.*" "%HOMEBIN%" 1>NUL: 2>NUL:
 %_info% "[%~nx0]    [Copy custom\bin in '%HOMEBIN%']"
-copy /Y "%script_dir%\custom\bin\*" "%HOMEBIN%" > NUL:
+copy /Y "%custom_dir%\bin\*" "%HOMEBIN%" > NUL:
 
 
 call:check_gitdate
@@ -246,9 +252,9 @@ if not "%st%"=="" (
     git commit -m "post-update"
 )
 :skipsecondstatus
-touch .git\COMMIT_EDITMSG
+if exist "%HOME%\.git\COMMIT_EDITMSG" ( touch "%HOME%\.git\COMMIT_EDITMSG" )
 %_info% "[%~nx0] ~~~~~~~~~~~~"
-call "%script_dir%\installs\gits.config.utils.bat" :restore_gitconfig system gits.post.bat
+call "%installs_dir%\gits.config.utils.bat" :restore_gitconfig system gits.post.bat
 
 if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
 
@@ -259,14 +265,14 @@ if exist "%setupsdir%\gitcred.exe" (
     copy /Y "%HOMEBIN%\gitcred.exe" "%HOMEBIN%\git-cred.exe"
     %_ok% "[%~nx0] 'gitcred.exe' in '%HOMEBIN%\' updated from '%setupsdir%'"
 )
-rem script_dir
-%_info% "[%~nx0] Copy/update '%HOME%\batcolors\' from %script_dir%"
+rem senv_dir
+%_info% "[%~nx0] Copy/update '%HOME%\batcolors\' from %senv_dir%"
 if not exist "%HOME%\batcolors" ( mkdir "%HOME%\batcolors" )
-(robocopy "%script_dir%\batcolors " "%HOME%\batcolors" /e /dcopy:T /mt /r:5 /NJH /NJS /NFL) ^& set rbc_errorlevel=%ERRORLEVEL%
+(robocopy "%senv_dir%\batcolors " "%HOME%\batcolors" /e /dcopy:T /mt /r:5 /NJH /NJS /NFL) ^& set rbc_errorlevel=%ERRORLEVEL%
 IF %rbc_errorlevel% LSS 8 SET rbc_errorlevel = 0
-if not "%rbc_errorlevel%"=="0" ( %_error% "[%~nx0] Unable to copy '%script_dir%\batcolors' to '%HOME%\': rbc_errorlevel='%rbc_errorlevel%'" && exit /b 0)
-%_ok% "[%~nx0] 'batcolors/' in '%HOME%\' updated from '%script_dir%'"
-
+if not "%rbc_errorlevel%"=="0" ( %_error% "[%~nx0] Unable to copy '%senv_dir%\batcolors' to '%HOME%\': rbc_errorlevel='%rbc_errorlevel%'" && exit /b 0)
+%_ok% "[%~nx0] 'batcolors/' in '%HOME%\' updated from '%senv_dir%'"
+endlocal
 exit /b 0
 goto:eof
 
