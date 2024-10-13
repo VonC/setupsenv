@@ -82,8 +82,9 @@ if errorlevel 1 (
     %_error% "Unable to call '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
 %_info% "setupsdir='%setupsdir%'"
-goto:eof
-if not exist "%setupsdir%\..\version" (
+for %%i in ("%setupsdir%\..") do ( set "remote_senv_dir=%%~fi" )
+
+if not exist "%remote_senv_dir%\version" (
     %_ok% "New publication"
     goto:build_and_publish
 )
@@ -123,35 +124,35 @@ IF %ERRORLEVEL% LSS 8 (
     set OK=%ERRORLEVEL%
 )
 echo "OK='%OK%' '!OK!'"
-if not "%OK%"=="ok" ( %_error% "Unable to robocopy '%custom_dir%\..\..\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && goto:eof)
-%_ok% "senv_%profile%-zip.exe updated from '%custom_dir%\..\..' to '%setupsdir%'"
+if not "%OK%"=="ok" ( %_error% "Unable to robocopy '%builds_dir%\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && goto:eof)
+%_ok% "senv_%profile%-zip.exe updated from '%builds_dir%' to '%setupsdir%'"
 
-copy /Y "%custom_dir%\version" "%setupsdir%\..\version"
+copy /Y "%custom_dir%\version" "%remote_senv_dir%\version"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 'version' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
-)
-
-copy /Y "%custom_dir%\echos_macros.bat" "%setupsdir%\..\echos_macros.bat"
-if errorlevel 1 (
-    %_fatal% "Unable to copy 'echos_macros.bat' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
-)
-copy /Y "%custom_dir%\echos.bat" "%setupsdir%\..\echos.bat"
-if errorlevel 1 (
-    %_fatal% "Unable to copy 'echos.bat' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
+    %_fatal% "Unable to copy 'version' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
-copy /Y "%custom_dir%\remote_setup.bat" "%setupsdir%\..\remote_setup.bat"
+copy /Y "%custom_dir%\echos_macros.bat" "%remote_senv_dir%\echos_macros.bat"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 'remote_setup.bat' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
+    %_fatal% "Unable to copy 'echos_macros.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+)
+copy /Y "%custom_dir%\echos.bat" "%remote_senv_dir%\echos.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'echos.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
-copy /Y "%custom_dir%\setup.ini.bat" "%setupsdir%\..\setup.ini.bat"
+copy /Y "%custom_dir%\remote_setup.bat" "%remote_senv_dir%\remote_setup.bat"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 'setup.ini.bat' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
+    %_fatal% "Unable to copy 'remote_setup.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
-copy /Y "%custom_dir%\detection_VDI.bat" "%setupsdir%\..\detection_VDI.bat"
+
+copy /Y "%custom_dir%\setup.ini.bat" "%remote_senv_dir%\setup.ini.bat"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 'detection_VDI.bat' from '%custom_dir%' to '%setupsdir%\..'" && exit /b 1)
+    %_fatal% "Unable to copy 'setup.ini.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+)
+copy /Y "%custom_dir%\detection_VDI.bat" "%remote_senv_dir%\detection_VDI.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'detection_VDI.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 copy /Y "%custom_dir%\ss.bat" "%setupsdir%\s.bat"
 if errorlevel 1 (
