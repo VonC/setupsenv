@@ -26,8 +26,6 @@ if not exist "%custom_dir%\%s%" (
     %_fatal% "setupsdir script '%s%' does not exist" 2
 )
 
-echo %profile%>profile
-
 cd ..
 if not exist custom (
     %_fatal% "current folder must be named custom" 1
@@ -106,11 +104,25 @@ for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
 :build_and_publish
 cd "%builds_dir%"
 del "senv_%profile%-zip.exe"
-%_info% "zip '%custom_dir%\..\..\senv' to 'senv_%profile%.zip'"
-%sz% a -sfx7z.sfx senv_%profile%-zip.exe senv
+%_info% "zip '[%PRGS%\]senv' to '%builds_dir%\senv_%profile%.zip'"
+copy "%senv_dir%\.git\config" "%builds_dir%\senv_git_config.bkp"
+copy "%builds_dir%\senv_git_config.fixed" "%senv_dir%\.git\config"
+copy "%custom_dir%\.git\config" "%builds_dir%\custom_git_config.bkp"
+copy "%custom_dir%\custom_git_config.fixed" "%custom_dir%\.git\config"
+copy "%custom_dir%\profile" "%builds_dir%\profile.bkp"
+echo %profile%>"%custom_dir%\profile"
+rem https://stackoverflow.com/questions/38297172/7-zip-command-line-incorrect-wildcard-type-marker
+%sz% a -sfx7z.sfx "%builds_dir%\senv_%profile%-zip.exe" "%PRGS%\senv" -x^^!*.fixed -x^^!\*.bkp -x^^!\*.zip.exe
+rem C:\Users\vonc\prgs\senv\builds>%sz% e senv_home-zip.exe senv\.git\config -so
 if not "%ERRORLEVEL%"=="0" (
-     %_fatal% "Unable 7z '%custom_dir%\..\..\senv' to '%CD%' 'senv_%profile%-zip.exe'" && exit /b 1
+    copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
+    copy "%builds_dir%\custom_git_config.bkp" "%custom_dir%\.git\config"
+    copy "%builds_dir%\senv_git_config.bkp" "%senv_dir%\.git\config"
+    %_fatal% "Unable 7z '%builds_dir%\senv' to '%CD%' 'senv_%profile%-zip.exe'" && exit /b 1
 )
+copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
+copy "%builds_dir%\custom_git_config.bkp" "%custom_dir%\.git\config"
+copy "%builds_dir%\senv_git_config.bkp" "%senv_dir%\.git\config"
 cd "%custom_dir%"
 
 %_task% "Must update 'senv_%profile%-zip.exe' from '%builds_dir%' to '%setupsdir%'"
