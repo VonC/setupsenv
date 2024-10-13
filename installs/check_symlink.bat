@@ -11,7 +11,7 @@ rem https://stackoverflow.com/questions/28810194/how-to-pass-a-list-of-strings-t
 rem @SET ASCII27=← 
 if "%1"=="" ( goto:eof )
 
-for %%i in ("%~dp0") do SET "script_dir=%%~fi"
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
