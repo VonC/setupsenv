@@ -1,25 +1,31 @@
 @echo off
+
+if "%script_dir%"=="" ( echo.>>"%~dp0standalone_%~nx0.flag")
 setlocal enabledelayedexpansion
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0..") do SET "script_dir=%%~fi"
-		set "empty_pre_ok=true"
-)
-call %script_dir%\batcolors\echos_macros.bat export
-%_info% "vscodes.pre: vscode"
+set "echos_standalone=%~dp0standalone_%~nx0.flag"
+
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& goto:eof
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+set "bin_dir=%senv_dir%\bin"
+
+call %senv_dir%\batcolors\echos_macros.bat
+%_info% "[%~nx0] vscodes.pre: vscode"
 
 set "pre_ok="
-call %script_dir%\bin\getInstallPath.bat VSCode code
-%_info% "vscodes.pre: instPath='%instPath%'"
+call "%bin_dir%\getInstallPath.bat" VSCode code
+%_info% "[%~nx0] vscodes.pre: instPath='%instPath%'"
 rem @echo on
 if exist "%instPath%\bin\code.cmd" (
   set "pre_ok=true"
 	if "%1"=="" (
-		%_ok% "VSCode already installed in '%instPath%"
+		%_ok% "[%~nx0] VSCode already installed in '%instPath%"
 	)
 )
-endlocal & set "pre_ok=%pre_ok%" & set "empty_pre_ok=%empty_pre_ok%"
+endlocal & set "pre_ok=%pre_ok%"
 set "vscodei="
-if "%empty_pre_ok%"=="true" (
-	set "pre_ok="
+if exist "%~dp0standalone_%~nx0.flag" (
+    echo pre_ok='%pre_ok%'
+		set "pre_ok="
+    del "%~dp0standalone_%~nx0.flag"
 )
-set "empty_pre_ok="
