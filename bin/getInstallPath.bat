@@ -1,48 +1,38 @@
 @echo off
 
+if "%script_dir%"=="" ( echo.>>"%~dp0standalone_%~nx0.flag")
 setlocal enabledelayedexpansion
 
-set "standaloneGetInstallPath="
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-		set "standaloneGetInstallPath=true"
-)
-if exist !script_dir!\..\batcolors (
-	call !script_dir!\..\batcolors\echos_macros.bat export
-) else if exist !script_dir!\batcolors (
-	call !script_dir!\batcolors\echos_macros.bat export
-) else (
-	echo "batcolor not found in script_dir '!script_dir!'" >&2
-	exit /b 1
-)
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+set "echos_standalone=%~dp0standalone_%~nx0.flag"
+
 rem @echo on
 set "prgname=%~1"
 set "prgpattern=%~2"
-if "%standaloneGetInstallPath%"=="" (
-	set "standaloneGetInstallPath=%~3"
-)
-%_task% "Must get installation path instpath of '%prgname%' pattern '%prgpattern%' standaloneGetInstallPath '%standaloneGetInstallPath%'"
+%_task% "[%~nx0] Must get installation path instpath of '%prgname%' pattern '%prgpattern%'"
 rem @echo on
 if "%prgname%"=="" (
-	%_fatal% "prgname must be provided (ex: VSCode)" 1
+	%_fatal% "[%~nx0] prgname must be provided (ex: VSCode)" 1
 )
 if "%prgpattern%"=="" (
-	%_fatal% "prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
+	%_fatal% "[%~nx0] prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
 
 set reg=HKCU
 reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "%prgname% is installed"
+		rem %_info% "[%~nx0] %prgname% is installed"
 ) else (
-		rem %_info% "%prgname% is NOT installed"
+		rem %_info% "[%~nx0] %prgname% is NOT installed"
 		set reg=HKLM
 )
 reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "%prgname% is installed"
+		rem %_info% "[%~nx0] %prgname% is installed"
 ) else (
-		%_fatal% "%prgname% is NOT installed for pattern '%prgpattern%'" 1
+		%_fatal% "[%~nx0] %prgname% is NOT installed for pattern '%prgpattern%'" 1
 )
 for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i %prgpattern%') do (
     set "instPath=%%a"
@@ -61,17 +51,16 @@ for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVe
 rem echo instPath final='%instPath%' '!instPath!'
 
 if not exist "%instPath%" (
-	if "%ignoreNoInstPath%"=="" (
+	if not defined ignoreNoInstPath (
 		set "instPath="
-		set "standaloneGetInstallPath="
-		%_fatal% "%prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'." 13
+		%_fatal% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'." 13
 	) else (
-		if "%standaloneGetInstallPath%"=="true" (
-			%_error% "%prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'."
+		if exist "%echos_standalone%" (
+			%_error% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'."
 		)
 	)
 )
-endlocal & set "instPath=%instPath%" & set "standaloneGetInstallPath=%standaloneGetInstallPath%"
+endlocal & set "instPath=%instPath%"
 rem if instPath ends with a trailing backslash, remove trailing backslash
 if "%instPath:~-1%"=="\" ( set "instPath=%instPath:~0,-1%" )
 rem echo getInstallPath: instPath='%instPath%'
@@ -79,12 +68,12 @@ rem echo getInstallPath: standaloneGetInstallPath='%standaloneGetInstallPath%'
 set ASCII27=
 rem set ASCII27=← 
 
-if "%standaloneGetInstallPath%"=="true" (
+if exist "%~dp0standalone_%~nx0.flag" (
 
 	echo %ASCII27%[106;30m INFO  %ASCII27%[0m: instPath='%instPath%'
 	set "instPath="
 	set "standaloneGetInstallPath="
 	set "ASCII27="
+	del "%~dp0standalone_%~nx0.flag"
 )
-set "standaloneGetInstallPath="
 rem echo RES instPath='%instPath%'
