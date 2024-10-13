@@ -202,7 +202,13 @@ if not exist "%script_dir%\custom\%instlist%" (
 for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do (
   set fnpl=%%a
   set fl=%%b
-  call:install "!fnpl!" "!fl!" || exit /b 1
+  set "cil_install=true"
+  if "!fl!"=="peazips" ( set "cil_install=false" )
+  if "!fl!"=="gits" ( set "cil_install=false" )
+  if "!fl!"=="vscodes" ( set "cil_install=false" )
+  if "!cil_install!"=="true" (
+      call:install "!fnpl!" "!fl!" || exit /b 1
+  )
 )
 if not exist "%locald%\install.list" ( goto:alldone )
 set "setupsdir=%locald%\setups"
@@ -297,6 +303,7 @@ if exist "%HOME%\.gitconfig" (
 )
 set pre_ok=false
 call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
+%_info% "[%~nx0] pname='%pname%', f='%f%', fname='%fname%' means sys='%sys%'"
 if "%pre_ok%"=="true" (
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     %_ok% "[%~nx0] pre-check ok for %f%: nothing more to do"&& exit /b 0
