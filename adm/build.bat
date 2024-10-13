@@ -6,8 +6,7 @@ cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 for %%i in ("%script_dir%") do (
     set "script_dir=%%~fi"
 )
-
-set "bc=%script_dir%\..\batcolors"
+for %%i in ("%script_dir%\..\batcolors") do ( set "bc=%%~fi" )
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(bundle)='%script_dir%'"
 
@@ -19,7 +18,7 @@ set "profile=%1"
 
 set "custom_dir=%script_dir%\..\custom"
 cd "%custom_dir%" || %_fatal% "Unable to access custom folder" 1
-for /F "delims=" %%f in ('cd') do ( set custom_dir=%%f)
+for /F "delims=" %%f in ('cd') do ( set "custom_dir=%%f" )
 %_info% "Custom folder full path: '%custom_dir%'"
 
 set s="setupsdir_%profile%.bat"
