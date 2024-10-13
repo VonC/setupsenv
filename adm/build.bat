@@ -87,9 +87,14 @@ if not exist "%setupsdir%\..\version" (
     %_ok% "New publication"
     goto:build_and_publish
 )
-for /f "delims=" %%a in ('type "%setupsdir%\..\version"') do (
+if defined senv_force_build (
+    %_warning% "senv_force_build env var is defined"
+    %_task% "Force build senv '%profile%' with '%vcsenv%'"
+    goto:build_and_publish
+)
+for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
     if "%%a"=="%vcsenv%" (
-        %_ok% "Already published senv '%profile%' with '%vcsenv%'"
+        %_ok% "Already published senv '%profile%' with '%vcsenv%' (senv_force_build not defined)"
         goto:eof
     ) else (
         %_task% "Update senv '%profile%' with '%vcsenv%' (from '%%a')"
