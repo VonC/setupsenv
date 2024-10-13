@@ -291,7 +291,7 @@ if "%pname%"=="" (
 %_info% "[%~nx0] --------------"
 %_info% "[%~nx0] folder: '%f%': pattern '%pname%' system: '%sys%'"
 %_info% "[%~nx0] --------------"
-@echo on
+
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
 )
