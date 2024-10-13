@@ -6,19 +6,19 @@ if "%script_dir%"=="" (
     set "prgtoinstall=test"
     set "f=test"
 )
-%_info% "~~~~~~~~~~~~"
+%_info% "[%~nx0] ~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
-%_info% " Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
+%_info% "[%~nx0]  Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
 set "internalsenvcall=1"
 call "%HOMEBIN%\senv.bat"
 set "internalsenvcall="
-%_info% "   [senv called]"
+%_info% "[%~nx0]    [senv called]"
 cd /d "%HOMEBIN%"
-if errorlevel 1 (%_fatal% "Unable to cd to %HOMEBIN%" 111)
+if errorlevel 1 (%_fatal% "[%~nx0] Unable to cd to %HOMEBIN%" 111)
 set FIRSTNAME=
 set LASTNAME=
 call "%HOMEBIN%\senv.local.pre.bat"
-%_info% "   [senv.local.pre.bat called]"
+%_info% "[%~nx0]    [senv.local.pre.bat called]"
 grep FIRSTNAME "%HOMEBIN%\senv.local.pre.bat">NUL
 if "%ERRORLEVEL%"=="0" ( goto:userset )
 if "%FIRSTNAME%"=="" (
@@ -43,7 +43,7 @@ if "%USERMAIL%"=="" (
     set /P USERMAIL="Enter your email (no quotes needed): "
 )
 if "%USERMAIL%"=="" (
-    %_fatal% "User email cannot be empty"&& exit /b 1
+    %_fatal% "[%~nx0] User email cannot be empty"&& exit /b 1
 )
 echo set ^"USERMAIL=%USERMAIL%^"%NL%>> "%HOMEBIN%\senv.local.pre.bat"
 echo git config user.name ^"%FULLNAME%^"%NL%git config user.email ^"%USERMAIL%^"%NL%> "%HOMEBIN%\gcu.bat"
@@ -56,7 +56,7 @@ if not exist "%HOMEBIN%\gcu.bat" (
 )
 if not "%prgtoinstall%"=="" (
     if not "%prgtoinstall%"=="%f%" (
-        %_warning% "Skip '%f%' installation (for '%prgtoinstall%')"
+        %_warning% "[%~nx0] Skip '%f%' installation (for '%prgtoinstall%')"
         goto:eof
     )
 )
@@ -75,12 +75,12 @@ for /f "tokens=1,2 delims=." %%b in ("!fullversion!") do (
 
 if !major! LEQ 2 (
     if !minor! LEQ 39 (
-        %_info% "Install: Keep 'manager-core' as credential helper for Git !major!.!minor!"
+        %_info% "[%~nx0] Install: Keep 'manager-core' as credential helper for Git !major!.!minor!"
         set "mgrname=manager-core"
     )
 )
 if "%mgrname%"=="manager" (
-    %_info% "Install: Keep 'manager' as credential helper for Git !major!.!minor!"
+    %_info% "[%~nx0] Install: Keep 'manager' as credential helper for Git !major!.!minor!"
 )
 
 git config --system credential.helper 1>NUL 2>NUL
@@ -127,14 +127,14 @@ if not "%firstTwo%"=="C:" (
     )
 )
 
-%_info% "GITPATH='%GITPATH%' (no Git repo in GITNOPATH='%GITNOPATH%', firstTwo='%firstTwo%')"
+%_info% "[%~nx0] GITPATH='%GITPATH%' (no Git repo in GITNOPATH='%GITNOPATH%', firstTwo='%firstTwo%')"
 
 if exist "%GITNOPATH%\.git\config" (
-    %_warning% "Git repository in '%GITNOPATH%' instead of '%GITPATH%'"
-    %_task% "Must delete '%GITNOPATH%\.git'"
+    %_warning% "[%~nx0] Git repository in '%GITNOPATH%' instead of '%GITPATH%'"
+    %_task% "[%~nx0] Must delete '%GITNOPATH%\.git'"
     rmdir /S /Q "%GITNOPATH%\.git"
     if errorlevel 1 (
-        %_fatal% "Unable to delete Git repository in '%GITNOPATH%'"
+        %_fatal% "[%~nx0] Unable to delete Git repository in '%GITNOPATH%'"
     )
     ok "Git repository in '%GITNOPATH%' deleted"
 )
@@ -144,16 +144,16 @@ if exist "%GITNOPATH%\.git\config" (
 if exist "%GITPATH%\.git\config" (
     grep bare "%GITPATH%\.git\config" 1>NUL 2>NUL
     if errorlevel 1 (
-        %_warning% "%GITPATH%\.git\config incomplete: delete and redo"
+        %_warning% "[%~nx0] %GITPATH%\.git\config incomplete: delete and redo"
         del /Q "%GITPATH%\.git\config"
         if errorlevel 1 (
-            %_error% "%GITPATH%\.git\config unable to be deleted"
+            %_error% "[%~nx0] %GITPATH%\.git\config unable to be deleted"
         )
     )
 )
 
 if not exist "%GITPATH%\.git\config" (
-    %_info% "Initialize git repository in '%GITPATH%'"
+    %_info% "[%~nx0] Initialize git repository in '%GITPATH%'"
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     git init "%GITPATH%"
 )
@@ -166,13 +166,13 @@ if errorlevel 1 (
 )
 if not exist "%GITPATH%\.gitignore" (
     copy "%script_dir%\bin\.gitignore" "%GITPATH%" )
-%_task% "Must check if '/batcolors/' is in '%GITPATH%\.gitignore'"
+%_task% "[%~nx0] Must check if '/batcolors/' is in '%GITPATH%\.gitignore'"
 findstr /BC:/batcolors/ "%GITPATH%\.gitignore" 1>NUL 2>NUL
 if not errorlevel 1 (
-    %_ok% "'/batcolors/' already in '%GITPATH%\.gitignore'"
+    %_ok% "[%~nx0] '/batcolors/' already in '%GITPATH%\.gitignore'"
     goto:cd_gitpath
 )
-%_task% "Must add '/batcolors/' in '%GITPATH%\.gitignore'"
+%_task% "[%~nx0] Must add '/batcolors/' in '%GITPATH%\.gitignore'"
 call "%script_dir%\bin\check_trailing_newline.bat" "%GITPATH%\.gitignore"
 if "%ERRORLEVEL%"=="2" ( echo.>> "%GITPATH%\.gitignore" )
 echo /batcolors>>"%GITPATH%\.gitignore"
@@ -180,66 +180,66 @@ echo /batcolors/>>"%GITPATH%\.gitignore"
 
 :cd_gitpath
 cd /d "%GITPATH%"
-if errorlevel 1 (%_fatal% "Unable to cd to '%GITPATH%'" 111)
-%_info% "   [Check 'git config --local user.name' in '%GITPATH%']"
+if errorlevel 1 (%_fatal% "[%~nx0] Unable to cd to '%GITPATH%'" 111)
+%_info% "[%~nx0]    [Check 'git config --local user.name' in '%GITPATH%']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
 git -C "%GITPATH%" config --local user.name>NUL
 if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL && call "%HOMEBIN%\gcu.bat" )
-%_info% "   [Check 'git config --local user.email' in '%GITPATH%']"
+%_info% "[%~nx0]    [Check 'git config --local user.email' in '%GITPATH%']"
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
 git -C "%GITPATH%" config --local user.email>NUL
 if errorlevel 1 ( "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL && call "%HOMEBIN%\gcu.bat" )
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
 
 call:check_gitdate
-%_info% "   [nomodif='%nomodif%' '!nomodif!']"
+%_info% "[%~nx0]    [nomodif='%nomodif%' '!nomodif!']"
 if "%nomodif%"=="1" ( goto:skipfirststatus)
 if exist "%GITPATH%\.git\index.lock" (sleep 1)
-if exist "%GITPATH%\.git\index.lock" (%_fatal% "'%GITPATH%' used by other Git process (close VSCode if opened) and relaunch setup" 11)
-%_info% "   [Calling first git status --porcelain in '%GITPATH%']"
+if exist "%GITPATH%\.git\index.lock" (%_fatal% "[%~nx0] '%GITPATH%' used by other Git process (close VSCode if opened) and relaunch setup" 11)
+%_info% "[%~nx0]    [Calling first git status --porcelain in '%GITPATH%']"
 set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
-    %_info% "Save local modification of '%GITPATH%'"
-    rem %_fatal% "no local save" 111
+    %_info% "[%~nx0] Save local modification of '%GITPATH%'"
+    rem %_fatal% "[%~nx0] no local save" 111
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
     git add .
     git commit -m "pre-update"
 )
 :skipfirststatus
-%_task% "Must update HOMEBIN '%HOMEBIN%'"
+%_task% "[%~nx0] Must update HOMEBIN '%HOMEBIN%'"
 cd /d "%HOMEBIN%"
 if errorlevel 1 (
-    %_fatal% "Unable to access HOMEBIN '%HOMEBIN%'" 111
+    %_fatal% "[%~nx0] Unable to access HOMEBIN '%HOMEBIN%'" 111
 )
-%_info% "   [copy script_dir\bin '%script_dir%\bin\*' in HOMEBIN '%HOMEBIN%']"
+%_info% "[%~nx0]    [copy script_dir\bin '%script_dir%\bin\*' in HOMEBIN '%HOMEBIN%']"
 copy /Y "%script_dir%\bin\*" . > NUL:
-%_info% "   [Copy senv.doskey in '%HOMEBIN%']"
+%_info% "[%~nx0]    [Copy senv.doskey in '%HOMEBIN%']"
 copy /Y "%script_dir%\bin\senv.doskey" . > NUL: 
-%_info% "   [Delete s.bat in '%HOMEBIN%']"
+%_info% "[%~nx0]    [Delete s.bat in '%HOMEBIN%']"
 if exist s.bat ( del s.bat > NUL: )
 if exist setup.bat ( del setup.bat > NUL: )
-%_info% "   [Copy custom\*.custom in '%HOMEBIN%']"
+%_info% "[%~nx0]    [Copy custom\*.custom in '%HOMEBIN%']"
 copy /Y "%script_dir%\custom\*.custom.*" "%HOMEBIN%" 1>NUL: 2>NUL:
-%_info% "   [Copy custom\bin in '%HOMEBIN%']"
+%_info% "[%~nx0]    [Copy custom\bin in '%HOMEBIN%']"
 copy /Y "%script_dir%\custom\bin\*" "%HOMEBIN%" > NUL:
 
 
 call:check_gitdate
-%_info% "   [nomodif(2)='%nomodif%' '!nomodif!']"
+%_info% "[%~nx0]    [nomodif(2)='%nomodif%' '!nomodif!']"
 if "%nomodif%"=="1" ( goto:skipsecondstatus)
-%_info% "   [Calling Second git status --porcelain in '%HOMEBIN%']"
+%_info% "[%~nx0]    [Calling Second git status --porcelain in '%HOMEBIN%']"
 set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
-    %_info% "Save new updates of '%GITPATH%'"
-    rem %_fatal% "no new update save" 112
+    %_info% "[%~nx0] Save new updates of '%GITPATH%'"
+    rem %_fatal% "[%~nx0] no new update save" 112
     "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
     "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
     git add --renormalize .
@@ -247,25 +247,25 @@ if not "%st%"=="" (
 )
 :skipsecondstatus
 touch .git\COMMIT_EDITMSG
-%_info% "~~~~~~~~~~~~"
+%_info% "[%~nx0] ~~~~~~~~~~~~"
 call "%script_dir%\installs\gits.config.utils.bat" :restore_gitconfig system gits.post.bat
 
 if not exist "%HOME%\.ssh" ( mkdir "%HOME%\.ssh" )
 
 if exist "%setupsdir%\gitcred.exe" (
-    %_info% "Copy/update '%HOMEBIN%\gitcred.exe' from %setupsdir%"
+    %_info% "[%~nx0] Copy/update '%HOMEBIN%\gitcred.exe' from %setupsdir%"
     (robocopy "%setupsdir%" "%HOMEBIN%" "gitcred.exe" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-    if not "%ERRORLEVEL%"=="0" ( %_warning% "Unable to copy '%setupsdir%\gitcred.exe' to '%HOMEBIN%\'" && exit /b 0)
+    if not "%ERRORLEVEL%"=="0" ( %_warning% "[%~nx0] Unable to copy '%setupsdir%\gitcred.exe' to '%HOMEBIN%\'" && exit /b 0)
     copy /Y "%HOMEBIN%\gitcred.exe" "%HOMEBIN%\git-cred.exe"
-    %_ok% "'gitcred.exe' in '%HOMEBIN%\' updated from '%setupsdir%'"
+    %_ok% "[%~nx0] 'gitcred.exe' in '%HOMEBIN%\' updated from '%setupsdir%'"
 )
 rem script_dir
-%_info% "Copy/update '%HOME%\batcolors\' from %script_dir%"
+%_info% "[%~nx0] Copy/update '%HOME%\batcolors\' from %script_dir%"
 if not exist "%HOME%\batcolors" ( mkdir "%HOME%\batcolors" )
 (robocopy "%script_dir%\batcolors " "%HOME%\batcolors" /e /dcopy:T /mt /r:5 /NJH /NJS /NFL) ^& set rbc_errorlevel=%ERRORLEVEL%
 IF %rbc_errorlevel% LSS 8 SET rbc_errorlevel = 0
-if not "%rbc_errorlevel%"=="0" ( %_error% "Unable to copy '%script_dir%\batcolors' to '%HOME%\': rbc_errorlevel='%rbc_errorlevel%'" && exit /b 0)
-%_ok% "'batcolors/' in '%HOME%\' updated from '%script_dir%'"
+if not "%rbc_errorlevel%"=="0" ( %_error% "[%~nx0] Unable to copy '%script_dir%\batcolors' to '%HOME%\': rbc_errorlevel='%rbc_errorlevel%'" && exit /b 0)
+%_ok% "[%~nx0] 'batcolors/' in '%HOME%\' updated from '%script_dir%'"
 
 exit /b 0
 goto:eof
@@ -276,7 +276,7 @@ set newest=
 if not exist .git\COMMIT_EDITMSG (goto:eof)
 copy .git\COMMIT_EDITMSG . >NUL
 for /f "tokens=*" %%a in ('dir /b /od') do set newest=%%a
-%_info% "newest=%newest% !newest!"
+%_info% "[%~nx0] newest=%newest% !newest!"
 if "%newest%"=="COMMIT_EDITMSG" ( set "nomodif=1" )
 set newest=
 del COMMIT_EDITMSG
