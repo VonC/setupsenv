@@ -2,30 +2,46 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir%\echos_macros.bat
-%_info% "Check latest Firefox version"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+
+rem @echo on
+set "arg=%~1"
+if "%arg%"=="" ( goto:dwl_prg)
+if not "%arg::=%"=="%arg%" ( goto%arg% )
+echo nope
+goto:eof
+
+:dwl_prg
+set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups"
+set "SENV_DWL_ASK_FOR_LATEST_VERSION=1"
+set "SENV_DWL_VERSION=131.0.3"
+set "SENV_DWL_URL=https://storage.googleapis.com/cdn.softaro.net/m/FirefoxPortable_131.0.3_English.paf.exe"
+set "repo=softaro/net"
+set "prgname=firefox"
+%_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
+call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+goto:eof
+
+:get_latest_version
+rem %_info% "Check latest Firefox version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://softaro.net/download-file/21759/?version=English 2^>^&1"
-echo.%cmd%
-
+rem echo.%cmd%
 for /f "tokens=* delims=" %%a in ('%cmd%^|grep Firefox') do ( set gu=%%a)
 set "gu=%gu:HTTP/1.1 403 Forbidden=%"
 set "gu=%gu:Japanese=English%"
-echo.Latest version URL='%gu%'
-
+rem echo.Latest version URL='%gu%'
+set "SENV_DWL_URL=%gu%"
 for /f "tokens=1,2,3,4,5 delims=/" %%a in ("%gu%") do set version=%%e
 set "version=%version:HTTP=%"
-echo.Latest version='%version%'
+set "version=%version:*FirefoxPortable_=%"
+set "version=%version:_English.paf.exe=%"
+echo.%version%
+goto:eof
 
-set "file=%PRGS%\firefoxs\%version%"
-if exist "%file%" (
-    %_ok% "'%file%' Already downloaded"
-    goto:eof
-)
-
-%_task% "Download '%gu%' latest to '%file%'"
-curl -kL "%gu%" -o "%file%"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to download '%file%' from latest" 1
-)
-%_ok% "'%file%' downloaded"
+:get_filename
+rem https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.sync.7z
+set "version=%~2"
+echo FirefoxPortable_%version%_English.paf.exe
+goto:eof
