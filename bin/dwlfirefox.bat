@@ -15,8 +15,14 @@ goto:eof
 :dwl_prg
 set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups"
 set "SENV_DWL_ASK_FOR_LATEST_VERSION=1"
-set "SENV_DWL_VERSION=131.0.3"
-set "SENV_DWL_URL=https://storage.googleapis.com/cdn.softaro.net/m/FirefoxPortable_131.0.3_English.paf.exe"
+if defined SENV_DWL_DEBUG (
+  set "SENV_DWL_VERSION=131.0.3"
+  set "SENV_DWL_URL=https://storage.googleapis.com/cdn.softaro.net/m/FirefoxPortable_131.0.3_English.paf.exe"
+  ::                https://storage.googleapis.com/cdn.softaro.net/m/FirefoxPortable_131.0.3_English.paf.exe
+  %_info% "[%~nx0] SENV_DWL_DEBUG set: SENV_DWL_VERSION '%SENV_DWL_VERSION%' and SENV_DWL_URL '%SENV_DWL_URL%'"
+) else (
+  %_info% "[%~nx0] SENV_DWL_DEBUG not set: version (SENV_DWL_VERSION) and URL (SENV_DWL_URL) to be fetched"
+)
 set "repo=softaro/net"
 set "prgname=firefox"
 %_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
