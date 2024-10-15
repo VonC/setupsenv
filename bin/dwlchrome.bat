@@ -13,6 +13,8 @@ echo nope
 goto:eof
 
 :dwl_from_github
+rem set "SENV_DWL_VERSION=129.0.6668.101-r1343869"
+set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups"
 set "repo=Hibbiki/chromium-win64"
 set "prgname=chrome"
 %_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
