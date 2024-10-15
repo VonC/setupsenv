@@ -34,16 +34,21 @@ rem %_info% "Check latest Firefox version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://softaro.net/download-file/21759/?version=English 2^>^&1"
 rem echo.%cmd%
+rem %cmd%|grep Firefox
 for /f "tokens=* delims=" %%a in ('%cmd%^|grep Firefox') do ( set gu=%%a)
 set "gu=%gu:HTTP/1.1 403 Forbidden=%"
-set "gu=%gu:Japanese=English%"
+if not "%gu:Japanese=%"=="%gu%" (
+  set "gu=%gu:Japanese=English%"
+)
+for /f "tokens=2 delims=:" %%a in ("%gu%") do set gu=https:%%a
+set "gu=%gu:exehttp=exe%"
 rem echo.Latest version URL='%gu%'
-set "SENV_DWL_URL=%gu%"
 for /f "tokens=1,2,3,4,5 delims=/" %%a in ("%gu%") do set version=%%e
 set "version=%version:HTTP=%"
 set "version=%version:*FirefoxPortable_=%"
 set "version=%version:_English.paf.exe=%"
-echo.%version%
+echo.%version%#%gu%
+endlocal
 goto:eof
 
 :get_filename
