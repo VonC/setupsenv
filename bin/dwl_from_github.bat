@@ -43,6 +43,13 @@ if defined SENV_DWL_VERSION (
 )
 
 %_info% "[%~nx0] Check latest '%repo%' version for '%prgname%' (SENV_DWL_VERSION not set)"
+if defined SENV_DWL_ASK_FOR_LATEST_VERSION (
+    %_info% "[%~nx0] SENV_DWL_ASK_FOR_LATEST_VERSION defined, so ask latest version to 'dwl%prgname%'"
+    for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_latest_version') do set "version=%%i"
+    goto:dr
+)
+
+%_info% "[%~nx0] SENV_DWL_ASK_FOR_LATEST_VERSION not defined, so ask GitHub '%repo%' for latest version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/%repo%/releases/latest"
 echo.%cmd%
