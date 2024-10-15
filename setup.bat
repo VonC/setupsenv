@@ -210,10 +210,13 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
       call:install "!fnpl!" "!fl!" || exit /b 1
   )
 )
-if not exist "%locald%\install.list" ( goto:alldone )
+if not exist "%locald%\install.list" (
+    %_ok% "[%~nx0] no local install list '%locald%\install.list', so no more list to process"
+    goto:alldone
+)
 set "setupsdir=%locald%\setups"
 %_info% "[%~nx0] =========="
-%_info% "[%~nx0] processing local installation list in %locald%\install.list"
+%_info% "[%~nx0] processing local installation list in '%locald%\install.list'"
 for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
   set fnpl=%%a
   set fl=%%b
