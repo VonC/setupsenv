@@ -32,12 +32,13 @@ set "prgsfolder=%prgname%s"
 
 mkdir "%PRGS%\%prgsfolder%" 2> nul
 
+if defined SENV_DWL_VERSION (
+    %_warning% "SENV_DWL_VERSION set to '%SENV_DWL_VERSION%': no latest check"
+    set "version=%SENV_DWL_VERSION%"
+    goto:dr
+)
 
-set "version=0.14.5"
-goto:dr
-
-
-%_info% "[%~nx0] Check latest '%repo%' version for '%prgname%'"
+%_info% "[%~nx0] Check latest '%repo%' version for '%prgname%' (SENV_DWL_VERSION not set)"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/%repo%/releases/latest"
 echo.%cmd%
