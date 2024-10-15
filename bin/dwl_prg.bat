@@ -36,7 +36,6 @@ if errorlevel 1 (
 
 mkdir "%PRGS%\%prgsfolder%" 2> nul
 
-set "SENV_DWL_VERSION=129.0.6668.101-r1343869"
 if defined SENV_DWL_VERSION (
     %_warning% "[%~nx0] SENV_DWL_VERSION set to '%SENV_DWL_VERSION%': no latest check"
     set "version=%SENV_DWL_VERSION%"
