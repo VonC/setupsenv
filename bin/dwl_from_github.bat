@@ -75,9 +75,13 @@ if exist "%setup_dir%\%target_local_file%" (
     goto:eof
 )
 
-set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
-%_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from URL '%url%'"
-where curl
+if not defined SENV_DWL_URL (
+    set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+    %_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from GitHub URL '!url!' (SENV_DWL_URL not defined)"
+) else (
+    set "url=%SENV_DWL_URL%"
+    %_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from Custom URL '!url!' (SENV_DWL_URL defined)"
+)
 curl -kL %url% -o "%setup_dir%\%target_local_file%"
 if not "%ERRORLEVEL%" == "0" (
     %_fatal% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 1
