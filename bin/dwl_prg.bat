@@ -13,7 +13,7 @@ if "%repo%"=="" (
     %_fatal% "[%~nx0] repo must be provided (ex: charmbracelet/gum)" 1
 )
 rem @echo on
-echo.%repo%| findstr /R /C:"^[a-Z0-9_]*/[a-Z0-9_]*$" >nul
+echo.%repo%| findstr /R /C:"^[a-Z0-9_-]*/[a-Z0-9_-]*$" >nul
 rem echo %ERRORLEVEL%
 if errorlevel 1 (
     %_fatal% "[%~nx0] repo must be in the format org/repo (ex: charmbracelet/gum)" 1
@@ -22,7 +22,7 @@ if errorlevel 1 (
 if "%prgname%"=="" (
     %_fatal% "[%~nx0] prgname must be provided (ex: gum)" 1
 )
-echo.%prgname%| findstr /R /C:"^[a-Z0-9_]*$" >nul
+echo.%prgname%| findstr /R /C:"^[a-Z0-9_-]*$" >nul
 rem echo %ERRORLEVEL%
 if errorlevel 1 (
     %_fatal% "[%~nx0] prgname must be composed of letter, digits or _ (ex: gum)" 1
@@ -55,6 +55,7 @@ rem set "version=2.35.1.windows.2"
 rem Call the script and capture its output
 for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_filename %version%') do set "file=%%i"
 %_info% "[%~nx0] file='%file%'"
+goto:eof
 
 if exist "%setup_dir%\%file%" (
     %_ok% "[%~nx0] '%file%' Already downloaded in setup_dir '%setup_dir%'"
