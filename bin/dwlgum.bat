@@ -5,8 +5,6 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
-set "extension=_Windows_x86_64"
-
 rem @echo on
 set "arg=%~1"
 if "%arg%"=="" ( goto:dwl_from_github)
@@ -17,65 +15,12 @@ goto:eof
 :dwl_from_github
 set "repo=charmbracelet/gum"
 set "prgname=gum"
+%_info% "[%~nx0] Dwl '%repo%'"
 call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_filename
-set "version=%~2"
-echo %prgname%_%version%%extension%.zip
-goto:eof
-
 rem https://github.com/charmbracelet/gum/releases/download/v0.14.1/gum_0.14.1_Windows_x86_64.zip
-set "file=%prgname%_%version%%extension%.zip"
-%_info% "file='%file%'"
-if exist "%PRGS%\%prgsfolder%\%file%" (
-    %_ok% "'%file%' Already downloaded"
-    goto:install
-)
-
-set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
-%_task% "Download latest to '%PRGS%\%prgsfolder%\%file%' from URL '%url%'"
-curl -kL %url% -o "%PRGS%\%prgsfolder%\%file%"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to download '%PRGS%\%prgsfolder%\%file%' from latest, URL '%url%'" 1
-)
-%_ok% "'%file%' downloaded"
-
-:install
-set "filename=%file:~0,-4%"
-if not exist "%PRGS%\%prgsfolder%\%filename%" (
-    %_task% "Unzip '%PRGS%\%prgsfolder%\%file%' to '%PRGS%\%prgsfolder%'"
-    unzip "%PRGS%\%prgsfolder%\%file%" -d "%PRGS%\%prgsfolder%\%filename%"
-    if ERRORLEVEL 1 (
-        %_fatal% "Unable to unzip '%PRGS%\%prgsfolder%\%file%' to '%PRGS%\%prgsfolder%'" 1
-    )
-    %_ok% "'%PRGS%\%prgsfolder%\%file%' unzipped to '%PRGS%\%prgsfolder%'"
-) else (
-    %_ok% "%PRGS%\%prgsfolder%\%filename%" already unzipped
-)
-
-for /f "tokens=5,* delims= " %%a in ('dir "%PRGS%\gums" ^| grep current') do ( set "curr=%%a" )
-if "%curr%"=="" (
-    %_task% "No current junction folder detected: must create '%PRGS%\%prgsfolder%\current'"
-)
-rem echo filename='%filename%'
-rem echo curr='%curr%'
-echo.%curr% | findstr /C:"%filename%" >nul
-if %errorlevel% equ 0 (
-    %_ok% "%filename% is already referenced by junction current"
-    goto:final
-)
-%_warning% "current (%curr%) does not reference '%filename%' yet"
-%_task% "'%PRGS%\%prgsfolder%\current' must reference '%filename%'"
-if exist "%PRGS%\%prgsfolder%\current" (
-    rmdir "%PRGS%\%prgsfolder%\current"
-)
-:createcurr
-mklink /J "%PRGS%\%prgsfolder%\current" "%PRGS%\%prgsfolder%\%filename%\%filename%"
-if ERRORLEVEL 1 (
-    %_fatal% "Unable to create current referencing '%PRGS%\%prgsfolder%\%filename%\%filename%'" 2
-)
-%_ok% "current now references '%PRGS%\%prgsfolder%\%filename%\%filename%'"
-:final
-%_ok% "Gum available at '%PRGS%\gums\current:"
-%PRGS%\gums\current\gum.exe --version
+set "version=%~2"
+echo %prgname%_%version%_Windows_x86_64.zip
+goto:eof
