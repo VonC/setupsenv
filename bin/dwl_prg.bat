@@ -4,8 +4,14 @@ setlocal enabledelayedexpansion
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
-for %%i in ("%senv_dir%\..\setup") do ( set "setup_dir=%%~fi" )
-
+for %%i in ("%senv_dir%\..\setup") do (
+    set "setup_dir=%%~fi"
+)
+if not defined SENV_DWL_SETUP_DIR (
+    %_info% "[%~nx0] setup_dir='%setup_dir%' (SENV_DWL_SETUP_DIR not defined)"
+) else (
+    set "setup_dir=%SENV_DWL_SETUP_DIR%"
+)
 set "repo=%~1"
 set "prgname=%~2"
 
