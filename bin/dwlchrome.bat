@@ -2,27 +2,25 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir%\echos_macros.bat
-%_info% "Check latest chrome version"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+
 rem @echo on
-set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/Hibbiki/chromium-win64/releases/latest"
-echo.%cmd%
+set "arg=%~1"
+if "%arg%"=="" ( goto:dwl_from_github)
+if not "%arg::=%"=="%arg%" ( goto%arg% )
+echo nope
+goto:eof
 
-for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
-echo.Latest version URL='%gu%'
+:dwl_from_github
+set "repo=Hibbiki/chromium-win64"
+set "prgname=chrome"
+%_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
+call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+goto:eof
 
-for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
-echo.Latest version='%version%'
-
-set "file=%PRGS%\chromiums\chrome%version%.7z"
-if exist "%file%" (
-    %_ok% "'%file%' Already downloaded"
-    goto:eof
-)
-
-%_task% "Download latest to '%file%'"
-curl -kL https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.sync.7z -o "%file%"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to download '%file%' from latest" 1
-)
-%_ok% "'%file%' downloaded"
+:get_filename
+rem https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.sync.7z
+set "version=%~2"
+echo chrome.sync.7z#chromev%version%.7z
+goto:eof
