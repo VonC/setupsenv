@@ -3,7 +3,8 @@ setlocal enabledelayedexpansion
 rem goto:clean_path
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir%\echos_macros.bat
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
 
 %_task% "Must check HTTP code by querying www.google.com"
 for /f "tokens=*" %%i in ('curl -Lks -o /dev/null -m 3 -w %%{http_code} https://www.google.com') do ( set "code=%%i" )
