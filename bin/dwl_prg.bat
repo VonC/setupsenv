@@ -28,12 +28,11 @@ if errorlevel 1 (
     %_fatal% "[%~nx0] prgname must be composed of letter, digits or _ (ex: gum)" 1
 )
 
-set "prgsfolder=%prgname%s"
-
 mkdir "%PRGS%\%prgsfolder%" 2> nul
 
+set "SENV_DWL_VERSION=129.0.6668.101-r1343869"
 if defined SENV_DWL_VERSION (
-    %_warning% "SENV_DWL_VERSION set to '%SENV_DWL_VERSION%': no latest check"
+    %_warning% "[%~nx0] SENV_DWL_VERSION set to '%SENV_DWL_VERSION%': no latest check"
     set "version=%SENV_DWL_VERSION%"
     goto:dr
 )
@@ -55,19 +54,20 @@ rem set "version=2.35.1.windows.2"
 
 rem Call the script and capture its output
 for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_filename %version%') do set "file=%%i"
-%_info% "[%~nx0] file='%file%'"
-goto:eof
+for /f "tokens=1,2 delims=#" %%a in ('echo %file%') do ( set "file=%%a" & set "target_local_file=%%b" )
+if "%target_local_file%"=="" ( set "target_local_file=%file%")
+%_info% "[%~nx0] URL file='%file%', target file '%target_local_file%'"
 
-if exist "%setup_dir%\%file%" (
-    %_ok% "[%~nx0] '%file%' Already downloaded in setup_dir '%setup_dir%'"
+if exist "%setup_dir%\%target_local_file%" (
+    %_ok% "[%~nx0] '%target_local_file%' Already downloaded in setup_dir '%setup_dir%'"
     goto:eof
 )
 
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
-%_task% "[%~nx0] Download latest to '%setup_dir%\%file%' from URL '%url%'"
+%_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from URL '%url%'"
 where curl
-curl -kL %url% -o "%setup_dir%\%file%"
+curl -kL %url% -o "%setup_dir%\%target_local_file%"
 if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "[%~nx0] Unable to download '%setup_dir%\%file%' from latest, URL '%url%'" 1
+    %_fatal% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 1
 )
-%_ok% "[%~nx0] '%file%' downloaded to '%setup_dir%'"
+%_ok% "[%~nx0] '%target_local_file%' downloaded to '%setup_dir%'"
