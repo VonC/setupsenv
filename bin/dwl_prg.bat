@@ -55,35 +55,41 @@ rem set "version=2.35.1.windows.2"
 rem Call the script and capture its output
 for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_filename %version%') do set "file=%%i"
 %_info% "[%~nx0] file='%file%'"
-goto:eof
 
-if exist "%PRGS%\%setup_dir%\%file%" (
+if exist "%setup_dir%\%file%" (
     %_ok% "[%~nx0] '%file%' Already downloaded in setup_dir '%setup_dir%'"
     goto:install
 )
 
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
-%_task% "[%~nx0] Download latest to '%PRGS%\%prgsfolder%\%file%' from URL '%url%'"
-curl -kL %url% -o "%PRGS%\%prgsfolder%\%file%"
+%_task% "[%~nx0] Download latest to '%setup_dir%\%file%' from URL '%url%'"
+where curl
+curl -kL %url% -o "%setup_dir%\%file%"
 if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "[%~nx0] Unable to download '%PRGS%\%prgsfolder%\%file%' from latest, URL '%url%'" 1
+    %_fatal% "[%~nx0] Unable to download '%setup_dir%\%file%' from latest, URL '%url%'" 1
 )
-%_ok% "[%~nx0] '%file%' downloaded"
+%_ok% "[%~nx0] '%file%' downloaded to '%setup_dir%'"
 
 :install
+if not defined SENV_DWL_INSTALL (
+    %_ok% "No installation needed (SENV_DWL_INSTALL not defined)"
+    goto:eof
+)
+goto:eof
+
 set "filename=%file:~0,-4%"
 if not exist "%PRGS%\%prgsfolder%\%filename%" (
-    %_task% "[%~nx0] Unzip '%PRGS%\%prgsfolder%\%file%' to '%PRGS%\%prgsfolder%'"
-    unzip "%PRGS%\%prgsfolder%\%file%" -d "%PRGS%\%prgsfolder%\%filename%"
+    %_task% "[%~nx0] Unzip '%setup_dir%\%file%' to '%PRGS%\%prgsfolder%'"
+    unzip "%setup_dir%\%file%" -d "%PRGS%\%prgsfolder%\%filename%"
     if ERRORLEVEL 1 (
-        %_fatal% "[%~nx0] Unable to unzip '%PRGS%\%prgsfolder%\%file%' to '%PRGS%\%prgsfolder%'" 1
+        %_fatal% "[%~nx0] Unable to unzip '%setup_dir%\%file%' to '%PRGS%\%prgsfolder%'" 1
     )
-    %_ok% "[%~nx0] '%PRGS%\%prgsfolder%\%file%' unzipped to '%PRGS%\%prgsfolder%'"
+    %_ok% "[%~nx0] '%setup_dir%\%file%' unzipped to '%PRGS%\%prgsfolder%'"
 ) else (
     %_ok% "[%~nx0] %PRGS%\%prgsfolder%\%filename%" already unzipped
 )
 
-for /f "tokens=5,* delims= " %%a in ('dir "%PRGS%\gums" ^| grep current') do ( set "curr=%%a" )
+for /f "tokens=5,* delims= " %%a in ('dir "%PRGS%\%prgsfolder%" ^| grep current') do ( set "curr=%%a" )
 if "%curr%"=="" (
     %_task% "[%~nx0] No current junction folder detected: must create '%PRGS%\%prgsfolder%\current'"
 )
@@ -106,5 +112,5 @@ if ERRORLEVEL 1 (
 )
 %_ok% "[%~nx0] current now references '%PRGS%\%prgsfolder%\%filename%\%filename%'"
 :final
-%_ok% "[%~nx0] Gum available at '%PRGS%\gums\current:"
-%PRGS%\gums\current\gum.exe --version
+%_ok% "[%~nx0] %prgname% available at '%PRGS%\gums\current:"
+%PRGS%\%prgsfolder%\current\%prgname%.exe --version
