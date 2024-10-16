@@ -2,17 +2,8 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-if exist %script_dir%\..\batcolors (
-  call %script_dir%\..\batcolors\echos_macros.bat
-) else if exist %script_dir%\batcolors (
-  call %script_dir%\batcolors\echos_macros.bat
-) else if exist %script_dir%\echos_macros.bat (
-  call %script_dir%\echos_macros.bat
-) else (
-  echo "batcolor not found in script_dir '%script_dir%'" >&2
-  endlocal
-  exit /b 1
-)
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
 
 if "%~1"=="/i" (
   set "case_insensitive=/I "
@@ -25,25 +16,52 @@ for /f "tokens=2*" %%a in ('reg query "HKCU\Environment" /v PATH ^| findstr /i P
 :: Get System PATH from Registry
 for /f "tokens=2*" %%a in ('reg query "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment" /v Path ^| findstr /i Path') do set "system_path=%%b"
 
+set "local_path=%PATH%"
+
+:: Display Local PATH
+set "prefix=LOCAL : "
+if "%~1"=="" (
+  %_info% "Local PATH:"
+  set "prefix="
+)
+rem @echo on
+call :filter_path "%local_path%" %*
+
 :: Display User PATH
 set "prefix=USER  : "
 if "%~1"=="" (
   %_info% "User PATH:"
   set "prefix="
 )
+rem @echo on
+call :filter_path "%user_path%" %*
+
+:: Display System PATH
+set "prefix=SYSTEM: "
+if "%~1"=="" (
+  %_warning% "System PATH:"
+  set "prefix="
+)
+call :filter_path "%system_path%" %*
+
+goto:eof
+
+:filter_path
+set "path_to_filter=%~1"
+shift
 rem set "user_path=%%USERPROFILE%%\go\bin"
 rem @echo on
-for %%u in ("%user_path:;=" "%") do (
+for %%u in ("%path_to_filter:;=" "%") do (
     REM Remove first and last character of %%u
-    set "modified_u=%%u"
-    set "modified_u=!modified_u:~1,-1!"
+    set "modified_u=%%~u"
+    rem set "modified_u=!modified_u:~1,-1!"
     call set "expanded_u=!modified_u!"
     set "expanded="
     if not "!expanded_u!"=="!modified_u!" (
       set "expanded= == !expanded_u!"
     )
     rem echo %prefix%!modified_u!!expanded! xxx
-    call :contains_all_params %%u %*
+    call :contains_all_params %%u %1 %2 %3 %4 %5 %6 %7 %8 %9
     if not errorlevel 1 (
         echo %prefix%!modified_u!!expanded!
     ) else (
@@ -56,42 +74,13 @@ for %%u in ("%user_path:;=" "%") do (
       )
     )
 )
-
-:: Display System PATH
-set "prefix=SYSTEM: "
-if "%~1"=="" (
-  %_warning% "System PATH:"
-  set "prefix="
-)
-for %%s in ("%system_path:;=" "%") do (
-    REM Remove first and last character of %%s
-    set "modified_s=%%s"
-    set "modified_s=!modified_s:~1,-1!"
-    call set "expanded_s=!modified_s!"
-    set "expanded="
-    if not "!expanded_s!"=="!modified_s!" (
-      set "expanded= == !expanded_s!"
-    )
-    rem echo %prefix%!modified_s!!expanded! xxx
-    call :contains_all_params %%s %*
-    if not errorlevel 1 (
-        echo %prefix%!modified_s!!expanded!
-    ) else (
-      if not "!expanded_s!"=="!modified_s!" (
-        rem echo must test '!modified_s:%%=_!'
-        call :contains_all_params "!modified_s:%%=_!" %*
-        if not errorlevel 1 (
-            echo %prefix%!modified_s!!expanded! _
-        )
-      )
-    )
-)
 goto:eof
 
 REM Function to check if all parameters are found in %%u
 :contains_all_params
 set "line=%~1"
 if "!line!"=="" (
+    if defined SENV_PPATH_DEBUG ( %_error% "[contains_all_params] empty line. [SENV_PPATH_DEBUG]" )
     exit /b 1
 )
 shift
@@ -100,12 +89,17 @@ if "%~1"=="/i" (
 )
 :check_next_param
 if "%~1"=="" (
+    if defined SENV_PPATH_DEBUG ( %_ok% "[contains_all_params] empty param for line '%line%' [SENV_PPATH_DEBUG]" )
+    del /Q /F "%script_dir%\ppath.tmp" 2>NUL
     exit /b 0
 )
-echo !line! | findstr %case_insensitive%/c:"%~1" >nul
+echo !line!> "%script_dir%\ppath.tmp"
+findstr %case_insensitive%/c:"%~1" "%script_dir%\ppath.tmp" >nul
 if errorlevel 1 (
     @echo off
+    if defined SENV_PPATH_DEBUG ( %_warning% "[contains_all_params] does not find param '%~1' into line '!line!' [SENV_PPATH_DEBUG]" )
     exit /b 1
 )
+if defined SENV_PPATH_DEBUG ( %_ok% "[contains_all_params] empty first param for line '%line%' [SENV_PPATH_DEBUG]" )
 shift
 goto:check_next_param
