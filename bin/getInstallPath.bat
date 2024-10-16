@@ -20,6 +20,11 @@ if "%prgpattern%"=="" (
 	%_fatal% "[%~nx0] prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
 
+if "%prgname%"=="ghs" (
+	set "instPath=C:\Program Files\GitHub CLI"
+	goto:endlocal
+)
+
 set reg=HKCU
 reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
@@ -60,6 +65,7 @@ if not exist "%instPath%" (
 		)
 	)
 )
+:endlocal
 endlocal & set "instPath=%instPath%"
 rem if instPath ends with a trailing backslash, remove trailing backslash
 if "%instPath:~-1%"=="\" ( set "instPath=%instPath:~0,-1%" )
