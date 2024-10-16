@@ -2,35 +2,27 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir%\echos_macros.bat
-rem goto:dr
-%_info% "Check latest LazyGit version"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+
 rem @echo on
-set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/jesseduffield/lazygit/releases/latest"
-echo.%cmd%
+set "arg=%~1"
+if "%arg%"=="" ( goto:dwl_from_github)
+if not "%arg::=%"=="%arg%" ( goto%arg% )
+echo nope
+goto:eof
 
-for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
-echo.Latest version URL='%gu%'
+:dwl_from_github
+set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups\setups"
+set "SENV_DWL_SCRIPT_NAME=lg"
+set "repo=jesseduffield/lazygit"
+set "prgname=lazygit"
+%_info% "[%~nx0] Dwl '%repo%'"
+call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+goto:eof
 
-for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
-set "version=%version:v=%"
-
-:dr
-rem set "version=2.35.1.windows.2"
-echo.Latest version='%version%'
-
+:get_filename
 rem https://github.com/jesseduffield/lazygit/releases/download/v0.38.0/lazygit_0.38.0_Windows_x86_64.zip
-set "file=lazygit_%version%_Windows_x86_64.zip"
-echo.file='%file%'
-if exist "%PRGS%\gits\%file%" (
-    %_ok% "'%file%' Already downloaded"
-    goto:eof
-)
-
-set "url=https://github.com/jesseduffield/lazygit/releases/download/v%version%/%file%"
-%_task% "Download latest to '%PRGS%\lazygits\%file%' from URL '%url%'"
-curl -kL %url% -o "%PRGS%\lazygits\%file%"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to download '%PRGS%\lazygits\%file%' from latest, URL '%url%'" 1
-)
-%_ok% "'%file%' downloaded"
+set "version=%~2"
+echo.lazygit_%version%_Windows_x86_64.zip
+goto:eof
