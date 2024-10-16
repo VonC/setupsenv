@@ -2,36 +2,29 @@
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-call %script_dir%\echos_macros.bat
-rem goto:dr
-%_info% "Check latest Git version"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+
 rem @echo on
-set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/git-for-windows/git/releases/latest"
-echo.%cmd%
+set "arg=%~1"
+if "%arg%"=="" ( goto:dwl_from_github)
+if not "%arg::=%"=="%arg%" ( goto%arg% )
+echo nope
+goto:eof
 
-for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
-echo.Latest version URL='%gu%'
+:dwl_from_github
+set "repo=git-for-windows/git"
+set "prgname=git"
+%_info% "[%~nx0] Dwl '%repo%'"
+call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+goto:eof
 
-for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
-set "version=%version:v=%"
-
-:dr
-rem set "version=2.35.1.windows.2"
-echo.Latest version='%version%'
-
+:get_filename
+rem https://github.com/charmbracelet/gum/releases/download/v0.14.1/gum_0.14.1_Windows_x86_64.zip
+set "version=%~2"
 set "file=PortableGit-%version%-64-bit.7z.exe"
 set "file=%file:.windows.1=%"
 set "file=%file:.windows.=.%"
-echo.file='%file%'
-if exist "%PRGS%\gits\%file%" (
-    %_ok% "'%file%' Already downloaded"
-    goto:eof
-)
+echo.%file%
+goto:eof
 
-set "url=https://github.com/git-for-windows/git/releases/download/v%version%/%file%"
-%_task% "Download latest to '%PRGS%\gits\%file%' from URL '%url%'"
-curl -kL %url% -o "%PRGS%\gits\%file%"
-if not "%ERRORLEVEL%" == "0" (
-    %_fatal% "Unable to download '%PRGS%\gits\%file%' from latest, URL '%url%'" 1
-)
-%_ok% "'%file%' downloaded"
