@@ -286,7 +286,7 @@ if "%pname%"=="" (
         %_warning% "[%~nx0] Skip '%f%' installation (test found) in '%setupsdir%\_%f%'"
         goto:eof
     )
-    %_error% "[%~nx0] No setup file found in '%setupsdir%' for '%f%', pattern '%p%'"
+    %_warning% "[%~nx0] No setup file found in '%setupsdir%' for '%f%', pattern '%p%'"
 ) else ( goto:info )
 %_task% "[%~nx0] Must check if '%f%', pattern '%p%' is in local setup dir '%setup_dir%'"
 if exist "%setup_dir%\%p%" (
