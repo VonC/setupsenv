@@ -13,7 +13,7 @@ echo nope
 goto:eof
 
 :dwl_prg
-set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups"
+set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups\setups"
 if defined SENV_DWL_DEBUG (
   set "SENV_DWL_VERSION=2.49.0"
   set "SENV_DWL_URL=https://github.com/cli/cli/releases/download/v2.49.0/gh_2.49.0_windows_amd64.zip"

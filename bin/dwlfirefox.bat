@@ -13,7 +13,7 @@ echo nope
 goto:eof
 
 :dwl_prg
-set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups"
+set "SENV_DWL_SETUP_DIR=%PROG%\senv_setups\setups"
 set "SENV_DWL_ASK_FOR_LATEST_VERSION=1"
 if defined SENV_DWL_DEBUG (
   set "SENV_DWL_VERSION=131.0.3"
