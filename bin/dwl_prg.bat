@@ -33,6 +33,9 @@ rem echo %ERRORLEVEL%
 if errorlevel 1 (
     %_fatal% "[%~nx0] prgname must be composed of letter, digits or _ (ex: gum)" 1
 )
+if not defined SENV_DWL_SCRIPT_NAME (
+    set "SENV_DWL_SCRIPT_NAME=%prgname%"
+)
 
 mkdir "%PRGS%\%prgsfolder%" 2> nul
 
@@ -44,8 +47,8 @@ if defined SENV_DWL_VERSION (
 
 %_info% "[%~nx0] Check latest '%repo%' version for '%prgname%' (SENV_DWL_VERSION not set)"
 if not defined SENV_DWL_ASK_FOR_LATEST_VERSION ( goto:github_latest_version )
-%_info% "[%~nx0] SENV_DWL_ASK_FOR_LATEST_VERSION defined, so ask latest version to 'dwl%prgname%'"
-for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_latest_version') do ( set "version=%%i" )
+%_info% "[%~nx0] SENV_DWL_ASK_FOR_LATEST_VERSION defined, so ask latest version to 'dwl%SENV_DWL_SCRIPT_NAME%'"
+for /f "delims=" %%i in ('call "%script_dir%\dwl%SENV_DWL_SCRIPT_NAME%.bat" :get_latest_version') do ( set "version=%%i" )
 for /f "tokens=1,2 delims=#" %%i in ('echo %version%') do ( set "version=%%i" & set "SENV_DWL_URL=%%j" )
 goto:dr
 
@@ -72,7 +75,7 @@ rem set "version=2.35.1.windows.2"
 %_info% "[%~nx0] Latest version='%version%'"
 
 rem Call the script and capture its output
-for /f "delims=" %%i in ('call "%script_dir%\dwl%prgname%.bat" :get_filename %version%') do set "file=%%i"
+for /f "delims=" %%i in ('call "%script_dir%\dwl%SENV_DWL_SCRIPT_NAME%.bat" :get_filename %version%') do set "file=%%i"
 for /f "tokens=1,2 delims=#" %%a in ('echo %file%') do ( set "file=%%a" & set "target_local_file=%%b" )
 if "%target_local_file%"=="" ( set "target_local_file=%file%")
 %_info% "[%~nx0] URL file='%file%', target file '%target_local_file%'"
