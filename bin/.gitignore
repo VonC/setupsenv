@@ -13,3 +13,5 @@ index
 /batcolors
 /batcolors/
 go_vers.txt
+tmp*
+*.tmp
