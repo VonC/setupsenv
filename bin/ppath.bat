@@ -10,6 +10,17 @@ if "%~1"=="/i" (
   shift
 )
 
+set ASCII27=
+rem set ASCII27=← 
+
+REM Set the variable with colored text
+set "red_bg_white_text=%ASCII27%[41;97m[X]%ASCII27%[0m"
+set "yellow_bg_white_text=%ASCII27%[43;97m[?]%ASCII27%[0m"
+REM Combine the variables
+set "colored_text=%red_bg_white_text% %yellow_bg_white_text%"
+REM Echo the variable
+rem echo %colored_text%
+
 :: Get User PATH from Registry
 for /f "tokens=2*" %%a in ('reg query "HKCU\Environment" /v PATH ^| findstr /i PATH') do set "user_path=%%b"
 
@@ -57,19 +68,28 @@ for %%u in ("%path_to_filter:;=" "%") do (
     rem set "modified_u=!modified_u:~1,-1!"
     call set "expanded_u=!modified_u!"
     set "expanded="
+    set "error="
     if not "!expanded_u!"=="!modified_u!" (
       set "expanded= == !expanded_u!"
+    )
+    if exist "!expanded_u!" (
+        dir /a:d "!expanded_u!" >nul 2>&1
+        if errorlevel 1 (
+            set "error= %yellow_bg_white_text%"
+        )
+    ) else (
+      set "error= %red_bg_white_text%"
     )
     rem echo %prefix%!modified_u!!expanded! xxx
     call :contains_all_params %%u %1 %2 %3 %4 %5 %6 %7 %8 %9
     if not errorlevel 1 (
-        echo %prefix%!modified_u!!expanded!
+        echo %prefix%!modified_u!!expanded!!error!
     ) else (
       if not "!expanded_u!"=="!modified_u!" (
         rem echo must test '!modified_u:%%=_!'
         call :contains_all_params "!modified_u:%%=_!" %*
         if not errorlevel 1 (
-            echo %prefix%!modified_u!!expanded! _
+            echo %prefix%!modified_u!!expanded!!error! _
         )
       )
     )
