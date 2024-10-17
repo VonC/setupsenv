@@ -11,46 +11,19 @@ call %senv_dir%\batcolors\echos_macros.bat
 set PYTHON_ROOT=%PRGS%\pythons
 pushd %PYTHON_ROOT%
 
-set PYTHON_VERSIONS=
-for /d %%f in (python3.*) do (
-    set PYTHON_VERSIONS=!PYTHON_VERSIONS! "%%f"
-)
-popd
-
-:: Use gum for selection
-set "gum=%PRGS%\gums\current\gum.exe"
-for /f "tokens=*" %%a in ('%gum% choose %PYTHON_VERSIONS%') do set SELECTED_VERSION=%%a
-
-%_ok% "Python version chosen: '%SELECTED_VERSION%'"
-
-:clean_path
-rem set "SELECTED_VERSION=python3.7.5"
+call "%script_dir%\switchver.bat" pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
+echo done
+%_ok% "[%~nx0] Python version chosen: '%SELECTED_VERSION%'"
 set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%"
-set "current_path="
-echo PATH='%PATH%'
-rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set "newPath=%%a" )
-:: Split the PATH variable at semicolons and echo each part
-set newPath=
-for %%a in ("%PATH:;=" "%") do (
-    set "current_path=%%~a"
-    echo !current_path! > "%script_dir%\tmp_switchpy"
-    findstr /C:"%PRGS%\python" "%script_dir%\tmp_switchpy" >nul
-    if not !errorlevel! equ 0 (
-        if "!newPath!" == "" (
-            set "newPath=!current_path!"
-        ) else (
-            set "newPath=!newPath!;!current_path!"
-        )
-    )
-)
-del "%script_dir%\tmp_switchpy"
-rem echo newPath='%newPath%'
-set "newPath=%PYTHON_HOME%;%PYTHON_HOME%\Scripts;%newPath%"
-set "current_path="
-endlocal & set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%" & set "PATH=%newPath%" & set "PYTHON_VERSION=3%SELECTED_VERSION:*3=%"
+set "PYTHON_VERSION=3%SELECTED_VERSION:*3=%"
+
+endlocal & set "PYTHON_HOME=%PYTHON_HOME%" & set "PYTHON_VERSION=%PYTHON_VERSION%" & set "PATH=%newPath%"
+
 echo PYTHON_HOME='%PYTHON_HOME%'
 echo CLEANED PATH='%PATH%'
 set PYTHON_ROOT=%PRGS%\pythons
+set "_OLD_VIRTUAL_PATH=%PATH%"
+
 mkdir "%PYTHON_ROOT%\venvs" 2>nul
 pushd %PYTHON_ROOT%\venvs
 set PYTHON_MAIN_VERSION=
@@ -91,6 +64,7 @@ if not exist "python_%PYTHON_VERSION%" (
 )
 echo Active venv python_%PYTHON_VERSION%
 popd
+echo.PATH BEFORE activation: '%PATH%'
 call "%PRGS%\pythons\venvs\python_%PYTHON_VERSION%\Scripts\activate.bat"
 if errorlevel 1 (
     echo ERROR: Unable to activate Py env for 'Python %PYTHON_VERSION%'
