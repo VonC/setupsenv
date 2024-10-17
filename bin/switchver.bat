@@ -63,20 +63,27 @@ set PRG_VERSIONS=
 :: on suspended process, see
 :: https://superuser.com/questions/1469567/executable-gets-suspended-when-called-from-batch-script
 :: https://www.dostips.com/forum/viewtopic.php?t=8940
-for /d %%f in (%prg_prefix%*) do (
-    set "dirname=%%~nxf"
-    rem %_info% "[%~nx0] dirname='!dirname!'"
-    echo !dirname!| findstr /r "%prg_pattern%" >nul
-    if not errorlevel 1 (
-        set "PRG_VERSIONS=!PRG_VERSIONS! %%f"
-        set /a count+=1
-        if "%%f" == "%prg_prefix%%prg_version%" (
-            set "SELECTED_VERSION=%%f"
-        )
+:: Write the %prg_prefix%* list to a file
+dir /b "%prg_prefix%*" > "%script_dir%\switchver_list.tmp"
+: Filter the entries using findstr and write to another file
+findstr /r "%prg_pattern%" "%script_dir%\switchver_list.tmp" > "%script_dir%\switchver_filtered_list.tmp"
+:: Read the filtered entries from the file and process them
+for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_list.tmp"') do (
+    set "PRG_VERSIONS=!PRG_VERSIONS! %%i"
+    set /a count+=1
+    if "%%i" == "%prg_prefix%%prg_version%" (
+        set "SELECTED_VERSION=%%i"
     )
 )
 popd
-echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
+rem %_info% "switchver_list.tmp:"
+rem type "%script_dir%\switchver_list.tmp"
+rem %_info% "switchver_filtered_list.tmp:"
+rem type "%script_dir%\switchver_filtered_list.tmp"
+rem %_ok% "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%', count=%count%."
+del "%script_dir%\switchver_list.tmp" "%script_dir%\switchver_filtered_list.tmp"
+rem %_fatal% "stop" 1
+rem echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 
 if not "%SELECTED_VERSION%" == "" ( goto:selected )
 if not "%prg_version%" == "" (
@@ -110,7 +117,7 @@ if "%SELECTED_VERSION%" == "" (
     %_fatal% "[%~nx0] No %prg_name% version selected for PRGS_ROOT '%PRGS_ROOT%'" 3
 )
 %_ok% "[%~nx0] %prg_name% version chosen: '%SELECTED_VERSION%'"
-@echo on
+rem @echo on
 :clean_path
 set "newPath="
 rem Test if `where prg_exe` is equal to %PRGS%\prgs_name\%SELECTED_VERSION%
