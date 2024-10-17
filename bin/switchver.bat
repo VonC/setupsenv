@@ -132,30 +132,46 @@ if not "%newPath%" == "" (
     goto:skip_clean_path
 )
 
+%_task% "[%~nx0] Must clean PATH from any '%PRGS%\pythons' occurrence"
 set "current_path="
-rem echo PATH='%PATH%'
-rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set "newPath=%%a" )
-:: Split the PATH variable at semicolons and echo each part
-for %%a in ("%PATH:;=" "%") do (
-    set "current_path=%%~a"
-    echo !current_path!| findstr /C:"%PRGS%\%prgs_name%" >nul
-    if not !errorlevel! equ 0 (
-        if "!newPath!" == "" (
-            set "newPath=!current_path!"
-        ) else (
-            set "newPath=!newPath!;!current_path!"
-        )
+:: Write the PATH variable to a file, splitting at semicolons
+(for %%a in ("%PATH:;=" "%") do echo %%~a) > "%script_dir%\switchver_path_list.tmp"
+:: Filter out entries containing %PRGS%\%prgs_name%
+findstr /V /C:"%PRGS%\%prgs_name%" "%script_dir%\switchver_path_list.tmp" > "%script_dir%\switchver_filtered_path_list.tmp"
+:: Read the filtered entries from the file and reconstruct newPath
+for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"') do (
+    if "!newPath!" == "" (
+        set "newPath=%%i"
+    ) else (
+        set "newPath=!newPath!;%%i"
     )
 )
-rem echo newPath='%newPath%'
+%_info% "[%~nx0] newPath='%newPath%'
+rem %_info% "switchver_path_list.tmp:"
+rem type "%script_dir%\switchver_path_list.tmp"
+rem %_info% "switchver_filtered_path_list.tmp:"
+rem type "%script_dir%\switchver_filtered_path_list.tmp"
+del "%script_dir%\switchver_path_list.tmp" "%script_dir%\switchver_filtered_path_list.tmp"
+rem %_fatal% "stop" 1
+
 set "current_path="
+:: Write the variables to a temporary file
+echo newPath=%newPath%> "%script_dir%\switchver_tempvars.tmp"
+echo SELECTED_VERSION=%SELECTED_VERSION%>> "%script_dir%\switchver_tempvars.tmp"
 :skip_clean_path
-endlocal & set "newPath=%newPath%" & set "SELECTED_VERSION=%SELECTED_VERSION%"
+endlocal
 popd
+:: Read the variables from the temporary file and set them
+for /f "tokens=1,* delims==" %%i in ('type "%script_dir%\switchver_tempvars.tmp"') do set "%%i=%%j"
+:: Clean up the temporary file
+del "%script_dir%\switchver_tempvars.tmp"
+rem echo [%~nx0] SELECTED_VERSION='%SELECTED_VERSION%'
+rem echo [%~nx0] newPath='%newPath%'
+rem goto:eof
 if exist "%~dp0standalone_%~nx0.flag" (
-    echo newPath='%newPath%'
+    echo [%~nx0] newPath='!newPath!';
     set "newPath="
-    echo SELECTED_VERSION='%SELECTED_VERSION%'
+    echo [%~nx0] SELECTED_VERSION='%SELECTED_VERSION%'.
     set "SELECTED_VERSION="
     del "%~dp0standalone_%~nx0.flag"
 )
