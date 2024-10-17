@@ -39,13 +39,14 @@ if not "%VIRTUAL_ENV%" == "" (
         exit /b 0
     ) else (
         echo deactivate: different venv activated: '%VIRTUAL_ENV%'
-        call "%PYTHON_VENVS%\python_%PYTHON_VERSION%\Scripts\deactivate.bat"
+        set "OLD_PYTHON_VERSION=%VIRTUAL_ENV:*python_=%"
+        call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
         if errorlevel 1 (
-            echo ERROR: Unable to deactivate Py env for 'Python %PYTHON_VERSION%'
+            echo ERROR: Unable to deactivate Py env for 'Python %OLD_PYTHON_VERSION%'
             popd
             exit /b 1
         ) else (
-            echo OK: Py env for 'Python %PYTHON_VERSION%' deactivated
+            echo OK: Py env for 'Python %OLD_PYTHON_VERSION%' deactivated
         )
     )
 )
