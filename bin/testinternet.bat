@@ -16,3 +16,6 @@ if "%code%" == "200" (
 curl -Lks -o /dev/null -m 3 -w %%{http_code}\n https://www.google.com
 set "err=%ERRORLEVEL%"
 %_error% "Code HTTP '%code%', errorlevel '%err%'"
+if not "%err%" == "0" (
+  exit /b 1
+)
