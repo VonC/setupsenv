@@ -9,6 +9,7 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& goto:eof
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 set "installs_dir=%senv_dir%\installs"
+call %senv_dir%\batcolors\echos_macros.bat
 
 %_info% "[%~nx0] install vscode %PRGS%\setup\%fs%"
 set install_ok=true
