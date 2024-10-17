@@ -49,15 +49,16 @@ if not "%VIRTUAL_ENV%" == "" (
         )
     )
 )
+set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
 if not exist "python_%PYTHON_VERSION%" (
-    echo Must create py env for 'Python %PYTHON_VERSION%'
-    py -%PYTHON_MAIN_VERSION% -m venv python_%PYTHON_VERSION%
+    echo Must create virtual env for 'Python %PYTHON_VERSION%'
+    python -m venv python_%PYTHON_VERSION%
     if errorlevel 1 (
-        echo ERROR: Unable to create Py env for 'Python %PYTHON_VERSION%'
+        echo ERROR: Unable to create virtual env for 'Python %PYTHON_VERSION%'
         popd
         exit /b 1
     ) else (
-        echo OK: Py env for 'Python %PYTHON_VERSION%' created
+        echo OK: 'Python %PYTHON_VERSION%' virtual env created in '%PYTHON_VENVS%\python_%PYTHON_VERSION%'
     )
 ) else (
     echo OK: Py env for '%PYTHON_VERSION%' already created
@@ -65,7 +66,7 @@ if not exist "python_%PYTHON_VERSION%" (
 echo Active venv python_%PYTHON_VERSION%
 popd
 echo.PATH BEFORE activation: '%PATH%'
-call "%PRGS%\pythons\venvs\python_%PYTHON_VERSION%\Scripts\activate.bat"
+call "%PYTHON_VENVS%\python_%PYTHON_VERSION%\Scripts\activate.bat"
 if errorlevel 1 (
     echo ERROR: Unable to activate Py env for 'Python %PYTHON_VERSION%'
     popd
