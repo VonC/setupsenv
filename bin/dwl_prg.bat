@@ -39,6 +39,28 @@ if not defined SENV_DWL_SCRIPT_NAME (
 
 mkdir "%PRGS%\%prgsfolder%" 2> nul
 
+call "%script_dir%\testinternet.bat"
+if "%ERRORLEVEL%" == "0" (
+    %_ok% "[%~nx0] Internet connection there. Proceed"
+    goto:proceed
+)
+if not defined HTTPS_PROXY (
+    %_fatal% "[%~nx0] Internet access missing: no download possible" 21
+)
+if not exist "%HOME%\bin\pxkill.bat" (
+    %_fatal% "[%~nx0] pxkill missing: unable to reset Internet access" 22
+)
+call "%HOME%\bin\pxkill.bat"
+if not exist "%HOME%\bin\px.bat" (
+    %_fatal% "[%~nx0] px missing: unable to reset Internet access" 23
+)
+call "%HOME%\bin\px.bat"
+call "%script_dir%\testinternet.bat"
+if not "%ERRORLEVEL%" == "0" (
+   %_fatal% "[%~nx0] Internet access still missing after reset" 22
+)
+
+:proceed
 if defined SENV_DWL_VERSION (
     %_warning% "[%~nx0] SENV_DWL_VERSION set to '%SENV_DWL_VERSION%': no latest check"
     set "version=%SENV_DWL_VERSION%"
