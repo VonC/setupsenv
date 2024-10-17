@@ -155,16 +155,9 @@ del "%script_dir%\switchver_path_list.tmp" "%script_dir%\switchver_filtered_path
 rem %_fatal% "stop" 1
 
 set "current_path="
-:: Write the variables to a temporary file
-echo newPath=%newPath%> "%script_dir%\switchver_tempvars.tmp"
-echo SELECTED_VERSION=%SELECTED_VERSION%>> "%script_dir%\switchver_tempvars.tmp"
 :skip_clean_path
-endlocal
+endlocal & set "SELECTED_VERSION=%SELECTED_VERSION%" & set "newPath=%newPath%"
 popd
-:: Read the variables from the temporary file and set them
-for /f "tokens=1,* delims==" %%i in ('type "%script_dir%\switchver_tempvars.tmp"') do set "%%i=%%j"
-:: Clean up the temporary file
-del "%script_dir%\switchver_tempvars.tmp"
 rem echo [%~nx0] SELECTED_VERSION='%SELECTED_VERSION%'
 rem echo [%~nx0] newPath='%newPath%'
 rem goto:eof
