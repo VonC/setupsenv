@@ -37,6 +37,10 @@ goto:eof
 :get_latest_version
 rem @echo on
 if "%jdk_version%"=="" ( %_fatal% "[%~nx0] jdk_version needs to be set (17, 21, ...)" 11 )
+rem https://adoptium.net/docs/faq/#_can_i_automate_the_download_of_temurin_binaries
+rem https://api.adoptium.net/q/swagger-ui/#/Assets/getLatestAssets
+rem https://github.com/adoptium/api.adoptium.net/blob/main/docs/cookbook.adoc#example-three-scripting-a-download-using-the-adoptium-api
+rem https://github.com/adoptium/api.adoptium.net/blob/main/docs/cookbook.adoc#example-two
 rem curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse"
 for /f "delims=" %%a in ('curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse" ^| findstr /R /C:"name.*zip"') do ( set "version=%%a" )
 rem https://fossies.org/windows/misc/go1.23.2.windows-amd64.zip
