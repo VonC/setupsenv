@@ -137,7 +137,12 @@ set "current_path="
 :: Write the PATH variable to a file, splitting at semicolons
 (for %%a in ("%PATH:;=" "%") do echo %%~a) > "%script_dir%\switchver_path_list.tmp"
 :: Filter out entries containing %PRGS%\%prgs_name%
-findstr /V /C:"%PRGS%\%prgs_name%" "%script_dir%\switchver_path_list.tmp" > "%script_dir%\switchver_filtered_path_list.tmp"
+if not defined switchver_todelete (
+    set "switchver_todelete=%PRGS%\%prgs_name%"
+)
+rem echo findstr /V /C:"\%prg_name%" "%script_dir%\switchver_path_list.tmp"
+findstr /I /V /C:"%switchver_todelete%" "%script_dir%\switchver_path_list.tmp" > "%script_dir%\switchver_filtered_path_list.tmp"
+set "switchver_todelete="
 ping -n 1 -w 300 127.0.0.1 > nul
 :: Read the filtered entries from the file and reconstruct newPath
 for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"') do (
