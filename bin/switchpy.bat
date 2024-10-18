@@ -24,11 +24,8 @@ endlocal & set "PYTHON_HOME=%PYTHON_HOME%" & set "PYTHON_VERSION=%PYTHON_VERSION
 rem echo PYTHON_HOME='%PYTHON_HOME%'
 rem echo CLEANED PATH='%PATH%'
 set PYTHON_ROOT=%PRGS%\pythons
-set PYTHON_VENVS=%PYTHON_ROOT%\venvs
 set "_OLD_VIRTUAL_PATH=%PATH%"
 
-mkdir "%PYTHON_VENVS%" 2>nul
-pushd %PYTHON_VENVS%
 set PYTHON_MAIN_VERSION=
 :: Split PYTHON_VERSION by '.' and keep the first two segments
 for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
@@ -36,21 +33,24 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
 )
 echo PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'
 if not "%VIRTUAL_ENV%" == "" (
-    if "%VIRTUAL_ENV%" == "%PYTHON_VENVS%\python_%PYTHON_VERSION%" (
-        echo OK: Py env for 'Python %PYTHON_VERSION%' already activated
-        popd
-        exit /b 0
-    ) else (
+    echo %VIRTUAL_ENV%>>"%CD%\switchpy_virtual_env.tmp"
+    ping -n 1 -w 300 127.0.0.1 > nul
+    findstr /c:"python_%PYTHON_VERSION%" "%CD%\switchpy_virtual_env.tmp" >nul
+    if errorlevel 1 (
+        del "%CD%\switchpy_virtual_env.tmp"
         echo deactivate: different venv activated: '%VIRTUAL_ENV%'
         set "OLD_PYTHON_VERSION=%VIRTUAL_ENV:*python_=%"
         call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
         if errorlevel 1 (
             echo ERROR: Unable to deactivate Py env for 'Python %OLD_PYTHON_VERSION%'
-            popd
             exit /b 1
         ) else (
             echo OK: Py env for 'Python %OLD_PYTHON_VERSION%' deactivated
         )
+    ) else (
+        del "%CD%\switchpy_virtual_env.tmp"
+        echo OK: Py env for 'Python %PYTHON_VERSION%' already activated
+        exit /b 0
     )
 )
 set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
