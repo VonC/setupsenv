@@ -54,6 +54,38 @@ if not "%VIRTUAL_ENV%" == "" (
     )
 )
 set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
+
+rem unset any doskey alias for deactivate.bat
+doskey deactivate=
+rem Propose with gum.exe 3 choices: 1) no venv 2) venv on %PYTHON_ROOT%\venvs 3) venv on %CD%\venvs
+set choice=
+echo cd='%CD%'
+"%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %CD%\venvs"> "%CD%\switchpy.tmp"
+ping -n 1 -w 300 127.0.0.1 > nul
+for /f "tokens=*" %%a in ('type "%CD%\switchpy.tmp"') do set choice=%%a
+echo choice='%choice%'
+if "%choice%" == "No venv" (
+    echo No virtual environment will be used.
+    del "%CD%\switchpy.tmp"
+    exit /b 0
+) else if "%choice%" == "venv on %PYTHON_ROOT%\venvs" (
+    set "VENV_LOCATION=%PYTHON_ROOT%\venvs"
+) else if "%choice%" == "venv on %CD%\venvs" (
+    set "VENV_LOCATION=%CD%\venvs"
+) else (
+    echo Invalid choice.
+    del "%CD%\switchpy.tmp"
+    exit /b 1
+)
+ping -n 1 -w 300 127.0.0.1 > nul
+del "%CD%\switchpy.tmp"
+
+rem TODO use existing code to create or activate venv in the chosen location
+rem TODO set doskey alias %VIRTUAL_ENV%\Scripts\deactivate.bat is a venv is chosen
+
+set PYTHON_VENVS="%VENV_LOCATION%"
+mkdir "%PYTHON_VENVS%" 2>nul
+pushd %PYTHON_VENVS%
 if not exist "python_%PYTHON_VERSION%" (
     echo Must create virtual env for 'Python %PYTHON_VERSION%'
     python -m venv python_%PYTHON_VERSION%
@@ -73,10 +105,9 @@ echo.PATH BEFORE activation: '%PATH%'
 call "%PYTHON_VENVS%\python_%PYTHON_VERSION%\Scripts\activate.bat"
 if errorlevel 1 (
     echo ERROR: Unable to activate Py env for 'Python %PYTHON_VERSION%'
-    popd
     exit /b 1
 ) else (
     echo OK: Py env for 'Python %PYTHON_VERSION%' activated
 )
-popd
+doskey deactivate=call "%VIRTUAL_ENV%\Scripts\deactivate.bat" $*
 set PYTHON_ROOT=
