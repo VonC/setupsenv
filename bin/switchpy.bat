@@ -11,10 +11,13 @@ call %senv_dir%\batcolors\echos_macros.bat
 set PYTHON_ROOT=%PRGS%\pythons
 pushd %PYTHON_ROOT%
 
+set "switchver_todelete=python"
 call "%script_dir%\switchver.bat" pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
+set "switchver_todelete="
 %_ok% "[%~nx0] Python version chosen: '%SELECTED_VERSION%'"
 set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%"
 set "PYTHON_VERSION=3%SELECTED_VERSION:*3=%"
+popd
 
 endlocal & set "PYTHON_HOME=%PYTHON_HOME%" & set "PYTHON_VERSION=%PYTHON_VERSION%" & set "PATH=%newPath%"
 
