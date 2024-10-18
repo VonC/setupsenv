@@ -198,6 +198,10 @@ if not exist "%script_dir%\custom\%instlist%" (
 
 call:install "gum_*_Windows_x86_64.zip" "gums" || exit /b 1
 
+findstr /i "sysinternalsSuites" "custom\%instlist%" >nul
+if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=SysinternalsSuite-*.zip" )
+call:install "%pattern%" "sysinternalsSuites" || exit /b 1
+
 %_info% "[%~nx0] =========="
 %_info% "[%~nx0] processing custom installation list '%instlist%'"
 @echo off
@@ -209,6 +213,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   if "!fl!"=="gits" ( set "cil_install=false" )
   if "!fl!"=="vscodes" ( set "cil_install=false" )
   if "!fl!"=="gums" ( set "cil_install=false" )
+  if "!fl!"=="sysinternals" ( set "cil_install=false" )
   if "!cil_install!"=="true" (
       call:install "!fnpl!" "!fl!" || exit /b 1
   )
