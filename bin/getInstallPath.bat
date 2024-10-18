@@ -19,27 +19,37 @@ if "%prgname%"=="" (
 if "%prgpattern%"=="" (
 	%_fatal% "[%~nx0] prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
+set "subkey_path="
+set "key_value="
 
 if "%prgname%"=="ghs" (
 	set "instPath=C:\Program Files\GitHub CLI"
 	goto:endlocal
 )
 
+if "%prgname%"=="sysinternalsSuites" (
+	set "subkey_path=Software\Microsoft\Windows\CurrentVersion\App Paths\pslist.exe"
+	set "key_value=Path"
+	set "prgpattern=Tools"
+)
+
+if not defined subkey_path ( set "subkey_path=SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall" )
+if not defined key_value ( set "key_value=InstallLocation" )
 set reg=HKCU
-reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
+reg query "%reg%\%subkey_path%" /v "%key_value%" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
 		rem %_info% "[%~nx0] %prgname% is installed"
 ) else (
 		rem %_info% "[%~nx0] %prgname% is NOT installed"
 		set reg=HKLM
 )
-reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s | findstr /i %prgpattern% 1>NUL
+reg query "%reg%\%subkey_path%" /v "%key_value%" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
 		rem %_info% "[%~nx0] %prgname% is installed"
 ) else (
 		%_fatal% "[%~nx0] %prgname% is NOT installed for pattern '%prgpattern%'" 1
 )
-for /f "tokens=3*" %%a in ('reg query %reg%\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v "InstallLocation" /s ^| findstr /i %prgpattern%') do (
+for /f "tokens=3*" %%a in ('reg query "%reg%\%subkey_path%" /v "%key_value%" /s ^| findstr /i %prgpattern%') do (
     set "instPath=%%a"
 	rem echo instPath 0 '%instPath%' '!instPath!'
 	if not exist "!instPath!" ( set "instPath=%%a %%b")
@@ -58,10 +68,10 @@ rem echo instPath final='%instPath%' '!instPath!'
 if not exist "%instPath%" (
 	if not defined ignoreNoInstPath (
 		set "instPath="
-		%_fatal% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'." 13
+		%_fatal% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\%subkey_path% /v '%key_value%' (or HKLM) for '%prgpattern%'." 13
 	) else (
 		if exist "%echos_standalone%" (
-			%_error% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall /v 'InstallLocation' (or HKLM) for '%prgpattern%'."
+			%_error% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\%subkey_path% /v '%key_value%' (or HKLM) for '%prgpattern%'."
 		)
 	)
 )
