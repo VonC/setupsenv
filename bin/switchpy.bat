@@ -58,7 +58,7 @@ if not "%VIRTUAL_ENV%" == "" (
         del "%ccd%\switchpy_virtual_env.tmp"
         %_ok% "[%~nx0] Py env for 'Python %PYTHON_VERSION%' already activated"
         call :unset
-        exit /b 0
+        goto:eof
     )
 )
 
@@ -77,7 +77,7 @@ if "%choice%" == "No venv" (
     del "%ccd%\switchpy.tmp" 2>nul
     set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
     call :unset
-    exit /b 0
+    goto:eof
 ) else if "%choice%" == "venv on %PYTHON_ROOT%\venvs" (
     set "VENV_LOCATION=%PYTHON_ROOT%\venvs"
 ) else if "%choice%" == "venv on %ccd%\venvs" (
