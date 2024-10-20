@@ -36,13 +36,14 @@ set PYTHON_MAIN_VERSION=
 for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
     set "PYTHON_MAIN_VERSION=%%a.%%b"
 )
-%_info% PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'
+set "ccd=%CD%"
+%_info% "[%~nx0] PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'"
 if not "%VIRTUAL_ENV%" == "" (
-    echo %VIRTUAL_ENV%>>"%CD%\switchpy_virtual_env.tmp"
+    echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
     ping -n 1 -w 300 127.0.0.1 > nul
-    findstr /c:"python_%PYTHON_VERSION%" "%CD%\switchpy_virtual_env.tmp" >nul
+    findstr /c:"python_%PYTHON_VERSION%" "%ccd%\switchpy_virtual_env.tmp" >nul
     if errorlevel 1 (
-        del "%CD%\switchpy_virtual_env.tmp"
+        del "%ccd%\switchpy_virtual_env.tmp"
         %_task% "[%~nx0] Must deactivate: different venv activated: '%VIRTUAL_ENV%'"
         set "OLD_PYTHON_VERSION=%VIRTUAL_ENV:*python_=%"
         call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
@@ -54,7 +55,7 @@ if not "%VIRTUAL_ENV%" == "" (
             %_ok% "[%~nx0] Py env for 'Python %OLD_PYTHON_VERSION%' deactivated"
         )
     ) else (
-        del "%CD%\switchpy_virtual_env.tmp"
+        del "%ccd%\switchpy_virtual_env.tmp"
         %_ok% "[%~nx0] Py env for 'Python %PYTHON_VERSION%' already activated"
         call :unset
         exit /b 0
@@ -73,22 +74,22 @@ rem echo choice='%choice%'
 rem if venv, then do not set PATH: activate will do it.
 if "%choice%" == "No venv" (
     %_ok% "[%~nx0] No virtual environment will be used."
-    del "%CD%\switchpy.tmp"
+    del "%ccd%\switchpy.tmp" 2>nul
     set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
     call :unset
     exit /b 0
 ) else if "%choice%" == "venv on %PYTHON_ROOT%\venvs" (
     set "VENV_LOCATION=%PYTHON_ROOT%\venvs"
-) else if "%choice%" == "venv on %CD%\venvs" (
-    set "VENV_LOCATION=%CD%\venvs"
+) else if "%choice%" == "venv on %ccd%\venvs" (
+    set "VENV_LOCATION=%ccd%\venvs"
 ) else (
     %_error% "[%~nx0] Invalid choice."
-    del "%CD%\switchpy.tmp"
+    del "%ccd%\switchpy.tmp" 2>nul
     call :unset
     exit /b 1
 )
 ping -n 1 -w 300 127.0.0.1 > nul
-del "%CD%\switchpy.tmp"
+del "%ccd%\switchpy.tmp" 2>nul
 
 rem use existing code to create or activate venv in the chosen location
 set PYTHON_VENVS="%VENV_LOCATION%"
