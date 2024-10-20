@@ -12,7 +12,7 @@ set PYTHON_ROOT=%PRGS%\pythons
 pushd %PYTHON_ROOT%
 
 set "switchver_todelete=python"
-call "%script_dir%\switchver.bat" pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
+call "%script_dir%\switchver.bat" pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python "%~1"
 set "switchver_todelete="
 %_ok% "[%~nx0] Python version chosen: '%SELECTED_VERSION%'"
 set "PYTHON_HOME=%PRGS%\pythons\%SELECTED_VERSION%"
