@@ -24,7 +24,7 @@ if defined SENV_DWL_DEBUG (
 set "repo=cli/cli"
 set "prgname=gh"
 %_info% "[%~nx0] Dwl '%repo%'"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_filename

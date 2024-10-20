@@ -29,9 +29,9 @@ set "SENV_DWL_SCRIPT_NAME=jdk"
 
 %_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
 set "jdk_version=17"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 set "jdk_version=21"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_latest_version

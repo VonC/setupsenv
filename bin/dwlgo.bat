@@ -26,7 +26,7 @@ if defined SENV_DWL_DEBUG (
 set "repo=go/dev"
 set "prgname=go"
 %_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_latest_version

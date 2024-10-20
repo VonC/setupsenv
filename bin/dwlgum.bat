@@ -7,16 +7,16 @@ call %senv_dir%\batcolors\echos_macros.bat
 
 rem @echo on
 set "arg=%~1"
-if "%arg%"=="" ( goto:dwl_from_github)
+if "%arg%"=="" ( goto:dwl_prg)
 if not "%arg::=%"=="%arg%" ( goto%arg% )
 echo nope
 goto:eof
 
-:dwl_from_github
+:dwl_prg
 set "repo=charmbracelet/gum"
 set "prgname=gum"
 %_info% "[%~nx0] Dwl '%repo%'"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_filename

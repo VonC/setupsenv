@@ -29,9 +29,9 @@ set "SENV_DWL_SCRIPT_NAME=py"
 
 %_info% "[%~nx0] Dwl '%repo%' for '%prgname%'"
 set "py_cycle=3.12"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 set "py_cycle=3.13"
-call "%script_dir%\dwl_from_github.bat" "%repo%" "%prgname%"
+call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_latest_version
