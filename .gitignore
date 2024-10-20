@@ -10,3 +10,4 @@ driverLetter.bat
 a
 tmp*
 *.tmp
+*.sha1
