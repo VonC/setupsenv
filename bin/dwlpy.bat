@@ -45,6 +45,7 @@ rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
 set "gu=https://www.python.org/ftp/python/%version%/python-%version%-amd64.exe"
 echo.%version%#%gu%
 endlocal
+set "py_cycle="
 goto:eof
 
 :get_filename
