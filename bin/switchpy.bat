@@ -65,11 +65,17 @@ if not "%VIRTUAL_ENV%" == "" (
 rem unset any doskey alias for deactivate.bat
 doskey deactivate=
 rem Propose with gum.exe 3 choices: 1) no venv 2) venv on %PYTHON_ROOT%\venvs 3) venv on %CD%\venvs
-set choice=
-rem echo cd='%CD%'
-"%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %CD%\venvs"> "%CD%\switchpy.tmp"
-ping -n 1 -w 300 127.0.0.1 > nul
-for /f "tokens=*" %%a in ('type "%CD%\switchpy.tmp"') do set choice=%%a
+set "ccd=%CD%"
+if defined SWITCHPY_CHOICE (
+    set "choice=%SWITCHPY_CHOICE%"
+) else (
+    set "choice="
+)
+if not defined choice (
+    "%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %ccd%\venvs"> "%ccd%\switchpy.tmp"
+    ping -n 1 -w 300 127.0.0.1 > nul
+    for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set choice=%%a
+)
 rem echo choice='%choice%'
 rem if venv, then do not set PATH: activate will do it.
 if "%choice%" == "No venv" (
