@@ -70,5 +70,8 @@ del "%script_dir%\git-filter-repo.py.tmp.sha1"
 
 :proceed
 %_ok% "[%~nx0] git-filter-repo.py is ready to use."
+
+python "%script_dir%\git-filter-repo.py" %*
+
 endlocal
 set "GIT_FILTER_REPO_CHECK_UPDATE="
