@@ -10,16 +10,21 @@ for %%i in ("%script_dir%\..\batcolors") do ( set "bc=%%~fi" )
 call "%bc%\echos_macros.bat"
 %_info% "[%~nx0] script_dir(bundle)='%script_dir%'"
 
-if "%1"=="" (
-    %_fatal% "[%~nx0] Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
-)
-
-set "profile=%1"
-
 set "custom_dir=%script_dir%\..\custom"
 cd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
 for /F "delims=" %%f in ('cd') do ( set "custom_dir=%%f" )
 %_info% "[%~nx0] Custom folder full path: '%custom_dir%'"
+
+if "%1"=="" (
+    if not exist "%custom_dir%\profile" (
+        %_fatal% "[%~nx0] Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
+        rem %_fatal% "[%~nx0] Must have a profile file in custom folder" 1
+    ) else (
+        for /F "delims=" %%f in ('type "%custom_dir%\profile"') do ( set "profile=%%f" )
+    )
+) else (
+    set "profile=%1"
+)
 
 set s="setupsdir_%profile%.bat"
 if not exist "%custom_dir%\%s%" (
