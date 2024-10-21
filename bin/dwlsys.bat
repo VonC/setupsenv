@@ -33,7 +33,6 @@ goto:eof
 
 :get_latest_version
 rem @echo on
-if "%py_cycle%"=="" ( %_fatal% "[%~nx0] py_cycle needs to be set (3.12, 3.13, ...)" 11 )
 
 curl -skL https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite > "%script_dir%\sysinternalsSuite.tmp"
 for /f "delims=" %%a in ('findstr "calculated" "%script_dir%\sysinternalsSuite.tmp"') do ( set "version=%%a" )
