@@ -32,7 +32,7 @@ set "local_path=%PATH%"
 :: Display Local PATH
 set "prefix=LOCAL : "
 if "%~1"=="" (
-  %_info% "Local PATH:"
+  %_info% "[%~nx0] Local PATH:"
   set "prefix="
 )
 rem @echo on
@@ -41,7 +41,7 @@ call :filter_path "%local_path%" %*
 :: Display User PATH
 set "prefix=USER  : "
 if "%~1"=="" (
-  %_info% "User PATH:"
+  %_info% "[%~nx0] User PATH:"
   set "prefix="
 )
 rem @echo on
@@ -50,7 +50,7 @@ call :filter_path "%user_path%" %*
 :: Display System PATH
 set "prefix=SYSTEM: "
 if "%~1"=="" (
-  %_warning% "System PATH:"
+  %_warning% "[%~nx0] System PATH:"
   set "prefix="
 )
 call :filter_path "%system_path%" %*

@@ -12,13 +12,13 @@ call %senv_dir%\batcolors\echos_macros.bat
 set MAVENS_ROOT=%PRGS%\mavens
 pushd "%MAVENS_ROOT%"
 if errorlevel 1 (
-    %_fatal% "Unable to change to MAVENS_ROOT directory '%MAVENS_ROOT%'" 1
+    %_fatal% "[%~nx0] Unable to change to MAVENS_ROOT directory '%MAVENS_ROOT%'" 1
 )
 
 if not "%1" == "" (
     echo %1| findstr /r "^[0-9].[0-9].[0-9]$" >nul
     if errorlevel 1 (
-        %_fatal% "First argument '%1' must be x.y.z, like 3.3.9 or 3.6.0 or 3.9.9" 2
+        %_fatal% "[%~nx0] First argument '%1' must be x.y.z, like 3.3.9 or 3.6.0 or 3.9.9" 2
     )
 )
 
@@ -28,7 +28,7 @@ set SELECTED_VERSION=
 set MAVEN_VERSIONS=
 for /d %%f in (mvn*) do (
     set "dirname=%%~nxf"
-    rem %_info% "dirname='!dirname!'"
+    rem %_info% "[%~nx0] dirname='!dirname!'"
     echo !dirname!| findstr /r "^mvn[0-9].[0-9].[0-9]$" >nul
     if not errorlevel 1 (
         set "MAVEN_VERSIONS=!MAVEN_VERSIONS! %%f"
@@ -42,22 +42,22 @@ popd
 
 if "%SELECTED_VERSION%" == "" (
     if not "%1" == "" (
-        %_warning% "Your Maven version argument '%1' was NOT found in MAVENS_ROOT '%MAVENS_ROOT%'" 4
+        %_warning% "[%~nx0] Your Maven version argument '%1' was NOT found in MAVENS_ROOT '%MAVENS_ROOT%'" 4
     )
 )
 
 :: if count == 1, set SELECTED_VERSION to MAVEN_VERSIONS, and trim any space
 if %count% equ 1 (
-    %_info% "Only one Maven version found: '%MAVEN_VERSIONS: =%'"
+    %_info% "[%~nx0] Only one Maven version found: '%MAVEN_VERSIONS: =%'"
     for %%v in (%MAVEN_VERSIONS%) do (
         set "SELECTED_VERSION=%%~v"
     )
     goto:selected
 )
 
-rem %_info% "MAVEN_VERSIONS='%MAVEN_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
+rem %_info% "[%~nx0] MAVEN_VERSIONS='%MAVEN_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 if "%SELECTED_VERSION%" == "" (
-    %_task% "Select Maven version amongst '%count%' available"
+    %_task% "[%~nx0] Select Maven version amongst '%count%' available"
     :: Use gum for selection
     set "gum=%PRGS%\gums\current\gum.exe"
     for /f "tokens=*" %%a in ('!gum! choose %MAVEN_VERSIONS%') do set SELECTED_VERSION=%%a
@@ -66,9 +66,9 @@ if "%SELECTED_VERSION%" == "" (
 :selected
 
 if "%SELECTED_VERSION%" == "" (
-    %_fatal% "No Maven version selected for MAVENS_ROOT '%MAVENS_ROOT%'" 3
+    %_fatal% "[%~nx0] No Maven version selected for MAVENS_ROOT '%MAVENS_ROOT%'" 3
 )
-%_ok% "Maven version chosen: '%SELECTED_VERSION%'"
+%_ok% "[%~nx0] Maven version chosen: '%SELECTED_VERSION%'"
 
 
 
@@ -84,7 +84,7 @@ for /f "tokens=*" %%j in ('where mvn^|findstr cmd') do (
 )
 
 if not "%newPath%" == "" (
-    %_ok% "Maven '%SELECTED_VERSION%' already in PATH"
+    %_ok% "[%~nx0] Maven '%SELECTED_VERSION%' already in PATH"
     goto:skip_clean_path
 )
 

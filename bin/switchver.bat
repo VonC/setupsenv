@@ -76,13 +76,13 @@ for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_list.tmp"') do (
     )
 )
 popd
-rem %_info% "switchver_list.tmp:"
+rem %_info% "[%~nx0] switchver_list.tmp:"
 rem type "%script_dir%\switchver_list.tmp"
-rem %_info% "switchver_filtered_list.tmp:"
+rem %_info% "[%~nx0] switchver_filtered_list.tmp:"
 rem type "%script_dir%\switchver_filtered_list.tmp"
-rem %_ok% "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%', count=%count%."
+rem %_ok% "[%~nx0] PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%', count=%count%."
 del "%script_dir%\switchver_list.tmp" "%script_dir%\switchver_filtered_list.tmp"
-rem %_fatal% "stop" 1
+rem %_fatal% "[%~nx0] stop" 1
 rem echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 
 if not "%SELECTED_VERSION%" == "" ( goto:selected )
@@ -153,12 +153,12 @@ for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"')
     )
 )
 %_info% "[%~nx0] newPath='%newPath%'
-rem %_info% "switchver_path_list.tmp:"
+rem %_info% "[%~nx0] switchver_path_list.tmp:"
 rem type "%script_dir%\switchver_path_list.tmp"
-rem %_info% "switchver_filtered_path_list.tmp:"
+rem %_info% "[%~nx0] switchver_filtered_path_list.tmp:"
 rem type "%script_dir%\switchver_filtered_path_list.tmp"
 del "%script_dir%\switchver_path_list.tmp" "%script_dir%\switchver_filtered_path_list.tmp"
-rem %_fatal% "stop" 1
+rem %_fatal% "[%~nx0] stop" 1
 
 set "current_path="
 :skip_clean_path

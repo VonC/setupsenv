@@ -6,11 +6,11 @@ cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 
 set "bc=%script_dir%\..\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "script_dir(publish)='%script_dir%'"
+%_info% "[%~nx0] script_dir(publish)='%script_dir%'"
 
-cd ../custom || %_fatal% "Unable to access custom folder" 1
+cd ../custom || %_fatal% "[%~nx0] Unable to access custom folder" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
-%_info% "Custom folder full path: '%cpwd%'"
+%_info% "[%~nx0] Custom folder full path: '%cpwd%'"
 
 dir ..\..\setup > NUL
 if errorlevel 1 (
@@ -39,9 +39,9 @@ call "%fsetupsdir%"
 set "UNCPathOnly="
 set "spath=!setupsdir!"
 if "%spath%"=="" (
-    %_fatal% "No target spath found in '%fsetupsdir%'" 111
+    %_fatal% "[%~nx0] No target spath found in '%fsetupsdir%'" 111
 )
-%_info% "Target path spath: '%spath%'"
+%_info% "[%~nx0] Target path spath: '%spath%'"
 
 call:publishOne "peazip_portable-"
 call:publishOne "PortableGit"
@@ -69,16 +69,16 @@ set "pattern=%1"
 
 set "fname="
 for /F "delims=" %%f in ('dir /OD /b ..\..\setup^|findstr %pattern%^|tail -1') do ( set fname=%%f)
-%_info% "fname: '%fname%'"
-if "%fname%"=="" ( %_fatal% "Unknown name pattern '%pattern%'" 23 )
+%_info% "[%~nx0] fname: '%fname%'"
+if "%fname%"=="" ( %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
 
 set "name="
 call %script_dir%\publish_setname.bat
-if "%name%"=="" ( %_fatal% "Unknown name for fname: '%fname%'" 222 )
+if "%name%"=="" ( %_fatal% "[%~nx0] Unknown name for fname: '%fname%'" 222 )
 
 :execrbcs
 if exist "!spath!\%fname%" (
-    %_warning% "Skip '%name% '%fname%': already in '!spath!'"
+    %_warning% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
 ) else (
     call:rbc "!spath!"
 )
@@ -88,7 +88,7 @@ goto:eof
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=..\..\setup" )
-%_info% "Robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+%_info% "[%~nx0] Robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 REM Explain the robocopy options:
 REM /Z: copy in restartable mode (survive network glitches)
 REM /R:5: retry 5 times

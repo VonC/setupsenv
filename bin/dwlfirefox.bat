@@ -30,7 +30,7 @@ call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 
 :get_latest_version
-rem %_info% "Check latest Firefox version"
+rem %_info% "[%~nx0] Check latest Firefox version"
 rem @echo on
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://softaro.net/download-file/21759/?version=English 2^>^&1"
 rem echo.%cmd%

@@ -74,29 +74,29 @@ echo done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'
 del "%script_dir%\tmp_drive"
 del "%script_dir%\tmp_drive_echo"
 if not "%driveLetter%"=="" ( goto:drive_found )
-%_warning% "No drive letter found for driveUNCPath '%driveUNCPath%'"
+%_warning% "[%~nx0] No drive letter found for driveUNCPath '%driveUNCPath%'"
 :: Test if UNC path is accessible by using dir command
-dir /b "%unc_path%" >nul 2>nul || ( %_fatal% "Directory '%driveUNCPath%' is not accessible." 119 )
-%_task% "Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
+dir /b "%unc_path%" >nul 2>nul || ( %_fatal% "[%~nx0] Directory '%driveUNCPath%' is not accessible." 119 )
+%_task% "[%~nx0] Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
 net use * "%driveUNCPath%" >nul 2>nul
 set "NEEL=%ERRORLEVEL%"
 if "%NEEL%"=="0" (
-    %_ok% "Drive mapped successfully for driveUNCPath '%driveUNCPath%'."
+    %_ok% "[%~nx0] Drive mapped successfully for driveUNCPath '%driveUNCPath%'."
     goto:search_driveLetter
 ) else (
-    %_fatal% "Failed to map drive for driveUNCPath '%driveUNCPath%'. Exiting..." %NEEL%
+    %_fatal% "[%~nx0] Failed to map drive for driveUNCPath '%driveUNCPath%'. Exiting..." %NEEL%
 )
 
 :drive_found
-%_info% "Drive found for '%driveUNCPath%': '%driveLetter%'"
+%_info% "[%~nx0] Drive found for '%driveUNCPath%': '%driveLetter%'"
 if not "%drRefresh%"=="" (
-    %_task% "Must refresh '%driveLetter%'"
+    %_task% "[%~nx0] Must refresh '%driveLetter%'"
     call :ActivateMappedNetworkDrive "%driveLetter%"
     dir "%driveLetter%" 1>NUL 2>NUL
     if errorlevel 1 (
-        %_fatal% "Unable to access drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%'" 118
+        %_fatal% "[%~nx0] Unable to access drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%'" 118
     )
-    %_ok% "Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
+    %_ok% "[%~nx0] Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
 )
 
 set "dl=%custom_dir%\driverLetter.bat"
