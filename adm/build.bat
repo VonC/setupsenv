@@ -149,11 +149,11 @@ if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to copy 'version' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
-copy /Y "%custom_dir%\echos_macros.bat" "%remote_senv_dir%\echos_macros.bat"
+copy /Y "%bc%\echos_macros.bat" "%remote_senv_dir%\echos_macros.bat"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to copy 'echos_macros.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
-copy /Y "%custom_dir%\echos.bat" "%remote_senv_dir%\echos.bat"
+copy /Y "%bc%\echos.bat" "%remote_senv_dir%\echos.bat"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to copy 'echos.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
