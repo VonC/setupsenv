@@ -77,10 +77,14 @@ set "name=%~2"
 
 set "fname="
 for /F "delims=" %%f in ('dir /OD /b "%setup_dir%"^|findstr %pattern%^|tail -1') do ( set fname=%%f)
-if "%fname%"=="" ( %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
+if "%fname%"=="" (
+    del "%custom_dir%\system.list.tmp"
+    %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
 %_info% "[%~nx0] fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
-if "%name%"=="" ( %_fatal% "[%~nx0] name not provided for fname: '%fname%'" 222 )
+if "%name%"=="" (
+    del "%custom_dir%\system.list.tmp"
+    %_fatal% "[%~nx0] name not provided for fname: '%fname%'" 222 )
 
 if exist "!spath!\%fname%" (
     %_ok% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
