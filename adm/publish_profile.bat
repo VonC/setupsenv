@@ -78,7 +78,7 @@ if "%name%"=="" ( %_fatal% "[%~nx0] Unknown name for fname: '%fname%'" 222 )
 
 :execrbcs
 if exist "!spath!\%fname%" (
-    %_warning% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
+    %_ok% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
 ) else (
     call:rbc "!spath!"
 )
