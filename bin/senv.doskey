@@ -51,3 +51,8 @@ dlgh=dwlgh.bat
 dllg=dwllg.bat
 dlgum=dwlgum.bat
 gum="%PRGS%\gums\current\gum.exe" $*
+
+ssleep=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -d -t 0
+shutd=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -k -f -t 0
+shutr=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -r -f -t 0
+pe=%PRGS%\sysinternalsSuites\current\procexp64.exe $*
