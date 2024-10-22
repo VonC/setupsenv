@@ -15,6 +15,9 @@ if exist "%script_dir_bin%\..\adm" (
    for %%i in ("%script_dir_bin%\..\installs") do (
       set "admPath=%admPath%;%%~fi"
    )
+   doskey ba=build_all.bat $*
+   doskey p=publish.bat $*
+   doskey pa=publish_all.bat $*
 )
 if not "%admPath%"=="" (
    set "admPath=%admPath%;"
