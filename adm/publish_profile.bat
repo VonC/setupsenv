@@ -27,7 +27,7 @@ if "%profile%"=="" (
     )
 )
 if not "%1"=="" ( set "profile=%1" )
-set "fprofile=install_%profile%.list"
+set "fprofile=%custom_dir%\install_%profile%.list"
 if not exist "%fprofile%" (
     %_fatal%  "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
 )
@@ -43,55 +43,45 @@ if "%spath%"=="" (
 )
 %_info% "[%~nx0] Target path spath: '%spath%'"
 
-rem C:\Public\SOFTWARE\senv\custom>cat *.list | sort -f | uniq
-call:publishOne "peazip_portable-"
-call:publishOne "PortableGit"
-call:publishOne "gitcred"
-call:publishOne "VSCode"
-call:publishOne "SysinternalsSuite-"
-call:publishOne "gum_"
-call:publishOne "px-"
-call:publishOne "apache-maven-3.0.4-"
-call:publishOne "apache-maven-3.3.9-"
-call:publishOne "apache-maven-3.9.9-"
-call:publishOne "jdk-8"
-call:publishOne "OpenJDK17"
-call:publishOne "OpenJDK11"
-call:publishOne "OpenJDK21"
-call:publishOne "putty-"
-call:publishOne "shellcheck-"
-call:publishOne "WinSCP-"
-call:publishOne "MobaXterm"
-call:publishOne "node-v10."
-call:publishOne "node-v14."
-call:publishOne "node-v22."
-call:publishOne "sqldeveloper-"
-call:publishOne "Postman-"
-call:publishOne "mqmon"
-call:publishOne "npp."
-call:publishOne "FileZilla_"
-call:publishOne "jd-gui-"
-call:publishOne "python-3.12"
-call:publishOne "python-3.13"
-call:publishOne "gh_"
-call:publishOne "yEd-"
-call:publishOne "ideaIC"
+call:is_system_tool "peazips"
+if errorlevel 1 ( call:publishOne "peazip_portable-" "peazips" )
+call:is_system_tool "gits"
+if errorlevel 1 ( call:publishOne "PortableGit-" "gits" )
+call:publishOne "VSCodeUserSetup-x64-" "vscodes"
+call:publishOne "gum_" "gums"
+call:is_system_tool "sysinternalsSuites"
+set "system_list=peazips#gits#vscodes#gums#sysinternalsSuites#"
+echo %system_list%>"%custom_dir%\system.list.tmp"
+if errorlevel 1 ( call:publishOne "SysinternalsSuite-" "sysinternalsSuites" )
+
+for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (
+    set "pattern=%%f"
+    set "name=%%g"
+    if not "!pattern!"=="system" (
+        call:publishOne "!pattern!" "!name!"
+    ) else (
+        set "mandatory="
+        for /F %%f in ('findstr /i /c:"!name!#" "%custom_dir%\system.list.tmp"') do ( set "mandatory=%%f" )
+        if "!mandatory!"=="" (
+            %_ok% "[%~nx0] Skip system tool '!name!'"
+        )
+    )
+)
+del "%custom_dir%\system.list.tmp"
 endlocal
 goto:eof
 
 :publishOne
-set "pattern=%1"
+set "pattern=%~1"
+set "name=%~2"
 
 set "fname="
 for /F "delims=" %%f in ('dir /OD /b "%setup_dir%"^|findstr %pattern%^|tail -1') do ( set fname=%%f)
-%_info% "[%~nx0] fname: '%fname%'"
 if "%fname%"=="" ( %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
+%_info% "[%~nx0] fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
-set "name="
-call %script_dir%\publish_setname.bat
-if "%name%"=="" ( %_fatal% "[%~nx0] Unknown name for fname: '%fname%'" 222 )
+if "%name%"=="" ( %_fatal% "[%~nx0] name not provided for fname: '%fname%'" 222 )
 
-:execrbcs
 if exist "!spath!\%fname%" (
     %_ok% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
 ) else (
@@ -115,3 +105,14 @@ REM /NJS: no job summary
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 goto:eof
 
+:is_system_tool
+set "name=%~1"
+for /f "tokens=1,2 delims= " %%f in ('findstr /i /c:" %name%" "%fprofile%"') do (
+    set "pattern=%%f"
+)
+if "%pattern%"=="system" (
+    %_ok% "[%~nx0] Skip mandatory tool '%name%' (system)"
+    exit /b 0
+)
+exit /b 1
+goto:eof
