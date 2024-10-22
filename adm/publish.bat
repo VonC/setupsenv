@@ -92,13 +92,9 @@ for /L %%n in (1 1 !output_cnt!) DO (
     set "UNCPathOnly=1"
     rem dir %cpwd%\!sc!
     rem echo call "%cpwd%\!sc!"
-    call "%cpwd%\!sc!"
-    set "UNCPathOnly="
-    set "spath=!setupsdir!"
     set "profile=!profiles[%%n]!"
     rem set "profile=calx_tesys"
     set "skip="
-    %_info% "[%~nx0] sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
     if not "%team%"=="all" (
         if not "%team%"=="!profile!" (
             %_warning% "[%~nx0] Team '%team%' does not match profile '!profile!': skipping."
@@ -108,6 +104,10 @@ for /L %%n in (1 1 !output_cnt!) DO (
         )
     )
     if "!skip!"=="" (
+        call "%custom_dir%\!sc!"
+        set "UNCPathOnly="
+        set "spath=!setupsdir!"
+        %_info% "[%~nx0] sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
         dir "!spath!" > NUL
         if errorlevel 1 (
             %_error% "[%~nx0] Target path '!spath!' not accessible: skipped"
