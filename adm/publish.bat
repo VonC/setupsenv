@@ -64,6 +64,7 @@ if "%team%"=="all" (
     %_task% "[%~nx0] Must publish '%fname%' for team '%team%'"
 )
 
+pushd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
 REM https://stackoverflow.com/questions/4956873/how-to-cut-first-n-and-last-n-columns/51005303#51005303
 call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f2-|cut -d'.' -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
@@ -75,13 +76,14 @@ for /L %%n in (1 1 !output_cnt!) DO (
 rem @echo on
 set "name="
 call %script_dir%\publish_setname.bat
-if "%name%"=="" ( %_fatal% "[%~nx0] Unknown name for fname for publish: '%fname%'" 228 )
+if "%name%"=="" ( podp && %_fatal% "[%~nx0] Unknown name for fname for publish: '%fname%'" 228 )
 
 :execrbcs
 call:execcmd "ls -1 setupsdir*_*"
 %_info% "[%~nx0] output_cnt='%output_cnt%' or '!output_cnt!'"
 if "%output_cnt%"=="0" (
     cd
+    popd
     %_fatal% "[%~nx0] No s*_* detected in custom" 1
 )
 for /L %%n in (1 1 !output_cnt!) DO (
@@ -122,6 +124,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
                 %_warning% "[%~nx0] Must delete '%fname%' in '!spath!'"
                 del "!spath!\%fname%"
                 if errorlevel 1 (
+                    popd
                     %_fatal% "[%~nx0] Unable to delete '!spath!\%fname%'" 23
                 )
             )
@@ -142,6 +145,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
                 %_warning% "[%~nx0] Must delete '%fname%' in '!spath!'"
                 del "!spath!\%fname%"
                 if errorlevel 1 (
+                    popd
                     %_fatal% "[%~nx0] Unable to delete '!spath!\%fname%'" 23
                 )
             )
@@ -152,6 +156,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
     :continue
     rem goto:eof
 )
+popd
 goto:eof
 
 :check_name
