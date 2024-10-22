@@ -178,7 +178,7 @@ goto:eof
 cd
 set "dst=%1"
 set "src=%2"
-if "%src%"=="" ( set "src=..\..\setup" )
+if "%src%"=="" ( set "src=%setup_dir%" )
 %_info% "[%~nx0] Robocopy '%fname%' from '%src%' to '%dst%'"
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 goto:eof
