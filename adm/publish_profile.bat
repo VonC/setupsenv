@@ -83,7 +83,7 @@ goto:eof
 set "pattern=%1"
 
 set "fname="
-for /F "delims=" %%f in ('dir /OD /b ..\..\setup^|findstr %pattern%^|tail -1') do ( set fname=%%f)
+for /F "delims=" %%f in ('dir /OD /b "%setup_dir%"^|findstr %pattern%^|tail -1') do ( set fname=%%f)
 %_info% "[%~nx0] fname: '%fname%'"
 if "%fname%"=="" ( %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
 
@@ -102,7 +102,7 @@ goto:eof
 :rbc
 set "dst=%1"
 set "src=%2"
-if "%src%"=="" ( set "src=..\..\setup" )
+if "%src%"=="" ( set "src=%setup_dir%" )
 %_info% "[%~nx0] Robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 REM Explain the robocopy options:
 REM /Z: copy in restartable mode (survive network glitches)
