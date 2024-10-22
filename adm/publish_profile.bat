@@ -3,30 +3,30 @@ setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
-
-set "bc=%script_dir%\..\batcolors"
+cd ..
+for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
+set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "[%~nx0] script_dir(publish)='%script_dir%'"
+%_info% "[%~nx0] script_dir(profile)='%script_dir%'"
 
-cd ../custom || %_fatal% "[%~nx0] Unable to access custom folder" 1
-for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
-%_info% "[%~nx0] Custom folder full path: '%cpwd%'"
+cd "%senv_dir%\..\setup" || %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
+for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
+cd "%senv_dir%\..\dl" || %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
+for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
-dir ..\..\setup > NUL
-if errorlevel 1 (
-    %_fatal%  "../../setup unavailable" 3
+set "custom_dir=%senv_dir%\custom"
+cd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
+%_info% "[%~nx0] Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
+
+if exist "%custom_dir%\profile" (
+    for /f "delims=" %%x in (%custom_dir%\profile) do set profile=%%x
 )
-
-dir ..\..\dl > NUL
-if errorlevel 1 (
-    %_fatal%  "../../dl unavailable (should symlink to C:\%USERNAME%\Downloads)" 5
+if "%profile%"=="" (
+    if "%1"=="" (
+        %_fatal%  "Usage: publish xxx (profile whose list is to be published)" 4
+    )
 )
-
-if "%1"=="" (
-    %_fatal%  "Usage: publish xxx (profile whose list is to be published)" 4
-)
-
-set "profile=%1"
+if not "%1"=="" ( set "profile=%1" )
 set "fprofile=install_%profile%.list"
 if not exist "%fprofile%" (
     %_fatal%  "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
