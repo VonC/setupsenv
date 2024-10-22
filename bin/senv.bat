@@ -17,7 +17,7 @@ if exist "%script_dir_bin%\..\adm" (
    )
    doskey ba=build_all.bat $*
    doskey p=publish.bat $*
-   doskey pa=publish_all.bat $*
+   doskey pp=publish_profile.bat $*
 )
 if not "%admPath%"=="" (
    set "admPath=%admPath%;"
