@@ -69,9 +69,15 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
 set "version=%version:v=%"
 
 :dr
+if defined SENV_DWL_ASK_FOR_URL (
+    for /f "delims=" %%i in ('call "%script_dir%\dwl%SENV_DWL_SCRIPT_NAME%.bat" :get_url %version%') do ( set "SENV_DWL_URL=%%i" )
+)
 if not defined SENV_DWL_URL (
     if defined SENV_DWL_ASK_FOR_LATEST_VERSION (
         %_fatal% "[%~nx0] SENV_DWL_URL not defined when it should be after SENV_DWL_ASK_FOR_LATEST_VERSION" 11
+    )
+    if defined SENV_DWL_ASK_FOR_URL (
+        %_fatal% "[%~nx0] SENV_DWL_URL not defined when it should be after SENV_DWL_ASK_FOR_URL (version='%version%')" 11
     )
 )
 rem set "version=2.35.1.windows.2"
