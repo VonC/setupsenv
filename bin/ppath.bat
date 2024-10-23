@@ -32,7 +32,7 @@ set "local_path=%PATH%"
 :: Display Local PATH
 set "prefix=LOCAL : "
 if "%~1"=="" (
-  %_info% "[%~nx0] Local PATH:"
+  %_ok% "[%~nx0] Local PATH:"
   set "prefix="
 )
 rem @echo on
