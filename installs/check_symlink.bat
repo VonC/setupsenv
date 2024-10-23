@@ -116,7 +116,7 @@ for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findst
 rem echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr "%p%" 1>NUL: 2>NUL:
 if errorlevel 1 (
-    %_info% "[%~nx0] Must update '%sln%' to reference '%p%'"
+    %_info% "[%~nx0] Must update '%sln%' to reference '%p%' from '%s%'"
     rmdir "%PRGS%\%f%\%sln%"
     goto:create
 )
