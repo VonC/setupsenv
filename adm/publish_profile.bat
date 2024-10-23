@@ -67,7 +67,7 @@ for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (
         )
     )
 )
-del "%custom_dir%\system.list.tmp"
+del "%custom_dir%\system.list.tmp" 2>NUL
 endlocal
 goto:eof
 
@@ -78,12 +78,13 @@ set "name=%~2"
 set "fname="
 for /F "delims=" %%f in ('dir /OD /b "%setup_dir%"^|findstr %pattern%^|tail -1') do ( set fname=%%f)
 if "%fname%"=="" (
-    del "%custom_dir%\system.list.tmp"
+    del "%custom_dir%\system.list.tmp" 2>NUL
+    echo dir /OD /b "%setup_dir%\%pattern%"^|tail -1
     %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
 %_info% "[%~nx0] fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
 if "%name%"=="" (
-    del "%custom_dir%\system.list.tmp"
+    del "%custom_dir%\system.list.tmp" 2>NUL
     %_fatal% "[%~nx0] name not provided for fname: '%fname%'" 222 )
 
 if exist "!spath!\%fname%" (
