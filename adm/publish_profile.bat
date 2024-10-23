@@ -44,15 +44,15 @@ if "%spath%"=="" (
 %_info% "[%~nx0] Target path spath: '%spath%'"
 
 call:is_system_tool "peazips"
-if errorlevel 1 ( call:publishOne "peazip_portable-" "peazips" )
+if errorlevel 1 ( call:publishOne "peazip_portable-*.zip" "peazips" )
 call:is_system_tool "gits"
-if errorlevel 1 ( call:publishOne "PortableGit-" "gits" )
-call:publishOne "VSCodeUserSetup-x64-" "vscodes"
-call:publishOne "gum_" "gums"
+if errorlevel 1 ( call:publishOne "PortableGit-*.7z.exe" "gits" )
+call:publishOne "VSCodeUserSetup-x64-*.exe" "vscodes"
+call:publishOne "gum_*.zip" "gums"
 call:is_system_tool "sysinternalsSuites"
 set "system_list=peazips#gits#vscodes#gums#sysinternalsSuites#"
 echo %system_list%>"%custom_dir%\system.list.tmp"
-if errorlevel 1 ( call:publishOne "SysinternalsSuite-" "sysinternalsSuites" )
+if errorlevel 1 ( call:publishOne "SysinternalsSuite-*.zip" "sysinternalsSuites" )
 
 for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (
     set "pattern=%%f"
