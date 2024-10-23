@@ -100,7 +100,7 @@ if %count% equ 1 (
 )
 
 if %count% equ 0 (
-    %_fatal% "[%~nx0] No %prg_version% version found in '%PRGS_ROOT%'" 3
+    %_fatal% "[%~nx0] No prg_version '%prg_version%' version found in '%PRGS_ROOT%'" 3
 )
 
 rem %_info% "[%~nx0] PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
