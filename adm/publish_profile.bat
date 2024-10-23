@@ -76,12 +76,12 @@ set "pattern=%~1"
 set "name=%~2"
 
 set "fname="
-for /F "delims=" %%f in ('dir /OD /b "%setup_dir%"^|findstr %pattern%^|tail -1') do ( set fname=%%f)
+for /F "delims=" %%f in ('dir /OD /b "%setup_dir%\%pattern%" 2^>NUL^|tail -1') do ( set fname=%%f)
 if "%fname%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
     echo dir /OD /b "%setup_dir%\%pattern%"^|tail -1
     %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
-%_info% "[%~nx0] fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
+%_task% "[%~nx0] Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
 if "%name%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
