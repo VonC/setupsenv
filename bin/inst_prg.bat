@@ -10,8 +10,9 @@ for %%i in ("%PRGS%\setup") do (
 
 %_info% "[%~nx0] 'script_dir(inst_prg)='%script_dir%'"
 
-cd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
+pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
+popd
 
 %_info% "[%~nx0] Install '%~2', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
@@ -88,12 +89,14 @@ if not exist "%fname%" (
 call "%HOME%\bin\pzxx.bat" "%PRGS%\%prgs_folder%\%fname%"
 if errorlevel 1 (
     rm -Rf "%PRGS%\%prgs_folder%\%prgs_folder%"
+    popd
     %_fatal% "[%~nx0] Error on 7z uncompression of '%fname%' to '%PRGS%\%prgs_folder%\%prgs_folder%'" 1
 )
 %_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
 :check_symlink
 %_task% "[%~nx0] Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
 call "%script_dir%\check_prg_symlink.bat" "%pname%" "%f%" "%sys%"
+popd
 goto:eof
 
 :rbc
