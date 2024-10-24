@@ -16,7 +16,7 @@ for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 %_info% "[%~nx0] Install '%~2', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if "%~2"=="" (
-    %_fatal%  "Usage: inst_prg <prgname> <pattern> (pattern to search for in Downloads or setup)." 4
+    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or setup)." 4
 )
 
 set "sfound=setup"
