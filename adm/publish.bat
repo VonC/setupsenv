@@ -11,7 +11,7 @@ call "%bc%\echos_macros.bat"
 
 cd "%senv_dir%\..\setup" || %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
-cd "%senv_dir%\..\dl" || %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
+cd "%senv_dir%\..\dl" || %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to %USERPROFILE%\Downloads)'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
 set "custom_dir=%senv_dir%\custom"
@@ -45,8 +45,9 @@ for /F "delims=" %%f in (a) do ( set fname=%%f)
 del a
 
 if "%sfound%"=="Downloads" (
-    %_info% "[%~nx0] Must copy match '%fname%' from Downloads to setup"
+    %_info% "[%~nx0] Must move match '%fname%' from Downloads to setup"
     call:rbc "%setup_dir%" "%dl_dir%"
+    del "%dl_dir%\%fname%"
 )
 
 if not "%2"=="" (
