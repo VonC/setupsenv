@@ -366,7 +366,7 @@ rem https://stackoverflow.com/questions/17546016/how-can-you-zip-or-unzip-from-t
 rem powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('foo.zip', 'bar'); }"
 if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     if "%szdone%"=="true" ( %fatal% "7z should be here" && exit /b 1 )
-    %_info% "[%~nx0] Uncompressing with powershell '%fname%' to '%tpath%'"
+    %_task% "[%~nx0] Must uncompress with powershell '%fname%' to '%tpath%'"
     rem https://stackoverflow.com/questions/33729801/returning-exit-code-from-a-batch-file-in-a-powershell-script-block#comment55261380_33730519
     powershell.exe -nologo -noprofile -ExecutionPolicy UnRestricted; $var = "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('%PRGS%\setup\%fname%', '%tpath%'); $res=$?; Write-Host \"LASTEXITCODE='$res'\";if (-not $res) { return 1; }; return 0;}"; exit $var
     if errorlevel 1 ( %_fatal% "[%~nx0] Error on powershell uncompression"&& exit /b 1 )
@@ -379,7 +379,7 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 cd /d "%PRGS%\%f%"
-%_info% "[%~nx0] Uncompressing with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
+%_task% "[%~nx0] Must uncompress with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\setup\%fname%"
 if errorlevel 1 (
     rm -Rf "%tpath%"
