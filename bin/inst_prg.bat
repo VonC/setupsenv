@@ -95,7 +95,7 @@ if errorlevel 1 (
 %_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
 :check_symlink
 %_task% "[%~nx0] Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
-call "%script_dir%\check_prg_symlink.bat" "%pname%" "%f%" "%sys%"
+call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
 popd
 goto:eof
 
