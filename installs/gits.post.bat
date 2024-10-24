@@ -69,7 +69,7 @@ if not "%prgtoinstall%"=="" (
 @echo off
 set "mgrname=manager"
 :: The command to get the version string
-for /f "tokens=2 delims= " %%a in ('type "%PRGS%\gits\current\etc\package-versions.txt" ^| findstr "mingw-w64-x86_64-git-doc-html"') do (
+for /f "tokens=2 delims= " %%a in ('findstr "mingw-w64-x86_64-git-doc-html" "%PRGS%\gits\current\etc\package-versions.txt"') do (
     set "fullversion=%%a"
 )
 :: Extract the major and minor version numbers
