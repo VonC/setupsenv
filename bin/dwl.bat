@@ -1,0 +1,367 @@
+@echo off
+setlocal enabledelayedexpansion
+
+rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
+rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/downloads#yEd
+
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+for %%i in ("%PRGS%\setup") do (
+    set "setup_dir=%%~fi"
+)
+
+set "repo="
+set "version="
+set "file="
+set "target_local_file="
+set "url="
+set "cmd="
+
+if "%~1"=="--get-latest-version" (
+  %_info% "[%~nx0] get latest version"
+  shift
+  call :get_latest_version "%~2" "%~3"
+  goto:eof
+)
+
+%_info% "[%~nx0] dwl prg_name [version] (default latest)"
+
+if not exist "%PRGS%\gums\current\gum.exe" (
+  %_fatal% "[%~nx0] gum.exe not found in '%PRGS%\gums\current'" 1
+)
+set "PATH=%PRGS%\gums\current;%PATH%"
+
+set "prgname=%~1"
+if not "%prgname%"=="" (
+  goto:set_version
+)
+set "programs=gum git go gh jdk chrome firefox lg node python sysinternals vscode"
+for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
+if "%prgname%"=="" (
+  %_fatal% "[%~nx0] No program selected" 1
+)
+
+:set_version
+set "version=%~2"
+if not "%version%"=="" (
+  if "%prgname%"=="jdk" (
+    set "jdk_version=%version%"
+  )
+  if "%prgname%"=="python" (
+    set "python_cycle=%version%"
+    set "version=latest"
+  )
+  goto:proceed
+)
+set "version=latest"
+
+if not "%prgname%"=="jdk" ( goto:not_jdk )
+set "jdk_versions=11 13 15 17 19 21 23"
+for /f "delims=" %%p in ('gum choose --limit=1 %jdk_versions%') do set "jdk_version=%%p"
+if "%jdk_version%"=="" (
+  %_fatal% "[%~nx0] No JDK version selected" 1
+)
+
+:not_jdk
+if not "%prgname%"=="python" ( goto:not_python )
+set "python_cycles=3.11 3.12 3.13"
+for /f "delims=" %%p in ('gum choose --limit=1 %python_cycles%') do set "python_cycle=%%p"
+if "%python_cycle%"=="" (
+  %_fatal% "[%~nx0] No Python cycle version selected" 1
+)
+
+:not_python
+:proceed
+%_info% "[%~nx0] Dwl '%prgname%' version '%version%'"
+:: findstr /R /C:"dwl_gum" "%PRGS%\senv\bin\dwl.bat" || echo %ERRORLEVEL%
+findstr /R "^:dwl_%prgname% $" "%script_dir%\dwl.bat" >nul
+if errorlevel 1 (
+  %_fatal% "[%~nx0] Program '%prgname%' not supported by '%script_dir%\dwl.bat'" 1
+)
+call :dwl_%prgname%
+goto:eof
+
+:: dwl --get-latest-version github charmbracelet/gum
+:get_latest_version
+if "%~1"=="" (
+  %_fatal% "[%~nx0] --get-latest-version means method and mean (github and repo charmbracelet/gum or grep and url,pattern)" 1
+)
+if "%~1"=="github" (
+  %_info% "[%~nx0] get latest version from github"
+  shift
+  call :get_latest_version_from_github "%~2"
+  goto:eof
+)
+%_fatal% "[%~nx0] --get-latest-version method not recognized" 1
+goto:eof
+
+:get_latest_version_from_github
+if not "%~1"=="" (
+  set "repo=%~1"
+)
+if not defined repo (
+  %_fatal% "[%~nx0] --get-latest-version github means repo (ex: charmbracelet/gum)" 1
+)
+echo.%repo%| findstr /R /C:"^[a-Z0-9_-]*/[a-Z0-9_-]*$" >nul
+rem echo %ERRORLEVEL%
+if errorlevel 1 (
+    %_fatal% "[%~nx0] repo must be in the format org/repo (ex: charmbracelet/gum), not '%repo%'" 1
+)
+%_task% "[%~nx0] Must get latest version from github for repo '%repo%'"
+set "url=https://api.github.com/repos/%repo%/releases/latest"
+set "version="
+set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/%repo%/releases/latest"
+rem echo.%cmd%
+for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
+if errorlevel 1 (
+    %_fatal% "[%~nx0] Cannot get latest version from github for repo '%repo%' with cmd '%cmd%'" 1
+)
+rem echo.Latest version URL='%gu%'
+for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
+set "tag=%version%"
+set "version=%version:v=%"
+%_ok% "[%~nx0] version '%version%' is latest for repo '%repo%'"
+goto:eof
+
+:template
+if not defined file ( %_fatal% "[%~nx0] [template] file must be defined for '%prgname%'" 1 )
+if not defined url ( %_fatal% "[%~nx0] [template] url must be defined for '%prgname%'" 1 )
+if "%target_local_file%"=="" ( set "target_local_file=%file%")
+CALL:ReplaceText "!file!" "[v]" "%version%"  file
+CALL:ReplaceText "!target_local_file!" "[v]" "%version%"  target_local_file
+if not "%prgname%"=="jdk" ( CALL:ReplaceText "!url!" "[v]" "%version%"  url )
+goto:eof
+
+:curl
+call :template
+%_info% "[%~nx0] URL file='%file%', target file '%target_local_file%'"
+
+if exist "%setup_dir%\%target_local_file%" (
+    %_ok% "[%~nx0] '%target_local_file%' Already downloaded in setup_dir '%setup_dir%'"
+    goto:eof
+)
+
+%_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from URL '!url!'"
+@echo on
+curl -fkL %url% -o "%setup_dir%\%target_local_file%"
+if not "%ERRORLEVEL%" == "0" (
+    %_fatal% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 1
+)
+%_ok% "[%~nx0] '%target_local_file%' downloaded to '%setup_dir%'"
+goto:eof
+
+:ReplaceText
+:: https://stackoverflow.com/questions/2772456/string-replacement-in-batch-file
+:: https://stackoverflow.com/a/62597777/6309
+:: CALL:ReplaceText "!OrginalText!" OldWordToReplace NewWordToUse  Result
+::Example
+::SET "MYTEXT=jump over the chair"
+::  echo !MYTEXT!
+::  call:ReplaceText "!MYTEXT!" chair table RESULT
+::  echo !RESULT!
+:: Remember to use the "! on the input text, but NOT on the Output text.
+:: Remember to add quotes "" around the MYTEXT Variable when calling.
+::
+set "OrginalText=%~1"
+set "OldWord=%~2"
+set "NewWord=%~3"
+call set OrginalText=%%OrginalText:!OldWord!=!NewWord!%%
+SET %4=!OrginalText!
+GOTO:EOF
+
+:dwl_gum
+set "repo=charmbracelet/gum"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl 'charmbracelet/gum' version '%version%'"
+set "file=%prgname%_%version%_Windows_x86_64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_firefox
+if not "%version%"=="latest" ( %_fatal% "[%~nx0] Firefox version '%version%' not supported: only latest" 1 )
+set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://softaro.net/download-file/21759/?version=English 2^>^&1"
+%_task% "[%~nx0] Must check latest Firefox version"
+for /f "tokens=* delims=" %%a in ('%cmd%^|grep Firefox') do ( set gu=%%a)
+if errorlevel 1 (
+    %_fatal% "[%~nx0] Cannot get latest version from softaro.net for Firefox with cmd '%cmd%'" 1
+)
+set "gu=%gu:HTTP/1.1 403 Forbidden=%"
+if not "%gu:Japanese=%"=="%gu%" (
+  set "gu=%gu:Japanese=English%"
+)
+for /f "tokens=2 delims=:" %%a in ("%gu%") do set gu=https:%%a
+set "gu=%gu:exehttp=exe%"
+%_ok% "[%~nx0] Latest Firefox version URL='%gu%'"
+for /f "tokens=1,2,3,4,5 delims=/" %%a in ("%gu%") do set version=%%e
+set "version=%version:HTTP=%"
+set "version=%version:*FirefoxPortable_=%"
+set "version=%version:_English.paf.exe=%"
+set "url=%gu%"
+set "file=FirefoxPortable_%version%_English.paf.exe"
+call :curl
+goto:eof
+
+:dwl_chrome
+set "repo=Hibbiki/chromium-win64"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl '%prgname%' version '%version%'"
+set "file=chrome.sync.7z"
+set "target_local_file=chromev%version%.7z"
+rem https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.sync.7z
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_gh
+set "repo=cli/cli"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+set "file=gh_%version%_windows_amd64.zip"
+rem https://github.com/cli/cli/releases/download/v2.49.0/gh_2.49.0_windows_amd64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_git
+set "repo=git-for-windows/git"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+set "file=PortableGit-%version%-64-bit.7z.exe"
+set "file=%file:.windows.1=%"
+set "file=%file:.windows.=.%"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_go
+rem <td class="filename"><a class="download" href="/dl/go1.23.2.windows-amd64.zip">go1.23.2.windows-amd64.zip</a></td>
+if defined version ( if not "%version%"=="latest" ( goto:go_version_set ) )
+%_task% "[%~nx0] Must get latest Go version"
+curl -sLk https://go.dev/dl/ 2>&1 | findstr .windows-amd64.zip > "%script_dir%\go_vers.txt"
+if errorlevel 1 (
+    %_fatal% "[%~nx0] Cannot get latest version from go.dev for Go with cmd '%cmd%'" 1
+)
+for /f "delims=" %%a in ('sed -e "s/.*zip.>//" -e "s/<.*//" "%script_dir%\go_vers.txt"') do (
+  set "file=%%a"
+  goto :go_file_set
+)
+:go_file_set
+set "version=%file:go=%"
+set "version=%version:.windows-amd64.zip=%"
+del "%script_dir%\go_vers.txt"
+%_ok% "[%~nx0] Latest Go version URL='%version%' for file '%file%'"
+:go_version_set
+%_info% "[%~nx0] Dwl (%prgname%) version '%version%'"
+set "url=https://fossies.org/windows/misc/%file%"
+call :curl
+goto:eof
+
+:dwl_jdk
+if "%jdk_version%"=="" ( %_fatal% "[%~nx0] jdk_version needs to be set (17, 21, ...)" 11 )
+rem https://adoptium.net/docs/faq/#_can_i_automate_the_download_of_temurin_binaries
+rem https://api.adoptium.net/q/swagger-ui/#/Assets/getLatestAssets
+rem https://github.com/adoptium/api.adoptium.net/blob/main/docs/cookbook.adoc#example-three-scripting-a-download-using-the-adoptium-api
+rem https://github.com/adoptium/api.adoptium.net/blob/main/docs/cookbook.adoc#example-two
+rem curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse"
+%_task% "[%~nx0] Must get latest version from adoptium.net for jdk version '%jdk_version%'"
+for /f "delims=" %%a in ('curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse" ^| findstr /R /C:"name.*zip"') do ( set "version=%%a" )
+if errorlevel 1 (
+    %_fatal% "[%~nx0] Cannot get latest version from adoptium.net for jdk with cmd '%cmd%'" 1
+)
+%_ok% "[%~nx0] Latest jdk version '%jdk_version%' means initially: '%version%'"
+set "version=%version:*hotspot_=%"
+set "version=%version:.zip=%"
+set "version=%version:~0,-2%"
+set "replacement=%%2B"
+set "dversion=!version:_=%replacement%!"
+%_ok% "[%~nx0] Latest jdk version '%jdk_version%' means: '%version%', dversion: '!dversion!'"
+set "file=OpenJDK%jdk_version%U-jdk_x64_windows_hotspot_%version%.zip"
+rem https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U_x64_windows_hotspot_21.0.5_11.zip
+rem https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.25%2B9/OpenJDK11U-jdk_x64_windows_hotspot_11.0.25_9.zip
+set "url=https://github.com/adoptium/temurin%jdk_version%-binaries/releases/download/%dversion%/%file%"
+
+%_task% "[%~nx0] Must get latest URL from adoptium.net for jdk version '%jdk_version%'"
+@echo on
+for /f "delims=" %%a in ('curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse" ^| findstr /R /C:"[^_]link.*zip"') do ( set "gu=%%a" )
+set "gu=%gu:*: =%"
+set "gu=%gu:,=%"
+set "url=%gu:"=%"
+%_ok% "[%~nx0] Latest jdk version URL='%url%'"
+call :curl
+goto:eof
+
+:dwl_lg
+set "repo=jesseduffield/lazygit"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+set "file=lazygit_%version%_Windows_x86_64.zip"
+rem https://github.com/jesseduffield/lazygit/releases/download/v0.38.0/lazygit_0.38.0_Windows_x86_64.zip
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_node
+set "repo=nodejs/node"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+set "file=node-v%version%-win-x64.zip"
+rem https://nodejs.org/download/release/v22.9.0/node-v22.9.0-win-x64.zip
+set "url=https://nodejs.org/download/release/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_python
+if "%python_cycle%"=="" ( %_fatal% "[%~nx0] python_cycle needs to be set (11, 12, 13, ...)" 12 )
+set "repo=python/cpython"
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' python_cycle '%python_cycle%'"
+%_task% "[%~nx0] Must get latest version from endoflife.date for python cycle '%python_cycle%'"
+@echo on
+set "cmd=curl -skL --request GET --url https://endoflife.date/api/python/%python_cycle%.json --header "Accept: application/json""
+for /f "tokens=3 delims=," %%a in ('%cmd% ^|^| touch "%script_dir%\dwl_error_curl"') do ( set "version=%%a" )
+if exist "%script_dir%\dwl_error_curl" (
+  del "%script_dir%\dwl_error_curl"
+  %_fatal% "[%~nx0] Cannot get latest version from endoflife.date for Python cycle '%python_cycle%' with cmd '%cmd%'" 1
+)
+set "version=%version:*latest=%"
+set "version=%version:"=%"
+set "version=%version::=%"
+%_ok% "[%~nx0] Latest Python version '%version%' for cycle '%python_cycle%'"
+rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
+set "file=python-%version%-amd64.exe"
+set "url=https://www.python.org/ftp/python/%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_sysinternals
+set "cmd=curl -skL https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite"
+%cmd% > "%script_dir%\sysinternalsSuite.tmp"
+if errorlevel 1 (
+  del "%script_dir%\sysinternalsSuite.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from learn.microsoft.com for Sysinternals Suite with cmd '%cmd%'" 1
+)
+for /f "delims=" %%a in ('findstr "calculated" "%script_dir%\sysinternalsSuite.tmp"') do ( set "version=%%a" )
+set "version=%version:>=%"
+set "version=%version:<=%"
+set "version=%version:*calculated=%"
+set "version=%version:"=%"
+echo %version%> "%script_dir%\sysinternalsSuite.tmp"
+for /f "tokens=1,2,3 delims=/" %%a in ('type "%script_dir%\sysinternalsSuite.tmp"') do ( set "version=%%c%%a%%b" )
+rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
+set "file=SysinternalsSuite.zip"
+set "url=https://download.sysinternals.com/files/%file%"
+set "target_local_file=SysinternalsSuite-%version%.zip"
+del "%script_dir%\sysinternalsSuite.tmp"
+call :curl
+goto:eof
+
+:dwl_vscode
+set "repo=microsoft/vscode"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://update.code.visualstudio.com/{version}/win32-x64-user/stable
+set "file=VSCodeUserSetup-x64-%version%.exe"
+set "url=https://update.code.visualstudio.com/%version%/win32-x64-user/stable"
+call :curl
+goto:eof
