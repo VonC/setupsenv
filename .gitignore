@@ -11,3 +11,4 @@ a
 tmp*
 *.tmp
 *.sha1
+old/
