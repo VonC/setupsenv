@@ -130,7 +130,7 @@ goto:eof
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
-%_info% "[%~nx0] Robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+%_task% "  [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 REM Explain the robocopy options:
 REM /Z: copy in restartable mode (survive network glitches)
 REM /R:5: retry 5 times
@@ -140,6 +140,15 @@ REM /MT:16: use 16 threads
 REM /NJH: no job header
 REM /NJS: no job summary
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
+IF %ERRORLEVEL% LSS 8 (
+    echo "ERRORLEVEL='%ERRORLEVEL%'"
+    SET "OK=ok"
+) else (
+    set OK=%ERRORLEVEL%
+)
+rem echo "OK='%OK%' '!OK!'"
+if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
+%_ok% "[%~nx0] %name% updated from '%src%' to '%dst%'"
 goto:eof
 
 :is_system_tool
