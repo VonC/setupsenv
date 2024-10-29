@@ -9,6 +9,9 @@ $PSModuleAutoloadingPreference = 'None'
 Import-Module CimCmdlets
 Import-Module Microsoft.PowerShell.Utility
 
+# Define the escape character
+$e = [char]27
+
 function Show-ProgressBar {
     param (
         [int]$current,
@@ -18,14 +21,36 @@ function Show-ProgressBar {
     $percent = [math]::Round(($current / $total) * 100)
     $barLength = 50
     $filledLength = [math]::Round(($barLength * $percent) / 100)
-    $bar = ("#" * $filledLength).PadRight($barLength)
 
-    Write-Host -NoNewline "`r[$bar] $percent% ($current/$total)"
+    # Determine color based on percentage
+    if ($percent -le 10) {
+      $color = "$e[38;5;196m"  # Deep Red
+    } elseif ($percent -le 20) {
+      $color = "$e[38;5;202m"  # Light Red
+    } elseif ($percent -le 30) {
+      $color = "$e[38;5;208m"  # Light Orange
+    } elseif ($percent -le 40) {
+      $color = "$e[38;5;214m"  # Orange
+    } elseif ($percent -le 50) {
+      $color = "$e[38;5;226m"  # Yellow
+    } elseif ($percent -le 60) {
+      $color = "$e[38;5;228m"  # Light Yellow
+    } elseif ($percent -le 80) {
+      $color = "$e[38;5;154m"  # Light Green
+    } elseif ($percent -le 90) {
+      $color = "$e[38;5;118m"  # Green
+    } else {
+      $color = "$e[38;5;34m"   # Dark Green
+    }
+
+    $bar = "$color" + ("#" * $filledLength) + "$e[0m"
+    $paddingLength = $barLength - $filledLength
+    $padding = " " * $paddingLength
+
+    Write-Host -NoNewline "`r[$bar$padding] $percent% ($current/$total)"
 }
 
 for ($i = 0; $i -le $n; $i++) {
     Show-ProgressBar -current $i -total $n
     Start-Sleep -Milliseconds 100
 }
-
-Write-Host "`r[$(" " * 50)] 100% ($n/$n)"
