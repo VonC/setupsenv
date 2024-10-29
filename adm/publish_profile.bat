@@ -44,7 +44,8 @@ if defined publish_all ( goto:eof )
 :publish_profile
 set "fprofile=%custom_dir%\install_%profile%.list"
 if not exist "%fprofile%" (
-    %_fatal%  "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
+    call:error_or_fatal "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
+    if defined publish_all ( goto:eof )
 )
 
 %_info% "[%~nx0] Profile '%profile%' to be published from setup_dir '%setup_dir%'"
@@ -55,7 +56,8 @@ call "%fsetupsdir%"
 set "UNCPathOnly="
 set "spath=!setupsdir!"
 if "%spath%"=="" (
-    %_fatal% "[%~nx0] No target spath found in '%fsetupsdir%'" 111
+    call:error_or_fatal "[%~nx0](%profile%) No target spath found in '%fsetupsdir%'" 111
+    if defined publish_all ( goto:eof )
 )
 %_info% "[%~nx0] Target path spath: '%spath%'"
 
@@ -87,6 +89,16 @@ del "%custom_dir%\system.list.tmp" 2>NUL
 endlocal
 goto:eof
 
+:error_or_fatal
+set "msg=%~1"
+set "code_error=%~2"
+if defined publish_all (
+    %_error% "%msg%"
+    goto:eof
+)
+%_fatal% "%msg%" %code_error%
+goto:eof
+
 :publishOne
 set "pattern=%~1"
 set "name=%~2"
@@ -96,12 +108,16 @@ for /F "delims=" %%f in ('dir /OD /b "%setup_dir%\%pattern%" 2^>NUL^|tail -1') d
 if "%fname%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
     echo dir /OD /b "%setup_dir%\%pattern%"^|tail -1
-    %_fatal% "[%~nx0] Unknown name pattern '%pattern%'" 23 )
-%_task% "[%~nx0] Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
+    call:error_or_fatal "[%~nx0](%profile%) Unknown name pattern '%pattern%'" 23
+    if defined publish_all ( goto:eof )
+)
+%_task% "[%~nx0](%profile%) Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
 if "%name%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
-    %_fatal% "[%~nx0] name not provided for fname: '%fname%'" 222 )
+    call:error_or_fatal "[%~nx0](%profile%) name not provided for fname: '%fname%'" 222
+    if defined publish_all ( goto:eof )
+)
 
 if exist "!spath!\%fname%" (
     %_ok% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
