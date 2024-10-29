@@ -180,8 +180,18 @@ cd
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
+%_task% "  [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 %_info% "[%~nx0] Robocopy '%fname%' from '%src%' to '%dst%'"
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
+IF %ERRORLEVEL% LSS 8 (
+    rem echo "ERRORLEVEL='%ERRORLEVEL%'"
+    SET "OK=ok"
+) else (
+    set OK=%ERRORLEVEL%
+)
+rem echo "OK='%OK%' '!OK!'"
+if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
+%_ok% "[%~nx0] %name% updated from '%src%' to '%dst%'"
 goto:eof
 
 :execcmd
