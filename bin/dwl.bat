@@ -36,7 +36,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk chrome firefox lg node python sysinternals vscode sqldeveloper"
+set "programs=gum git go gh jdk chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
