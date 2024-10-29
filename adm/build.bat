@@ -135,12 +135,12 @@ rem @echo on
 set OK="KO"
 robocopy "%builds_dir%" "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:2 /W:2 /TBD /MT:16 /NJH /NJS
 IF %ERRORLEVEL% LSS 8 (
-    echo "ERRORLEVEL='%ERRORLEVEL%'"
+    rem echo "ERRORLEVEL='%ERRORLEVEL%'"
     SET "OK=ok"
 ) else (
     set OK=%ERRORLEVEL%
 )
-echo "OK='%OK%' '!OK!'"
+rem echo "OK='%OK%' '!OK!'"
 if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%builds_dir%\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && goto:eof)
 %_ok% "[%~nx0] senv_%profile%-zip.exe updated from '%builds_dir%' to '%setupsdir%'"
 
