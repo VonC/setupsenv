@@ -36,7 +36,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk chrome firefox lg node python sysinternals vscode"
+set "programs=gum git go gh jdk chrome firefox lg node python sysinternals vscode sqldeveloper"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
@@ -364,4 +364,21 @@ rem https://update.code.visualstudio.com/{version}/win32-x64-user/stable
 set "file=VSCodeUserSetup-x64-%version%.exe"
 set "url=https://update.code.visualstudio.com/%version%/win32-x64-user/stable"
 call :curl
+goto:eof
+
+:dwl_sqldeveloper
+set "cmd=curl -skL https://www.oracle.com/database/sqldeveloper/technologies/download/"
+%cmd% > "%script_dir%\dwl_sqldeveloper.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_sqldeveloper.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from oracle/database/sqldeveloper for SQL Developer with cmd '%cmd%'" 1
+)
+for /f "tokens=2 delims=><" %%a in ('findstr /R /C:"Version .* - "  "%script_dir%\dwl_sqldeveloper.tmp"') do ( set "version=%%a" )
+for /f "tokens=2 delims=- " %%a in ('echo %version%') do ( set "version=%%a" )
+%_ok% "[%~nx0] Latest SQL Developer version '%version%'"
+rem https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-23.1.1.345.2114-x64.zip
+set "file=sqldeveloper-%version%-x64.zip"
+set "url=https://download.oracle.com/otn_software/java/sqldeveloper/%file%"
+call :curl
+del "%script_dir%\dwl_sqldeveloper.tmp"
 goto:eof
