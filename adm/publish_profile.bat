@@ -108,7 +108,7 @@ for /F "delims=" %%f in ('dir /OD /b "%setup_dir%\%pattern%" 2^>NUL^|tail -1') d
 if "%fname%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
     echo dir /OD /b "%setup_dir%\%pattern%"^|tail -1
-    call:error_or_fatal "[%~nx0](%profile%) Unknown name pattern '%pattern%'" 23
+    call:error_or_fatal "[%~nx0](%profile%) Unknown name pattern '%pattern%', not found in '%setup_dir%'" 23
     if defined publish_all ( goto:eof )
 )
 %_task% "[%~nx0](%profile%) Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
