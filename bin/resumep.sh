@@ -8,6 +8,7 @@ prg="cmd"
 if [ ! "${1}" == "" ]; then
   prg="${1}"
 fi
+echo "pslist for prg '${prg}'"
 output=$("${setis}/pslist.exe" -d "${prg}")
 
 # Process the output line by line
