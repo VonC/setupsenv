@@ -27,11 +27,27 @@ if "%profile%"=="" (
     )
 )
 if not "%1"=="" ( set "profile=%1" )
+
+set "publish_all="
+if "%~1"=="all" (
+    set "publish_all=true"
+    for /F "delims=" %%f in ('dir /b "%custom_dir%\install_*.list"') do (
+        set "profile=%%~nf"
+        set "profile=!profile:install_=!"
+        set "profile=!profile:.list=!"
+        call :publish_profile
+    )
+    goto:eof
+)
+if defined publish_all ( goto:eof )
+
+:publish_profile
 set "fprofile=%custom_dir%\install_%profile%.list"
 if not exist "%fprofile%" (
     %_fatal%  "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
 )
 
+%_info% "[%~nx0] Profile '%profile%' to be published from setup_dir '%setup_dir%'"
 set "spath="
 set "fsetupsdir=setupsdir_%profile%.bat"
 set "UNCPathOnly=1"
