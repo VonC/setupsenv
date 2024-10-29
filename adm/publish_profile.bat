@@ -59,7 +59,7 @@ if "%spath%"=="" (
     call:error_or_fatal "[%~nx0](%profile%) No target spath found in '%fsetupsdir%'" 111
     if defined publish_all ( goto:eof )
 )
-%_info% "[%~nx0] Target path spath: '%spath%'"
+%_info% "[%~nx0](%profile%) Target path spath: '%spath%'"
 
 call:is_system_tool "peazips"
 if errorlevel 1 ( call:publishOne "peazip_portable-*.zip" "peazips" )
@@ -81,7 +81,7 @@ for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (
         set "mandatory="
         for /F %%f in ('findstr /i /c:"!name!#" "%custom_dir%\system.list.tmp"') do ( set "mandatory=%%f" )
         if "!mandatory!"=="" (
-            %_ok% "[%~nx0] Skip system tool '!name!'"
+            %_ok% "[%~nx0](%profile%) Skip system tool '!name!'"
         )
     )
 )
@@ -120,7 +120,7 @@ if "%name%"=="" (
 )
 
 if exist "!spath!\%fname%" (
-    %_ok% "[%~nx0] Skip '%name% '%fname%': already in '!spath!'"
+    %_ok% "[%~nx0](%profile%) Skip '%name% '%fname%': already in '!spath!'"
 ) else (
     call:rbc "!spath!"
 )
@@ -157,7 +157,7 @@ for /f "tokens=1,2 delims= " %%f in ('findstr /i /c:" %name%" "%fprofile%"') do 
     set "pattern=%%f"
 )
 if "%pattern%"=="system" (
-    %_ok% "[%~nx0] Skip mandatory tool '%name%' (system)"
+    %_ok% "[%~nx0](%profile%) Skip mandatory tool '%name%' (system)"
     exit /b 0
 )
 exit /b 1
