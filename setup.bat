@@ -8,9 +8,15 @@ set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "[%~nx0] script_dir='%script_dir%'"
 set "senv_dir=%script_dir%"
+if not exist "%senv_dir%\..\setup" (
+    mkdir "%senv_dir%\..\setup"
+    if errorlevel 1 (
+        %_fatal% "[%~nx0] Unable to create setup folder at '%senv_dir%/../setup'" 3
+    )
+)
 cd "%senv_dir%\..\setup" || %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
-cd /d "%script_dir%" || echo "unable to cd again to '%script_dir%'"&& exit /b 2
+cd /d "%script_dir%" || %_fatal% "[%~nx0] unable to cd again to '%script_dir%'" 2
 set profile=
 set profil=
 set script_dir_bin=
