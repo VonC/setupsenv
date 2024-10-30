@@ -1,5 +1,6 @@
 @echo off
 set "local_senv="
+for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 where publish_profile.bat >NUL 2> NUL
 if not errorlevel 1 (
    set "local_senv=(preserved local) "
@@ -9,7 +10,6 @@ if exist "%script_dir_bin%\..\adm" (
 )
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
-for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 set "admPath="
 if defined local_senv (
    set "admPath=%PRGS%\senv\adm;%PRGS%\senv\bin;%PRGS%\senv\installs;"
