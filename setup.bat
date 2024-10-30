@@ -104,6 +104,36 @@ if errorlevel 1 (
 )
 %_ok% "[%~nx0] '%script_dir%\custom\*.custom.*' COPIED to '%HOME%\bin'"
 
+if not defined profile ( goto:skip_custom_cleanup)
+
+%_task% "[%~nx0] Must cleanup custom.[profile].[bat,doskey] files"
+dir /B "%HOME%\bin\*.custom.*.bat" > "%script_dir%\setup_cleanup.tmp"
+if errorlevel 1 (
+  %_fatal% "[%~nx0] Unable to list custom bat files in %HOME%\bin" 51
+)
+dir /B "%HOME%\bin\*.custom.*.doskey" >> "%script_dir%\setup_cleanup.tmp"
+if errorlevel 1 (
+  %_fatal% "[%~nx0] Unable to list custom doskey files in %HOME%\bin" 52
+)
+findstr /R /V /C:".*custom\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
+if errorlevel 1 (
+  %_info% "[%~nx0] No other profile than '%profile%' in '%script_dir%\setup_cleanup.tmp'"
+)
+for /f "delims=" %%a in ('type "%script_dir%\setup_cleanup_filtered.tmp"') do (
+  set "custom_file_to_delete=%%a"
+  rem echo Must delete '!custom_file_to_delete!'
+  del "%HOME%\bin\!custom_file_to_delete!"
+  if errorlevel 1 (
+    %_fatal% "[%~nx0] Unable to delete custom file '!custom_file_to_delete!' in %HOME%\bin" 54
+  )
+)
+del "%script_dir%\setup_cleanup.tmp"
+del "%script_dir%\setup_cleanup_filtered.tmp"
+%_ok% "All custom file from different profiles than '%profile%' have been deleted from HOME\bin '%HOME%\bin'"
+
+rem %_fatal% "stop for now" 22
+
+:skip_custom_cleanup
 if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
 if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
 if not exist "%HOME%\.config\git\config" ( copy "%script_dir%\.config.git.config" "%HOME%\.config\git\config" )
