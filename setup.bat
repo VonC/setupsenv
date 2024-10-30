@@ -289,7 +289,7 @@ set script_dir=
 set profile=
 set setupsdirbat=
 set setupsdir=
-%_ok% "[%~nx0] calling senv.bat: You are good to go"
+echo [%~nx0] calling senv.bat: You are good to go!
 call "%HOME%\bin\senv.bat"
 goto:eof
 
