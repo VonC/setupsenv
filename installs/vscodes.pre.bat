@@ -13,7 +13,7 @@ call %senv_dir%\batcolors\echos_macros.bat
 %_info% "[%~nx0] vscodes.pre: vscode"
 
 set "pre_ok="
-call "%bin_dir%\getInstallPath.bat" VSCode code
+call "%bin_dir%\getInstallPath.bat" VSCode code nofatal
 %_info% "[%~nx0] vscodes.pre: instPath='%instPath%'"
 rem @echo on
 if exist "%instPath%\bin\code.cmd" (
@@ -21,6 +21,8 @@ if exist "%instPath%\bin\code.cmd" (
 	if "%1"=="" (
 		%_ok% "[%~nx0] VSCode already installed in '%instPath%"
 	)
+) else (
+	%_warning% "[%~nx0] VSCode not installed. To be installed by next step."
 )
 endlocal & set "pre_ok=%pre_ok%"
 set "vscodei="
