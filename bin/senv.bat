@@ -1,26 +1,21 @@
 @echo off
+set "local_senv="
+where publish_profile.bat >NUL 2> NUL
+if not errorlevel 1 (
+   set "local_senv=(preserved local) "
+)
+if exist "%script_dir_bin%\..\adm" (
+   set "local_senv=(local) "
+)
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
 for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
 set "admPath="
-if exist "%script_dir_bin%\..\adm" (
-   for %%i in ("%script_dir_bin%\..\adm") do (
-      set "admPath=%%~fi"
-   )
-)
-if exist "%script_dir_bin%\..\adm" (
-   set "admPath=%admPath%;%script_dir_bin%"
-)
-if exist "%script_dir_bin%\..\adm" (
-   for %%i in ("%script_dir_bin%\..\installs") do (
-      set "admPath=%admPath%;%%~fi"
-   )
+if defined local_senv (
+   set "admPath=%PRGS%\senv\adm;%PRGS%\senv\bin;%PRGS%\senv\installs;"
    doskey ba=build_all.bat $*
-   doskey p=publish.bat $*
+   doskey pb=publish.bat $*
    doskey pp=publish_profile.bat $*
-)
-if not "%admPath%"=="" (
-   set "admPath=%admPath%;"
 )
 if not exist "%script_dir_bin%\senv.local.pre.bat" (
    if "%HOME%"=="" (
@@ -67,10 +62,10 @@ for /l %%a in (0,1,25) do (
    call set "_STRING=%%_STRING:!_FROM!=!_TO!%%
 )
 echo %_STRING%>"%USERPROFILE%\usernamel"
-endlocal & set usernamel=%_STRING%
+endlocal & set "usernamel=%_STRING%"
 
 :setusernamel
-for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set usernamel=%%x
+for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set "usernamel=%%x"
 
 call %HOME%\bin\senv.custom.bat
 call %HOME%\bin\senv.local.bat
@@ -111,10 +106,13 @@ if "%internalsenvcall%"=="1" (
 if defined NOCOLORS ( goto:oknc )
 set ASCII27=
 rem set ASCII27=← 
-echo %ASCII27%[42;97m OK    %ASCII27%[0m: senv activated: senv_dir='%senv_dir%'
+echo %ASCII27%[42;97m OK    %ASCII27%[0m: %local_senv%senv activated: senv_dir='%senv_dir%'
 set "senv_dir="
 set ASCII27=
+set local_senv=
 goto:eof
 :oknc
-echo  OK    : senv activated: senv_dir='%senv_dir%' 1>&2
+echo  OK    : %local_senv%senv activated: senv_dir='%senv_dir%' 1>&2
 set "senv_dir="
+set local_senv=
+goto:eof
