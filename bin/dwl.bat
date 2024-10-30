@@ -143,7 +143,7 @@ if exist "%setup_dir%\%target_local_file%" (
 )
 
 %_task% "[%~nx0] Download latest to '%setup_dir%\%target_local_file%' from URL '!url!'"
-@echo on
+rem @echo on
 curl -fkL %url% -o "%setup_dir%\%target_local_file%"
 if not "%ERRORLEVEL%" == "0" (
     %_fatal% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 1
@@ -283,7 +283,7 @@ rem https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.25
 set "url=https://github.com/adoptium/temurin%jdk_version%-binaries/releases/download/%dversion%/%file%"
 
 %_task% "[%~nx0] Must get latest URL from adoptium.net for jdk version '%jdk_version%'"
-@echo on
+rem @echo on
 for /f "delims=" %%a in ('curl -sLk "https://api.adoptium.net/v3/assets/latest/%jdk_version%/hotspot?architecture=x64&image_type=jdk&os=windows&vendor=eclipse" ^| findstr /R /C:"[^_]link.*zip"') do ( set "gu=%%a" )
 set "gu=%gu:*: =%"
 set "gu=%gu:,=%"
@@ -317,7 +317,7 @@ if "%python_cycle%"=="" ( %_fatal% "[%~nx0] python_cycle needs to be set (11, 12
 set "repo=python/cpython"
 %_info% "[%~nx0] Dwl (%prgname%)'%repo%' python_cycle '%python_cycle%'"
 %_task% "[%~nx0] Must get latest version from endoflife.date for python cycle '%python_cycle%'"
-@echo on
+rem @echo on
 set "cmd=curl -skL --request GET --url https://endoflife.date/api/python/%python_cycle%.json --header "Accept: application/json""
 for /f "tokens=3 delims=," %%a in ('%cmd% ^|^| touch "%script_dir%\dwl_error_curl"') do ( set "version=%%a" )
 if exist "%script_dir%\dwl_error_curl" (
