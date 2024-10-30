@@ -1,4 +1,14 @@
 #!/bin/bash
+
+# Function to handle CTRL-C
+function handle_ctrl_c() {
+    echo "CTRL-C detected. Exiting immediately..."
+    exit 1
+}
+
+# Trap CTRL-C (SIGINT)
+trap handle_ctrl_c SIGINT
+
 DIR="$( cd "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )"
 #echo "Hello from Bash from '${DIR}'!"
 echo "done"
@@ -29,3 +39,13 @@ while read -r line; do
     fi
   fi
 done <<< "${output}"
+
+#!/bin/bash
+
+if [ ! "${2}" == "" ]; then
+  total=$2
+  for ((i=1; i<=total; i++)); do
+    powershell -ExecutionPolicy Bypass -File "${DIR}/progress_bar.ps1" -total "${total}" -current $i
+    sleep 0.1  # Optional: Add a sleep to simulate progress
+  done
+fi
