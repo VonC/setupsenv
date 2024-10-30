@@ -1,6 +1,7 @@
 @echo off
 
 if "%script_dir%"=="" ( echo.>>"%~dp0standalone_%~nx0.flag")
+set "instPath="
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
@@ -19,6 +20,7 @@ if "%prgname%"=="" (
 if "%prgpattern%"=="" (
 	%_fatal% "[%~nx0] prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
+set "nofatal=%~3"
 set "subkey_path="
 set "key_value="
 
@@ -47,7 +49,8 @@ reg query "%reg%\%subkey_path%" /v "%key_value%" /s | findstr /i %prgpattern% 1>
 if not errorlevel 1 (
 		rem %_info% "[%~nx0] %prgname% is installed"
 ) else (
-		%_fatal% "[%~nx0] %prgname% is NOT installed for pattern '%prgpattern%'" 1
+		call:error_or_fatal "[%~nx0] %prgname% is NOT installed for pattern '%prgpattern%'" 1
+		if defined nofatal ( exit /b 1 )
 )
 for /f "tokens=3*" %%a in ('reg query "%reg%\%subkey_path%" /v "%key_value%" /s ^| findstr /i %prgpattern%') do (
     set "instPath=%%a"
@@ -66,14 +69,8 @@ for /f "tokens=3*" %%a in ('reg query "%reg%\%subkey_path%" /v "%key_value%" /s 
 rem echo instPath final='%instPath%' '!instPath!'
 
 if not exist "%instPath%" (
-	if not defined ignoreNoInstPath (
-		set "instPath="
-		%_fatal% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\%subkey_path% /v '%key_value%' (or HKLM) for '%prgpattern%'." 13
-	) else (
-		if exist "%echos_standalone%" (
-			%_error% "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\%subkey_path% /v '%key_value%' (or HKLM) for '%prgpattern%'."
-		)
-	)
+	call:error_or_fatal "[%~nx0] %prgname% '%instPath%' incorrect path, as determined by '%HOME%\bin\getInstallPath.bat', from reg query HKCU\%subkey_path% /v '%key_value%' (or HKLM) for '%prgpattern%'." 13
+	if defined nofatal ( exit /b 13 )
 )
 :endlocal
 endlocal & set "instPath=%instPath%"
@@ -93,3 +90,15 @@ if exist "%~dp0standalone_%~nx0.flag" (
 	del "%~dp0standalone_%~nx0.flag"
 )
 rem echo RES instPath='%instPath%'
+goto:eof
+
+
+:error_or_fatal
+set "msg=%~1"
+set "code_error=%~2"
+if defined nofatal (
+    %_error% "%msg%"
+    goto:eof
+)
+%_fatal% "%msg%" %code_error%
+goto:eof
