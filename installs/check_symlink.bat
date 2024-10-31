@@ -176,9 +176,7 @@ if not exist "%PRGS%\%f%\%sln%" (
     %_fatal% "[%~nx0] '%sln%' is still missing in folder '%f%'" 3
 )
 
-:endlocal_sln
-endlocal & set "sln=%sln%"
-goto:eof
+goto:endlocal_sln
 
 :check_subdir
 REM https://stackoverflow.com/questions/11004045/batch-file-counting-number-of-files-in-folder-and-storing-in-a-variable
@@ -230,3 +228,8 @@ set Params=%*
 for /f "tokens=1*" %%a in ("!Params!") do EndLocal & set %1=%%b
 exit /b
 goto:eof
+
+:endlocal_sln
+%_info% "[%~nx0] pre-endlocal symlink '%sln%' for '%f%'"
+endlocal & set "sln=%sln%"
+%_info% "[%~nx0] post-endlocal symlink '%sln%' for '%f%'"
