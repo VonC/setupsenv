@@ -344,7 +344,7 @@ if "%pname%"=="" (
 %_info% "[%~nx0] --------------"
 %_info% "[%~nx0] folder: '%f%': pattern '%pname%' system: '%sys%'"
 %_info% "[%~nx0] --------------"
-
+set "sln="
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
 )
@@ -359,15 +359,15 @@ set "tpath=%PRGS%\%f%\_%pname%"
 if exist "%tpath%" (
     %_ok% "[%~nx0] Program '%pname%' already installed in '%PRGS%\%f%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" "%sln%" || exit /b 1
+    call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
 set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
-    %_ok% "[%~nx0] Program '%pname%' already installed2 in '%PRGS%\%f%'"
+    %_ok% "[%~nx0] Program '%pname%' already installed2 in '%PRGS%\%f%', sln '%sys%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" "%sln%" || exit /b 1
+    call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
@@ -408,7 +408,7 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     if errorlevel 1 ( %_fatal% "[%~nx0] Error on powershell uncompression"&& exit /b 1 )
     %_ok% "[%~nx0] '%fname%' uncompressed (powershell) to '%tpath%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" "%sln%" || exit /b 1
+    call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
@@ -424,7 +424,7 @@ if errorlevel 1 (
 %_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%tpath%'"
 :postinstall
 call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-call:check_post "%f%" "%sln%" || exit /b 1
+call:check_post "%f%" "!sln!" || exit /b 1
 cd /d "%script_dir%"
 goto:eof
 
@@ -436,6 +436,7 @@ set "sln=%~2"
 if not defined sln (
     %_fatal% "[%~nx0] No symlink name defined for '%f%' check_post" 79
 )
+%_info% "[%~nx0] check_post for '%f%' sln '%sln%'"
 if exist "%script_dir%\installs\%f%.post.bat" (
     call "%script_dir%\installs\%f%.post.bat" "%sln%" || exit /b 1
 )
