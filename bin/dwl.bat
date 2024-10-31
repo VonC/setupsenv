@@ -382,3 +382,7 @@ set "url=https://download.oracle.com/otn_software/java/sqldeveloper/%file%"
 call :curl
 del "%script_dir%\dwl_sqldeveloper.tmp"
 goto:eof
+
+rem <button class="material-button material-button-theme  zip-download" data-meta="{&quot;displayName&quot;:&quot;yEd&quot;,&quot;filePath&quot;:&quot;/resources/yed/demo/yEd-3.24.zip&quot;,&quot;licensePath&quot;:&quot;/resources/yed/license_without-jre.html&quot;}">Download .zip file<svg xmlns="http://www.w3.org/2000/svg" width="20" height="1em" viewBox="-1 0 10 10" style="margin-left: .35em;"><use href="#icon-download-top" style="fill: currentColor"></use><use href="#icon-download-bottom" style="fill: currentColor"></use></svg></button>
+rem https://www.yworks.com/downloads
+rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
