@@ -121,8 +121,11 @@ rem @echo on
 :clean_path
 set "newPath="
 rem Test if `where prg_exe` is equal to %PRGS%\prgs_name\%SELECTED_VERSION%
-for /f "tokens=*" %%j in ('where %prg_exe% 2^>NUL') do (
-    if "%%j" == "%PRGS%\%prgs_name%\%SELECTED_VERSION%\bin\%prg_exe%.exe" (
+rem echo PRGS\prgs_name\SELECTED_VERSION\prg_exe = '%PRGS%\%prgs_name%\%SELECTED_VERSION%\%prg_exe%'
+for %%f in ("%prg_exe%") do set "prg_exe_file=%%~nxf"
+rem echo prg_exe_file='%prg_exe_file%'
+for /f "tokens=*" %%j in ('where %prg_exe_file% 2^>NUL') do (
+    if "%%j" == "%PRGS%\%prgs_name%\%SELECTED_VERSION%\%prg_exe%" (
         set "newPath=%PATH%"
     )
 )
@@ -152,7 +155,7 @@ for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"')
         set "newPath=!newPath!;%%i"
     )
 )
-%_info% "[%~nx0] newPath='%newPath%'
+%_info% "[%~nx0] Cleaned newPath='%newPath%'
 rem %_info% "[%~nx0] switchver_path_list.tmp:"
 rem type "%script_dir%\switchver_path_list.tmp"
 rem %_info% "[%~nx0] switchver_filtered_path_list.tmp:"
