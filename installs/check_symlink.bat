@@ -7,14 +7,12 @@ rem https://stackoverflow.com/questions/10534911/how-can-i-exit-a-batch-file-fro
 rem https://stackoverflow.com/questions/2048509/how-to-echo-with-different-colors-in-the-windows-command-line
 rem https://stackoverflow.com/questions/28810194/how-to-pass-a-list-of-strings-to-a-batch-script-as-a-parameter
 
-@SET ASCII27=
-rem @SET ASCII27=← 
 if "%1"=="" ( goto:eof )
 
-if "%script_dir%"=="" (
-    for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-    call !script_dir!\batcolors\echos_macros.bat export
-)
+for %%i in ("%~dp0") do SET "script_dir=%%~fi"
+cd /d "%script_dir%"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
 
 set "p=%~1"
 set "msgp='%p%'"
@@ -33,7 +31,7 @@ if "%sln%"=="system" (
 if not "%p:system-=%"=="%p%" (
     set "ipattern=%p:system-=%"
     %_task% "[%~nx0] check_symlink (p): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
-    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
         %_fatal% "[%~nx0] Pre-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 32
     )
@@ -55,7 +53,7 @@ set "msgsln='%sln%'"
 if not "%sln:system-=%"=="%sln%" (
     set "ipattern=%sln:system-=%"
     %_task% "[%~nx0] check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
-    call "%script_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
+    call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
         %_fatal% "[%~nx0] Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
     )
@@ -69,11 +67,11 @@ if not "%sln:system-=%"=="%sln%" (
 %_info% "[%~nx0] Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
 rem @echo on
 
-if exist "%script_dir%\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('call "%script_dir%\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+if exist "%script_dir%\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('call "%script_dir%\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
-if exist "%script_dir%\custom\installs\%f%.sln.bat" (
-    for /f "tokens=*" %%i in ('call "%script_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
+if exist "%senv_dir%\custom\installs\%f%.sln.bat" (
+    for /f "tokens=*" %%i in ('call "%senv_dir%\custom\installs\%f%.sln.bat" "%p%"') do ( set "sln=%%i" )
 )
 if "%sln%"=="" ( set "sln=current" )
 rem @echo off
