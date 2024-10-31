@@ -62,3 +62,6 @@ download=dwl.bat $*
 install=inst_prg $*
 inst=inst_prg $*
 in=inst_prg $*
+
+ti=testinternet.bat $*
+ei=ensure_internet.bat $*
