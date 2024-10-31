@@ -276,6 +276,7 @@ if "%nomodif%"=="1" ( goto:skipsecondstatus)
 set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
+%_task% "Must Check second Git status in '%CD%'"
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
     %_info% "[%~nx0] Save new updates of '%GITPATH%'"
@@ -284,6 +285,9 @@ if not "%st%"=="" (
     "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
     git add --renormalize .
     git commit -m "post-update"
+    %_ok% "pre-update second commit done in '%CD%'"
+) else (
+    %_ok% "No second Git local modification in '%CD%'"
 )
 :skipsecondstatus
 if exist "%HOME%\.git\COMMIT_EDITMSG" ( touch "%HOME%\.git\COMMIT_EDITMSG" )
