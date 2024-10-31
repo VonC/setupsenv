@@ -44,7 +44,7 @@ del a
 
 if "%sfound%"=="Downloads" (
     %_task% "[%~nx0] Must move match '%fname%' from Downloads to setup"
-    call:rbc "%setup_dir%" "%dl_dir%"
+    call:rbc "%dl_dir%"
     del "%dl_dir%\%fname%" || %_fatal% "[%~nx0] Unable to delete '%dl_dir%\%fname%'" 88
     %_ok% "'%fname%' moved from Downloads to setup"
 )
@@ -83,7 +83,7 @@ set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 pushd "%PRGS%\%prgs_folder%" || %_fatal% "[%~nx0] Unable to access '%PRGS%\%prgs_folder%'" 8
 if not exist "%fname%" (
-    call:rbc "%setup_dir%" "%PRGS%\%prgs_folder%"
+    call:rbc "%PRGS%\%prgs_folder%"
 )
 %_task% "[%~nx0] Must uncompress with 7z '%PRGS%\setup\%fname%' to '%PRGS%\%prgs_folder%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\%prgs_folder%\%fname%"
@@ -106,7 +106,7 @@ set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
 %_task% "[%~nx0] Must robocopy '%fname%' from '%src%' to '%dst%'"
 (robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-if not "%ERRORLEVEL%"=="0" ( %_fatal% "[%~nx0] Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
+if not "%ERRORLEVEL%"=="0" ( %_fatal% "[%~nx0] Unable to copy '%setup_dir%\%fname%' to '%PRGS%\setup\' errorlevel '%ERRORLEVEL%'" && exit /b 1)
 %_ok% "[%~nx0] Setup '%fname%' copied locally"
 goto:eof
 
