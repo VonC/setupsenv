@@ -121,7 +121,7 @@ if errorlevel 1 (
     goto:create
 )
 %_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%p%'"
-goto:eof
+goto:endlocal_sln
 
 :create
 if "%instPath%"=="" (
@@ -132,8 +132,9 @@ if "%instPath%"=="" (
 mklink /J "%PRGS%\%f%\%sln%" "!tpath!"
 if errorlevel 1 (
     %_warning% "[%~nx0] Unable to create %sln% symlink for '%f%\%p%' (!tpath!)"
+    set "sln="
 )
-goto:eof
+goto:endlocal_sln
 
 
 :network
@@ -148,7 +149,7 @@ if exist "%PRGS%\%f%\%sln%" (
         ping 127.0.0.1 -n 4 > nul
     ) else (
         %_ok% "[%~nx0] Symlink '%sln%' already reference program '%p%'"
-        goto:eof
+        goto:endlocal_sln
     )
 )
 if not exist "%PRGS%\%f%\%p%" (
@@ -176,8 +177,10 @@ if errorlevel 1 (
 if not exist "%PRGS%\%f%\%sln%" (
     %_fatal% "[%~nx0] '%sln%' is still missing in folder '%f%'" 3
 )
-goto:eof
 
+:endlocal_sln
+endlocal & set "sln=%sln%"
+goto:eof
 
 :check_subdir
 REM https://stackoverflow.com/questions/11004045/batch-file-counting-number-of-files-in-folder-and-storing-in-a-variable
