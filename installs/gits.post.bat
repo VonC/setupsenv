@@ -9,7 +9,14 @@ set "custom_dir=%senv_dir%\custom"
 set "bin_dir=%senv_dir%\bin"
 set "installs_dir=%senv_dir%\installs"
 
-%_info% "[%~nx0] ~~~~~~~~~~~~"
+if not defined profile (
+    if not defined senv_profile (
+        %_fatal% "[%~nx0] no profile defined (senv_profile not set)" 19
+    )
+    set "profile=%senv_profile%"
+)
+
+%_info% "[%~nx0] for profile '%profile%' ~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
 %_info% "[%~nx0]  Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
 set "internalsenvcall=1"
