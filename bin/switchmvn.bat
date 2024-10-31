@@ -22,91 +22,15 @@ if not "%1" == "" (
     )
 )
 
-rem Initialize counter
-set count=0
-set SELECTED_VERSION=
-set MAVEN_VERSIONS=
-for /d %%f in (mvn*) do (
-    set "dirname=%%~nxf"
-    rem %_info% "[%~nx0] dirname='!dirname!'"
-    echo !dirname!| findstr /r "^mvn[0-9].[0-9].[0-9]$" >nul
-    if not errorlevel 1 (
-        set "MAVEN_VERSIONS=!MAVEN_VERSIONS! %%f"
-        set /a count+=1
-        if "%%f" == "mvn%1" (
-            set "SELECTED_VERSION=%%f"
-        )
-    )
-)
+set "switchver_todelete=maven"
+call "%script_dir%\switchver.bat" mavens mvn "mvn[0-9]\.[0-9]*\.[0-9]*$" "bin\mvn.cmd" "%~1"
+set "switchver_todelete="
+%_ok% "[%~nx0] Node version chosen: '%SELECTED_VERSION%'"
+set "NODE_HOME=%PRGS%\nodes\%SELECTED_VERSION%"
+set "NODE_VERSION=3%SELECTED_VERSION:*3=%"
 popd
 
-if "%SELECTED_VERSION%" == "" (
-    if not "%1" == "" (
-        %_warning% "[%~nx0] Your Maven version argument '%1' was NOT found in MAVENS_ROOT '%MAVENS_ROOT%'" 4
-    )
-)
-
-:: if count == 1, set SELECTED_VERSION to MAVEN_VERSIONS, and trim any space
-if %count% equ 1 (
-    %_info% "[%~nx0] Only one Maven version found: '%MAVEN_VERSIONS: =%'"
-    for %%v in (%MAVEN_VERSIONS%) do (
-        set "SELECTED_VERSION=%%~v"
-    )
-    goto:selected
-)
-
-rem %_info% "[%~nx0] MAVEN_VERSIONS='%MAVEN_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
-if "%SELECTED_VERSION%" == "" (
-    %_task% "[%~nx0] Select Maven version amongst '%count%' available"
-    :: Use gum for selection
-    set "gum=%PRGS%\gums\current\gum.exe"
-    for /f "tokens=*" %%a in ('!gum! choose %MAVEN_VERSIONS%') do set SELECTED_VERSION=%%a
-)
-
-:selected
-
-if "%SELECTED_VERSION%" == "" (
-    %_fatal% "[%~nx0] No Maven version selected for MAVENS_ROOT '%MAVENS_ROOT%'" 3
-)
-%_ok% "[%~nx0] Maven version chosen: '%SELECTED_VERSION%'"
-
-
-
-:clean_path
-set "M2_HOME=%PRGS%\mavens\%SELECTED_VERSION%"
-
-set "newPath="
-rem Test if `where mvn` is equal to %PRGS%\mavens\%SELECTED_VERSION%
-for /f "tokens=*" %%j in ('where mvn^|findstr cmd') do (
-    if "%%j" == "%PRGS%\mavens\%SELECTED_VERSION%\bin\mvn.cmd" (
-        set "newPath=%PATH%"
-    )
-)
-
-if not "%newPath%" == "" (
-    %_ok% "[%~nx0] Maven '%SELECTED_VERSION%' already in PATH"
-    goto:skip_clean_path
-)
-
-set "current_path="
-rem echo PATH='%PATH%'
-:: Split the PATH variable at semicolons and echo each part
-for %%a in ("%PATH:;=" "%") do (
-    set "current_path=%%~a"
-    echo !current_path!| findstr /C:"%PRGS%\mavens" >nul
-    if not !errorlevel! equ 0 (
-        if "!newPath!" == "" (
-            set "newPath=!current_path!"
-        ) else (
-            set "newPath=!newPath!;!current_path!"
-        )
-    )
-)
-rem echo newPath='%newPath%'
-set "newPath=%M2_HOME%\bin;%newPath%"
-set "current_path="
-:skip_clean_path
 endlocal & set "M2_HOME=%PRGS%\mavens\%SELECTED_VERSION%" & set "M2=%M2_HOME%\bin" & set "PATH=%newPath%" & set "MVN_VERSION=%SELECTED_VERSION:mvn=%"
 echo M2_HOME='%M2_HOME%'
+set "PATH=%M2_HOME%\bin;%PATH%"
 where mvn | findstr cmd
-rem echo PATH='%PATH%'
