@@ -112,26 +112,26 @@ goto:eof
 
 :symlink_name
 set "fname=%~1"
-if not "%fname:node-v=%"=="" (
+if not "%fname:node-v=%"=="%fname%" (
     set "sln=%fname:node-v=%"
     for /f "tokens=1 delims=." %%f in ('echo !sln!') do ( set "sln=node%%f" )
     goto:eof
 )
-if not "%fname:python-=%"=="" (
+if not "%fname:python-=%"=="%fname%" (
     set "sln=%fname:python-=%"
     for /f "tokens=1 delims=-" %%f in ('echo !sln!') do ( set "sln=python%%f" )
     goto:eof
 )
-if not "%fname:jdk8u=%"=="" (
+if not "%fname:jdk8u=%"=="%fname%" (
     set "sln=jdk8"
     goto:eof
 )
-if not "%fname:OpenJDK=%"=="" (
+if not "%fname:OpenJDK=%"=="%fname%" (
     set "sln=%fname:OpenJDK=%"
     for /f "tokens=1 delims=U" %%f in ('echo !sln!') do ( set "sln=jdk%%f" )
     goto:eof
 )
-if not "%fname:apache-maven-=%"=="" (
+if not "%fname:apache-maven-=%"=="%fname%" (
     set "sln=mvn%fname:apache-maven-%"
     goto:eof
 )
