@@ -121,7 +121,7 @@ rem @echo on
 :clean_path
 set "newPath="
 rem Test if `where prg_exe` is equal to %PRGS%\prgs_name\%SELECTED_VERSION%
-for /f "tokens=*" %%j in ('where %prg_exe%') do (
+for /f "tokens=*" %%j in ('where %prg_exe% 2^>NUL') do (
     if "%%j" == "%PRGS%\%prgs_name%\%SELECTED_VERSION%\bin\%prg_exe%.exe" (
         set "newPath=%PATH%"
     )
