@@ -359,7 +359,7 @@ set "tpath=%PRGS%\%f%\_%pname%"
 if exist "%tpath%" (
     %_ok% "[%~nx0] Program '%pname%' already installed in '%PRGS%\%f%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" || exit /b 1
+    call:check_post "%f%" "%sln%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
@@ -367,7 +367,7 @@ set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
     %_ok% "[%~nx0] Program '%pname%' already installed2 in '%PRGS%\%f%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" || exit /b 1
+    call:check_post "%f%" "%sln%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
@@ -408,7 +408,7 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     if errorlevel 1 ( %_fatal% "[%~nx0] Error on powershell uncompression"&& exit /b 1 )
     %_ok% "[%~nx0] '%fname%' uncompressed (powershell) to '%tpath%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    call:check_post "%f%" || exit /b 1
+    call:check_post "%f%" "%sln%" || exit /b 1
     cd /d "%script_dir%"
     goto:eof
 )
@@ -424,7 +424,7 @@ if errorlevel 1 (
 %_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%tpath%'"
 :postinstall
 call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-call:check_post "%f%" || exit /b 1
+call:check_post "%f%" "%sln%" || exit /b 1
 cd /d "%script_dir%"
 goto:eof
 
