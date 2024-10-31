@@ -432,14 +432,18 @@ goto:eof
 
 :check_post
 set "f=%~1"
+set "sln=%~2"
+if not defined sln (
+    %_fatal% "[%~nx0] No symlink name defined for '%f%' check_post" 79
+)
 if exist "%script_dir%\installs\%f%.post.bat" (
-    call "%script_dir%\installs\%f%.post.bat" || exit /b 1
+    call "%script_dir%\installs\%f%.post.bat" "%sln%" || exit /b 1
 )
 if exist "%script_dir%\custom\%f%.post.bat" (
-    call "%script_dir%\custom\%f%.post.bat" || exit /b 1
+    call "%script_dir%\custom\%f%.post.bat" "%sln%" || exit /b 1
 )
 if exist "%locald%\%f%.post.bat" (
-    call "%locald%\%f%.post.bat" || exit /b 1
+    call "%locald%\%f%.post.bat" "%sln%" || exit /b 1
 )
 goto:eof
 
