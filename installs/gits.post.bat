@@ -206,6 +206,7 @@ if exist "%GITPATH%\.git\index.lock" (%_fatal% "[%~nx0] '%GITPATH%' used by othe
 set st=
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
+%_task% "Must Check Git status in '%CD%'"
 for /f "delims=" %%x in ('git status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
     %_info% "[%~nx0] Save local modification of '%GITPATH%'"
@@ -214,6 +215,9 @@ if not "%st%"=="" (
     "%PRGS%\gits\current\usr\bin\cat.exe" "%GITPATH%\.git\config" 1>NUL
     git add .
     git commit -m "pre-update"
+    %_ok% "pre-update commit done in '%CD%'"
+) else (
+    %_ok% "No Git local modification in '%CD%'"
 )
 :skipfirststatus
 %_task% "[%~nx0] Must update HOMEBIN '%HOMEBIN%'"
