@@ -57,7 +57,7 @@ if not "%version%"=="" (
 set "version=latest"
 
 if not "%prgname%"=="jdk" ( goto:not_jdk )
-set "jdk_versions=11 13 15 17 19 21 23"
+set "jdk_versions=11 13 15 17 19 20 21 22 23"
 for /f "delims=" %%p in ('gum choose --limit=1 %jdk_versions%') do set "jdk_version=%%p"
 if "%jdk_version%"=="" (
   %_fatal% "[%~nx0] No JDK version selected" 1
