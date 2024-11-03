@@ -12,7 +12,7 @@ trap handle_ctrl_c SIGINT
 DIR="$( cd "$( dirname "$(readlink -f "${BASH_SOURCE[0]}")" )" && pwd )"
 #echo "Hello from Bash from '${DIR}'!"
 echo "done"
-setis=$(cygpath -u "${PRGS}/sysinternalSuites/current")
+setis=$(cygpath -u "${PRGS}/sysinternalsSuites/current")
 echo "setis='${setis}'"
 prg="cmd"
 if [ ! "${1}" == "" ]; then
