@@ -67,6 +67,12 @@ for /l %%a in (0,1,25) do (
 set "prgs_folder=%prgs_folder%s"
 
 if not exist "%PRGS%\%prgs_folder%" (
+    %_task% "[%~nx0] Must create folder '%PRGS%\%prgs_folder%'"
+    mkdir "%PRGS%\%prgs_folder%" || %_fatal% "[%~nx0] Unable to create folder '%PRGS%\%prgs_folder%'" 3
+    %_ok% "[%~nx0] Folder '%PRGS%\%prgs_folder%' created"
+)
+
+if not exist "%PRGS%\%prgs_folder%" (
     %_fatal% "Target folder '%PRGS%\%prgs_folder%' does not exist"
 )
 
