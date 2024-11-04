@@ -36,7 +36,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk maven chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
+set "programs=gum git go gh jdk maven wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
@@ -387,6 +387,18 @@ goto:eof
 rem https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
 set "file=apache-maven-%version%-bin.zip"
 set "url=https://dlcdn.apache.org/maven/maven-3/%version%/binaries/%file%"
+call :curl
+goto:eof
+
+:dwl_wildfly:
+set "repo=wildfly/wildfly"
+set "version=%version:.Final=%"
+set "version=%version:.final=%"
+if "%version%"=="latest" ( call :get_latest_version_from_github ) else ( set "version=%version%.Final")
+rem %_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+set "file=wildfly-%version%.zip"
+rem https://github.com/wildfly/wildfly/releases/download/34.0.0.Final/wildfly-34.0.0.Final.zip
+set "url=https://github.com/wildfly/wildfly/releases/download/%version%/%file%"
 call :curl
 goto:eof
 
