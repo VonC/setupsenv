@@ -14,7 +14,7 @@ set "file=%~3"
 
 if not defined src (
     call:usage
-    %_fatal% "src is missing" 1
+    %_fatal% "[rbc.bat] src is missing" 1
 )
 
 if "%src%"=="/?" (
@@ -24,16 +24,16 @@ if "%src%"=="/?" (
 
 if not defined dst (
     call:usage
-    %_fatal% "dst is missing" 2
+    %_fatal% "[rbc.bat] dst is missing" 2
 )
 
 if not defined file (
     call:usage
-    %_fatal% "file is missing" 3
+    %_fatal% "[rbc.bat] file is missing" 3
 )
 
 if not exist "%src%\%file%" (
-    %_fatal% "file does not exist: '%src%\%file%'" 4
+    %_fatal% "[rbc.bat] file does not exist: '%src%\%file%'" 4
 )
 
 rem Shift the parameters to skip the first three
@@ -66,11 +66,11 @@ for %%v in (%vars%) do (
         )
     )
     if defined value (
-        %_fatal% "%%v '!%%v!' value '!value!' must be composed of digits only" 5
+        %_fatal% "[rbc.bat] %%v '!%%v!' value '!value!' must be composed of digits only" 5
     )
 )
 
-%_task% "Must robocopy '%file%' from '%src%' to '%dst%' (RBC_RETRY='%RBC_RETRY%', RBC_WAIT='%RBC_WAIT%', RBC_MT='%RBC_MT%', RBC_ERROR='%RBC_ERROR%')"
+%_task% "[rbc.bat] Must robocopy '%file%' from '%src%' to '%dst%' (RBC_RETRY='%RBC_RETRY%', RBC_WAIT='%RBC_WAIT%', RBC_MT='%RBC_MT%', RBC_ERROR='%RBC_ERROR%')"
 robocopy "%src%" "%dst%" "%file%" /Z /R:%RBC_RETRY% /W:%RBC_WAIT% /MT:%RBC_MT% /TBD /NJH /NJS %params%
 IF %ERRORLEVEL% LSS 8 (
     SET "OK=ok_%ERRORLEVEL%"
@@ -80,30 +80,30 @@ IF %ERRORLEVEL% LSS 8 (
 rem echo "OK='%OK%' '!OK!'"
 if "%OK:ok_=%"=="ok" (
     if defined RBC_ERROR (
-        %_error% "[%~nx0] Unable to robocopy '%src%\%file%' to '%dst%': errorlevel '%OK%'" && goto:eof
+        %_error% "[rbc.bat] Unable to robocopy '%src%\%file%' to '%dst%': errorlevel '%OK%'" && goto:eof
     )
-    %_fatal% "[%~nx0] Unable to robocopy '%src%\%file%' to '%dst%': errorlevel '%OK%'" 6
+    %_fatal% "[rbc.bat] Unable to robocopy '%src%\%file%' to '%dst%': errorlevel '%OK%'" 6
 )
 %_ok% "[rbc.bat] %name% robocpied from '%src%' to '%dst%' (exit '%OK:ok_=%')"
 goto:eof
 
 :usage
-%_info% "Simple Usage :: ROBOCOPY source destination file"
-%_info% " "
-%_info% "      source :: Source Directory (drive:\path or \\server\share\path)."
-%_info% " destination :: Destination Dir  (drive:\path or \\server\share\path).
-%_info% " "
-%_info% "For more usage information run rbc /?"
-%_info% " "
-%_info% "Default options:"
-%_info% " "
-%_info% "  /Z: copy in restartable mode (survive network glitches)"
-%_info% "  /R:5: retry 5 times (change with env var RBC_RETRY)"
-%_info% "  /W:5: wait 5 seconds between retries (change with env var RBC_WAIT)"
-%_info% "  /TBD: wait for sharenames to be defined (useful for network drives)"
-%_info% "  /MT:16: use 16 threads (change with env var RBC_MT)"
-%_info% "  /NJH: no job header"
-%_info% "  /NJS: no job summary"
-%_info% " "
-%_info% "  If env var RBC_ERROR is defined, failure to robocopy triggers error, not fatal"
+%_info% "[rbc.bat] Simple Usage :: ROBOCOPY source destination file"
+%_info% "[rbc.bat]  "
+%_info% "[rbc.bat]       source :: Source Directory (drive:\path or \\server\share\path)."
+%_info% "[rbc.bat]  destination :: Destination Dir  (drive:\path or \\server\share\path).
+%_info% "[rbc.bat]  "
+%_info% "[rbc.bat] For more usage information run rbc /?"
+%_info% "[rbc.bat]  "
+%_info% "[rbc.bat] Default options:"
+%_info% "[rbc.bat]  "
+%_info% "[rbc.bat]   /Z: copy in restartable mode (survive network glitches)"
+%_info% "[rbc.bat]   /R:5: retry 5 times (change with env var RBC_RETRY)"
+%_info% "[rbc.bat]   /W:5: wait 5 seconds between retries (change with env var RBC_WAIT)"
+%_info% "[rbc.bat]   /TBD: wait for sharenames to be defined (useful for network drives)"
+%_info% "[rbc.bat]   /MT:16: use 16 threads (change with env var RBC_MT)"
+%_info% "[rbc.bat]   /NJH: no job header"
+%_info% "[rbc.bat]   /NJS: no job summary"
+%_info% "[rbc.bat]  "
+%_info% "[rbc.bat]   If env var RBC_ERROR is defined, failure to robocopy triggers error, not fatal"
 goto:eof
