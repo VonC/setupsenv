@@ -84,7 +84,7 @@ if "%OK:ok_=%"=="ok" (
     )
     %_fatal% "[%~nx0] Unable to robocopy '%src%\%file%' to '%dst%': errorlevel '%OK%'" 6
 )
-%_ok% "[%~nx0] %name% updated from '%src%' to '%dst%' (exit '%OK:ok_=%')"
+%_ok% "[rbc.bat] %name% robocpied from '%src%' to '%dst%' (exit '%OK:ok_=%')"
 goto:eof
 
 :usage
