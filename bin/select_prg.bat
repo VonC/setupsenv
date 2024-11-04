@@ -11,17 +11,11 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
-%_info% "[%~nx0] select prg_name"
-
 if not exist "%PRGS%\gums\current\gum.exe" (
   %_fatal% "[%~nx0] gum.exe not found in '%PRGS%\gums\current'" 1
 )
 set "PATH=%PRGS%\gums\current;%PATH%"
 
-set "prgname=%~1"
-if not "%prgname%"=="" (
-  goto:set_version
-)
 REM read the list of programs from two files: one from script_dir, and one from %USERPROFILE%\senv_home (the personal/private senv directory): both are names prgs.list. The format is name,versions,folder,pattern. A name can be  with lower or upercase letters and include spaces. A folder is in lowercase, without spaces, versions are separated by semicolon (there can be 0 to n versions, 0 meaning 'latest'), and the pattern is a glob expression intended to be use by a dir command. The end result is 4 arrays variables: prg_names, prg_versions, prg_folders, prg_patterns
 
 set "senv_home=%USERPROFILE%\senv_home"
@@ -39,10 +33,22 @@ REM Read and parse both files
 call :read_file %file1%
 call :read_file %file2%
 
+REM Step 1: check if a program name is provided as argument
+
+set "prgname=%~1"
+if "%prgname%"=="" (
+  goto:select_program
+)
+rem findstr /R /C:"^Git/" prgs.list
+rem findstr /R /C:"/git[/,]" prgs.list
+rem TODO for /f "delims=" %%p in ('findstr /R /C:"/git[/,]" %script_dir%\prgs.list') do set "prgname=%%p"
+rem if p not nul, goto:select_version
+
+:select_program
 REM Select a program using gum
-echo type %script_dir%\prg_names.tmp ^| "%PRGS%\gums\current\gum.exe" choose --limit=1
+rem echo type %script_dir%\prg_names.tmp ^| "%PRGS%\gums\current\gum.exe" choose --limit=1
 rem goto:eof
-for /f "delims=" %%p in ('type "%script_dir%\prg_names.tmp" ^| "%PRGS%\gums\current\gum.exe" choose --limit=1') do set "prgname=%%p"
+for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose --limit 1 $(sed "s/\S+.*?$\r\n/\n/g" prg_names.tmp)"') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
 )
