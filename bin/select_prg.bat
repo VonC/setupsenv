@@ -29,9 +29,6 @@ set prg_folders=
 set prg_patterns=
 
 del "%script_dir%\prg_names.tmp" 2>NUL
-REM Read and parse both files
-call :read_file %file1%
-call :read_file %file2%
 
 REM Step 1: check if a program name is provided as argument
 
@@ -86,20 +83,4 @@ if "%prg_name%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
 )
 %_ok% "[%~nx0] Program selected: %prg_name%"
-goto:eof
-
-REM Function to read and parse a file
-:read_file
-if not exist "%1" (
-    %_warning% "[%~nx0] File '%1' not found"
-    goto:eof
-)
-%_task% "[%~nx0] Must read file '%1'"
-for /f "tokens=1-4 delims=," %%a in (%1) do (
-    echo %%a>> "%script_dir%\prg_names.tmp"
-    set "prg_versions=!prg_versions!%%b|"
-    set "prg_folders=!prg_folders!%%c|"
-    set "prg_patterns=!prg_patterns!%%d|"
-)
-%_ok% "[%~nx0] File '%1' read"
 goto:eof
