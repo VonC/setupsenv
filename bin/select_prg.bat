@@ -47,17 +47,19 @@ if not defined prg_line (
   %_fatal% "[%~nx0] prg_name '%prg_name%' not found in available program list" 11
 )
 %_ok% "[%~nx0] prg_name '%prg_name%' matches prg_line '%prg_line%'"
-
-for /f "tokens=1-4 delims=~" %%a in ('echo %prg_line%') do (
+for /f "tokens=1-4 delims=~" %%a in ('echo "%prg_line%"') do (
   set "prg_names=%%a"
   set "prg_versions=%%b"
   set "prg_folders=%%c"
   set "prg_patterns=%%d"
 )
+set "prg_names=%prg_names:"=%"
 if defined prg_versions ( set "prg_versions=%prg_versions:#=%" )
 if defined prg_folders ( set "prg_folders=%prg_folders:#=%" )
+if defined prg_patterns ( set "prg_patterns=%prg_patterns:"=%" )
 if defined prg_patterns ( set "prg_patterns=%prg_patterns:#=%" )
-for /f "tokens=1 delims=/" %%a in ('echo %prg_names%') do ( set "prg_name=%%a" )
+for /f "tokens=1 delims=/" %%a in ('echo "%prg_names%"') do ( set "prg_name=%%a" )
+set "prg_name=%prg_name:"=%"
 %_info% "[%~nx0] prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
 
 goto:eof
