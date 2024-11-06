@@ -4,23 +4,29 @@ setlocal enabledelayedexpansion
 rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
 rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/downloads#yEd
 
+set "standalone_call=true"
+if defined script_dir (
+  set "standalone_call="
+)
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
+set "senv_home=%USERPROFILE%\senv_home"
 
 if not exist "%PRGS%\gums\current\gum.exe" (
-  %_fatal% "[%~nx0] gum.exe not found in '%PRGS%\gums\current'" 1
+  if defined standalone_call (
+    %_fatal% "[%~nx0] gum.exe not found in '%PRGS%\gums\current'" 1
+  )
+  %_warning% "[%~nx0] gum.exe not found in '%PRGS%\gums\current', but non-standalone call, so does not matter"
+) else (
+  set "PATH=%PRGS%\gums\current;%PATH%"
 )
-set "PATH=%PRGS%\gums\current;%PATH%"
 
 REM read the list of programs from script_dir, from %HOME% (%USERPROFILE%\senv_home) and %USERPROFILE%\senv_setups (the private setup folder): both are names prgs.list. The format is name,versions,folder,pattern. A name can be  with lower or upercase letters and include spaces. A folder is in lowercase, without spaces, versions are separated by semicolon (there can be 0 to n versions, 0 meaning 'latest'), and the pattern is a glob expression intended to be use by a dir command. The end result is 4 arrays variables: prg_names, prg_versions, prg_folders, prg_patterns
 
-set "senv_home=%USERPROFILE%\senv_home"
-set "file1=%script_dir%\prgs.list"
-set "file2=%senv_home%\prgs.list"
 
 REM Initialize arrays
 set prg_names=
