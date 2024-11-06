@@ -57,19 +57,15 @@ for /f "tokens=1-4 delims=~" %%a in ('echo %prg_line%') do (
 if defined prg_versions ( set "prg_versions=%prg_versions:#=%" )
 if defined prg_folders ( set "prg_folders=%prg_folders:#=%" )
 if defined prg_patterns ( set "prg_patterns=%prg_patterns:#=%" )
-%_info% "[%~nx0] prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
-
+for /f "tokens=1 delims=/" %%a in ('echo %prg_names%') do ( set "prg_name=%%a" )
+%_info% "[%~nx0] prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
 
 goto:eof
-rem findstr /R /C:"^Git/" prgs.list
-rem findstr /R /C:"/git[/,]" prgs.list
-rem TODO for /f "delims=" %%p in ('findstr /R /C:"/git[/,]" %script_dir%\prgs.list') do set "prg_name=%%p"
-rem if p not nul, goto:select_version
 
 :parse_prgs_list
-for /f "delims=" %%p in ('findstr /I /R /C:"^%prg_name%[/,]" "%~1"') do set "prg_line=%%p"
+for /f "delims=" %%p in ('findstr /I /R /C:"^%prg_name%[/~]" "%~1"') do set "prg_line=%%p"
 if not defined prg_line (
-  for /f "delims=" %%p in ('findstr /I /R /C:"/%prg_name%[/,]" "%~1"') do set "prg_line=%%p"
+  for /f "delims=" %%p in ('findstr /I /R /C:"/%prg_name%[/~]" "%~1"') do set "prg_line=%%p"
 )
 goto:eof
 
