@@ -40,7 +40,7 @@ REM Step 1: check if a program name is provided as argument
 
 set "prg_name=%~1"
 if "%prg_name%"=="" (
-  if standalone_call (
+  if defined standalone_call (
     call:select_program
   ) else (
     %_fatal% "[%~nx0] non-standalone call: prg_name first parameter is missing" 12
@@ -70,12 +70,16 @@ if defined prg_patterns ( set "prg_patterns=%prg_patterns:"=%" )
 if defined prg_patterns ( set "prg_patterns=%prg_patterns:#=%" )
 for /f "tokens=1 delims=/" %%a in ('echo "%prg_names%"') do ( set "prg_name=%%a" )
 set "prg_name=%prg_name:"=%"
+if not defined prg_folders (
+  %_fatal% "[%~nx0] prg_folders not defined for '%prg_name%'" 15
+)
+set "prg_id=%prg_folders:~0,-1%"
 %_info% "[%~nx0] prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
 
 REM Step 2: check the version
 
-set "prg_version=~2"
-if defined prg_versions (
+set "prg_version=%~2"
+if not defined prg_version (
   if defined prg_versions (
     if not defined standalone_call (
       %_fatal% "[%~nx0] non-standalone call: prg_version second parameter is missing. Should be one of '%prg_versions%'" 13
