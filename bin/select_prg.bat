@@ -40,7 +40,11 @@ REM Step 1: check if a program name is provided as argument
 
 set "prg_name=%~1"
 if "%prg_name%"=="" (
-  call:select_program
+  if standalone_call (
+    call:select_program
+  ) else (
+    %_fatal% "[%~nx0] non-standalone call: prg_name first parameter is missing" 12
+  )
 )
 set "prg_line="
 call:parse_prgs_list "%script_dir%\prgs.list"
