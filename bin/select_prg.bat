@@ -72,6 +72,45 @@ for /f "tokens=1 delims=/" %%a in ('echo "%prg_names%"') do ( set "prg_name=%%a"
 set "prg_name=%prg_name:"=%"
 %_info% "[%~nx0] prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
 
+REM Step 2: check the version
+
+set "prg_version=~2"
+if defined prg_versions (
+  if defined prg_versions (
+    if not defined standalone_call (
+      %_fatal% "[%~nx0] non-standalone call: prg_version second parameter is missing. Should be one of '%prg_versions%'" 13
+    )
+    call:select_version
+    %_ok% "[%~nx0] Selected version: latest of '!prg_version!'"
+  ) else (
+    %_info% "[%~nx0] No version provided, and prg_versions not defined: assume 'latest'"
+    set "prg_version=latest"
+  )
+) else if defined prgs_versions (
+  set "prg_version_found="
+  for /f "usebackq" %%a in ('%prg_versions%') do (
+    if "%%a"=="%prg_version%" ( set "prg_version_found=true" )
+  )
+  if not defined prg_version_found (
+    if not defined standalone_call (
+      %_fatal% "[%~nx0] Invalid prg_version '%prg_version%', should be one of '%prg_versions%'" 14
+    )
+    %_error% "[%~nx0] Invalid prg_version '%prg_version%', Select one of '%prg_versions%'"
+    call:select_version
+    %_ok% "[%~nx0] Selected fixed version: latest of '!prg_version!'"
+  ) else (
+    %_ok% "[%~nx0] Valid version '%prg_version%', one of '%prg_versions%'"
+  )
+)
+%_info% "[%~nx0] prg_version='%prg_version%'"
+goto:eof
+
+:select_version
+for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose "%prg_versions""') do set "prg_version=%%p"
+if "%prg_version%"=="" (
+  %_fatal% "[%~nx0] No program version selected from '%prg_versions%'" 1
+)
+%_ok% "[%~nx0] Program version selected: %prg_version%"
 goto:eof
 
 :parse_prgs_list
