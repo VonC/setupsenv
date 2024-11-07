@@ -1,13 +1,14 @@
 @echo off
-setlocal enabledelayedexpansion
-
-rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
-rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/downloads#yEd
 
 set "standalone_call=true"
 if defined script_dir (
   set "standalone_call="
 )
+setlocal enabledelayedexpansion
+
+rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
+rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/downloads#yEd
+
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
@@ -107,6 +108,27 @@ if not defined prg_version (
   )
 )
 %_info% "[%~nx0] prg_version='%prg_version%'"
+endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_patterns=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%"
+if defined standalone_call (
+  call %senv_dir%\batcolors\echos_macros.bat unset
+  set "senv_dir="
+  set "senv_home="
+  set "standalone_call="
+  set "prg_id="
+  set "prg_name="
+  set "prg_version="
+  set "setup_dir="
+  set "batdir="
+  set "ASCII27="
+  set "a="
+)
+set "prg_folders="
+set "prg_line="
+set "prg_names="
+set "prg_versions="
+set "file1="
+set "file2="
+rem set prg_
 goto:eof
 
 :select_version
