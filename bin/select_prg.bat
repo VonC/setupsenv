@@ -110,7 +110,7 @@ if not defined prg_version (
 goto:eof
 
 :select_version
-for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose "%prg_versions""') do set "prg_version=%%p"
+for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose %prg_versions%"') do ( set "prg_version=%%p" )
 if "%prg_version%"=="" (
   %_fatal% "[%~nx0] No program version selected from '%prg_versions%'" 1
 )
