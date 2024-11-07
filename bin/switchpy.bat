@@ -103,7 +103,7 @@ mkdir "%PYTHON_VENVS%" 2>nul
 pushd %PYTHON_VENVS%
 if not exist "python_%PYTHON_VERSION%" (
     %_task% "[%~nx0] Must create virtual env for 'Python %PYTHON_VERSION%'"
-    python -m venv python_%PYTHON_VERSION%
+    "%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe" -m venv python_%PYTHON_VERSION%
     if errorlevel 1 (
         %_error% "[%~nx0] Unable to create virtual env for 'Python %PYTHON_VERSION%'"
         popd
