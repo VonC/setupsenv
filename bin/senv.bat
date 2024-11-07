@@ -30,14 +30,14 @@ if not exist "%script_dir_bin%\senv.local.pre.bat" (
    )
 )
 if not exist "%script_dir_bin%\senv.local.pre.bat" (
-   echo "script_dir_bin '%script_dir_bin%' must be reference senv.local.pre.bat" && exit /b 1
+   call:fatal "script_dir_bin '%script_dir_bin%' must be reference senv.local.pre.bat" 101
 )
 set PRGS=
 set HOME=
 call "%script_dir_bin%\senv.local.pre.bat"
-if "%PRGS%"=="" ( echo "PRGS (installation folder) must be defined" && exit /b 1 )
-if "%HOME%"=="" ( echo "HOME must be defined" && exit /b 1 )
-if "%PROG%"=="" ( echo "PROG (data folder) must be defined" && exit /b 1 )
+if "%PRGS%"=="" ( call:fatal "PRGS (installation folder) must be defined" 102 )
+if "%HOME%"=="" ( call:fatal "HOME must be defined" 103 )
+if "%PROG%"=="" ( call:fatal "PROG (data folder) must be defined" 104 )
 
 set GH=%PRGS%\gits\current
 set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
@@ -116,8 +116,12 @@ set "senv_dir="
 set ASCII27=
 set local_senv=
 goto:eof
-:oknc
-echo  OK    : %local_senv%senv activated: senv_dir='%senv_dir%' 1>&2
+
+:fatal
+set "bc="
+set "script_dir_bin="
 set "senv_dir="
+set ASCII27=
 set local_senv=
+%_fatal% "%~1" %~2
 goto:eof
