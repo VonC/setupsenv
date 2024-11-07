@@ -12,7 +12,7 @@ set "installs_dir=%senv_dir%\installs"
 call %senv_dir%\batcolors\echos_macros.bat
 
 %_info% "[%~nx0] install vscode %PRGS%\setup\%fs%"
-set install_ok=true
+set "install_ok=check_symlink"
 "%PRGS%\setup\%fs%" /DIR="%PRGS%\vscode" /VERYSILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /MERGETASKS=!runcode
 if errorlevel 1 ( %_fatal% "[%~nx0] Issue when installing vscode" 1 )
 call "%installs_dir%\vscodes.pre.bat"
