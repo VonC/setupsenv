@@ -8,6 +8,11 @@ if not errorlevel 1 (
 if exist "%script_dir_bin%\..\adm" (
    set "local_senv=(local) "
 )
+for %%i in ("%script_dir_bin%\..\batcolors") do ( set "bc=%%~fi" )
+call %bc%\echos_macros.bat export
+if errorlevel 1 (
+   echo "Batcolors not available in '%bc%'" && exit /b 1
+)
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
 set "admPath="
