@@ -87,34 +87,40 @@ set "admPath="
 set "vscodei="
 
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
+if errorlevel 1 (
+   %_warning% "Error setting global (all) aliases from '%HOME%\bin\senv.doskey'"
+)
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
+if errorlevel 1 (
+   %_warning% "Error setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
+)
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
+if errorlevel 1 (
+   %_warning% "Error setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
+)
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
 )
 if exist "%script_dir_bin%\profile" (
    if exist "%HOME%\bin\senv.custom.%senv_profile%.doskey" (
       DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
+      if errorlevel 1 (
+         %_warning% "Error setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
+      )
    )
 )
 set "script_dir_bin="
-set "_ok="
-set "_info="
-set "_task="
-set "_warning="
-set "_fatal="
-set "_error="
 if "%internalsenvcall%"=="1" (
+   set "bc="
    set "senv_dir="
    goto:eof
 )
-if defined NOCOLORS ( goto:oknc )
-set ASCII27=
-rem set ASCII27=← 
-echo %ASCII27%[42;97m OK    %ASCII27%[0m: %local_senv%senv activated: senv_dir='%senv_dir%'
+%_ok% "%local_senv%senv activated: senv_dir='%senv_dir%'"
 set "senv_dir="
 set ASCII27=
 set local_senv=
+call %bc%\echos_macros.bat unset
+set "bc="
 goto:eof
 
 :fatal
