@@ -88,15 +88,15 @@ set "vscodei="
 
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 if errorlevel 1 (
-   %_warning% "Error setting global (all) aliases from '%HOME%\bin\senv.doskey'"
+   %_warning% "Issue setting global (all) aliases from '%HOME%\bin\senv.doskey'"
 )
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
 if errorlevel 1 (
-   %_warning% "Error setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
+   %_warning% "Issue setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
 )
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 if errorlevel 1 (
-   %_warning% "Error setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
+   %_warning% "Issue setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
 )
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
@@ -105,7 +105,7 @@ if exist "%script_dir_bin%\profile" (
    if exist "%HOME%\bin\senv.custom.%senv_profile%.doskey" (
       DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
       if errorlevel 1 (
-         %_warning% "Error setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
+         %_warning% "Issue setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
       )
    )
 )
