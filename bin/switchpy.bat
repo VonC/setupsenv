@@ -37,11 +37,12 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
     set "PYTHON_MAIN_VERSION=%%a.%%b"
 )
 set "ccd=%CD%"
+for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
 %_info% "[%~nx0] PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'"
 if not "%VIRTUAL_ENV%" == "" (
     echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
     ping -n 1 -w 300 127.0.0.1 > nul
-    findstr /c:"python_%PYTHON_VERSION%" "%ccd%\switchpy_virtual_env.tmp" >nul
+    findstr /c:"python_%PYTHON_VERSION%_%project_name%" "%ccd%\switchpy_virtual_env.tmp" >nul
     if errorlevel 1 (
         del "%ccd%\switchpy_virtual_env.tmp"
         %_task% "[%~nx0] Must deactivate: different venv activated: '%VIRTUAL_ENV%'"
@@ -65,7 +66,8 @@ if not "%VIRTUAL_ENV%" == "" (
 rem unset any doskey alias for deactivate.bat
 doskey deactivate=
 rem Propose with gum.exe 3 choices: 1) no venv 2) venv on %PYTHON_ROOT%\venvs 3) venv on %CD%\venvs
-set "ccd=%CD%"
+
+set "project_name=%project_name: =_%"
 if defined SWITCHPY_CHOICE (
     set "choice=%SWITCHPY_CHOICE%"
 ) else (
@@ -77,6 +79,7 @@ if not defined choice (
     for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set choice=%%a
 )
 rem echo choice='%choice%'
+set "venv_name=python_%PYTHON_VERSION%"
 rem if venv, then do not set PATH: activate will do it.
 if "%choice%" == "No venv" (
     %_ok% "[%~nx0] No virtual environment will be used."
@@ -88,6 +91,7 @@ if "%choice%" == "No venv" (
     set "VENV_LOCATION=%PYTHON_ROOT%\venvs"
 ) else if "%choice%" == "venv on %ccd%\venvs" (
     set "VENV_LOCATION=%ccd%\venvs"
+    set "venv_name=python_%PYTHON_VERSION%_%project_name%"
 ) else (
     %_error% "[%~nx0] Invalid choice."
     del "%ccd%\switchpy.tmp" 2>nul
@@ -101,30 +105,30 @@ rem use existing code to create or activate venv in the chosen location
 set PYTHON_VENVS="%VENV_LOCATION%"
 mkdir "%PYTHON_VENVS%" 2>nul
 pushd %PYTHON_VENVS%
-if not exist "python_%PYTHON_VERSION%" (
-    %_task% "[%~nx0] Must create virtual env for 'Python %PYTHON_VERSION%'"
-    "%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe" -m venv python_%PYTHON_VERSION%
+if not exist "%venv_name%" (
+    %_task% "[%~nx0] Must create virtual env '%venv_name%' for 'Python %PYTHON_VERSION%'"
+    "%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe" -m venv %venv_name%
     if errorlevel 1 (
         %_error% "[%~nx0] Unable to create virtual env for 'Python %PYTHON_VERSION%'"
         popd
         call :unset
         exit /b 1
     ) else (
-        %_ok% "[%~nx0] 'Python %PYTHON_VERSION%' virtual env created in '%PYTHON_VENVS%\python_%PYTHON_VERSION%'"
+        %_ok% "[%~nx0] 'Python %PYTHON_VERSION%' virtual env created in '%PYTHON_VENVS%\%venv_name%'"
     )
 ) else (
     %_ok% "[%~nx0] Py env for '%PYTHON_VERSION%' already created"
 )
-%_info% "[%~nx0] Active venv python_%PYTHON_VERSION%"
+%_info% "[%~nx0] Active venv '%venv_name%'"
 popd
 %_info% "[%~nx0] PATH BEFORE activation: '%PATH%'"
-call "%PYTHON_VENVS%\python_%PYTHON_VERSION%\Scripts\activate.bat"
+call "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
 if errorlevel 1 (
-    %_error% "[%~nx0] Unable to activate Py env for 'Python %PYTHON_VERSION%'"
+    %_error% "[%~nx0] Unable to activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
     call :unset
     exit /b 1
 ) else (
-    %_ok% "[%~nx0] Py env for 'Python %PYTHON_VERSION%' activated"
+    %_ok% "[%~nx0] Py env '%venv_name%' for 'Python %PYTHON_VERSION%' activated"
 )
 rem set doskey alias %VIRTUAL_ENV%\Scripts\deactivate.bat is a venv is chosen
 doskey deactivate=call "%VIRTUAL_ENV%\Scripts\deactivate.bat" $*
@@ -142,7 +146,7 @@ set "PYTHON_HOME="
 set "PYTHON_VERSION="
 set "PYTHON_ROOT="
 set "PYTHON_MAIN_VERSION="
-set "VIRTUAL_ENV="
+rem set "VIRTUAL_ENV="
 set "OLD_PYTHON_VERSION="
 set "PYTHON_VENVS="
 set "VENV_LOCATION="
