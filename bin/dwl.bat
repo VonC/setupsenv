@@ -36,7 +36,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk maven wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
+set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
@@ -406,3 +406,24 @@ goto:eof
 rem <button class="material-button material-button-theme  zip-download" data-meta="{&quot;displayName&quot;:&quot;yEd&quot;,&quot;filePath&quot;:&quot;/resources/yed/demo/yEd-3.24.zip&quot;,&quot;licensePath&quot;:&quot;/resources/yed/license_without-jre.html&quot;}">Download .zip file<svg xmlns="http://www.w3.org/2000/svg" width="20" height="1em" viewBox="-1 0 10 10" style="margin-left: .35em;"><use href="#icon-download-top" style="fill: currentColor"></use><use href="#icon-download-bottom" style="fill: currentColor"></use></svg></button>
 rem https://www.yworks.com/downloads
 rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
+
+:dwl_eclipse
+set "cmd=curl -skL https://www.eclipse.org/downloads/packages/"
+%cmd% > "%script_dir%\dwl_eclipse.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_eclipse.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from www.eclipse.org/downloads/packages for Eclipse IDE for Enterprise Java and Web Developers with cmd '%cmd%'" 1
+)
+for /f "tokens=3 delims=><" %%a in ('findstr /R /C:"Eclipse IDE .* Packages"  "%script_dir%\dwl_eclipse.tmp"') do ( set "version=%%a" )
+set "version=%version:*Eclipse IDE =%"
+set "version=%version: Packages=%"
+%_ok% "[%~nx0] Latest Eclipse IDE for Enterprise Java and Web Developers version '%version%'"
+set "file=eclipse-jee-%version: =-%-win32-x86_64.zip"
+rem https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip&mirror_id=1321
+rem https://eclipse.mirror.wearetriple.com//technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip
+set "url=https://eclipse.mirror.wearetriple.com/technology/epp/downloads/release/%version: =/%/%file%"
+rem          https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip
+rem set "url=https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip"
+call :curl
+rem del "%script_dir%\dwl_eclipse.tmp"
+goto:eof
