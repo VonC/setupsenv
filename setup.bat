@@ -135,9 +135,9 @@ for /f "delims=" %%a in ('type "%script_dir%\setup_cleanup_filtered.tmp"') do (
 )
 del "%script_dir%\setup_cleanup.tmp"
 del "%script_dir%\setup_cleanup_filtered.tmp"
-%_ok% "All custom file from different profiles than '%profile%' have been deleted from HOME\bin '%HOME%\bin'"
+%_ok% "[%~nx0] All custom file from different profiles than '%profile%' have been deleted from HOME\bin '%HOME%\bin'"
 
-rem %_fatal% "stop for now" 22
+rem %_fatal% "[%~nx0] stop for now" 22
 
 :skip_custom_cleanup
 if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
@@ -211,6 +211,14 @@ if "%setupsdir%"=="" (
 )
 %_info% "[%~nx0] setupsdir='%setupsdir%'"
 cd /d "%script_dir%"
+if exist installs\python.install.bat (
+    %_task% "[%~nx0] Must delete installs\python.install.bat in '%script_dir%'"
+    del installs\python.install.bat
+    if errorlevel 1 (
+        %_fatal% "[%~nx0] Unable to delete installs\python.install.bat in '%script_dir%'" 165
+    )
+    %_ok% "[%~nx0] installs\python.install.bat in '%script_dir%' deleted"
+)
 rem goto:alldone
 findstr /i "peazips" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=peazip_portable-*" )
