@@ -1,5 +1,8 @@
 @echo off
-if "%1"=="" (
+if "%~1"=="-l" (
+	shift
+)
+if "%~1"=="" (
 	doskey /macros
 	goto :EOF
 )
