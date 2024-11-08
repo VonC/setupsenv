@@ -1,9 +1,6 @@
 @echo off
 setlocal enabledelayedexpansion
 
-rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
-rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/downloads#yEd
-
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
@@ -36,7 +33,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP"
+set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP yEd"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
@@ -402,10 +399,26 @@ set "url=https://github.com/wildfly/wildfly/releases/download/%version%/%file%"
 call :curl
 goto:eof
 
-
+:dwl_yed
 rem <button class="material-button material-button-theme  zip-download" data-meta="{&quot;displayName&quot;:&quot;yEd&quot;,&quot;filePath&quot;:&quot;/resources/yed/demo/yEd-3.24.zip&quot;,&quot;licensePath&quot;:&quot;/resources/yed/license_without-jre.html&quot;}">Download .zip file<svg xmlns="http://www.w3.org/2000/svg" width="20" height="1em" viewBox="-1 0 10 10" style="margin-left: .35em;"><use href="#icon-download-top" style="fill: currentColor"></use><use href="#icon-download-bottom" style="fill: currentColor"></use></svg></button>
 rem https://www.yworks.com/downloads
-rem https://www.yworks.com/resources/yed/demo/yEd-3.24.zip
+rem https://www.yworks.com/resources/yed/demo/yEd-3.24_without-JRE_64-bit_setup.exe
+
+set "cmd=curl -skL https://www.yworks.com/downloads"
+%cmd% > "%script_dir%\dwl_yed.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_yed.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from www.yworks.com/downloads for yEd Graph Editor with cmd '%cmd%'" 1
+)
+for /f "tokens=2 delims=><" %%a in ('sed "s/.*<a href=\"\/products\/yed\"/xxxxxxx/g" "%script_dir%\dwl_yed.tmp" ^| grep xxxx') do ( set "version=%%a" )
+set "version=%version:yEd Graph Editor =%"
+%_info% "Yed version='%version%'"
+set "file=yEd-%version%_without-JRE_64-bit_setup.exe"
+rem https://www.yworks.com/resources/yed/demo/yEd-3.24_without-JRE_64-bit_setup.exe
+set "url=www.yworks.com/resources/yed/demo/%file%"
+call :curl
+del "%script_dir%\dwl_yed.tmp"
+goto:eof
 
 :dwl_eclipse
 set "cmd=curl -skL https://www.eclipse.org/downloads/packages/"
@@ -425,5 +438,5 @@ set "url=https://eclipse.mirror.wearetriple.com/technology/epp/downloads/release
 rem          https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip
 rem set "url=https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip"
 call :curl
-rem del "%script_dir%\dwl_eclipse.tmp"
+del "%script_dir%\dwl_eclipse.tmp"
 goto:eof
