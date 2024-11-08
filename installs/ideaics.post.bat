@@ -39,11 +39,15 @@ if exist "%APPDATA%\JetBrains\IdeaIC%version%\idea.properties" (
 ) else (
     %_info% "[%~nx0] No file '%APPDATA%\JetBrains\IdeaIC%version%\idea.properties' found"
     REM create the parent folder structure, then copy the file there
-    mkdir "%APPDATA%\JetBrains\IdeaIC%version%"
-    if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to create '%APPDATA%\JetBrains\IdeaIC%version%' folder" 1
+    if not exist "%APPDATA%\JetBrains\IdeaIC%version%" (
+        mkdir "%APPDATA%\JetBrains\IdeaIC%version%"
+        if errorlevel 1 (
+            %_fatal% "[%~nx0] Unable to create '%APPDATA%\JetBrains\IdeaIC%version%' folder" 1
+        ) else (
+            %_ok% "[%~nx0] Folder '%APPDATA%\JetBrains\IdeaIC%version%' created"
+        )
     ) else (
-        %_ok% "[%~nx0] Folder '%APPDATA%\JetBrains\IdeaIC%version%' created"
+        %_ok% "[%~nx0] Folder '%APPDATA%\JetBrains\IdeaIC%version%' already exists"
     )
     %_task% "[%~nx0] Copy 'idea.properties' file to '%APPDATA%\JetBrains\IdeaIC%version%'"
     copy /y "%script_dir%\installs\idea.properties" "%APPDATA%\JetBrains\IdeaIC%version%\idea.properties" >nul
