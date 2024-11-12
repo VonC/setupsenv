@@ -29,6 +29,20 @@
 			"commandCenter.border": "#e7e7e799",
 			"tab.activeBorder": "#0ed941"
 		},
-		"peacock.color": "#0ba933"
+		"peacock.color": "#0ba933",
+		"replacerules.rules": {
+			"Update _message with nx0": {
+				"find": "%_(.*?)% \"([^\\[])",
+				"replace": "%_$1% \"[%~nx0] $2",
+				"flags": "gmi"
+			},
+		},
+    "replacerules.rulesets": {
+			"Update xxx messages": {
+				"rules": [
+					"Update _message with nx0",
+				]
+			},
+		},
 	}
 }
