@@ -65,11 +65,8 @@ goto:eof
 :fatal
 set "msg=%~1"
 set "error=%~2"
-setlocal enabledelayedexpansion
-set "__fatal=call "!batdir!\echos.bat" :fatal"
-endlocal & set "__fatal=%__fatal%"
 call:unset
-%__fatal% "%msg%" %error%
+call "%HOME%\batcolors\echos.bat" :fatal "%msg%" %error%
 goto:eof
 
 :unset
@@ -83,3 +80,4 @@ set "script_dir="
 set "last_folder="
 set "error="
 set "batdir="
+set "__fatal="
