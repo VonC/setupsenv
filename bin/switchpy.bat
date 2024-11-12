@@ -109,7 +109,7 @@ if not exist "%venv_name%" (
     %_task% "[%~nx0] Must create virtual env '%venv_name%' for 'Python %PYTHON_VERSION%'"
     "%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe" -m venv %venv_name%
     if errorlevel 1 (
-        %_error% "[%~nx0] Unable to create virtual env for 'Python %PYTHON_VERSION%'"
+        %_error% "[%~nx0] Unable to create virtual env for 'Python %PYTHON_VERSION%' using '%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe'"
         popd
         call :unset
         exit /b 1
