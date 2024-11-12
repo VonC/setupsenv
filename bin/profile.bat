@@ -43,7 +43,6 @@ if errorlevel 1 (
 )
 git -C "%PRGS%\senv\custom" diff-index --quiet HEAD --
 if errorlevel 1 (
-    
     if defined dirty_message (
         set "dirty_message=%dirty_message%, and "
     )
@@ -63,7 +62,7 @@ if "%vcsenv%"=="%remote_vc%" (
     goto:eof
 )
 
-%_warning% "[%~nx0] local `git describe` senv updated: needs to be published"
+%_warning% "[%~nx0] local `git describe` senv differs from recorded one"
 for /f "tokens=3,6 delims=- " %%a in ('echo %remote_vc%') do (
     set "remote_senv_commit=%%b"
     set "remote_senv_custom_commit=%%a"
