@@ -6,7 +6,12 @@ for %%i in ("%script_dir%\..") do ( set "home_dir=%%~fi" )
 call %home_dir%\batcolors\echos_macros.bat
 
 FOR /F %%i IN ('cat %HOME%\bin\profile') DO set profileName=%%i
-%_info% "[%~nx0] profile name='%profileName%'"
+set "localmsg="
+where publish_setname.bat >NUL 2>NUL
+if not errorlevel 1 (
+    set "localmsg= [LOCAL path activated]"
+)
+%_info% "[%~nx0] profile name='%profileName%'%localmsg%"
 :: Use FOR /F to capture all tokens starting from the third one, managing spaces in the profile folder name
 FOR /F "tokens=3* delims= " %%i IN ('alias cdis') DO (
     set "profileFolder=%%i"
