@@ -119,6 +119,7 @@ for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
 set "tag=%version%"
 set "version=%version:v=%"
 %_ok% "[%~nx0] version '%version%' is latest for repo '%repo%'"
+set "url="
 goto:eof
 
 :template
