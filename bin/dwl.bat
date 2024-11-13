@@ -33,7 +33,7 @@ set "prgname=%~1"
 if not "%prgname%"=="" (
   goto:set_version
 )
-set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP yEd"
+set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP yEd Terminal"
 for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
@@ -440,4 +440,15 @@ rem          https://www.eclipse.org/downloads/download.php?file=/technology/epp
 rem set "url=https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip"
 call :curl
 del "%script_dir%\dwl_eclipse.tmp"
+goto:eof
+
+:dwl_terminal
+
+set "repo=microsoft/terminal"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/microsoft/terminal/releases/download/v1.21.2911.0/Microsoft.WindowsTerminal_1.21.2911.0_x64.zip
+set "file=Microsoft.WindowsTerminal_%version%_x64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
 goto:eof
