@@ -109,6 +109,10 @@ for /L %%n in (1 1 !output_cnt!) DO (
         set "UNCPathOnly="
         set "spath=!setupsdir!"
         %_info% "[%~nx0] sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
+        if "!spath!"=="" (
+            %_error% "[%~nx0] spath is empty: skipped"
+            set "skip=1"
+        )
         dir "!spath!" > NUL
         if errorlevel 1 (
             %_error% "[%~nx0] Target path '!spath!' not accessible: skipped"
@@ -116,7 +120,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
         )
     )
     if "!skip!"=="" (
-        %_task% "[%~nx0] Check name"
+        %_task% "[%~nx0] Check name '%name%' (fname='%fname%')"
         call:check_name
         rem %_info% "[%~nx0] name_ok2='!name_ok!'"
         if "!name_ok!"=="false" (
