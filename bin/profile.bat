@@ -99,10 +99,10 @@ if errorlevel 1 (
 )
 if defined publish_message (
     %_warning% "[%~nx0] %publish_message%"
-    %_task% "[%~nx0] Must publish local senv to remote_senv '%remote_senv'"
+    %_task% "[%~nx0] Must publish local senv to remote_senv '%remote_senv%'"
 )
 if defined update_message (
     %_warning% "[%~nx0] %update_message%"
-    %_task% "[%~nx0] Should update local senv from remote_senv '%remote_senv'"
+    %_task% "[%~nx0] Should update local senv from remote_senv '%remote_senv%'"
     %_task% "[%~nx0] Type cdis, then s when you want to update your senv"
 )
