@@ -19,7 +19,7 @@ cd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
 %_info% "[%~nx0] Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if "%1"=="" (
-    %_fatal%  "Usage: publish xxx [profile/local/all] (pattern to search for in Downloads or setup). No profile means publish to local only." 4
+    %_fatal%  "Usage: publish xxx [profile/local/all] [force] (pattern to search for in Downloads or setup). No profile means publish to local only." 4
 )
 
 set "sfound=setup"
@@ -65,6 +65,14 @@ if "%team%"=="all" (
     %_task% "[%~nx0] Must publish '%fname%' for team '%team%'"
 )
 
+set "forcepb="
+if "%~3"=="force" (
+    set "forcepb=true"
+    %_ok% "[%~nx0] third 'force' param: force publish activated"
+) else (
+    %_warning% "[%~nx0] No third 'force' param: force publish not activated"
+)
+
 pushd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
 REM https://stackoverflow.com/questions/4956873/how-to-cut-first-n-and-last-n-columns/51005303#51005303
 call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f2-|cut -d'.' -f 1"
@@ -79,7 +87,26 @@ set "name="
 call %script_dir%\publish_setname.bat
 if "%name%"=="" ( podp && %_fatal% "[%~nx0] Unknown name for fname for publish: '%fname%'" 228 )
 
-:execrbcs
+if not defined SENV_FORCE_PB (
+    %_warning% "[%~nx0] SENV_FORCE_PB not defined: force publish not activated unless its value includes '-%name%-'"
+    goto:nosenv_force_pb
+)
+for %%i in (%SENV_FORCE_PB:-= %) do (
+    %_info% "[%~nx0] Process '%%i' or '%%is' from SENV_FORCE_PB='%SENV_FORCE_PB%' for name '%name%'"
+    if "%%i"=="%name%" (
+        %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
+        set "forcepb=true"
+    )
+    if "%%is"=="%name%" (
+        %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
+        set "forcepb=true"
+    )
+)
+if not defined forcepb (
+    %_warning% "[%~nx0] SENV_FORCE_PB does not include '%name%': force publish not activated"
+)
+:nosenv_force_pb
+
 call:execcmd "ls -1 setupsdir*_*"
 %_info% "[%~nx0] output_cnt='%output_cnt%' or '!output_cnt!'"
 if "%output_cnt%"=="0" (
@@ -176,6 +203,10 @@ if not errorlevel 1 (
 ) else if "%name%"=="peazips" (
     set "name_ok=true"
 )
+if defined forcepb (
+    %_ok% "[%~nx0] Force published activated for name '%name%': check_name OK"
+    set "name_ok=true"
+)
 rem %_info% "[%~nx0] name_ok='%name_ok%'"
 goto:eof
 
@@ -184,7 +215,7 @@ cd
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
-%_task% "  [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+%_task% "[%~nx0]   [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 %_info% "[%~nx0] Robocopy '%fname%' from '%src%' to '%dst%'"
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 IF %ERRORLEVEL% LSS 8 (
