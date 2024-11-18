@@ -14,20 +14,50 @@ pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROF
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
 
-%_info% "[%~nx0] Install '%~2', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
+set "profile_filename="
+if exist "%HOME%\bin\profile" ( set "profile_filename=%HOME%\bin\profile")
+if not defined profile_filename (
+    if exist "%PRGS%\senv\custom\profile"  ( set "profile_filename=%PRGS%\senv\custom\profile")
+)
+
+set "profile_name="
+if defined profile_filename (
+    for /f %%a in (%profile_filename%) do ( set profile_name=%%a)
+    %_info% "[%~nx0] profile name found: '!profile_name!'"
+)
+if not defined profile_name ( goto:proceed)
+set s="setupsdir_%profile_name%.bat"
+set "custom_dir=%PRGS%\senv\custom"
+if not exist "%custom_dir%\%s%" (
+    %_fatal% "[%~nx0] setupsdir script '%s%' does not exist" 2
+)
+call "%custom_dir%\%s%"
+if errorlevel 1 (
+    %_error% "[%~nx0] Unable to call '%custom_dir%\%s%'" && exit /b 1)
+)
+
+:proceed
+%_info% "[%~nx0] Install '%~2', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
 
 if "%~2"=="" (
-    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or setup)." 4
+    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or local setup or remote setup)." 4
 )
 
 set "sfound=setup"
+set "sfound_path="
 dir /b "%setup_dir%"|findstr "%~2" > a
 if errorlevel 1 (
     dir /b "%dl_dir%"|findstr "%~2" > a
     if errorlevel 1 (
-        %_fatal%  "No '%~2' pattern found in setup or Downloads" 6
+        dir /b "%setupsdir%"|findstr "%~2" > a
+        if errorlevel 1 (
+            %_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
+        )
+        set "sfound=remote setup"
+        set "sfound_path=%setupsdir%"
     )
     set "sfound=Downloads"
+    set "sfound_path=%dl_dir%"
 )
 
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
@@ -42,11 +72,14 @@ for /F "delims=" %%f in (a) do ( set fname=%%f)
 %_info% "[%~nx0] One match found in '%sfound%': '%fname%'"
 del a
 
-if "%sfound%"=="Downloads" (
-    %_task% "[%~nx0] Must move match '%fname%' from Downloads to setup"
-    call:rbc "%dl_dir%"
+if not "%sfound%"=="setup" (
+    %_task% "[%~nx0] Must move match '%fname%' from '%sfound%' to local setup"
+    rem call:rbc dst src
+    call:rbc "%setup_dir%" "%sfound_path%"
+    %_ok% "[%~nx0] '%fname%' moved from '%sfound%' ('%sfound_path%') to local setup ('%%')"
+)
+if exist "%dl_dir%\%fname%" (
     del "%dl_dir%\%fname%" || %_fatal% "[%~nx0] Unable to delete '%dl_dir%\%fname%'" 88
-    %_ok% "'%fname%' moved from Downloads to setup"
 )
 
 set "prg_name=%~1"
@@ -73,7 +106,7 @@ if not exist "%PRGS%\%prgs_folder%" (
 )
 
 if not exist "%PRGS%\%prgs_folder%" (
-    %_fatal% "Target folder '%PRGS%\%prgs_folder%' does not exist"
+    %_fatal% "[%~nx0] Target folder '%PRGS%\%prgs_folder%' does not exist"
 )
 
 for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder=%%~ni"
