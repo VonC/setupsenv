@@ -44,22 +44,20 @@ if "%~2"=="" (
 )
 
 set "sfound=setup"
-set "sfound_path="
-dir /b "%setup_dir%"|findstr "%~2" > a
-if errorlevel 1 (
-    dir /b "%dl_dir%"|findstr "%~2" > a
-    if errorlevel 1 (
-        dir /b "%setupsdir%"|findstr "%~2" > a
-        if errorlevel 1 (
-            %_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
-        )
-        set "sfound=remote setup"
-        set "sfound_path=%setupsdir%"
-    )
-    set "sfound=Downloads"
-    set "sfound_path=%dl_dir%"
-)
+set "sfound_path=%setup_dir%"
+call:check_folder "%sfound_path%" "%~2"
+if not errorlevel 1 ( goto:count )
+set "sfound=Downloads"
+set "sfound_path=%dl_dir%"
+call:check_folder "%sfound_path%" "%~2"
+if not errorlevel 1 ( goto:count )
+set "sfound=remote setup"
+set "sfound_path=%setupsdir%"
+call:check_folder "%sfound_path%" "%~2"
+if not errorlevel 1 ( goto:count )
+%_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
 
+:count
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
 set COUNT=0
 for /F "tokens=*" %%N in (a) do set /a COUNT+=1
@@ -175,3 +173,42 @@ if not "%fname:apache-maven-=%"=="%fname%" (
 )
 set "sln="
 goto:eof
+
+:check_folder
+set "folder=%~1"
+set "pattern=%~2"
+%_info% "[%~nx0]   Check folder '%folder%' for pattern '%pattern%'"
+dir /b "%folder%\%pattern%" >a 2>NUL
+if not errorlevel 1 ( goto:eof )
+rem if env var pattern value does not start with '*', add '*' at its beginning
+set "start_pattern="
+if not "%pattern:~0,1%"=="*" set "start_pattern=*%pattern%"
+if defined start_pattern (
+    %_info% "[%~nx0]   Check folder '%folder%' for start pattern '%start_pattern%'"
+    dir /b "%folder%\%start_pattern%" >a 2>NUL
+    if not errorlevel 1 (
+        set "pattern=%start_pattern%"
+        goto:eof
+    )
+)
+rem if env var pattern value does not end with '*', add '*' at its end
+set "end_pattern="
+if not "%pattern:~-1%"=="*" set "end_pattern=%pattern%*"
+if defined end_pattern (
+    %_info% "[%~nx0]   Check folder '%folder%' for end pattern '%end_pattern%'"
+    dir /b "%folder%\%end_pattern%" >a 2>NUL
+    if not errorlevel 1 (
+        set "pattern=%end_pattern%"
+        goto:eof
+    )
+)
+if defined start_pattern (
+    if defined end_pattern (
+        set "pattern=*%pattern%*"
+        %_info% "[%~nx0]   Check folder '%folder%' for start-end pattern '!pattern!'"
+        dir /b "%folder%\!pattern!" >a 2>NUL
+        if not errorlevel 1 ( goto:eof )
+    )
+)
+set "pattern="
+exit /b 1
