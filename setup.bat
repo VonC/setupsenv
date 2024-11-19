@@ -299,7 +299,7 @@ if not errorlevel 1 (
     sed -i "s/^\s\+[\r\n]*$//g" "%script_dir%\tmp"
 )
 del "%HOME%\bin\senv.local.doskey"
-move "%script_dir%\tmp" "%HOME%\bin\senv.local.doskey"
+move "%script_dir%\tmp" "%HOME%\bin\senv.local.doskey" >NUL
 cd /d "%script_dir%"
 rem del /F "%script_dir%\tmp" 2>NUL
 
