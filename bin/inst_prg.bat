@@ -55,6 +55,12 @@ set "sfound=remote setup"
 set "sfound_path=%setupsdir%"
 call:check_folder "%sfound_path%" "%~2"
 if not errorlevel 1 ( goto:count )
+if not exist "%USERPROFILE%\senv_setups\setups" (goto:not_found)
+set "sfound=user setup"
+set "sfound_path=%USERPROFILE%\senv_setups\setups"
+call:check_folder "%sfound_path%" "%~2"
+if not errorlevel 1 ( goto:count )
+:not_found
 %_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
 
 :count
