@@ -40,7 +40,12 @@ if errorlevel 1 (
 %_info% "[%~nx0] Install '%~2', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
 
 if "%~2"=="" (
-    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or local setup or remote setup)." 4
+    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or local setup or remote setup) (symlink name, default to current)." 4
+)
+
+call "%script_dir%\select_prg.bat" "%~1"
+if not defined prg_id (
+    %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
 )
 
 set "sfound=setup"
@@ -87,21 +92,13 @@ if exist "%dl_dir%\%fname%" (
 )
 
 set "prg_name=%~1"
-set "prgs_folder=%~1"
-:: Symlink name, defautl to current if no name returned by :symlink_name
+
+:: Symlink name, default to current if no name returned by :symlink_name
 set "sln=%~3"
 if not defined sln ( call:symlink_name "%fname%" )
 if not defined sln ( set "sln=current" )
 
-rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
-set "_UCASE=ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-set "_LCASE=abcdefghijklmnopqrstuvwxyz"
-for /l %%a in (0,1,25) do (
-   call set "_FROM=%%_UCASE:~%%a,1%%
-   call set "_TO=%%_LCASE:~%%a,1%%
-   call set "prgs_folder=%%prgs_folder:!_FROM!=!_TO!%%
-)
-set "prgs_folder=%prgs_folder%s"
+set "prgs_folder=%prg_id%s"
 
 if not exist "%PRGS%\%prgs_folder%" (
     %_task% "[%~nx0] Must create folder '%PRGS%\%prgs_folder%'"
