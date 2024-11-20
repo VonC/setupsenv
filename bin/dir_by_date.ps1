@@ -1,7 +1,7 @@
 param (
     [string]$folder,
     [string]$pattern,
-    [string]$envVarName = "RESULT"
+    [string]$existingFile=""
 )
 
 if (-not $folder -or -not $pattern) {
@@ -17,27 +17,28 @@ Import-Module Microsoft.PowerShell.Management
 Import-Module Microsoft.PowerShell.Utility
 
 # Collect the formatted results
-$result = Get-ChildItem -Path $folder -Filter $pattern | ForEach-Object {
-  $creationDate = $_.CreationTime
+$newestFile = Get-ChildItem -Path $folder -Filter $pattern | Sort-Object CreationTime | Select-Object -Last 1
+
+if ($newestFile) {
+  $creationDate = $newestFile.CreationTime
   $formattedDate = $creationDate.ToString("yyyyMMdd-HHmm")
-  "$formattedDate $($_.Name)"
-}
+  $resultString = "$formattedDate $($newestFile.Name)"
 
-# Join the results into a single string
-$resultString = $result -join "`n"
+  # Compare resultString with existingFile
+  if (-not $existingFile) {
+    # If existingFile is empty, return resultString
+    Write-Output $resultString
+  } else {
+    # Extract the date part from existingFile
+    $existingDate = $existingFile.Split(' ')[0]
 
-# Check if the environment variable is already set
-if (Test-Path "env:$envVarName") {
-  $currentValue = Get-Item -Path "env:$envVarName"
-  Set-Item -Path "env:$envVarName" -Value "$($currentValue.Value)`n$resultString"
+    # Compare the dates
+    if ($formattedDate -gt $existingDate) {
+        Write-Output $resultString
+    } else {
+        Write-Output $existingFile
+    }
+  }
 } else {
-  Set-Item -Path "env:$envVarName" -Value $resultString
+  exit 1
 }
-
-# Output the result for verification
-$finalValue = (Get-Item -Path "env:$envVarName").Value -replace "`n", [System.Environment]::NewLine
-#Write-Host "Environment variable '$envVarName' set to:"
-#Write-Host $finalValue
-
-# Output the final value for CMD to capture
-Write-Output $finalValue
