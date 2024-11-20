@@ -26,7 +26,7 @@ if not exist "%PRGS%\gums\current\gum.exe" (
   set "PATH=%PRGS%\gums\current;%PATH%"
 )
 
-REM read the list of programs from script_dir, from %HOME% (%USERPROFILE%\senv_home) and %USERPROFILE%\senv_setups (the private setup folder): both are names prgs.list. The format is name,versions,folder,pattern. A name can be  with lower or upercase letters and include spaces. A folder is in lowercase, without spaces, versions are separated by semicolon (there can be 0 to n versions, 0 meaning 'latest'), and the pattern is a glob expression intended to be use by a dir command. The end result is 4 arrays variables: prg_names, prg_versions, prg_folders, prg_patterns
+REM read the list of programs from script_dir, from %HOME% (%USERPROFILE%\senv_home) and %USERPROFILE%\senv_setups (the private setup folder): both are names prgs.list. The format is name,versions,folder,pattern. A name can be  with lower or uppercase letters and include spaces. A folder is in lowercase, without spaces, versions are separated by semicolon (there can be 0 to n versions, 0 meaning 'latest'), and the pattern is a glob expression intended to be use by a dir command. The end result is 4 arrays variables: prg_names, prg_versions, prg_folders, prg_patterns
 
 
 REM Initialize arrays
