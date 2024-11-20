@@ -108,7 +108,7 @@ if not defined prg_version (
   )
 )
 %_info% "[%~nx0] prg_version='%prg_version%'"
-endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_patterns=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%"
+endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_pattern=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%"
 if defined standalone_call (
   call %senv_dir%\batcolors\echos_macros.bat unset
   set "senv_dir="
