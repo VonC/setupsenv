@@ -40,7 +40,7 @@ if errorlevel 1 (
 %_info% "[%~nx0] Install '%~2', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
 
 if "%~2"=="" (
-    %_fatal%  "Usage: inst_prg (prgname) (pattern) (pattern to search for in Downloads or local setup or remote setup) (symlink name, default to current)." 4
+    %_fatal%  "Usage: inst_prg (prgname) (pattern or latest) (pattern to search for in Downloads or local setup or remote setup) (symlink name, default to current)." 4
 )
 
 call "%script_dir%\select_prg.bat" "%~1"
@@ -50,6 +50,8 @@ if not defined prg_id (
 
 set "sfound=setup"
 set "sfound_path=%setup_dir%"
+set "sfound_most_recent="
+set "sfound_most_recent_folder="
 call:check_folder "%sfound_path%" "%~2"
 if not errorlevel 1 ( goto:count )
 set "sfound=Downloads"
@@ -65,7 +67,11 @@ set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
 call:check_folder "%sfound_path%" "%~2"
 if not errorlevel 1 ( goto:count )
+if defined sfound_most_recent (
+    %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
+)
 :not_found
+goto:eof
 %_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
 
 :count
@@ -180,6 +186,7 @@ goto:eof
 :check_folder
 set "folder=%~1"
 set "pattern=%~2"
+if not "%pattern:latest=%"=="%pattern%" ( goto:record_latest )
 %_info% "[%~nx0]   Check folder '%folder%' for pattern '%pattern%'"
 dir /b "%folder%\%pattern%" >a 2>NUL
 if not errorlevel 1 ( goto:eof )
@@ -214,4 +221,18 @@ if defined start_pattern (
     )
 )
 set "pattern="
+exit /b 1
+:record_latest
+if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( pattern= "%pattern:-latest=%" )
+if not defined pattern ( %_fatal% "[%~nx0] check_folder/record_latest: pattern empty from '%~2'" 33 )
+%_info% "[%~nx0]   Record latest from folder '%folder%' for pattern '%pattern%'"
+for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\dir_by_date.ps1" "%folder%" "%pattern%" "%sfound_most_recent%"') do (
+    %_info% "[%~nx0] Found most recent '%%a' in '%folder%' for pattern '%pattern%', vs. sfound_most_recent '%sfound_most_recent%'"
+    if defined sfound_most_recent (
+        if not "!sfound_most_recent!"=="%%a" ( set "sfound_most_recent_folder=%folder%" )
+    ) else (
+        set "sfound_most_recent_folder=%folder%"
+    )
+    set "sfound_most_recent=%%a"
+)
 exit /b 1
