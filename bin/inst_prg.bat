@@ -69,6 +69,7 @@ call:check_folder "%sfound_path%" "%~2"
 if not errorlevel 1 ( goto:count )
 if defined sfound_most_recent (
     %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
+    set "sfound_path=%sfound_most_recent_folder%"
 )
 :not_found
 goto:eof
