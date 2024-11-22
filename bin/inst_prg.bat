@@ -244,9 +244,19 @@ goto:eof
 set "folder=%~1"
 set "pattern=%~2"
 if not "%pattern:latest=%"=="%pattern%" ( goto:record_latest )
-%_info% "[%~nx0]   Check folder '%folder%' for pattern '%pattern%'"
+if "%prg_name%"=="ls" ( %_task% "[%~nx0] Ls: Must look for '%prg_pattern%' in '%folder%'" ) else (
+    %_info% "[%~nx0]   Check folder '%folder%' for pattern '%pattern%'" )
 dir /b "%folder%\%pattern%" >a 2>NUL
-if not errorlevel 1 ( goto:eof )
+if not errorlevel 1 (
+    if not "%prg_name%"=="ls" ( goto:eof )
+    %_ok% "[%~nx0] Ls: pattern '%pattern%' found in '%folder%'"
+    dir /B /OD "%folder%\%pattern%"
+    exit /b 1
+)
+if "%prg_name%"=="ls" (
+    %_error% "[%~nx0] Ls: No '%prg_pattern%' pattern found in '%folder%'"
+    exit /b 1
+)
 rem if env var pattern value does not start with '*', add '*' at its beginning
 set "start_pattern="
 if not "%pattern:~0,1%"=="*" set "start_pattern=*%pattern%"
