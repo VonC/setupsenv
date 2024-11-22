@@ -443,12 +443,21 @@ del "%script_dir%\dwl_eclipse.tmp"
 goto:eof
 
 :dwl_terminal
-
 set "repo=microsoft/terminal"
 if "%version%"=="latest" ( call :get_latest_version_from_github )
 %_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
 rem https://github.com/microsoft/terminal/releases/download/v1.21.2911.0/Microsoft.WindowsTerminal_1.21.2911.0_x64.zip
 set "file=Microsoft.WindowsTerminal_%version%_x64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_superfile
+set "repo=yorukot/superfile"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/yorukot/superfile/releases/download/v1.1.6/superfile-windows-v1.1.6-amd64.zip
+set "file=%prgname%-windows-v%version%-amd64.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
