@@ -10,6 +10,55 @@ for %%i in ("%PRGS%\setup") do (
 
 %_info% "[%~nx0] 'script_dir(inst_prg)='%script_dir%'"
 
+:: Define the output file
+set "man_file=man_inst_prg.txt"
+
+:: Echo the man-like usage message into the file
+(
+echo _
+echo NAME
+echo     inst_prg.bat - Install a program from a specified source
+echo _
+echo SYNOPSIS
+echo     inst_prg.bat [prgname] [pattern or latest] [symlink name]
+echo -
+echo DESCRIPTION
+echo     This script installs a program by searching for the specified pattern in various directories and optionally creates a symlink.
+echo _
+echo     prgname
+echo         ^(Optional^) The name of the program to install. Display the list of programs to choose from if not specified.
+echo _
+echo     pattern or latest
+echo         ^(Optional^) The pattern to search for in the specified directories or the keyword 'latest' to use the most recent version. Defaults to 'latest' if not specified.
+echo _
+echo     symlink name
+echo         ^(Optional^) The name of the symlink to create. Defaults to 'current' if not specified.
+echo _
+echo EXAMPLES
+echo     inst_prg.bat myprogram
+echo         Install the latest version of 'myprogram' and create a symlink named 'current'.
+echo _
+echo     inst_prg.bat myprogram "myprogram-1.0.*"
+echo         Install 'myprogram' version 1.0 from the specified pattern and create a symlink named 'current'.
+echo _
+echo     inst_prg.bat myprogram "myprogram-1.0.*" myprogram_symlink
+echo         Install 'myprogram' version 1.0 from the specified pattern and create a symlink named 'myprogram_symlink'.
+echo _
+echo AUTHOR
+echo     VonC
+) > "%script_dir%\%man_file%"
+
+set "ECHOS_POST_FILE="
+if "%~1"=="/?" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
+if "%~1"=="-h" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
+if "%~1"=="--help" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
+if defined ECHOS_POST_FILE (
+    %_info% "[%~nx0] Usage:"
+    del "%script_dir%\%man_file%" 2>NUL
+    set "ECHOS_POST_FILE="
+    goto:eof
+)
+
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
