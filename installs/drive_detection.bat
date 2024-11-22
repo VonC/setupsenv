@@ -70,7 +70,7 @@ for /f "tokens=* delims=" %%i in ('type "%script_dir%\tmp_drive"') do (
     )
 )
 :found
-echo done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'
+%_info% "[%~nx0] done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'"
 del "%script_dir%\tmp_drive"
 del "%script_dir%\tmp_drive_echo"
 if not "%driveLetter%"=="" ( goto:drive_found )
