@@ -26,7 +26,7 @@ if defined profile_filename (
     %_info% "[%~nx0] profile name found: '!profile_name!'"
 )
 if not defined profile_name ( goto:proceed)
-set s="setupsdir_%profile_name%.bat"
+set "s=setupsdir_%profile_name%.bat"
 set "custom_dir=%PRGS%\senv\custom"
 if not exist "%custom_dir%\%s%" (
     %_fatal% "[%~nx0] setupsdir script '%s%' does not exist" 2
