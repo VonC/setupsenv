@@ -67,13 +67,19 @@ if errorlevel 1 (
         %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
     )
     if defined prg_pattern (
-        if not "%prg_pattern%"=="%~2" ( set "prg_pattern=%~2" )
+        if not "!prg_pattern!"=="%~2" (
+            if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=!prg_pattern!-latest" )
+        )
+    ) else (
+        if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=latest" )
     )
 ) else (
     set "prg_name=ls"
     set "prg_pattern=%~1"
-    %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='%prg_pattern%'"
+    %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='!prg_pattern!'"
 )
+rem %_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
+rem goto:eof
 
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
@@ -116,7 +122,7 @@ echo - remote setupsdir='%setupsdir%'
 echo -------------------------------------
 ) > "post_FILE.txt"
 set "ECHOS_POST_FILE=post_FILE.txt"
-%_info% "[%~nx0] Install '%prg_name%' for profile '%profile_name%'"
+%_info% "[%~nx0] Install '%prg_name%' for profile '%profile_name%', pattern '%prg_pattern%'"
 set "ECHOS_POST_FILE="
 del "post_FILE.txt"
 
@@ -306,7 +312,7 @@ if defined start_pattern (
 set "pattern="
 exit /b 1
 :record_latest
-if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( pattern= "%pattern:-latest=%" )
+if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( set "pattern=%pattern:-latest=%" )
 if not defined pattern ( %_fatal% "[%~nx0] check_folder/record_latest: pattern empty from '%~2'" 33 )
 %_info% "[%~nx0]   Record latest from folder '%folder%' for pattern '%pattern%'"
 for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\dir_by_date.ps1" "%folder%" "%pattern%" "%sfound_most_recent%"') do (
