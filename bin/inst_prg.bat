@@ -79,6 +79,12 @@ pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROF
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
 
+if defined INST_PRG_DEBUG (
+    %_ok% "[%~nx0] INST_PRG_DEBUG defined, all intermediate messages will be displayed"
+) else (
+    %_warning% "[%~nx0] INST_PRG_DEBUG not defined, only final profile and folder names will be displayed"
+    set "ECHOS_OFF=1"
+)
 set "profile_filename="
 if exist "%HOME%\bin\profile" ( set "profile_filename=%HOME%\bin\profile")
 if not defined profile_filename (
@@ -98,11 +104,21 @@ if not exist "%custom_dir%\%s%" (
 )
 call "%custom_dir%\%s%"
 if errorlevel 1 (
-    %_error% "[%~nx0] Unable to call '%custom_dir%\%s%'" && exit /b 1)
+    %_fatal% "[%~nx0] Unable to call '%custom_dir%\%s%'" 111)
 )
 
 :proceed
-%_info% "[%~nx0] Install '%prg_name%', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
+set "ECHOS_OFF="
+(
+echo - dl_dir          ='%dl_dir%'
+echo - setup_dir       ='%setup_dir%'
+echo - remote setupsdir='%setupsdir%'
+echo -------------------------------------
+) > "post_FILE.txt"
+set "ECHOS_POST_FILE=post_FILE.txt"
+%_info% "[%~nx0] Install '%prg_name%' for profile '%profile_name%'"
+set "ECHOS_POST_FILE="
+del "post_FILE.txt"
 
 set "sfound=setup"
 set "sfound_path=%setup_dir%"
