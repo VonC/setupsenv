@@ -108,20 +108,20 @@ set "sfound=setup"
 set "sfound_path=%setup_dir%"
 set "sfound_most_recent="
 set "sfound_most_recent_folder="
-call:check_folder "%sfound_path%" "%~2"
+call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 set "sfound=Downloads"
 set "sfound_path=%dl_dir%"
-call:check_folder "%sfound_path%" "%~2"
+call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 set "sfound=remote setup"
 set "sfound_path=%setupsdir%"
-call:check_folder "%sfound_path%" "%~2"
+call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 if not exist "%USERPROFILE%\senv_setups\setups" (goto:not_found)
 set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
-call:check_folder "%sfound_path%" "%~2"
+call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 if defined sfound_most_recent (
     %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
@@ -129,7 +129,7 @@ if defined sfound_most_recent (
 )
 :not_found
 goto:eof
-%_fatal%  "No '%~2' pattern found in Downloads or local or remote setup dirs" 6
+%_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
 
 :count
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
