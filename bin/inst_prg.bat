@@ -59,6 +59,11 @@ if defined ECHOS_POST_FILE (
     goto:eof
 )
 
+call "%script_dir%\select_prg.bat" "%~1"
+if not defined prg_id (
+    %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
+)
+
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
@@ -86,16 +91,10 @@ if errorlevel 1 (
 )
 
 :proceed
-%_info% "[%~nx0] Install '%~2', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
+%_info% "[%~nx0] Install '%prg_name%', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
 
-if "%~2"=="" (
-    %_fatal%  "Usage: inst_prg (prgname) (pattern or latest) (pattern to search for in Downloads or local setup or remote setup) (symlink name, default to current)." 4
-)
+goto:eof
 
-call "%script_dir%\select_prg.bat" "%~1"
-if not defined prg_id (
-    %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
-)
 
 set "sfound=setup"
 set "sfound_path=%setup_dir%"
