@@ -12,3 +12,4 @@ tmp*
 *.tmp
 *.sha1
 old/
+man_*.txt
