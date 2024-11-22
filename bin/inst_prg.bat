@@ -59,9 +59,20 @@ if defined ECHOS_POST_FILE (
     goto:eof
 )
 
-call "%script_dir%\select_prg.bat" "%~1"
-if not defined prg_id (
-    %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
+set "prg_name=%~1"
+echo %prg_name% | findstr /C:"*" >nul 2>&1
+if errorlevel 1 (
+    call "%script_dir%\select_prg.bat" "%~1"
+    if not defined prg_id (
+        %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
+    )
+    if defined prg_pattern (
+        if not "%prg_pattern%"=="%~2" ( set "prg_pattern=%~2" )
+    )
+) else (
+    set "prg_name=ls"
+    set "prg_pattern=%~1"
+    %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='%prg_pattern%'"
 )
 
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
@@ -92,9 +103,6 @@ if errorlevel 1 (
 
 :proceed
 %_info% "[%~nx0] Install '%prg_name%', dl_dir='%dl_dir%', setup_dir='%setup_dir%', remote setupsdir='%setupsdir%'"
-
-goto:eof
-
 
 set "sfound=setup"
 set "sfound_path=%setup_dir%"
