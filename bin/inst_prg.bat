@@ -151,7 +151,7 @@ if defined sfound_most_recent (
     %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
     set "sfound_path=%sfound_most_recent_folder%"
     set "sfound=%sfound_most_recent_name%"
-    %_info% "[%~nx0] One lastest match found in '!sfound!': '%fname%' in '!sfound_path!'"
+    %_info% "[%~nx0] One lastest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
     goto:proceed_install
 )
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
@@ -200,8 +200,7 @@ if not exist "%PRGS%\%prgs_folder%" (
 
 for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder=%%~ni"
 
-%_task% "[%~nx0] '%prg_name%': Must check/install '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
-goto:eof
+%_task% "[%~nx0] '%prg_name%': Must check/install fname '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "[%~nx0] Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
@@ -260,7 +259,8 @@ if not "%fname:OpenJDK=%"=="%fname%" (
     goto:eof
 )
 if not "%fname:apache-maven-=%"=="%fname%" (
-    set "sln=mvn%fname:apache-maven-%"
+    set "sln=mvn%fname:apache-maven-=%"
+    set "sln=!sln:-bin.zip=!"
     goto:eof
 )
 set "sln="
@@ -325,6 +325,7 @@ for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir
         if not "!sfound_most_recent!"=="%%a" (
             set "sfound_most_recent_folder=%folder%"
             set "fname=%%a"
+            set "fname=!fname:* =!"
             set "sfound_most_recent_name=%sfound%"
             %_ok% "[%~nx0] set new sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
         ) else (
@@ -333,6 +334,7 @@ for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir
     ) else (
         set "sfound_most_recent_folder=%folder%"
         set "fname=%%a"
+        set "fname=!fname:* =!"
         set "sfound_most_recent_name=%sfound%"
         %_ok% "[%~nx0] sfound_most_recent not defined, set sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
     )
