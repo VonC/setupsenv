@@ -1,4 +1,3 @@
-
 @echo off
 setlocal enabledelayedexpansion
 
@@ -20,6 +19,7 @@ if not exist "%PRGS%\%prgs_folder%\" (
     if errorlevel 1 (
         %_fatal% "[%~nx0] Unable to create '%PRGS%\%prgs_folder%' for '%sln%' to reference '%prg_folder%'" 1
     )
+    %_ok% "[%~nx0] Folder '%prgs_folder%' created"
 ) else (
     %_ok% "[%~nx0] Folder '%prgs_folder%' already exists"
 )
@@ -42,14 +42,26 @@ if errorlevel 1 (
 goto:eof
 
 :create
-if "%instPath%"=="" (
-    call :check_subdir
-) else (
+if not "%instPath%"=="" (
     set "tpath=%prg_folder%"
+    goto:mklink_tpath
 )
+
+set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
+:loop
+set "subdir="
+call :check_subdir "%tpath%"
+if defined subdir (
+    %_warning% "[%~nx0] one subdirectory detected '%subdir%': looping"
+    goto:loop
+)
+:mklink_tpath
+%_task% "[%~nx0] Must create %sln% symlink for '!tpath!'"
 mklink /J "%PRGS%\%prgs_folder%\%sln%" "!tpath!"
 if errorlevel 1 (
-    %_warning% "[%~nx0] Unable to create %sln% symlink for '%prgs_folder%\%prg_folder%' (!tpath!)"
+    %_warning% "[%~nx0] Unable to create %sln% symlink for '!tpath!')"
+) else (
+    %_ok% "[%~nx0] symlink '%sln%' created for '!tpath!'"
 )
 goto:eof
 
@@ -72,13 +84,21 @@ if exist "%PRGS%\%prgs_folder%\%sln%" (
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_fatal% "[%~nx0] '%prg_folder%' is missing in folder '%prgs_folder%'" 3
 )
-call :check_subdir
-%_warning% "[%~nx0] Must rename program '%prg_folder%' (!tpath!) to '%sln%'"
+set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
+:loop
+set "subdir="
+call :check_subdir "%tpath%"
+if defined subdir (
+    %_warning% "[%~nx0] (network) one subdirectory detected '%subdir%': looping"
+    goto:loop
+)
+%_task% "[%~nx0] Must rename program '%prg_folder%' (!tpath!) to '%sln%'"
 rem %_fatal% "[%~nx0] stop" 1
 move "!tpath!" "%PRGS%\%prgs_folder%\%sln%"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to rename program '%prg_folder%' to '%sln%' in folder '%prgs_folder%'" 2
 )
+%_ok% "[%~nx0] Program '%prg_folder%' renamed to '%sln%' in folder '%prgs_folder%'"
 ping 127.0.0.1 -n 4 > nul
 if exist "%prg_folder%" (
     rmdir "%prg_folder%"
@@ -101,7 +121,7 @@ goto:eof
 REM https://stackoverflow.com/questions/11004045/batch-file-counting-number-of-files-in-folder-and-storing-in-a-variable
 REM https://stackoverflow.com/questions/25702814/code-to-determine-target-of-remote-junction
 rem if not target=="%pname% (
-set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
+set "tpath=%~1%"
 rem dir "%tpath%"
 for /f %%A in ('dir "%tpath%" ^| C:\Windows\System32\find " "') do (
     set "cnt=!cntd!"
@@ -121,7 +141,7 @@ rem echo "path with subdir='%tpath%'"
 call :Trim tpath %tpath%
 rem set stpath=%tpath:~0,-1%
 rem echo "final tpath='%tpath%'"
-EndLocal & set tpath=%tpath%
+EndLocal & set "tpath=%tpath%" & set "subdir=%subdir%"
 exit /b
 GOTO :EOF
 
