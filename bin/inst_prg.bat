@@ -68,7 +68,11 @@ if errorlevel 1 (
     )
     if defined prg_pattern (
         if not "!prg_pattern!"=="%~2" (
-            if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=!prg_pattern!-latest" )
+            if not "%~2"=="latest" (
+               if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=!prg_pattern!-latest" )
+            ) else (
+                set "prg_pattern=!prg_pattern!-latest"
+            )
         )
     ) else (
         if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=latest" )
@@ -318,7 +322,7 @@ exit /b 1
 :record_latest
 if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( set "pattern=%pattern:-latest=%" )
 if not defined pattern ( %_fatal% "[%~nx0] check_folder/record_latest: pattern empty from '%~2'" 33 )
-%_info% "[%~nx0]   Record latest from folder '%folder%' for pattern '%pattern%'"
+%_info% "[%~nx0]   Record latest from folder '%folder%' for pattern '%pattern%', prg_pattern='%prg_pattern%'"
 for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\dir_by_date.ps1" "%folder%" "%pattern%" "%sfound_most_recent%"') do (
     %_info% "[%~nx0] Found most recent '%%a' in '%folder%' for pattern '%pattern%', vs. sfound_most_recent '%sfound_most_recent%'"
     if defined sfound_most_recent (
