@@ -130,6 +130,7 @@ set "sfound=setup"
 set "sfound_path=%setup_dir%"
 set "sfound_most_recent="
 set "sfound_most_recent_folder="
+set "sfound_most_recent_name="
 call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 set "sfound=Downloads"
@@ -145,12 +146,14 @@ set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
 call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
+:not_found
 if defined sfound_most_recent (
     %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
     set "sfound_path=%sfound_most_recent_folder%"
+    set "sfound=%sfound_most_recent_name%"
+    %_info% "[%~nx0] One lastest match found in '!sfound!': '%fname%' in '!sfound_path!'"
+    goto:proceed_install
 )
-:not_found
-goto:eof
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
 
 :count
@@ -165,7 +168,7 @@ if not "%count%"=="1" (
 for /F "delims=" %%f in (a) do ( set fname=%%f)
 %_info% "[%~nx0] One match found in '%sfound%': '%fname%'"
 del a
-
+:proceed_install
 if not "%sfound%"=="setup" (
     %_task% "[%~nx0] Must move match '%fname%' from '%sfound%' to local setup"
     rem call:rbc dst src
@@ -198,6 +201,7 @@ if not exist "%PRGS%\%prgs_folder%" (
 for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder=%%~ni"
 
 %_task% "[%~nx0] '%prg_name%': Must check/install '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
+goto:eof
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "[%~nx0] Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
@@ -318,9 +322,19 @@ if not defined pattern ( %_fatal% "[%~nx0] check_folder/record_latest: pattern e
 for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\dir_by_date.ps1" "%folder%" "%pattern%" "%sfound_most_recent%"') do (
     %_info% "[%~nx0] Found most recent '%%a' in '%folder%' for pattern '%pattern%', vs. sfound_most_recent '%sfound_most_recent%'"
     if defined sfound_most_recent (
-        if not "!sfound_most_recent!"=="%%a" ( set "sfound_most_recent_folder=%folder%" )
+        if not "!sfound_most_recent!"=="%%a" (
+            set "sfound_most_recent_folder=%folder%"
+            set "fname=%%a"
+            set "sfound_most_recent_name=%sfound%"
+            %_ok% "[%~nx0] set new sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
+        ) else (
+            %_warning% "[%~nx0] sfound_most_recent unchanged ('%%a'), keep '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
+        )
     ) else (
         set "sfound_most_recent_folder=%folder%"
+        set "fname=%%a"
+        set "sfound_most_recent_name=%sfound%"
+        %_ok% "[%~nx0] sfound_most_recent not defined, set sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
     )
     set "sfound_most_recent=%%a"
 )
