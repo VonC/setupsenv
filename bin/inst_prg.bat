@@ -155,7 +155,7 @@ if defined sfound_most_recent (
     %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
     set "sfound_path=%sfound_most_recent_folder%"
     set "sfound=%sfound_most_recent_name%"
-    %_info% "[%~nx0] One lastest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
+    %_info% "[%~nx0] One latest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
     goto:proceed_install
 )
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
