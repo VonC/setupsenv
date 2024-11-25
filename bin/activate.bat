@@ -20,9 +20,14 @@ if defined VIRTUAL_ENV (
     for %%j in ("%VIRTUAL_ENV%") do ( set "venv_name=%%~nxj" )
 )
 if defined venv_name (
-    %_info% "Current venv acticated: '%venv_name%'"
+    %_info% "Current venv activated: '%venv_name%'"
     if exist "venvs\%venv_name%" (
-        %_ok% "Venv '%venv_name%' already activated for project '%project_name%'"
+        %_ok% "Venv '%venv_name%' already! activated for project '%project_name%'"
+        where python.exe 1>nul 2>nul
+        if errorlevel 1 (
+            %_warning% "VIRTUAL_ENV set, but not added to the PATH: re-activating."
+            goto:activate
+        )
         goto:eof
     )
     %_task% "Must deactivate old current venv '%venv_name%' before activating the one from '%project_name%'"
@@ -32,6 +37,8 @@ if defined venv_name (
     )
     %_ok% "Old current venv '%venv_name%' deactivated"
 )
+
+:activate
 set "VIRTUAL_ENV="
 set "VIRTUAL_ENV_PROMPT="
 
