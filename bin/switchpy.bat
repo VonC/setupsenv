@@ -58,6 +58,21 @@ if not "%VIRTUAL_ENV%" == "" (
     ) else (
         del "%ccd%\switchpy_virtual_env.tmp"
         %_ok% "[%~nx0] Py env for 'Python %PYTHON_VERSION%' already activated"
+        where python.exe >NUL 2>NUL
+        if errorlevel 1 (
+            %_warning% "[%~nx0] VIRTUAL_ENV set, but not added to the PATH: re-activating."
+            %_task% "[%~nx0] Must re-activating."
+            call "%VIRTUAL_ENV%\Scripts\activate.bat"
+            if errorlevel 1 (
+                %_error% "[%~nx0] Unable to re-activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
+                call :unset
+                exit /b 1
+            ) else (
+                %_ok% "[%~nx0] Py env '%venv_name%' for 'Python %PYTHON_VERSION%' re-activated"
+            )
+        ) else (
+            %_ok% "[%~nx0] PATH for 'Python %PYTHON_VERSION%' already set"
+        )
         call :unset
         goto:eof
     )
