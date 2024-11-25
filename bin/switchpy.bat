@@ -89,6 +89,12 @@ if defined SWITCHPY_CHOICE (
     set "choice="
 )
 if not defined choice (
+    set "choice=%~2"
+)
+if "%choice%"=="no" ( set "choice=No venv")
+if "%choice%"=="global" ( set "choice=venv on %PYTHON_ROOT%\venvs")
+if "%choice%"=="local" ( set "choice=venv on %ccd%\venvs")
+if not defined choice (
     "%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %ccd%\venvs"> "%ccd%\switchpy.tmp"
     ping -n 1 -w 300 127.0.0.1 > nul
     for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set choice=%%a
