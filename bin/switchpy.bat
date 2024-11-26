@@ -59,7 +59,7 @@ if defined VIRTUAL_ENV (
     rem echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
     rem ping -n 1 -w 300 127.0.0.1 > nul
     rem findstr /c:"python_%PYTHON_VERSION%_%project_name%" "%ccd%\switchpy_virtual_env.tmp" >nul
-    if not "%VIRTUAL_ENV%"=="%ccd%\venvs\python_%PYTHON_VERSION%_%project_name%"
+    if not "%VIRTUAL_ENV%"=="%ccd%\venvs\python_%PYTHON_VERSION%_%project_name%" (
         %_task% "[%~nx0] Must deactivate: different venv activated: '%VIRTUAL_ENV%'"
         set "OLD_PYTHON_VERSION=%VIRTUAL_ENV:*python_=%"
         call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
@@ -76,8 +76,9 @@ if defined VIRTUAL_ENV (
         where python.exe >NUL 2>NUL
         if errorlevel 1 (
             %_warning% "[%~nx0] VIRTUAL_ENV set, but not added to the PATH: re-activating."
-            %_task% "[%~nx0] Must re-activating."
-            sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%VIRTUAL_ENV%,g" "%VIRTUAL_ENV%\Scripts\activate.bat"
+            %_task% "[%~nx0] Must re-activating VIRTUAL_ENV='%VIRTUAL_ENV%'."
+            rem call sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%VIRTUAL_ENV%,g" "%VIRTUAL_ENV%\Scripts\activate.bat"
+            call sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%VIRTUAL_ENV:\=\\\\%,g" "%VIRTUAL_ENV%\Scripts\activate.bat"
             call "%VIRTUAL_ENV%\Scripts\activate.bat"
             if errorlevel 1 (
                 %_error% "[%~nx0] Unable to re-activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
@@ -159,7 +160,12 @@ if not exist "%venv_name%" (
 %_info% "[%~nx0] Active venv '%venv_name%'"
 popd
 %_info% "[%~nx0] PATH BEFORE activation: '%PATH%'"
-sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%PYTHON_VENVS%\%venv_name%,g" "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
+echo sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%PYTHON_VENVS%\%venv_name%,g" "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
+rem @echo on
+rem call bash -c "sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%PYTHON_VENVS:\=\\\\\\\\%\\\\\\\\%venv_name%,g" '%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat'"
+call sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%PYTHON_VENVS:\=\\\\%\\\\%venv_name%,g" "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
+rem grep "VIRTUAL_ENV=" "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
+rem %_fatal% "stop" 1
 call "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
 if errorlevel 1 (
     %_error% "[%~nx0] Unable to activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
