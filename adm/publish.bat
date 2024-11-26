@@ -65,9 +65,9 @@ if "%team%"=="all" (
     %_task% "[%~nx0] Must publish '%fname%' for team '%team%'"
 )
 
-set "forcepb="
+set "forcePB="
 if "%~3"=="force" (
-    set "forcepb=true"
+    set "forcePB=true"
     %_ok% "[%~nx0] third 'force' param: force publish activated"
 ) else (
     %_warning% "[%~nx0] No third 'force' param: force publish not activated"
@@ -89,23 +89,23 @@ if "%name%"=="" ( podp && %_fatal% "[%~nx0] Unknown name for fname for publish: 
 
 if not defined SENV_FORCE_PB (
     %_warning% "[%~nx0] SENV_FORCE_PB not defined: force publish not activated unless its value includes '-%name%-'"
-    goto:nosenv_force_pb
+    goto:noSenv_force_pb
 )
 for %%i in (%SENV_FORCE_PB:-= %) do (
     %_info% "[%~nx0] Process '%%i' or '%%is' from SENV_FORCE_PB='%SENV_FORCE_PB%' for name '%name%'"
     if "%%i"=="%name%" (
         %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
-        set "forcepb=true"
+        set "forcePB=true"
     )
     if "%%is"=="%name%" (
         %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
-        set "forcepb=true"
+        set "forcePB=true"
     )
 )
-if not defined forcepb (
+if not defined forcePB (
     %_warning% "[%~nx0] SENV_FORCE_PB does not include '%name%': force publish not activated"
 )
-:nosenv_force_pb
+:noSenv_force_pb
 
 call:execcmd "ls -1 setupsdir*_*"
 %_info% "[%~nx0] output_cnt='%output_cnt%' or '!output_cnt!'"
@@ -203,7 +203,7 @@ if not errorlevel 1 (
 ) else if "%name%"=="peazips" (
     set "name_ok=true"
 )
-if defined forcepb (
+if defined forcePB (
     %_ok% "[%~nx0] Force published activated for name '%name%': check_name OK"
     set "name_ok=true"
 )

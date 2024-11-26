@@ -152,7 +152,7 @@ goto:eof
 :ReplaceText
 :: https://stackoverflow.com/questions/2772456/string-replacement-in-batch-file
 :: https://stackoverflow.com/a/62597777/6309
-:: CALL:ReplaceText "!OrginalText!" OldWordToReplace NewWordToUse  Result
+:: CALL:ReplaceText "!OriginalText!" OldWordToReplace NewWordToUse  Result
 ::Example
 ::SET "MYTEXT=jump over the chair"
 ::  echo !MYTEXT!
@@ -161,11 +161,11 @@ goto:eof
 :: Remember to use the "! on the input text, but NOT on the Output text.
 :: Remember to add quotes "" around the MYTEXT Variable when calling.
 ::
-set "OrginalText=%~1"
+set "OriginalText=%~1"
 set "OldWord=%~2"
 set "NewWord=%~3"
-call set OrginalText=%%OrginalText:!OldWord!=!NewWord!%%
-SET %4=!OrginalText!
+call set OriginalText=%%OriginalText:!OldWord!=!NewWord!%%
+SET %4=!OriginalText!
 GOTO:EOF
 
 :dwl_gum
@@ -273,12 +273,12 @@ set "version=%version:*hotspot_=%"
 set "version=%version:.zip=%"
 set "version=%version:~0,-2%"
 set "replacement=%%2B"
-set "dversion=!version:_=%replacement%!"
-%_ok% "[%~nx0] Latest jdk version '%jdk_version%' means: '%version%', dversion: '!dversion!'"
+set "dVersion=!version:_=%replacement%!"
+%_ok% "[%~nx0] Latest jdk version '%jdk_version%' means: '%version%', dVersion: '!dVersion!'"
 set "file=OpenJDK%jdk_version%U-jdk_x64_windows_hotspot_%version%.zip"
 rem https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U_x64_windows_hotspot_21.0.5_11.zip
 rem https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.25%2B9/OpenJDK11U-jdk_x64_windows_hotspot_11.0.25_9.zip
-set "url=https://github.com/adoptium/temurin%jdk_version%-binaries/releases/download/%dversion%/%file%"
+set "url=https://github.com/adoptium/temurin%jdk_version%-binaries/releases/download/%dVersion%/%file%"
 
 %_task% "[%~nx0] Must get latest URL from adoptium.net for jdk version '%jdk_version%'"
 rem @echo on
