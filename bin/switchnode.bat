@@ -15,13 +15,15 @@ set "switchver_todelete=node"
 call "%script_dir%\switchver.bat" nodes node "node[2-9]*$" npm.cmd "%~1"
 set "switchver_todelete="
 %_ok% "[%~nx0] Node version chosen: '%SELECTED_VERSION%'"
-%_ok% "[%~nx0] Node PATH updated: '%newPath%'"
+if defined SWITCHVER_DEBUG (
+  %_ok% "[%~nx0] Node PATH updated: '%newPath%'"
+)
 set "NODE_HOME=%PRGS%\nodes\%SELECTED_VERSION%"
 set "NODE_VERSION=%SELECTED_VERSION%"
 popd
 
 endlocal & set "NODE_HOME=%NODE_HOME%" & set "NODE_VERSION=%NODE_VERSION%" & set "PATH=%newPath%"
-where node 2>nul | findstr cmd >nul 2>nul
+where node 2>nul | findstr exe >nul 2>nul
 if errorlevel 1 (
     set "PATH=%NODE_HOME%;%PATH%"
 )

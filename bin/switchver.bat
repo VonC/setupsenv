@@ -155,7 +155,9 @@ for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"')
         set "newPath=!newPath!;%%i"
     )
 )
-%_info% "[%~nx0] Cleaned newPath='%newPath%'
+if defined SWITCHVER_DEBUG (
+    %_info% "[%~nx0] Cleaned newPath='%newPath%'
+)
 rem %_info% "[%~nx0] switchver_path_list.tmp:"
 rem type "%script_dir%\switchver_path_list.tmp"
 rem %_info% "[%~nx0] switchver_filtered_path_list.tmp:"
