@@ -77,6 +77,7 @@ if not "%VIRTUAL_ENV%" == "" (
         if errorlevel 1 (
             %_warning% "[%~nx0] VIRTUAL_ENV set, but not added to the PATH: re-activating."
             %_task% "[%~nx0] Must re-activating."
+            sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%VIRTUAL_ENV%,g" "%VIRTUAL_ENV%\Scripts\activate.bat"
             call "%VIRTUAL_ENV%\Scripts\activate.bat"
             if errorlevel 1 (
                 %_error% "[%~nx0] Unable to re-activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
@@ -158,6 +159,7 @@ if not exist "%venv_name%" (
 %_info% "[%~nx0] Active venv '%venv_name%'"
 popd
 %_info% "[%~nx0] PATH BEFORE activation: '%PATH%'"
+sed -i "s,VIRTUAL_ENV=.*$,VIRTUAL_ENV=%PYTHON_VENVS%\%venv_name%,g" "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
 call "%PYTHON_VENVS%\%venv_name%\Scripts\activate.bat"
 if errorlevel 1 (
     %_error% "[%~nx0] Unable to activate Py env '%venv_name%' for 'Python %PYTHON_VERSION%'"
