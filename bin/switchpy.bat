@@ -8,7 +8,7 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
 :: Find Python 3.x.y folders
-set PYTHON_ROOT=%PRGS%\pythons
+set "PYTHON_ROOT=%PRGS%\pythons"
 pushd %PYTHON_ROOT%
 
 set "switchver_todelete=python"
@@ -28,10 +28,10 @@ call %senv_dir%\batcolors\echos_macros.bat export
 
 rem echo PYTHON_HOME='%PYTHON_HOME%'
 rem echo CLEANED PATH='%PATH%'
-set PYTHON_ROOT=%PRGS%\pythons
+set "PYTHON_ROOT=%PRGS%\pythons"
 set "_OLD_VIRTUAL_PATH=%PATH%"
 
-set PYTHON_MAIN_VERSION=
+set "PYTHON_MAIN_VERSION="
 :: Split PYTHON_VERSION by '.' and keep the first two segments
 for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
     set "PYTHON_MAIN_VERSION=%%a.%%b"
@@ -39,7 +39,7 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
 set "ccd=%CD%"
 for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
 %_info% "[%~nx0] PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'"
-if not "%VIRTUAL_ENV%" == "" (
+if defined VIRTUAL_ENV (
     if not exist "%VIRTUAL_ENV%" (
         %_task% "Must deactivate non-existing path VIRTUAL_ENV='%VIRTUAL_ENV%'"
         if defined _OLD_VIRTUAL_PROMPT (
@@ -113,7 +113,7 @@ if "%choice%"=="local" ( set "choice=venv on %ccd%\venvs")
 if not defined choice (
     "%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %ccd%\venvs"> "%ccd%\switchpy.tmp"
     ping -n 1 -w 300 127.0.0.1 > nul
-    for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set choice=%%a
+    for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set "choice=%%a"
 )
 rem echo choice='%choice%'
 set "venv_name=python_%PYTHON_VERSION%"
@@ -139,7 +139,7 @@ ping -n 1 -w 300 127.0.0.1 > nul
 del "%ccd%\switchpy.tmp" 2>nul
 
 rem use existing code to create or activate venv in the chosen location
-set PYTHON_VENVS="%VENV_LOCATION%"
+set "PYTHON_VENVS=%VENV_LOCATION%"
 mkdir "%PYTHON_VENVS%" 2>nul
 pushd %PYTHON_VENVS%
 if not exist "%venv_name%" (
@@ -170,7 +170,7 @@ if errorlevel 1 (
 )
 rem set doskey alias %VIRTUAL_ENV%\Scripts\deactivate.bat is a venv is chosen
 doskey deactivate=call "%VIRTUAL_ENV%\Scripts\deactivate.bat" $*
-set PYTHON_ROOT=
+set "PYTHON_ROOT="
 call :unset
 
 goto:eof
