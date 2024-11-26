@@ -461,3 +461,15 @@ set "file=%prgname%-windows-v%version%-amd64.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_filezilla
+rem https://filezilla-project.org/download.php?platform=win64
+rem https://dl2.cdn.filezilla-project.org/client/FileZilla_3.68.1_win64.zip?h=fwla0ZPpullR4IvFXVmZEw&x=1732628710
+set "cmd=curl -skL https://filezilla-project.org/download.php?type=client"
+%cmd% > "%script_dir%\dwl_filezilla.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_filezilla.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from filezilla-project.org/download.php?type=client for Eclipse IDE for Enterprise Java and Web Developers with cmd '%cmd%'" 1
+)
+for /f "tokens=3 delims=><" %%a in ('findstr /R /C:"The latest stable version of FileZilla Client is"  "%script_dir%\dwl_filezilla.tmp"') do ( set "version=%%a" )
+set "version=%version:*Eclipse IDE =%"
