@@ -25,11 +25,13 @@ if not "%1" == "" (
 set "switchver_todelete=maven"
 call "%script_dir%\switchver.bat" mavens mvn "mvn[0-9]\.[0-9]*\.[0-9]*$" "bin\mvn.cmd" "%~1"
 set "switchver_todelete="
-%_ok% "[%~nx0] Node version chosen: '%SELECTED_VERSION%'"
-set "NODE_HOME=%PRGS%\nodes\%SELECTED_VERSION%"
-set "NODE_VERSION=3%SELECTED_VERSION:*3=%"
+%_ok% "[%~nx0] Maven version chosen: '%SELECTED_VERSION%'"
+%_ok% "[%~nx0] Maven PATH updated: '%newPath%'"
 popd
 
 endlocal & set "M2_HOME=%PRGS%\mavens\%SELECTED_VERSION%" & set "M2=%PRGS%\mavens\%SELECTED_VERSION%\bin" & set "PATH=%newPath%" & set "MVN_VERSION=%SELECTED_VERSION:mvn=%"
 echo M2_HOME='%M2_HOME%'
-where mvn | findstr cmd
+where mvn 2>nul | findstr cmd >nul 2>nul
+if errorlevel 1 (
+    set "PATH=%M2%;%PATH%"
+)
