@@ -40,6 +40,22 @@ set "ccd=%CD%"
 for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
 %_info% "[%~nx0] PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'"
 if not "%VIRTUAL_ENV%" == "" (
+    if not exist "%VIRTUAL_ENV%" (
+        %_task% "Must deactivate non-existing path VIRTUAL_ENV='%VIRTUAL_ENV%'"
+        if defined _OLD_VIRTUAL_PROMPT (
+            set "PROMPT=%_OLD_VIRTUAL_PROMPT%"
+        )
+        if defined _OLD_VIRTUAL_PATH (
+            set "PATH=%_OLD_VIRTUAL_PATH%"
+        )
+        set "_OLD_VIRTUAL_PATH="
+        set "_OLD_VIRTUAL_PROMPT="
+        set "VIRTUAL_ENV="
+        set "VIRTUAL_ENV_PROMPT="
+        %_ok% "Non-existent VIRTUAL_ENV deactivated"
+        goto:activate
+    )
+
     echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
     ping -n 1 -w 300 127.0.0.1 > nul
     findstr /c:"python_%PYTHON_VERSION%_%project_name%" "%ccd%\switchpy_virtual_env.tmp" >nul
@@ -77,7 +93,7 @@ if not "%VIRTUAL_ENV%" == "" (
         goto:eof
     )
 )
-
+:activate
 rem unset any doskey alias for deactivate.bat
 doskey deactivate=
 rem Propose with gum.exe 3 choices: 1) no venv 2) venv on %PYTHON_ROOT%\venvs 3) venv on %CD%\venvs
