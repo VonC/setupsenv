@@ -56,11 +56,10 @@ if not "%VIRTUAL_ENV%" == "" (
         goto:activate
     )
 
-    echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
-    ping -n 1 -w 300 127.0.0.1 > nul
-    findstr /c:"python_%PYTHON_VERSION%_%project_name%" "%ccd%\switchpy_virtual_env.tmp" >nul
-    if errorlevel 1 (
-        del "%ccd%\switchpy_virtual_env.tmp"
+    rem echo %VIRTUAL_ENV%>>"%ccd%\switchpy_virtual_env.tmp"
+    rem ping -n 1 -w 300 127.0.0.1 > nul
+    rem findstr /c:"python_%PYTHON_VERSION%_%project_name%" "%ccd%\switchpy_virtual_env.tmp" >nul
+    if not "%VIRTUAL_ENV%"=="%ccd%\venvs\python_%PYTHON_VERSION%_%project_name%"
         %_task% "[%~nx0] Must deactivate: different venv activated: '%VIRTUAL_ENV%'"
         set "OLD_PYTHON_VERSION=%VIRTUAL_ENV:*python_=%"
         call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
