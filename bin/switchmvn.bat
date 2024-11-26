@@ -30,7 +30,6 @@ set "NODE_HOME=%PRGS%\nodes\%SELECTED_VERSION%"
 set "NODE_VERSION=3%SELECTED_VERSION:*3=%"
 popd
 
-endlocal & set "M2_HOME=%PRGS%\mavens\%SELECTED_VERSION%" & set "M2=%M2_HOME%\bin" & set "PATH=%newPath%" & set "MVN_VERSION=%SELECTED_VERSION:mvn=%"
+endlocal & set "M2_HOME=%PRGS%\mavens\%SELECTED_VERSION%" & set "M2=%PRGS%\mavens\%SELECTED_VERSION%\bin" & set "PATH=%newPath%" & set "MVN_VERSION=%SELECTED_VERSION:mvn=%"
 echo M2_HOME='%M2_HOME%'
-set "PATH=%M2_HOME%\bin;%PATH%"
 where mvn | findstr cmd
