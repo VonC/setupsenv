@@ -87,7 +87,7 @@ rem echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 
 if not "%SELECTED_VERSION%" == "" ( goto:selected )
 if not "%prg_version%" == "" (
-    %_warning% "[%~nx0] Your %prg_name% version argument '%prg_version%' was NOT found in PRGS_ROOT '%PRGS_ROOT%'"
+    %_warning% "[%~nx0] Your %prg_name% version argument '%prg_version%' was NOT found in PRGS_ROOT '%PRGS_ROOT%' (prg_prefix='%prg_prefix%')"
 )
 
 :: if count == 1, set SELECTED_VERSION to PRG_VERSIONS, and trim any space
@@ -135,7 +135,7 @@ if not "%newPath%" == "" (
     goto:skip_clean_path
 )
 
-%_task% "[%~nx0] Must clean PATH from any '%PRGS%\pythons' occurrence"
+%_task% "[%~nx0] Must clean PATH from any '%PRGS%\%prgs_name%' occurrence"
 set "current_path="
 :: Write the PATH variable to a file, splitting at semicolons
 (for %%a in ("%PATH:;=" "%") do echo %%~a) > "%script_dir%\switchver_path_list.tmp"
