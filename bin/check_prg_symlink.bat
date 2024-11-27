@@ -61,12 +61,13 @@ if not "%instPath%"=="" (
 )
 
 set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
-:loop
+:loop_check_subdir
 set "subdir="
+%_info% "[%~nx0] Check subdirectory for tpath '%tpath%'"
 call :check_subdir "%tpath%"
 if defined subdir (
-    %_warning% "[%~nx0] one subdirectory detected '%subdir%': looping"
-    goto:loop
+    %_warning% "[%~nx0] one subdirectory detected '%subdir%': looping on tpath '%tpath%'"
+    goto:loop_check_subdir
 )
 :mklink_tpath
 %_task% "[%~nx0] Must create %sln% symlink for '!tpath!'"
@@ -83,7 +84,7 @@ goto:eof
 %_warning% "[%~nx0] Check if '%prg_folder%' exists on network drive '%drive%' (%PRGS%)"
 if exist "%PRGS%\%prgs_folder%\%sln%" (
     if not exist "%PRGS%\%prgs_folder%\_%prg_folder%" (
-        %_warning% "[%~nx0] Must delete '%sln%' before renaming '%prg_folder%' to '%sln%'"
+        %_warning% "[%~nx0] Must delete folder '%sln%' before renaming '%prg_folder%' to '%sln%'"
         rmdir /S /Q "%PRGS%\%prgs_folder%\%sln%"
         if errorlevel 1 (
             %_fatal% "[%~nx0] Must delete '%sln%' in folder '%prgs_folder%', needed to rename '%prg_folder%' to '%sln%'" 1
@@ -98,15 +99,15 @@ if not exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_fatal% "[%~nx0] '%prg_folder%' is missing in folder '%prgs_folder%'" 3
 )
 set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
-:loop
+:loop_network_check_subdir
 set "subdir="
 call :check_subdir "%tpath%"
 if defined subdir (
     %_warning% "[%~nx0] (network) one subdirectory detected '%subdir%': looping"
-    goto:loop
+    goto:loop_network_check_subdir
 )
 %_task% "[%~nx0] Must rename program '%prg_folder%' (!tpath!) to '%sln%'"
-rem %_fatal% "[%~nx0] stop" 1
+%_fatal% "[%~nx0] stop" 1
 move "!tpath!" "%PRGS%\%prgs_folder%\%sln%"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to rename program '%prg_folder%' to '%sln%' in folder '%prgs_folder%'" 2
