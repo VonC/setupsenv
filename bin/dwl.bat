@@ -383,8 +383,9 @@ goto:eof
 
 :dwl_maven:
 rem https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
+rem https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip
 set "file=apache-maven-%version%-bin.zip"
-set "url=https://dlcdn.apache.org/maven/maven-3/%version%/binaries/%file%"
+set "url=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/%version%/%file%"
 call :curl
 goto:eof
 
