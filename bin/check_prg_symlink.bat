@@ -35,7 +35,20 @@ rem echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr "%prg_folder%" 1>NUL: 2>NUL:
 if errorlevel 1 (
     %_info% "[%~nx0] Must update '%sln%' to reference '%prg_folder%' from '%s%'"
-    rmdir "%PRGS%\%prgs_folder%\%sln%"
+    %_task% "[%~nx0] Must delete '%sln%' before creating '%sln%' for '%prg_folder%'"
+    rmdir "%PRGS%\%prgs_folder%\%sln%" 2>nul
+    if exist "%PRGS%\%prgs_folder%\%sln%" (
+        %_error% "[%~nx0] Unable to rmdir '%PRGS%\%prgs_folder%\%sln%': probably not a symlink, folder not empty"
+        %_task% "[%~nx0] Must rm -Rf '%sln%' before creating '%sln%' for '%prg_folder%'"
+        rm -Rf "%PRGS%\%prgs_folder%\%sln%" 2>nul
+        if errorlevel 1 (
+            %_fatal% "[%~nx0] Unable to rm -Rf '%PRGS%\%prgs_folder%\%sln%'" 43
+        ) else (
+            %_ok% "[%~nx0] Folder '%PRGS%\%prgs_folder%\%sln%' rm -Rf  successfully"
+        )
+    ) else (
+        %_ok% "[%~nx0] Symlink '%PRGS%\%prgs_folder%\%sln%' rmdir successfully"
+    )
     goto:create
 )
 %_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%prg_folder%'"
