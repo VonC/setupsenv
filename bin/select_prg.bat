@@ -47,6 +47,11 @@ if "%prg_name%"=="" (
     %_fatal% "[%~nx0] non-standalone call: prg_name first parameter is missing" 12
   )
 )
+if "%prg_name%"=="choose" (
+  set "prg_name="
+  call:select_program
+)
+
 set "prg_line="
 call:parse_prgs_list "%script_dir%\prgs.list"
 if not defined prg_line (
