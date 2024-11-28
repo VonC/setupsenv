@@ -80,7 +80,7 @@ set "JAVA_HOME=%PRGS%\javas\%SELECTED_VERSION%"
 
 set "newPath="
 rem Test if `where java` is equal to %PRGS%\javas\%SELECTED_VERSION%
-for /f "tokens=*" %%j in ('where java') do (
+for /f "tokens=*" %%j in ('where java 2^>NUL') do (
     if "%%j" == "%PRGS%\javas\%SELECTED_VERSION%\bin\java.exe" (
         set "newPath=%PATH%"
     )
