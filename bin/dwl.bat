@@ -478,3 +478,14 @@ if errorlevel 1 (
 )
 for /f "tokens=3 delims=><" %%a in ('findstr /R /C:"The latest stable version of FileZilla Client is"  "%script_dir%\dwl_filezilla.tmp"') do ( set "version=%%a" )
 set "version=%version:*Eclipse IDE =%"
+goto:eof
+
+:dwl_git-cliff
+set "repo=orhun/git-cliff"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/orhun/git-cliff/releases/download/v2.7.0/git-cliff-2.7.0-x86_64-pc-windows-msvc.zip
+set "file=%prgname%-%version%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
