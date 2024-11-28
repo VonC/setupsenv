@@ -30,15 +30,19 @@ if not exist "%PRGS%\gums\current\gum.exe" (
 set "PATH=%PRGS%\gums\current;%PATH%"
 
 set "prgname=%~1"
-if not "%prgname%"=="" (
-  goto:set_version
+if not defined prgname (
+  set "prgname=choose"
 )
-set "programs=gum git go gh jdk maven eclipse wildfly chrome firefox lg node python sysinternals vscode sqldeveloper IntelliJ_IDEA-IC Notepad++ Filezilla MobaXTerm Postman putty shellcheck zoomit WinSCP yEd Terminal"
-for /f "delims=" %%p in ('gum choose --limit=1 %programs%') do set "prgname=%%p"
+
+call "%script_dir%\select_prg.bat" "%prgname%"
+if not defined prg_id (
+    %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
+)
+
 if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
 )
-
+set "prgname=%prg_id%"
 :set_version
 set "version=%~2"
 if not "%version%"=="" (
