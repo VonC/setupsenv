@@ -246,6 +246,8 @@ findstr /i "sysinternalsSuites" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=SysinternalsSuite-*.zip" )
 call:install "%pattern%" "sysinternalsSuites" || exit /b 1
 
+call:install "git-cliff-*-x86_64-pc-windows-msvc.zip" "git-cliffs" || exit /b 1
+
 %_info% "[%~nx0] =========="
 %_info% "[%~nx0] processing custom installation list '%instlist%'"
 @echo off
