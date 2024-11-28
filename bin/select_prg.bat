@@ -155,8 +155,8 @@ goto:eof
 REM Select a program using gum
 rem echo type %script_dir%\prg_names.tmp ^| "%PRGS%\gums\current\gum.exe" choose --limit=1
 rem goto:eof
-sed "s/[/,].*$//g" prgs.list > prg_names.tmp
-for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose --limit 1 $(sed "s/\S+.*?$\r\n/\n/g" prg_names.tmp)"') do set "prg_name=%%p"
+sed "s/[~#/,].*$//g" "%script_dir%\prgs.list" > "%script_dir%\prg_names.tmp"
+for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose --limit 1 $(sed "s/\S+.*?$\r\n/\n/g" '%script_dir%\prg_names.tmp')"') do set "prg_name=%%p"
 if "%prg_name%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
 )
