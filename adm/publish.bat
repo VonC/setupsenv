@@ -200,12 +200,10 @@ set "name_ok=false"
 grep "%name%" "install_!profile!.list"
 if not errorlevel 1 (
     set "name_ok=true"
-) else if "%name%"=="gits" (
+    %_ok% "[%~nx0] Name '%name%' is part of install_!profile!.list"
+) else if defined prg_is_global (
     set "name_ok=true"
-) else if "%name%"=="vscodes" (
-    set "name_ok=true"
-) else if "%name%"=="peazips" (
-    set "name_ok=true"
+    %_ok% "[%~nx0] Name '%name%' is global"
 )
 if defined forcePB (
     %_ok% "[%~nx0] Force published activated for name '%name%': check_name OK"
