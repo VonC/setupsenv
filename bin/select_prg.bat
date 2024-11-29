@@ -61,6 +61,14 @@ if not defined prg_line (
   )
 )
 if not defined prg_line (
+  call:parse_prgs_list_for_pattern "%script_dir%\prgs.list"
+)
+if not defined prg_line (
+  if exist "%senv_home%\prgs.list" (
+    call:parse_prgs_list_for_pattern "%script_dir%\prgs.list"
+  )
+)
+if not defined prg_line (
   %_fatal% "[%~nx0] prg_name '%prg_name%' not found in available program list" 11
 )
 %_ok% "[%~nx0] prg_name '%prg_name%' matches prg_line '%prg_line%'"
@@ -152,6 +160,25 @@ for /f "delims=" %%p in ('findstr /I /R /C:"^%prg_name%[/~]" "%~1"') do set "prg
 if not defined prg_line (
   for /f "delims=" %%p in ('findstr /I /R /C:"/%prg_name%[/~]" "%~1"') do set "prg_line=%%p"
 )
+goto:eof
+
+:parse_prgs_list_for_pattern
+goto:eof
+set "prg_list_file=%~1"
+for /f "usebackq delims=" %%p in ("%prg_list_file%") do (
+  set "prg_line=%%p"
+  for /f "tokens=1-4 delims=~" %%a in ("%%p") do (
+    set "pattern=%%d"
+    if defined pattern (
+      for /f "delims=" %%f in ('dir /b "%pattern!" 2^>nul') do (
+        if "%fname%"=="%%f" (
+          goto:eof
+        )
+      )
+    )
+  )
+)
+set "prg_line="
 goto:eof
 
 :select_program
