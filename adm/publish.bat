@@ -84,7 +84,11 @@ for /L %%n in (1 1 !output_cnt!) DO (
 
 rem @echo on
 set "name="
-call %script_dir%\publish_setname.bat
+call %senv_dir%\bin\select_prg.bat "%fname%"
+if errorlevel 1 (
+    %_fatal% "[%~nx0] Unable to select program for '%fname%'" 101
+)
+set "name=prg_id"
 if "%name%"=="" ( podp && %_fatal% "[%~nx0] Unknown name for fname for publish: '%fname%'" 228 )
 
 if not defined SENV_FORCE_PB (
