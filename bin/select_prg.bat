@@ -34,6 +34,7 @@ set prg_names=
 set prg_versions=
 set prg_folders=
 set prg_patterns=
+set prg_is_global=
 
 del "%script_dir%\prg_names.tmp" 2>NUL
 
@@ -63,11 +64,12 @@ if not defined prg_line (
   %_fatal% "[%~nx0] prg_name '%prg_name%' not found in available program list" 11
 )
 %_ok% "[%~nx0] prg_name '%prg_name%' matches prg_line '%prg_line%'"
-for /f "tokens=1-4 delims=~" %%a in ('echo "%prg_line%"') do (
+for /f "tokens=1-5 delims=~" %%a in ('echo "%prg_line%"') do (
   set "prg_names=%%a"
   set "prg_versions=%%b"
   set "prg_folders=%%c"
   set "prg_patterns=%%d"
+  set "prg_is_global=%%d"
 )
 set "prg_names=%prg_names:"=%"
 if defined prg_versions ( set "prg_versions=%prg_versions:#=%" )
@@ -113,7 +115,7 @@ if not defined prg_version (
   )
 )
 %_info% "[%~nx0] prg_version='%prg_version%'"
-endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_pattern=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%"
+endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_pattern=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%" & set "prg_is_global=%prg_is_global%"
 if defined standalone_call (
   call %senv_dir%\batcolors\echos_macros.bat unset
   set "senv_dir="
@@ -122,6 +124,7 @@ if defined standalone_call (
   set "prg_id="
   set "prg_name="
   set "prg_version="
+  set "prg_is_global="
   set "setup_dir="
   set "batdir="
   set "ASCII27="
