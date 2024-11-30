@@ -70,10 +70,6 @@ if defined skipped_profile (
 )
 
 :recheck
-if not "%UNCPathOnly%"=="" (
-    set "setupsdir=%driveUNCPath%%localPath%%senvname%\setups"
-    goto:endlocal
-)
 
 %_task% "[%~nx0] [drive detection] Must test access to driveUNCPath '%driveUNCPath%'"
 dir "%driveUNCPath%" 1>NUL: 2>NUL:
@@ -133,11 +129,16 @@ if "%driveLetter%"=="" (
 goto:endlocal
 
 :endlocalko
+%_error% "[%~nx0] [%profile%] %errorMessage%: marked as skipped in '%SKIPPED_PROFILES_FILE%'"
 echo [%profile%] %errorMessage%>> "%SKIPPED_PROFILES_FILE%"
+set SKIPPED_PROFILES_FILE_ADDED=1
 :endlocal_ko_noadd
 set "setupsdir="
 set "setupsdirsenv="
-%_error% "[%~nx0] [%profile%] %errorMessage%"
+if not defined SKIPPED_PROFILES_FILE_ADDED (
+    %_error% "[%~nx0] [%profile%] %errorMessage%"
+)
+set "SKIPPED_PROFILES_FILE_ADDED="
 endlocal & set "setupsdir=" & set "setupsdirsenv="
 exit /b 1
 goto:eof
