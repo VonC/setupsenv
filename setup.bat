@@ -82,7 +82,7 @@ echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
 echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
 echo @echo off%NL%call "%%USERPROFILE%%\senv.bat"> "%HOME%\senv.bat"
 echo @echo off%NL%call "%%USERPROFILE%%\gsenv.bat"> "%HOME%\gsenv.bat"
-REM usefull when HOMEDRIVE is U: or other than C:
+REM useful when HOMEDRIVE is U: or other than C:
 if not "%HOMEDRIVE%"=="C:" (
     echo @echo off%NL%call "%%USERPROFILE%%\senv.bat"> "%HOMEDRIVE%\senv.bat"
     echo @echo off%NL%call "%%USERPROFILE%%\gsenv.bat"> "%HOMEDRIVE%\gsenv.bat"
