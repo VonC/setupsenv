@@ -166,22 +166,9 @@ if defined prg_line (
 goto:eof
 
 :parse_prgs_list_for_pattern
-goto:eof
-set "prg_list_file=%~1"
-for /f "usebackq delims=" %%p in ("%prg_list_file%") do (
-  set "prg_line=%%p"
-  for /f "tokens=1-4 delims=~" %%a in ("%%p") do (
-    set "pattern=%%d"
-    if defined pattern (
-      for /f "delims=" %%f in ('dir /b "%pattern!" 2^>nul') do (
-        if "%fname%"=="%%f" (
-          goto:eof
-        )
-      )
-    )
-  )
-)
 set "prg_line="
+set "prg_list_file=%~1"
+for /f "tokens=* delims=" %%p in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\parse_prgs_list_for_pattern.ps1" -prg_list_file "%prg_list_file%" -string_to_test "%prg_name%" 2^>nul') do set "prg_line=%%p"
 goto:eof
 
 :select_program
