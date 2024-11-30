@@ -34,7 +34,7 @@ if not defined prgname (
   set "prgname=choose"
 )
 
-call "%script_dir%\select_prg.bat" "%prgname%"
+call "%script_dir%\select_prg.bat" "%prgname%" "%~2"
 if not defined prg_id (
     %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
 )
