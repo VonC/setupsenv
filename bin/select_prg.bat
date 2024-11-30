@@ -65,7 +65,7 @@ if not defined prg_line (
 )
 if not defined prg_line (
   if exist "%senv_home%\prgs.list" (
-    call:parse_prgs_list_for_pattern "%script_dir%\prgs.list"
+    call:parse_prgs_list_for_pattern "%senv_home%\prgs.list"
   )
 )
 if not defined prg_line (
