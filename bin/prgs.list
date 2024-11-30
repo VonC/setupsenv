@@ -1,28 +1,28 @@
 Name/alias1/alias2/...~version1/version2/...~folders_name~pattern~global
-Gum~#~gums~#gum_*_Windows_x86_64.zip~global
-Git~#~gits~#PortableGit-*-bit.7z.exe~global
-Go/golang~#~gos~#go*.windows-amd64.zip
-GH_(GitHub_CLI)/GH~#~ghs~#gh_*_windows_amd64.zip
-JDK_(Java)/java/jdk~11 12 13 14 15 16 17 18 19 20 21 22 23~jdks~#OpenJDK*U-jdk_x64_windows_hotspot_*.zip
-Chrome~#~chromiums~#chromev*-r*.7z
+Gum~#~gums~gum_*_Windows_x86_64.zip~global
+Git~#~gits~PortableGit-*-bit.7z.exe~global
+Go/golang~#~gos~go*.windows-amd64.zip
+GH_(GitHub_CLI)/GH~#~ghs~gh_*_windows_amd64.zip
+JDK_(Java)/java/jdk~11 12 13 14 15 16 17 18 19 20 21 22 23~jdks~OpenJDK*U-jdk_x64_windows_hotspot_*.zip
+Chrome~#~chromiums~chromev*-r*.7z
 Peazip/pz/7z~#~peazips~peazip_portable-~global
-Firefox/ff~#~firefoxs~#FirefoxPortable_*_English.paf.exe
-lg_(LazyGit)/lazygit/lg/lzg~#~lgs~#lazygit_*_Windows_x86_64.zip
-Node~10 12 14 16~nodes~#node-v*-win-x64.zip
-Python/py~3.12 3.13~pythons~#python-*-amd64.exe
-Sysinternals_Suite/sysinternals/sysinternal/sys/sysint~#~sysinternalsSuites~#SysinternalsSuite-*.zip~global
-VSCode/code~#~vscodes~#VSCodeUserSetup-x64-*.exe~global
-SQL_Developer/sqldeveloper/sqldev~#~sqldevelopers~#sqldeveloper-*-x64.zip
-IntelliJ_IDEA_Community_Edition/idea/intellij~#~ideas~#ideaIC-*.win.zip
-Notepad++/notepadplusplus/notepad-plus-plus/npp~#~npps~#npp.*.portable.x64.zip
-Filezilla/fz~#~filezillas~#FileZilla_*_win64.zip
-MobaXTerm/mobax/moba~#~mobaxterms~#MobaXterm_Portable_v*.zip
-Postman~#~postmans~#PortableGit-*-64-bit.7z.exe
-putty~#~puttys~#putty-*.zip
-shellcheck~#~shellchecks~#shellcheck-v*.zip
-ZoomIt/zi~#~zoomits~#ZoomIt-v*.zip
-WinSCP~#~winscps~#WinSCP-*-Portable.zip
-superfile/spf~#~superfiles~#superfile-windows-v*-amd64.zip
+Firefox/ff~#~firefoxs~FirefoxPortable_*_English.paf.exe
+lg_(LazyGit)/lazygit/lg/lzg~#~lgs~lazygit_*_Windows_x86_64.zip
+Node~10 12 14 16~nodes~node-v*-win-x64.zip
+Python/py~3.12 3.13~pythons~python-*-amd64.exe
+Sysinternals_Suite/sysinternals/sysinternal/sys/sysint~#~sysinternalsSuites~SysinternalsSuite-*.zip~global
+VSCode/code~#~vscodes~VSCodeUserSetup-x64-*.exe~global
+SQL_Developer/sqldeveloper/sqldev~#~sqldevelopers~sqldeveloper-*-x64.zip
+IntelliJ_IDEA_Community_Edition/idea/intellij~#~ideas~ideaIC-*.win.zip
+Notepad++/notepadplusplus/notepad-plus-plus/npp~#~npps~npp.*.portable.x64.zip
+Filezilla/fz~#~filezillas~FileZilla_*_win64.zip
+MobaXTerm/mobax/moba~#~mobaxterms~MobaXterm_Portable_v*.zip
+Postman~#~postmans~PortableGit-*-64-bit.7z.exe
+putty~#~puttys~putty-*.zip
+shellcheck~#~shellchecks~shellcheck-v*.zip
+ZoomIt/zi~#~zoomits~ZoomIt-v*.zip
+WinSCP~#~winscps~WinSCP-*-Portable.zip
+superfile/spf~#~superfiles~superfile-windows-v*-amd64.zip
 Maven/mvn~#~mavens~apache-maven-*-bin.zip
-Terminal/term/cmd~#~terminals~#Microsoft.WindowsTerminal_*_x64.zip
-Git-Cliff/gitcliff/gcliff/cliff~#~git-cliffs~#git-cliff-*-x86_64-pc-windows-msvc.zip~global
+Terminal/term/cmd~#~terminals~Microsoft.WindowsTerminal_*_x64.zip
+Git-Cliff/gitcliff/gcliff/cliff~#~git-cliffs~git-cliff-*-x86_64-pc-windows-msvc.zip~global
