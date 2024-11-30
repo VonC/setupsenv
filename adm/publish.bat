@@ -121,7 +121,6 @@ if "%output_cnt%"=="0" (
 for /L %%n in (1 1 !output_cnt!) DO (
     set "sc=!output[%%n]!"
     rem set "sc=setupsdir_calx_tesys.bat"
-    set "UNCPathOnly=1"
     rem dir %cpwd%\!sc!
     rem echo call "%cpwd%\!sc!"
     set "profile=!profiles[%%n]!"
@@ -137,7 +136,6 @@ for /L %%n in (1 1 !output_cnt!) DO (
     )
     if "!skip!"=="" (
         call "%custom_dir%\!sc!"
-        set "UNCPathOnly="
         set "spath=!setupsdir!"
         %_info% "[%~nx0] sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
         if "!spath!"=="" (
