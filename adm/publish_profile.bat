@@ -51,7 +51,9 @@ if not exist "%fprofile%" (
 %_info% "[%~nx0] Profile '%profile%' to be published from setup_dir '%setup_dir%'"
 set "spath="
 set "fsetupsdir=setupsdir_%profile%.bat"
+set "l_only=1"
 call "%fsetupsdir%"
+set "l_only="
 set "spath=!setupsdir!"
 if "%spath%"=="" (
     call:error_or_fatal "[%~nx0](%profile%) No target spath found in '%fsetupsdir%'" 111
