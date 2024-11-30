@@ -160,6 +160,9 @@ for /f "delims=" %%p in ('findstr /I /R /C:"^%prg_name%[/~]" "%~1"') do set "prg
 if not defined prg_line (
   for /f "delims=" %%p in ('findstr /I /R /C:"/%prg_name%[/~]" "%~1"') do set "prg_line=%%p"
 )
+if defined prg_line (
+  %_ok% "[%~nx0] prg_name '%prg_name%' found in '%~1': prg_line '%prg_line%'"
+)
 goto:eof
 
 :parse_prgs_list_for_pattern
