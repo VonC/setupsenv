@@ -148,7 +148,12 @@ if exist "%setup_dir%\%target_local_file%" (
 rem @echo on
 curl -fkL %url% -o "%setup_dir%\%target_local_file%"
 if not "%ERRORLEVEL%" == "0" (
+  if not defined next_url (
     %_fatal% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 1
+  ) else (
+    %_error% "[%~nx0] Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'
+    exit /b 1
+  )
 )
 %_ok% "[%~nx0] '%target_local_file%' downloaded to '%setup_dir%'"
 goto:eof
@@ -255,9 +260,29 @@ set "version=%version:.windows-amd64.zip=%"
 del "%script_dir%\go_vers.txt"
 %_ok% "[%~nx0] Latest Go version URL='%version%' for file '%file%'"
 :go_version_set
+if not defined file (
+  rem https://go.dev/dl/go1.19.windows-amd64.zip
+  rem https://mirrors.aliyun.com/golang/go1.19.windows-amd64.zip
+  rem https://studygolang.com/dl/golang/go1.19.windows-amd64.zip
+  set "file=go%version%.windows-amd64.zip"
+)
 %_info% "[%~nx0] Dwl (%prgname%) version '%version%'"
 set "url=https://fossies.org/windows/misc/%file%"
+set "next_url=https://studygolang.com/dl/golang/%file%"
 call :curl
+if errorlevel 1 (
+  set "url=%next_url%"
+  %_task% "[%~nx0] Must try withURL from studygolang.com for Go version '%version%'"
+  set "next_url=https://mirrors.aliyun.com/golang/%file%"
+  call :curl
+)
+if errorlevel 1 (
+  set "url=%next_url%"
+  set "next_url="
+  %_task% "[%~nx0] Must try withURL from mirrors.aliyun.com for Go version '%version%'"
+  call :curl
+)
+set "next_url="
 goto:eof
 
 :dwl_jdk
