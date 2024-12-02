@@ -108,6 +108,8 @@ if "%driveLetter%"=="" (
 if not "%driveLetter%"=="" (
     set "setupsdir=%driveLetter%%localPath%%senvname%\setups"
     set "setupsdirsenv=%driveLetter%%localPath%%senvname%"
+    call:check_setupsdir
+    if errorlevel 1 ( goto:endlocalko )
     dir "!setupsdir!" 1>NUL: 2>NUL:
     if errorlevel 1 (
         %_warning% "[%~nx0] [%profile%] UNABLE to access drive path '!setupsdir!' with driveLetter '%driveLetter%'. Fall back to network path '%driveUNCPath%' for setup"
@@ -120,6 +122,8 @@ if not "%driveLetter%"=="" (
 if "%driveLetter%"=="" (
     set "setupsdir=%driveUNCPath%%localPath%%senvname%\setups"
     set "setupsdirsenv=%driveUNCPath%%localPath%%senvname%"
+    call:check_setupsdir
+    if errorlevel 1 ( goto:endlocalko )
     dir "!setupsdir!" 1>NUL: 2>NUL:
     if errorlevel 1 (
         set "errorMessage=Unable to access network path '!setupsdir!'"
@@ -156,3 +160,17 @@ if exist "%skipped_profiles_file%" (
 )
 :endlocalnoclean
 endlocal & set "setupsdir=%setupsdir%" & set "setupsdirsenv=%setupsdirsenv%"
+goto:eof
+
+:check_setupsdir
+if not exist "%setupsdir%" (
+    %_task% "[%~nx0] [%profile%] Must create remote senv path '%setupsdir%'"
+    mkdir "%setupsdir%"
+    if errorlevel 1 (
+        set "errorMessage=Drive '%driveLetter%' accessible, but unable to create remote senv path '%setupsdir%'"
+        exit /b 1
+    )
+    %_ok% "[%~nx0] [%profile%] Remote senv path '%setupsdir%' created"
+) else (
+    %_ok% "[%~nx0] [%profile%] Remote senv path '%setupsdir%' already exists"
+)
