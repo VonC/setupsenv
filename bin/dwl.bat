@@ -34,7 +34,11 @@ if not defined prgname (
   set "prgname=choose"
 )
 
-call "%script_dir%\select_prg.bat" "%prgname%" "%~2"
+set "version=%~2"
+if not defined version (
+  set "version=latest"
+)
+call "%script_dir%\select_prg.bat" "%prgname%" "%version%"
 if not defined prg_id (
     %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
 )
@@ -43,8 +47,7 @@ if "%prgname%"=="" (
   %_fatal% "[%~nx0] No program selected" 1
 )
 set "prgname=%prg_id%"
-:set_version
-set "version=%~2"
+set "version=%prg_version%"
 if not "%version%"=="" (
   if "%prgname%"=="jdk" (
     set "jdk_version=%version%"
