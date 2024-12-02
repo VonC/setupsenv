@@ -62,7 +62,7 @@ if defined ECHOS_POST_FILE (
 set "prg_name=%~1"
 echo %prg_name% | findstr /C:"*" >nul 2>&1
 if errorlevel 1 (
-    call "%script_dir%\select_prg.bat" "%~1"
+    call "%script_dir%\select_prg.bat" "%~1" "inst_prg"
     if not defined prg_id (
         %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
     )
