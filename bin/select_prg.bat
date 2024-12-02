@@ -141,6 +141,7 @@ if defined standalone_call (
   set "senv_home="
   set "standalone_call="
   set "prg_id="
+  set "prg_pattern="
   set "prg_name="
   set "prg_version="
   set "prg_is_global="
