@@ -84,7 +84,7 @@ for /L %%n in (1 1 !output_cnt!) DO (
 
 rem @echo on
 set "name="
-call %senv_dir%\bin\select_prg.bat "%fname%"
+call %senv_dir%\bin\select_prg.bat "%fname%" "inst_prg"
 if errorlevel 1 (
     %_fatal% "[%~nx0] Unable to select program for '%fname%'" 101
 )
