@@ -69,7 +69,11 @@ if errorlevel 1 (
     if defined prg_pattern (
         if not "!prg_pattern!"=="%~2" (
             if not "%~2"=="latest" (
-               if not "%~2"=="" ( set "prg_pattern=%~2" ) else ( set "prg_pattern=!prg_pattern!-latest" )
+                if not "%~2"=="" (
+                    for /f "tokens=1,2 delims=*" %%p in ('echo !prg_pattern!') do (
+                        set "prg_pattern=%%p*%~2*%%q"
+                    )
+                ) else ( set "prg_pattern=!prg_pattern!-latest" )
             ) else (
                 set "prg_pattern=!prg_pattern!-latest"
             )
@@ -83,7 +87,6 @@ if errorlevel 1 (
     %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='!prg_pattern!'"
 )
 %_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
-goto:eof
 
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
