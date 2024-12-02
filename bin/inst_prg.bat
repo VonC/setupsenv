@@ -82,8 +82,8 @@ if errorlevel 1 (
     set "prg_pattern=%~1"
     %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='!prg_pattern!'"
 )
-rem %_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
-rem goto:eof
+%_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
+goto:eof
 
 pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
