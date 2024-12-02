@@ -94,6 +94,7 @@ set "prg_id=%prg_folders:~0,-1%"
 
 REM Step 2: check the version
 set "prg_version=%~2"
+if "%prg_version%"=="inst_prg" ( goto:prg_version_inst_prg )
 if not defined prg_version (
   if defined prg_versions (
     if not defined standalone_call (
@@ -133,6 +134,7 @@ if not defined prg_version (
 ) else (
   %_ok% "[%~nx0] prg_version '%prg_version%' preserved, since no prg_versions defined"
 )
+:prg_version_inst_prg
 %_info% "[%~nx0] prg_version='%prg_version%'"
 endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_pattern=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%" & set "prg_is_global=%prg_is_global%"
 if defined standalone_call (
