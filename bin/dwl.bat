@@ -416,9 +416,22 @@ goto:eof
 :dwl_maven:
 rem https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
 rem https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip
+if not "%version%"=="latest" ( goto:dwl_maven_with_version )
+set "cmd=curl -skL https://maven.apache.org/download.cgi"
+%cmd% > "%script_dir%\dwl_maven.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_maven.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from maven.apache.org/download.cgi for Maven with cmd '%cmd%'" 101
+)
+for /f "tokens=2 delims=><" %%a in ('findstr /R /C:"Downloading Apache Maven "  "%script_dir%\dwl_maven.tmp"') do ( set "version=%%a" )
+for /f "tokens=4 delims=- " %%a in ('echo %version%') do ( set "version=%%a" )
+%_ok% "[%~nx0] Latest Maven version '%version%'"
+rem %_fatal% "[%~nx0] :dwl_maven stop" 1
+:dwl_maven_with_version
 set "file=apache-maven-%version%-bin.zip"
 set "url=https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/%version%/%file%"
 call :curl
+del "%script_dir%\dwl_maven.tmp"
 goto:eof
 
 :dwl_wildfly:
