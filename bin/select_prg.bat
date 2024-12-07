@@ -96,6 +96,9 @@ REM Step 2: check the version
 set "prg_version=%~2"
 if "%prg_version%"=="inst_prg" ( goto:prg_version_inst_prg )
 if not defined prg_version (
+  if "%prg_id%"=="node" ( set "prg_version=LTS" )
+)
+if not defined prg_version (
   if defined prg_versions (
     if not defined standalone_call (
       %_fatal% "[%~nx0] non-standalone call: prg_version second parameter is missing. Should be one of '%prg_versions%'" 13
@@ -108,8 +111,16 @@ if not defined prg_version (
   )
 ) else if defined prg_versions (
   set "prg_version_found="
+  set "latest_version="
+  set "lts_version="
   for %%a in (%prg_versions%) do (
     if "%%a"=="%prg_version%" ( set "prg_version_found=true" )
+    set "prg_version_item=%%a"
+    set "prg_version_item=!prg_version_item:-LTS=!"
+    if not "!prg_version_item!"=="%%a" (
+      if "%prg_version%"=="LTS" ( set "prg_version_found=true" && set "lts_version=!prg_version_item!" )
+    )
+    rem echo '%%a' for prg_version='%prg_version%', prg_version_found='!prg_version_found!', lts_version='!lts_version!'
     set "latest_version=%%a"
   )
   if not defined prg_version_found (
@@ -120,6 +131,9 @@ if not defined prg_version (
         set "prg_version_found=true"
       )
     )
+    if "%prg_version%"=="LTS" (
+      %_fatal% "[%~nx0] no version '%prg_version%' found for '%prg_name%', versions '%prg_versions%'" 19
+    )
   )
   if not defined prg_version_found (
     if not defined standalone_call (
@@ -129,6 +143,10 @@ if not defined prg_version (
     call:select_version
     %_ok% "[%~nx0] Selected fixed version: latest of '!prg_version!'"
   ) else (
+    if defined lts_version (
+      %_ok% "[%~nx0] LTS version selected: !lts_version!"
+      set "prg_version=!lts_version!"
+    )
     %_ok% "[%~nx0] Valid version '!prg_version!', one of '%prg_versions%'"
   )
 ) else (
@@ -166,6 +184,7 @@ for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose %prg_ver
 if "%prg_version%"=="" (
   %_fatal% "[%~nx0] No program version selected from '%prg_versions%'" 1
 )
+set "prg_version=%prg_version:-LTS=%"
 %_ok% "[%~nx0] Program version selected: %prg_version%"
 goto:eof
 
