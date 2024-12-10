@@ -8,6 +8,10 @@ if not errorlevel 1 (
 if exist "%script_dir_bin%\..\adm" (
    set "local_senv=(local) "
 )
+if defined no_local_senv (
+   set "no_local_senv=(reset) "
+   set "local_senv="
+)
 for %%i in ("%script_dir_bin%\..\batcolors") do ( set "bc=%%~fi" )
 call %bc%\echos_macros.bat export
 rem if errorlevel 1 (
@@ -115,10 +119,11 @@ if "%internalsenvcall%"=="1" (
    set "senv_dir="
    goto:eof
 )
-%_ok% "[%~nx0] %local_senv%senv activated: senv_dir='%senv_dir%'"
+%_ok% "[%~nx0] %local_senv%%no_local_senv%senv activated: senv_dir='%senv_dir%'"
 set "senv_dir="
 set ASCII27=
-set local_senv=
+set "local_senv="
+set "no_local_senv="
 call %bc%\echos_macros.bat unset
 set "bc="
 goto:eof
