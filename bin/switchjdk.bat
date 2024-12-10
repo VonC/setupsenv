@@ -114,3 +114,4 @@ endlocal & set "JAVA_HOME=%PRGS%\javas\%SELECTED_VERSION%" & set "PATH=%newPath%
 echo JAVA_HOME='%JAVA_HOME%'
 where java
 rem echo PATH='%PATH%'
+exit /b 0

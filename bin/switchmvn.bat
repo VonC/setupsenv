@@ -37,3 +37,4 @@ where mvn 2>nul | findstr cmd >nul 2>nul
 if errorlevel 1 (
     set "PATH=%M2%;%PATH%"
 )
+exit /b 0
