@@ -52,6 +52,9 @@ if not "%version%"=="" (
   if "%prgname%"=="jdk" (
     set "jdk_version=%version%"
   )
+  if "%prgname%"=="java" (
+    set "jdk_version=%version%"
+  )
   if "%prgname%"=="python" (
     set "python_cycle=%version%"
     set "version=latest"
@@ -288,6 +291,7 @@ if errorlevel 1 (
 set "next_url="
 goto:eof
 
+:dwl_java
 :dwl_jdk
 if "%jdk_version%"=="" ( %_fatal% "[%~nx0] jdk_version needs to be set (17, 21, ...)" 11 )
 rem https://adoptium.net/docs/faq/#_can_i_automate_the_download_of_temurin_binaries
