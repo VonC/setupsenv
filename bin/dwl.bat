@@ -308,13 +308,14 @@ if errorlevel 1 (
 set "version=%version:*hotspot_=%"
 set "version=%version:.zip=%"
 set "version=%version:~0,-2%"
-set "replacement=%%2B"
+set "replacement=+"
 set "dVersion=!version:_=%replacement%!"
 %_ok% "[%~nx0] Latest jdk version '%jdk_version%' means: '%version%', dVersion: '!dVersion!'"
 set "file=OpenJDK%jdk_version%U-jdk_x64_windows_hotspot_%version%.zip"
 rem https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.5%2B11/OpenJDK21U_x64_windows_hotspot_21.0.5_11.zip
 rem https://github.com/adoptium/temurin11-binaries/releases/download/jdk-11.0.25%2B9/OpenJDK11U-jdk_x64_windows_hotspot_11.0.25_9.zip
 set "url=https://github.com/adoptium/temurin%jdk_version%-binaries/releases/download/%dVersion%/%file%"
+%_ok% "[%~nx0] Built latest jdk version URL='%url%'"
 
 %_task% "[%~nx0] Must get latest URL from adoptium.net for jdk version '%jdk_version%'"
 rem @echo on
@@ -322,6 +323,7 @@ for /f "delims=" %%a in ('curl -sLk "https://api.adoptium.net/v3/assets/latest/%
 set "gu=%gu:*: =%"
 set "gu=%gu:,=%"
 set "url=%gu:"=%"
+set "url=%url:2B=+%"
 %_ok% "[%~nx0] Latest jdk version URL='%url%'"
 call :curl
 goto:eof
