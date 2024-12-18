@@ -97,6 +97,8 @@ set "prg_version=%~2"
 if "%prg_version%"=="inst_prg" ( goto:prg_version_inst_prg )
 if not defined prg_version (
   if "%prg_id%"=="node" ( set "prg_version=LTS" )
+) else if "%prg_version%"=="lts" (
+  set "prg_version=LTS"
 )
 if not defined prg_version (
   if defined prg_versions (
