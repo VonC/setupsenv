@@ -3,7 +3,7 @@ Gum~#~gums~gum_*_Windows_x86_64.zip~global
 Git~#~gits~PortableGit-*-bit.7z.exe~global
 Go/golang~#~gos~go*.windows-amd64.zip
 GH_(GitHub_CLI)/GH~#~ghs~gh_*_windows_amd64.zip
-JDK_(Java)/java/jdk~11 12 13 14 15 16 17 18 19 20 21 22 23~javas~OpenJDK*U-jdk_x64_windows_hotspot_*.zip
+JDK_(Java)/java/jdk~11 12 13 14 15 16 17 18 19 20 21-LTS 22 23~javas~OpenJDK*U-jdk_x64_windows_hotspot_*.zip
 Chrome~#~chromiums~chromev*-r*.7z
 Peazip/pz/7z~#~peazips~peazip_portable-~global
 Firefox/ff~#~firefoxs~FirefoxPortable_*_English.paf.exe
