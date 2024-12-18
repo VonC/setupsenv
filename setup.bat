@@ -432,7 +432,7 @@ cd /d "%PRGS%\%f%"
 %_task% "[%~nx0] Must uncompress with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\setup\%fname%"
 if errorlevel 1 (
-    rm -Rf "%tpath%"
+    rmdir /s /q "%tpath%"
     %_fatal% "[%~nx0] Error on 7z uncompression" 1
 )
 %_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%tpath%'"
