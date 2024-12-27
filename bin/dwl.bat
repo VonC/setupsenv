@@ -539,3 +539,13 @@ set "file=%prgname%-%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_ripgrep
+set "repo=BurntSushi/ripgrep"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/BurntSushi/ripgrep/releases/download/14.1.1/ripgrep-14.1.1-x86_64-pc-windows-msvc.zip
+set "file=%prgname%-%version%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
+call :curl
+goto:eof

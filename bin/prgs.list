@@ -27,3 +27,4 @@ superfile/spf~#~superfiles~superfile-windows-v*-amd64.zip
 Maven/mvn~#~mavens~apache-maven-*-bin.zip
 Terminal/term/cmd~#~terminals~Microsoft.WindowsTerminal_*_x64.zip
 Git-Cliff/gitcliff/gcliff/cliff~#~git-cliffs~git-cliff-*-x86_64-pc-windows-msvc.zip~global
+ripgrep/rg~#~ripgreps~ripgrep-*-x86_64-pc-windows-msvc.zip
