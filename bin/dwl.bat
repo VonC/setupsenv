@@ -549,3 +549,13 @@ set "file=%prgname%-%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_shellcheck
+set "repo=koalaman/shellcheck"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/koalaman/shellcheck/releases/download/v0.10.0/shellcheck-v0.10.0.zip
+set "file=%prgname%-v%version%.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
