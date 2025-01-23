@@ -559,3 +559,11 @@ set "file=%prgname%-v%version%.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_wildfly
+set "repo=wildfly/wildfly"
+rem https://github.com/wildfly/wildfly/releases/download/35.0.0.Final/wildfly-35.0.0.Final.zip
+set "file=%prgname%-%version%.Final.zip"
+set "url=https://github.com/%repo%/releases/download/%version%.Final/%file%"
+call :curl
+goto:eof
