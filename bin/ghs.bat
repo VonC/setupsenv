@@ -24,7 +24,7 @@ if %ERRORLEVEL% == 1 (
 %_ok% "Analyzed staged changes"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
 %_task% "Must commit staged changes with analyzed message"
-mods -Sr | git commit -F -
+mods -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); print $0; next } found == 1 { print $0 }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 | git commit -F -
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to commit staged changes with analyzed message" 13
 )
