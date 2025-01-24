@@ -16,12 +16,15 @@ if %ERRORLEVEL% == 0 (
 set "mods=%GOBIN%\mods.exe"
 set "EDITOR=%PRGS%\npps\current\notepad++.exe -multiInst -notabbar -nosession -noPlugin"
 
+set "param=%~1"
+if defined param ( goto:commit_with_analyzed_message )
 %_task% "Must analyze staged changes"
 git diff --cached | "%mods%" --role=cm-shell
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to analyze staged changes" 12
 )
 %_ok% "Analyzed staged changes"
+:commit_with_analyzed_message
 set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
 %_task% "Must commit staged changes with analyzed message"
 mods -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); print $0; next } found == 1 { print $0 }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 | git commit -F -
