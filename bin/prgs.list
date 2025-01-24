@@ -15,7 +15,7 @@ Sysinternals_Suite/sysinternals/sysinternal/sys/sysint~#~sysinternalsSuites~Sysi
 VSCode/code~#~vscodes~VSCodeUserSetup-x64-*.exe~global
 SQL_Developer/sqldeveloper/sqldev~#~sqldevelopers~sqldeveloper-*-x64.zip
 IntelliJ_IDEA_Community_Edition/idea/intellij~#~ideas~ideaIC-*.win.zip
-Notepad++/notepadplusplus/notepad-plus-plus/npp~#~npps~npp.*.portable.x64.zip
+Notepad++/notepadplusplus/notepad-plus-plus/npp~#~npps~npp.*.portable.x64.zip~global
 Filezilla/fz~#~filezillas~FileZilla_*_win64.zip
 MobaXTerm/mobax/moba~#~mobaxterms~MobaXterm_Portable_v*.zip
 Postman~#~postmans~PortableGit-*-64-bit.7z.exe

@@ -26,7 +26,6 @@
 [init]
 	defaultBranch = main
 [core]
-	editor = C:/Public/SOFTWARE/vscode/bin/code.cmd --wait
 	repositoryformatversion = 0
 	filemode = false
 	bare = false

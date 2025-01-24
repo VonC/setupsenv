@@ -54,6 +54,7 @@ set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 
 set "EDITOR=%PRGS%\vscodes\current\bin\code.cmd"
+set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
 
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
