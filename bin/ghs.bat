@@ -16,10 +16,17 @@ if %ERRORLEVEL% == 0 (
 set "mods=%GOBIN%\mods.exe"
 set "EDITOR=%PRGS%\npps\current\notepad++.exe -multiInst -notabbar -nosession -noPlugin"
 
+set model=gemini
+if defined GEMINI_MODEL (
+  %_warning% "GEMINI_MODEL is defined: '%GEMINI_MODEL%'"
+  set "model=%GEMINI_MODEL%"
+) else (
+  %_warning% "GEMINI_MODEL is not defined: use gemini, alias for 'gemini-1.5-pro-latest'"
+)
 set "param=%~1"
 if defined param ( goto:commit_with_analyzed_message )
 %_task% "Must analyze staged changes"
-git diff --cached | "%mods%" --role=cm-shell
+git diff --cached | "%mods%" --role=cm-shell --model=%model%
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to analyze staged changes" 12
 )
