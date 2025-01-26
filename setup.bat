@@ -287,8 +287,12 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 ENDLOCAL
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%"
-rem cd
-call custom\setup.ini.bat "set" || %_fatal% "[%~nx0] custom/setup.ini.bat still missing" && exit /b 1
+cd
+call custom\setup.ini.bat "set"
+set "err=%ERRORLEVEL%"
+if not "%err%"=="0" (
+ %_fatal% "[%~nx0] custom/setup.ini.bat still missing" %err%
+)
 echo HOME='%HOME%'
 echo script_dir='%script_dir%'
 rem set "script_dir=%cd%"
