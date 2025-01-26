@@ -28,6 +28,10 @@ if "%prgname%"=="ghs" (
 	set "instPath=C:\Program Files\GitHub CLI"
 	goto:endlocal
 )
+if "%prgname%"=="npps" (
+	set "instPath=C:\Program Files\Notepad++"
+	goto:endlocal
+)
 
 if "%prgname%"=="sysinternalsSuites" (
 	set "subkey_path=Software\Microsoft\Windows\CurrentVersion\App Paths\pslist.exe"

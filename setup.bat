@@ -236,18 +236,20 @@ if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
 )
 cd /d "%script_dir%"
 call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
-if not exist "%script_dir%\custom\%instlist%" (
-    goto:alldone
-)
-
+findstr /i "npps" "custom\%instlist%" >nul
+if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=npp.*.portable.x64.zip" )
+call:install "%pattern%" "npps" || exit /b
 call:install "gum_*_Windows_x86_64.zip" "gums" || exit /b 1
 call:install "npp.*.portable.x64.zip" "npps" || exit /b 1
 
 findstr /i "sysinternalsSuites" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=SysinternalsSuite-*.zip" )
 call:install "%pattern%" "sysinternalsSuites" || exit /b 1
-
 call:install "git-cliff-*-x86_64-pc-windows-msvc.zip" "git-cliffs" || exit /b 1
+
+if not exist "%script_dir%\custom\%instlist%" (
+    goto:alldone
+)
 
 %_info% "[%~nx0] =========="
 %_info% "[%~nx0] processing custom installation list '%instlist%'"
@@ -261,6 +263,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   if "!fl!"=="vscodes" ( set "cil_install=false" )
   if "!fl!"=="gums" ( set "cil_install=false" )
   if "!fl!"=="sysinternals" ( set "cil_install=false" )
+  if "!fl!"=="npps" ( set "cil_install=false" )
   if "!cil_install!"=="true" (
       call:install "!fnpl!" "!fl!" || exit /b 1
   )
