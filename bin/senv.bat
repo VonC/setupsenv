@@ -63,7 +63,7 @@ if exist "%PRGS%\gos\current" (
    set "GOROOT=%PRGS%\gos\current"
    set "GOBIN=%USERPROFILE%\go\bin"
    set "GOROOT=%PRGS%\gos\current"
-   set "PATH=%GOROOT%\bin;%PATH%"
+   set "PATH=%PATH%;%GOROOT%\bin;"
 )
 set GOPROXY=https://proxy.golang.org
 
