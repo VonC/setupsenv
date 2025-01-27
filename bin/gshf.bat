@@ -9,5 +9,5 @@ for %%i in ("%PRGS%\setup") do (
 )
 
 set "GEMINI_MODEL=flash"
-call "%senv_dir%\bin\ghs.bat" %*
+call "%senv_dir%\bin\gsh.bat" %*
 set "GEMINI_MODEL="
