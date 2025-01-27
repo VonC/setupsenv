@@ -333,7 +333,7 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
-if "%p%"=="system" ( set "pname=system" && goto:info )
+if "%p%"=="system" ( set "pname=system" && set "fname=" && goto:info )
 rem echo Check path in setupsdir/p: '%setupsdir%'\'%p%'
 set pname=
 rem echo "p='%p%', f='%f%'"
