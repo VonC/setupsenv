@@ -56,6 +56,16 @@ set sz=%pz%\res\7z\7z.exe
 set "EDITOR=%PRGS%\vscodes\current\bin\code.cmd"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
 
+if exist "%PRGS%\gos\current" (
+   set CGO_ENABLED=1
+   set "GOOGLE_API_KEY="
+   set GO111MODULE=on
+   set "GOROOT=%PRGS%\gos\current"
+   set "GOBIN=%USERPROFILE%\go\bin"
+   set "GOROOT=%PRGS%\gos\current"
+   set "PATH=%GOROOT%\bin;%PATH%"
+)
+set GOPROXY=https://proxy.golang.org
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 set "senv_dir=%script_dir_bin%"
