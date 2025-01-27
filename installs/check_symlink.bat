@@ -108,17 +108,16 @@ if not exist "%PRGS%\%f%\%sln%" (
     %_info% "[%~nx0] Must create '%sln%' to reference '%p%'"
     goto:create
 )
-%_task% "[%~nx0] Must check if symlink '%sln%' does reference p '%p%'"
-rem @echo on
-for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr %sln%') do (set s=%%a)
-rem echo "s='%s%'"
-echo "%s%" | C:\Windows\System32\findstr "%p%" 1>NUL: 2>NUL:
+%_task% "[%~nx0] Must check if symlink '%sln%' does reference p '%p%' in '%PRGS%\%f%'"
+for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr /C:%sln%') do (set s=%%a)
+echo "s='%s%'"
+echo "%s%" | C:\Windows\System32\findstr /C:"%p%" 1>NUL: 2>NUL:
 if errorlevel 1 (
-    %_info% "[%~nx0] Must update '%sln%' to reference '%p%' from '%s%'"
+    %_info% "[%~nx0] Must update '%sln%' to reference '%p%' from '%s%' in '%PRGS%\%f%'"
     rmdir "%PRGS%\%f%\%sln%"
     goto:create
 )
-%_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%p%'"
+%_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%p%' in '%PRGS%\%f%'"
 goto:endlocal_sln
 
 :create
