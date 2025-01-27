@@ -262,7 +262,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   if "!fl!"=="gits" ( set "cil_install=false" )
   if "!fl!"=="vscodes" ( set "cil_install=false" )
   if "!fl!"=="gums" ( set "cil_install=false" )
-  if "!fl!"=="sysinternals" ( set "cil_install=false" )
+  if "!fl!"=="sysinternalsSuites" ( set "cil_install=false" )
   if "!fl!"=="npps" ( set "cil_install=false" )
   if "!cil_install!"=="true" (
       call:install "!fnpl!" "!fl!" || exit /b 1
