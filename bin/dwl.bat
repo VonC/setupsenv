@@ -567,3 +567,30 @@ set "file=%prgname%-%version%.Final.zip"
 set "url=https://github.com/%repo%/releases/download/%version%.Final/%file%"
 call :curl
 goto:eof
+
+:dwl_idea
+rem https://www.zenrows.com/blog/curl-bypass-cloudflare#set-real-http-headers
+curl -sL -o NUL -w "Final URL: %%{url_effective}\n" ^
+-H "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8" ^
+-H "Accept-Encoding: gzip, deflate" ^
+-H "Accept-Language: en-US,en;q=0.5" ^
+-H "Connection: keep-alive" ^
+-H "Sec-Ch-Ua: 'Chromium';v='128', 'Not;A=Brand';v='24', 'Brave';v='128'" ^
+-H "Sec-Ch-Ua-Mobile: ?0" ^
+-H "Sec-Ch-Ua-Platform: 'Windows'" ^
+-H "Sec-Fetch-Dest: document" ^
+-H "Sec-Fetch-Mode: navigate" ^
+-H "Sec-Fetch-Site: none" ^
+-H "Sec-Fetch-User: ?1" ^
+-H "Sec-Gpc: 1" ^
+-H "Upgrade-Insecure-Requests: 1" ^
+-H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36" ^
+https://mvnrepository.com/artifact/com.jetbrains.intellij.idea/ideaIC/latest > "%script_dir%\dwl_idea.tmp" 2>&1
+for /f "usebackq delims=" %%a in ("%script_dir%\dwl_idea.tmp") do set "url_latest=%%a"
+set "version=%url_latest:*/ideaIC/=%"
+%_info% "[%~nx0] Dwl (%prgname%) version '%version%'"
+rem https://download.jetbrains.com/idea/ideaIU-2024.3.2.2.win.zip
+set "file=ideaIC-%version%.win.zip"
+set "url=https://download.jetbrains.com/idea/%file%"
+call :curl
+goto:eof
