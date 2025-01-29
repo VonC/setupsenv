@@ -8,33 +8,31 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
-@echo on
 REM Initialize parameter array
 set "args_count=0"
 for %%a in (%*) do (
     set /a args_count+=1
     set "param[!args_count!]=%%a"
+    echo "Add '%%a' to param at '!args_count!'"
 )
 
-set "WF_JDK=17"
-call:check_param jdk
-set "jdk_version=%param_output%"
-
-if "%jdk_version%"=="" (
-  %_fatal% "Missing first mandatory parameter (e.g. Java version number like 17)" 2
-)
-set "jdk_version=%~1"
+rem set "WF_JDK=17"
+call:check_param jdk "Must be a version number like 17"
+set "jdk_version=%param_value%"
 if not exist "%PRGS%\javas\jdk%jdk_version%" (
   %_fatal% "Invalid jdk version '%jdk_version%' (Must be a version number like 17)" 3
 )
+%_ok% "jdk version '%jdk_version%' exists as '%PRGS%\javas\jdk%jdk_version%'"
 
 goto:eof
 
 :check_param
-set "param_name=%1"
+set "param_name=%~1"
+set "mandatory=%~2"
 for /f %%A in ('powershell -command "('%param_name%').ToUpper()"') do set "param_name_upper=%%A"
 echo param_name_upper=%param_name_upper%
 
+set "param_value="
 if defined WF_%param_name_upper% (
     set "param_value=!WF_%param_name_upper%!"
     %_ok% "Environment variable 'WF_%param_name_upper%' set to '!param_value!'"
@@ -42,13 +40,16 @@ if defined WF_%param_name_upper% (
     %_ok% "No 'WF_%param_name_upper%' set. Look for a '--%param_name=' argument"
 )
 
-@echo on
+set "extracted_value="
 REM Loop over parameters
 for /L %%i in (1,2,!args_count!) do (
     set "current_param=!param[%%i]!"
+    echo "current_param='!current_param!' at '%%i'"
     REM Check if the parameter starts with param_name=
     if "!current_param!"=="!param_name!" (
-        set "value=!param[%%i+1]!"
+        set /a next=%%i+1
+        call set "value=%%param[!next!]%%"
+        echo "value='!value!' at '!next!'"
         
         REM Trim leading spaces
         for /f "tokens=* delims= " %%x in ("!value!") do set "value=%%x"
@@ -61,10 +62,23 @@ for /L %%i in (1,2,!args_count!) do (
         REM Assign the trimmed value to a variable
         set "extracted_value=!value!"
         echo Extracted value: "!extracted_value!"
+        goto:extracted_value
     )
     
     echo Parameter %%i: !current_param!
     REM Add your processing here
 )
-
+:extracted_value
+if defined extracted_value (
+  if defined param_value (
+    %_warning% "Parameter '%param_name%=%extracted_value% will override env var 'WF_%param_name_upper%=%param_value%'"
+  )
+  set "param_value=%extracted_value%"
+  %_ok% "'%param_name%' set to '!param_value!'"
+)
+if not defined param_value (
+  if defined mandatory (
+    %_fatal% "Missing mandatory parameter (%mandatory%)" 2
+  )
+)
 goto:eof
