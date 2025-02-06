@@ -1,0 +1,4 @@
+@echo off
+setlocal enabledelayedexpansion
+
+powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module CimCmdlets; Import-Module Microsoft.PowerShell.Management; Import-Module Microsoft.PowerShell.Utility; $os = Get-CimInstance -ClassName Win32_OperatingSystem; $usedMemory = $os.TotalVisibleMemorySize - $os.FreePhysicalMemory; ('Total Memory: {0} KB' -f $os.TotalVisibleMemorySize); ('Used Memory: {0} KB' -f $usedMemory); ('Available Memory: {0} KB' -f $os.FreePhysicalMemory); Get-CimInstance -ClassName Win32_PerfFormattedData_PerfOS_Memory | Select-Object PoolPagedBytes, PoolNonpagedBytes"

@@ -72,3 +72,4 @@ ti=testinternet.bat $*
 ei=ensure_internet.bat $*
 
 gcliff="%PRGS%\git-cliffs\current\git-cliff.exe" $*
+mem=memory.bat
