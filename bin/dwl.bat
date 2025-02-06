@@ -594,3 +594,12 @@ set "file=ideaIC-%version%.win.zip"
 set "url=https://download.jetbrains.com/idea/%file%"
 call :curl
 goto:eof
+
+:dwl_npp
+set "repo=notepad-plus-plus/notepad-plus-plus"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.7.6/npp.8.7.6.portable.x64.zip
+set "file=%prgname%.%version%.portable.x64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
