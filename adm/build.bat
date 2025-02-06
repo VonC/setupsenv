@@ -46,7 +46,11 @@ set "builds_dir=%senv_dir%\builds"
 
 set "sbem=SENV_BUILD_ERROR_MODE='%SENV_BUILD_ERROR_MODE%'"
 for /f "delims=" %%x in ('git -C "%custom_dir%" status --porcelain') do set "st=%%x"
-rem goto:skipcl
+if defined SENV_BUILD_SKIP_STATUS (
+    %_warning% "Skip git status check, SENV_BUILD_SKIP_STATUS set"
+    goto:skipcl
+)
+%_info% "SENV_BUILD_SKIP_STATUS not set: check git status in senv and senv\custom"
 if not "%st%"=="" (
     if "%SENV_BUILD_ERROR_MODE%"=="custom" (
         %_error% "[%~nx0] Not a clean git status in custom '%custom_dir%' (%sbem%)"
