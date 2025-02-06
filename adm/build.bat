@@ -188,8 +188,6 @@ if errorlevel 1 (
 if "%setupsdirsenv%"=="" (
     %_fatal% "[%~nx0] setupsdirsenv empty. Check '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
-
-echo call remote_setup.bat %profile%>%setupsdirsenv%\s.bat
+echo call remote_setup.bat %profile%>"%setupsdirsenv%\s.bat"
 rem echo call %setupsdirsenv%\remote_setup.bat %profile%>%setupsdir%\s.bat
-
 if exist "%builds_dir%\build.post.bat" ( call "%builds_dir%\build.post.bat" )
