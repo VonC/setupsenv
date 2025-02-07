@@ -6,11 +6,13 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 cd /d "%script_dir%"
 call "%senv_dir%\batcolors\echos_macros.bat"
 
-where cat > NUL 2>NUL
-if errorlevel 1 (
+if not exist "%PRGS%\gits\current\usr\bin\cat.exe" (
   %_info% "[%~nx0] Skip gits.config.utils: cat non available in path"
   goto:eof
 )
+
+set "_cat=%PRGS%\gits\current\usr\bin\cat.exe"
+set "_grep=%PRGS%\gits\current\usr\bin\grep.exe"
 
 if "%1"==":save_gitconfig" (
     call :save_gitconfig %*
@@ -27,8 +29,8 @@ call :restore_gitconfig %*
 goto:eof
 
 :save_gitconfig
-cat %HOME%\.gitconfig >NUL
-grep "st = status" %HOME%\.gitconfig >NUL
+"%_cat%" %HOME%\.gitconfig >NUL
+"%_grep%" "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "[%~nx0] Unable to read %HOME%\.gitconfig: content corrupted (%*)" 666
 )
@@ -44,7 +46,7 @@ if not exist "%HOME%\.gitconfig.ori" (
   %_info% "[%~nx0] skip  gits.config.utils restore_gitconfig: no .gitconfig.ori"
   goto:eof
 )
-grep "st = status" %HOME%\.gitconfig.ori >NUL
+"%_grep%" "st = status" %HOME%\.gitconfig.ori >NUL
 if errorlevel 1 (
   %_fatal% "[%~nx0] Unable to read %HOME%\.gitconfig.ori: content corrupted (%*)" 668
 )
@@ -52,7 +54,7 @@ copy /Y %HOME%\.gitconfig.ori %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "[%~nx0] Unable to copy %HOME%\.gitconfig.ori: content corrupted (%*)" 669
 )
-grep "st = status" %HOME%\.gitconfig >NUL
+"%_grep%" "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
   %_fatal% "[%~nx0] Unable to confirm read %HOME%\.gitconfig: content corrupted (%*)" 670
 )
