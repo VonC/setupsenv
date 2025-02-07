@@ -304,9 +304,12 @@ for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
 set "setupsdirbat=setupsdir_%profile%.bat"
 call "%script_dir%\custom\%setupsdirbat%"
 echo cdis=cd /d %setupsdir%>> "%script_dir%\tmp"
-where sed.exe >NUL 2>NUL
-if not errorlevel 1 (
-    sed -i "s/^\s\+[\r\n]*$//g" "%script_dir%\tmp"
+set "_sed="
+if exist "%PRGS%\gits\current\usr\bin\sed.exe" (
+    set "_sed=%PRGS%\gits\current\usr\bin\sed.exe"
+)
+if defined _sed (
+    "%_sed%" -i "s/^\s\+[\r\n]*$//g" "%script_dir%\tmp"
 )
 del "%HOME%\bin\senv.local.doskey"
 move "%script_dir%\tmp" "%HOME%\bin\senv.local.doskey" >NUL
