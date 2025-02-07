@@ -41,6 +41,32 @@ if "%~1"=="all" (
 )
 if defined publish_all ( goto:eof )
 
+if exist "%custom_dir%\install_%profile%.list" (
+    call :publish_profile
+    goto:eof
+)
+
+%_warning% "'%custom_dir%\install_%profile%.list' does not exist (list of tools to install for profile '%profile%')"
+
+%_task% "Must look for any 'setupsdir_%profile%*.bat' script in '%custom_dir%'"
+
+set "foundMatch="
+for %%F in ("%custom_dir%\setupsdir_%profile%*.bat") do (
+    set "fname=%%~nxF"
+    rem Remove the "setupsdir_" prefix and ".bat" suffix to form the new profile value
+    set "newProfile=!fname:setupsdir_=!"
+    set "newProfile=!newProfile:.bat=!"
+    %_info% "[%~nx0] Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
+    set "profile=!newProfile!"
+    call :publish_profile
+    set "foundMatch=1"
+)
+if not defined foundMatch (
+    %_fatal% "[%~nx0] No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
+)
+
+goto:eof
+
 :publish_profile
 set "fprofile=%custom_dir%\install_%profile%.list"
 if not exist "%fprofile%" (
