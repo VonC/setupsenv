@@ -220,6 +220,7 @@ call :curl
 goto:eof
 
 :dwl_chrome
+:dwl_chromium
 set "repo=Hibbiki/chromium-win64"
 if "%version%"=="latest" ( call :get_latest_version_from_github )
 %_info% "[%~nx0] Dwl '%prgname%' version '%version%'"
