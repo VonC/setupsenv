@@ -26,11 +26,6 @@ if "%1"=="" (
     set "profile=%1"
 )
 
-set s="setupsdir_%profile%.bat"
-if not exist "%custom_dir%\%s%" (
-    %_fatal% "[%~nx0] setupsdir script '%s%' does not exist" 2
-)
-
 cd ..
 if not exist custom (
     %_fatal% "[%~nx0] current folder must be named custom" 1
@@ -84,7 +79,33 @@ cd %senv_dir%
 call gcuvc
 cd %custom_dir%
 call gcuu
-call "%custom_dir%\setupsdir_%profile%.bat" %2
+
+set s="setupsdir_%profile%.bat"
+if exist "%custom_dir%\%s%" (
+    call:build_for_profile
+    goto:eof
+)
+%_warning% "[%~nx0] setupsdir script '%s%' does not exist"
+%_task% "Must look for any 'setupsdir_%profile%*.bat' script in '%custom_dir%'"
+
+set "foundMatch="
+for %%F in ("%custom_dir%\setupsdir_%profile%*.bat") do (
+    set "fname=%%~nxF"
+    rem Remove the "setupsdir_" prefix and ".bat" suffix to form the new profile value
+    set "newProfile=!fname:setupsdir_=!"
+    set "newProfile=!newProfile:.bat=!"
+    %_info% "[%~nx0] Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
+    set "profile=!newProfile!"
+    call :build_for_profile
+    set "foundMatch=1"
+)
+if not defined foundMatch (
+    %_fatal% "[%~nx0] No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
+)
+goto:eof
+
+:build_for_profile
+call "%custom_dir%\setupsdir_%profile%.bat"
 if errorlevel 1 (
     %_error% "[%~nx0] Unable to call '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
