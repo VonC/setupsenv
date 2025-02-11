@@ -8,6 +8,8 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
+if "%~1"=="prompt" ( call:dump_prompt && exit /b 0 )
+
 git diff --cached --quiet
 if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
@@ -45,3 +47,16 @@ if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to edit committed changes message" 14
 )
 %_ok% "Committed changes message edited"
+goto:eof
+
+:dump_prompt
+for /f "tokens=2* delims=:" %%a in ('mods --dirs ^| findstr "Configuration"') do (
+    set "config_path=%%a:%%b"
+)
+REM Optionally remove any leading space
+set "config_path=%config_path:~1%"
+echo %config_path%
+if not exist "%config_path%\mods.yml" (
+    %_fatal% "Configuration directory not found: '%config_path%\mods.yml'" 15
+)
+awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line ^!= e) print line } }" "%config_path%\mods.yml"
