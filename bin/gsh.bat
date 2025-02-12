@@ -8,12 +8,12 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
-if "%~1"=="prompt" ( call:dump_prompt && exit /b 0 )
-
 git diff --cached --quiet
 if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
 )
+
+if "%~1"=="prompt" ( call:dump_prompt && exit /b 0 )
 
 set "mods=%GOBIN%\mods.exe"
 set "EDITOR=%PRGS%\npps\current\notepad++.exe -multiInst -notabbar -nosession -noPlugin"
@@ -59,4 +59,16 @@ echo %config_path%
 if not exist "%config_path%\mods.yml" (
     %_fatal% "Configuration directory not found: '%config_path%\mods.yml'" 15
 )
-awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line ^!= e) print line } }" "%config_path%\mods.yml"
+awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line ^!= e) print line } }" "%config_path%\mods.yml" > tmp.txt
+echo Reminder: conventional commit means: the title must start with `^<type^>[optional scope]: description`, with 52 characters max>> tmp.txt
+echo Types other than `fix:` and `feat:` are `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.>> tmp.txt
+echo Do not add a footer. Do not add an introduction like 'The title should be...'. Just print the title and the body of the commit message without any other comment.>> tmp.txt
+echo.>> tmp.txt
+echo The following git diff, with its lines starting with plus or minus, does contain changes to the codebase:>> tmp.txt
+echo.>> tmp.txt
+echo ```>> tmp.txt
+git diff --cached>> tmp.txt
+echo ```>> tmp.txt
+powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
+echo Prompt and Git diff --cached copied to the clipboard.
+del tmp.txt
