@@ -344,7 +344,26 @@ goto:eof
 
 :dwl_node
 set "repo=nodejs/node"
-if "%version%"=="latest" ( call :get_latest_version_from_github )
+if "%version%"=="latest" (
+  call :get_latest_version_from_github
+  goto:dwl_node_with_version
+)
+echo %version% | findstr "\." >nul
+if %ERRORLEVEL%==0 ( goto:dwl_node_with_version )
+
+set "cmd=curl -skL https://nodejs.org/download/release/"
+%cmd% > "%script_dir%\dwl_node.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_node.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from nodejs.org/download/release/ for Node with cmd '%cmd%'" 101
+)
+grep -oP "(?<=>)(v.*?)(?=/)" "%script_dir%\dwl_node.tmp" > "%script_dir%\dwl_node1.tmp"
+sort -V "%script_dir%\dwl_node1.tmp" > "%script_dir%\dwl_node.tmp"
+for /f "delims=" %%a in ('grep "v%version%\." "%script_dir%\dwl_node.tmp"') do ( set "version=%%a" )
+del "%script_dir%\dwl_node.tmp"
+del "%script_dir%\dwl_node1.tmp"
+set "version=%version:v=%"
+:dwl_node_with_version
 %_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
 set "file=node-v%version%-win-x64.zip"
 rem https://nodejs.org/download/release/v22.9.0/node-v22.9.0-win-x64.zip
