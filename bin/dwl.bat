@@ -623,3 +623,13 @@ rem https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.
 set "file=%prgname%.%version%.portable.x64.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+goto:eof
+
+:dwl_lsd
+set "repo=lsd-rs/lsd"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/lsd-rs/lsd/releases/download/v1.1.5/lsd-v1.1.5-x86_64-pc-windows-msvc.zip
+set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
