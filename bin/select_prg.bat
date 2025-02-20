@@ -79,6 +79,10 @@ for /f "tokens=1-5 delims=~" %%a in ('echo "%prg_line%"') do (
   set "prg_patterns=%%d"
   set "prg_is_global=%%d"
 )
+if not defined prg_patterns (
+  %_error% "Line should be Name/aliases~Major Versions or #~FolderName-with-s~pattern_*_file.ext[~global]"
+  %_fatal% "Incomplete prg_line '%prg_line%', no pattern or other data" 126
+)
 set "prg_names=%prg_names:"=%"
 if defined prg_versions ( set "prg_versions=%prg_versions:#=%" )
 if defined prg_folders ( set "prg_folders=%prg_folders:#=%" )
