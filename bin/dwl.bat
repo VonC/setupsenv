@@ -633,3 +633,12 @@ rem https://github.com/lsd-rs/lsd/releases/download/v1.1.5/lsd-v1.1.5-x86_64-pc-
 set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+
+:dwl_bat
+set "repo=sharkdp/bat"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-pc-windows-msvc.zip
+set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
