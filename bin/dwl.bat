@@ -642,3 +642,12 @@ rem https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-
 set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+
+:dwl_fd
+set "repo=sharkdp/fd"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/sharkdp/fd/releases/download/v10.2.0/fd-v10.2.0-x86_64-pc-windows-msvc.zip
+set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl

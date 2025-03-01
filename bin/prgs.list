@@ -32,3 +32,4 @@ Wildfly/wf/wfly~27.0.1~wildflys~wildfly-*.Final.zip
 Git_Cred/gitcred/gitcreds~#~gits~gitcred.exe~global
 Lsd_ll_ls/ll/ls/lsd~#~lsds~lsd-*-x86_64-pc-windows-msvc.zip
 Bat/cat~#~bats~bat-v*-x86_64-pc-windows-msvc.zip
+fd/find~#~fds~fd-v*-x86_64-pc-windows-msvc.zip
