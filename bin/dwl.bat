@@ -633,6 +633,7 @@ rem https://github.com/lsd-rs/lsd/releases/download/v1.1.5/lsd-v1.1.5-x86_64-pc-
 set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+goto:eof
 
 :dwl_bat
 set "repo=sharkdp/bat"
@@ -642,6 +643,7 @@ rem https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-x86_64-
 set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+goto:eof
 
 :dwl_fd
 set "repo=sharkdp/fd"
@@ -651,3 +653,31 @@ rem https://github.com/sharkdp/fd/releases/download/v10.2.0/fd-v10.2.0-x86_64-pc
 set "file=%prgname%-v%version%-x86_64-pc-windows-msvc.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+goto:eof
+
+:dwl_powertoy
+set "repo=microsoft/PowerToys"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/microsoft/PowerToys/releases/download/v0.88.0/PowerToysUserSetup-0.88.0-x64.exe
+set "file=PowerToysUserSetup-%version%-x64.exe
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_treesize
+if not "%version%"=="latest" ( %_fatal% "Can only download latest version of TreeSize" )
+set "cmd=curl -skL https://www.jam-software.com/treesize/changes.shtml
+%cmd% > "%script_dir%\dwl_treesize.tmp"
+if errorlevel 1 (
+  del "%script_dir%\dwl_treesize.tmp"
+  %_fatal% "[%~nx0] Cannot get latest version from https://www.jam-software.com/treesize/changes.shtml for TreeSize with cmd '%cmd%'" 101
+)
+for /f "tokens=2 delims= " %%a in ('grep -oP "(?<=>)Version (.*?)(?=<)" "%script_dir%\dwl_treesize.tmp" ^| head -1') do ( set "version=%%a" )
+del "%script_dir%\dwl_treesize.tmp"
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://downloads.jam-software.de/treesize_free/TreeSizeFree-Portable.zip
+set "file=TreeSizeFree-Portable-v%version%.zip"
+set "url=https://downloads.jam-software.de/treesize_free/TreeSizeFree-Portable.zip"
+call :curl
+goto:eof
