@@ -681,3 +681,13 @@ set "file=TreeSizeFree-Portable-v%version%.zip"
 set "url=https://downloads.jam-software.de/treesize_free/TreeSizeFree-Portable.zip"
 call :curl
 goto:eof
+
+:dwl_mods
+set "repo=charmbracelet/mods"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/charmbracelet/mods/releases/download/v1.7.0/mods_1.7.0_Windows_x86_64.zip
+set "file=%prgname%_%version%_Windows_x86_64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
