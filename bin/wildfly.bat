@@ -3,35 +3,107 @@ setlocal enabledelayedexpansion
 call:init_env
 call:init_params %*
 %_info% "Wildfly URL '%WF_URL%' ."
-endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%"
+endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%" & set "WF_VERSION=%WF_VERSION%"
+set "WF_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%"
 
 setlocal enabledelayedexpansion
 call:init_env
+call:init_mgmt_user
 call:get_wildfly_state
-%_ok% "Wildfly Status done"
+%_ok% "Wildfly Status: '%WILDFLY_STATE%'"
+if "%WILDFLY_STATE%" == "running" (
+  %_ok% "Wildfly '%WF_VERSION%' already started"
+  exit /b 0
+)
+if "%WILDFLY_STATE%" == "failed" (
+  %_fatal% "Wildfly '%WF_VERSION%' failed to start" 121
+)
+if "%WILDFLY_STATE%" == "not started" (
+  %_task% "Must start Wildfly '%WF_VERSION%'"
+  call:runWildFly
+)
 
 endlocal
+goto:eof
+
+:init_mgmt_user
+if not exist wildfly_mgmt_user.txt (
+  %_fatal% "No wildfly_mgmt_user file present in %CD%" 122
+)
+for /f "tokens=1,2 delims= " %%a in (wildfly_mgmt_user.txt) do (
+  set "WF_MGMT_USER=%%a"
+  set "WF_MGMT_PASS=%%b"
+)
+
+if not defined WF_MGMT_USER (
+  %_fatal% "Could not read username from wildfly_mgmt_user.txt in '%CD%'" 123
+)
+if not defined WF_MGMT_PASS (
+  %_fatal% "Could not read password from wildfly_mgmt_user.txt in '%CD%'" 124
+)
+%_ok% "Wildfly management user '%WF_MGMT_USER%' and password read from wildfly_mgmt_user.txt"
+set "WF_MGMT_USERS_FILE=%WF_HOME%\standalone\configuration\mgmt-users.properties"
+if not exist "%WF_MGMT_USERS_FILE%" (
+  %_fatal% "No mgmt-users.properties file present in '%WF_MGMT_USERS_FILE%'" 125
+)
+findstr /i "^%WF_MGMT_USER%=" "%WF_MGMT_USERS_FILE%" >nul
+if %errorlevel% equ 0 (
+    %_ok% "User "%WF_MGMT_USER%" exists in '%WF_MGMT_USERS_FILE%'"
+    exit /b 0
+)
+%_task% "Must add 'WF_MGMT_USER' to '%WF_MGMT_USERS_FILE%'"
+rem https://docs.redhat.com/en/documentation/jboss_enterprise_application_platform_continuous_delivery/12/html/getting_started_guide/administering_jboss_eap#running_the_add_user_utility_non_interactively
+rem https://docs.redhat.com/en/documentation/jboss_enterprise_application_platform_continuous_delivery/12/html/getting_started_guide/reference_material#reference_of_add_user_utility_arguments
+%_info% "%WF_HOME%\bin\add-user.bat -u %WF_MGMT_USER% -p %WF_MGMT_PASS%"
+call "%WF_HOME%\bin\add-user.bat" -u "%WF_MGMT_USER%" -p "%WF_MGMT_PASS%" --silent
+if errorlevel 1 (
+    %_fatal% "Failed to add user '%WF_MGMT_USER%' to '%WF_MGMT_USERS_FILE%'" 126
+)
+%_ok% "User '%WF_MGMT_USER%' added to '%WF_MGMT_USERS_FILE%'"
+goto:eof
+
+:runWildFly
+start /b cmd /c "%WF_HOME%\bin\standalone.bat"
+rem -c %STANDALONE_CONF%"
+
+:monitor_wildfly
+call :get_wildfly_state
+if "%WILDFLY_STATE%"=="running" (
+    %_ok% "WildFly started successfully."
+    exit /b 0
+) else if "%WILDFLY_STATE%"=="failed" (
+    %_fatal% "WildFly failed to start." 121
+) else (
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting..."
+    timeout /t 5 >nul  REM Wait for 5 seconds
+    goto :monitor_wildfly
+)
 goto:eof
 
 :get_wildfly_state
 set "STATE_TO_CHECK=%~1"
 set "WILDFLY_STATE="
-
-for /f "tokens=*" %%i in ('curl -s -H "Content-Type: application/json" -d "{\"operation\":\"read-attribute\",\"name\":\"server-state\"}" %WF_URL%') do (
+if not defined WF_MGMT_USER (
+  %_fatal% "An admin user is needed to access console/management and read WildFly state" 131
+)
+if not defined WF_MGMT_PASS (
+  %_fatal% "An admin user is needed to access console/management and read WildFly state" 132
+)
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-attribute\",\"name\":\"server-state\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+rem %_info% "curl_cmd='%curl_cmd:"='%'"
+rem echo %curl_cmd%
+for /f "tokens=*" %%i in ('%curl_cmd%') do (
     set "RESPONSE=%%i"
 )
-echo RESPONSE='%RESPONSE%'
-for /f "tokens=2 delims=:" %%a in ('echo %RESPONSE% ^| findstr /c:"\"result\""') do (
-    for /f "delims=," %%b in ("%%a") do (
-        set "WILDFLY_STATE=%%~b"
-        set "WILDFLY_STATE=%WILDFLY_STATE:"=%"
-    )
+set "RESPONSE=%RESPONSE:"=%"
+rem echo RESPONSE='%RESPONSE%'
+rem @echo on
+for /f "delims=" %%a in ('echo {outcome : success, result : running} ^| awk "{sub(/}/, \"\", $NF); print $NF}"') do (
+    set "WILDFLY_STATE=%%a"
 )
+rem @echo off
 
-if not defined WILDFLY_STATE (
-    echo not started
-    exit /b 0
-)
+if not defined WILDFLY_STATE ( set "WILDFLY_STATE=not started" )
 echo.%WILDFLY_STATE%
 exit /b 0
 goto:eof
@@ -86,17 +158,17 @@ call switchjdk %jdk_version%
 %_ok% "jdk version '%jdk_version%' exists as '%PRGS%\javas\jdk%jdk_version%'"
 
 call:check_param version "Must be a version number like 27"
-set "wildfly_version=%param_value%"
-if not exist "%PRGS%\wildflys\wildfly%wildfly_version%" (
-  %_fatal% "Invalid Wildfly version '%jdk_version%' (Must be a version number like 27)" 3
+set "WF_VERSION=%param_value%"
+if not exist "%PRGS%\wildflys\wildfly%WF_VERSION%" (
+  %_fatal% "Invalid Wildfly version '%WF_VERSION%' (Must be a version number like 27)" 3
 )
-%_info% "Wildfly version '%wildfly_version%' selected."
+%_info% "Wildfly version '%WF_VERSION%' selected."
 
 call:check_param url
 set "WF_URL=%param_value%"
 if not defined wildfly_console_url (
-  %_warning% "url param missing (Wildfly console URL). Use http://localhost:9990"
-  set "WF_URL=http://localhost:9990"
+  %_warning% "url param missing (Wildfly console URL). Use http://127.0.0.1:9990"
+  set "WF_URL=http://127.0.0.1:9990"
 )
 goto:eof
 
