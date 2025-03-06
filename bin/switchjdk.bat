@@ -73,45 +73,63 @@ if "%SELECTED_VERSION%" == "" (
 )
 %_ok% "[%~nx0] Java version chosen: '%SELECTED_VERSION%'"
 
+set "must_switchjdk="
+set "jdk_bin_path=%PRGS%\javas\%SELECTED_VERSION%\bin"
+set "path_prefix=%PRGS%\javas"
 
+set "path_check_awk_file=%script_dir%\path_check.awk"
+echo %PATH%> "path_temp.txt"
+set "awk_path_prefix=%path_prefix:\=\\\\%"
+set "awk_jdk_bin_path=%jdk_bin_path:\=\\\\%"
+rem echo awk -v prefix="%awk_path_prefix%" -v jdk_bin_path="%awk_jdk_bin_path%" -f "%path_check_awk_file%" path_temp.txt
+for /f "delims=" %%a in ('awk -v prefix^="%awk_path_prefix%" -v jdk_bin_path^="%awk_jdk_bin_path%" -f "%path_check_awk_file%" path_temp.txt') do (
+    set "complete_output=%%a"
+)
+del path_temp.txt
+rem %_info% "complete_output='%complete_output%'" 
+
+REM Split the output at the special separator
+for /f "tokens=1,2 delims=#@#" %%b in ("!complete_output!") do (
+    set "filtered_path=%%b"
+    set "flags=%%c"
+)
+if not defined filtered_path (
+    %_fatal% "[%~nx0] Unable to filter PATH" 4
+)
+if "%filtered_path:\=%" == "%filtered_path%" (
+    %_fatal% "[%~nx0] Unable to detect PATH in filtered_path '%filtered_path%'" 5
+)
+
+set "jdk_path_found="
+set "multiple_paths_found="
+REM Extract individual flags
+set "jdk_path_found=!flags:~0,1!"
+set "multiple_paths_found=!flags:~1,1!"
+
+rem %_info% "jdk_bin_path='%jdk_bin_path%'"
+rem %_info% "filtered_path='%filtered_path%'"
+rem %_info% "jdk_path_found='%jdk_path_found%'"
+rem  %_info% "multiple_paths_found='%multiple_paths_found%'"
 
 :clean_path
 set "JAVA_HOME=%PRGS%\javas\%SELECTED_VERSION%"
 
-set "newPath="
-rem Test if `where java` is equal to %PRGS%\javas\%SELECTED_VERSION%
-for /f "tokens=*" %%j in ('where java 2^>NUL') do (
-    if "%%j" == "%PRGS%\javas\%SELECTED_VERSION%\bin\java.exe" (
-        set "newPath=%PATH%"
-    )
-)
+set "newPath=%filtered_path%"
 
-if not "%newPath%" == "" (
-    %_ok% "[%~nx0] Java '%SELECTED_VERSION%' already in PATH"
-    goto:skip_clean_path
+if "%jdk_path_found%" == "1" (
+    set "msg=Java '%SELECTED_VERSION%' already in PATH"
+) else (
+    set "newPath=%JAVA_HOME%\bin;%filtered_path%"
+    set "msg=Java '%SELECTED_VERSION%' added to PATH"
 )
+if "%multiple_paths_found%" == "1" (
+    set "msg=%msg%, other '%PRGS%\javas' paths removed"
+)
+%_ok% "%msg%"
 
-set "current_path="
-rem echo PATH='%PATH%'
-rem for /f "tokens=*" %%a in ('set PATH ^| sed "s,%PRGS%\pythons,,g"') do ( set "newPath=%%a" )
-:: Split the PATH variable at semicolons and echo each part
-for %%a in ("%PATH:;=" "%") do (
-    set "current_path=%%~a"
-    echo !current_path!| findstr /C:"%PRGS%\javas" >nul
-    if not !errorlevel! equ 0 (
-        if "!newPath!" == "" (
-            set "newPath=!current_path!"
-        ) else (
-            set "newPath=!newPath!;!current_path!"
-        )
-    )
-)
-rem echo newPath='%newPath%'
-set "newPath=%JAVA_HOME%\bin;%newPath%"
-set "current_path="
 :skip_clean_path
-endlocal & set "JAVA_HOME=%PRGS%\javas\%SELECTED_VERSION%" & set "PATH=%newPath%" & set "JAVA_VERSION=%SELECTED_VERSION:jdk=%"
-echo JAVA_HOME='%JAVA_HOME%'
-where java
+endlocal & set "JAVA_HOME=%PRGS%\javas\%SELECTED_VERSION%" & set "JAVA_VERSION=%SELECTED_VERSION:jdk=%" & set "PATH=%newPath%" 
+rem echo JAVA_HOME='%JAVA_HOME%'
+rem where java
 rem echo PATH='%PATH%'
 exit /b 0
