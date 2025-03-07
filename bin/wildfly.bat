@@ -38,7 +38,9 @@ goto:eof
 
 :runWildFly
 call:prepare_log_for_action
-start /b cmd /c "%WF_HOME%\bin\standalone.bat" > %wildfly_log_file% 2>&1
+echo wildfly_log_file start='%wildfly_log_file%'
+type nul > "%wildfly_log_file%"
+start /b cmd /c ""%WF_HOME%\bin\standalone.bat" > "%wildfly_log_file%" 2>&1" 
 rem -c %STANDALONE_CONF%"
 
 rem set "ECHO_STATE=ON"
@@ -78,7 +80,9 @@ goto:eof
 call:prepare_log_for_action
 rem @echo on
 set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
-%curl_cmd% > %wildfly_log_file% 2>&1
+echo wildfly_log_file stop='%wildfly_log_file%'
+type nul > "%wildfly_log_file%"
+( %curl_cmd% ) >> "%wildfly_log_file%"
 
 :monitor_stopping_wildfly
 call :get_wildfly_state
@@ -149,6 +153,7 @@ set "RESPONSE="
 for /f "tokens=*" %%i in ('%curl_cmd%') do (
     set "RESPONSE=%%i"
 )
+rem echo RESPONSE0='%RESPONSE%'
 if defined RESPONSE (
     set "RESPONSE=%RESPONSE:"=%"
 )
