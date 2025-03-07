@@ -99,6 +99,27 @@ if "%WILDFLY_STATE%"=="not started" (
 )
 goto:eof
 
+:tlog
+:logt
+set "tail_log=1"
+:log
+set "latest_log="
+for /f "delims=" %%a in ('dir /b /a-d /od "wildfly_27_*.log" ^| grep -E "start|run"^|tail -1') do set "latest_log=%%a"
+
+if defined latest_log (
+  if defined tail_log (
+    set "tail_log="
+    tail -f "%latest_log%"
+    exit /b 0
+  )
+  tail -n 50 "%latest_log%"
+) else (
+  %_error% "No matching log file found in %CD%"
+)
+exit /b 0
+goto:eof
+
+:vversionv
 :vversion
 call:version verbose
 goto:eof
