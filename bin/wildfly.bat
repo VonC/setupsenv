@@ -11,7 +11,7 @@ setlocal enabledelayedexpansion
 
 call:init_env
 call:init_mgmt_user
-call:%WF_ACTION%
+call <NUL :%WF_ACTION%
 endlocal
 goto:eof
 
