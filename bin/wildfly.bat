@@ -99,6 +99,26 @@ if "%WILDFLY_STATE%"=="not started" (
 )
 goto:eof
 
+:vversion
+call:version verbose
+goto:eof
+:version
+set "verbose=%1"
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-resource\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+rem @echo on
+for /f "tokens=*" %%i in ('%curl_cmd%') do (
+    rem echo i=%%i
+    set "RESPONSE=%%i"
+)
+rem @echo off
+if not defined verbose (
+  rem echo echo %RESPONSE% ^| "%PRGS%\jqs\current\jq-win64.exe" -r '.result."product-version"'
+  echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r ".result.\"product-version\""
+  exit /b 0
+)
+echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r "\"Product name: \" + .result.\"product-name\" + \", version: \" + .result.\"product-version\" + \", release version: \" + .result.\"release-version\""
+exit /b 0
+goto:eof
 
 :init_mgmt_user
 if not exist wildfly_mgmt_user.txt (
