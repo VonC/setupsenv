@@ -1,4 +1,30 @@
 @echo off
+REM ===================================================================
+REM                    WILDFLY MANAGEMENT SCRIPT
+REM ===================================================================
+REM This script provides commands for managing WildFly application
+REM server instances, including starting, stopping, checking status,
+REM viewing logs, and getting version information.
+REM
+REM Usage:   wildfly.bat [version value] [url value] [action]
+REM Example: wildfly.bat version 27 url http://127.0.0.1:9990 start
+REM          (the action is always last)
+REM
+REM Actions:
+REM   - status (default):   Check if WildFly is running
+REM   - start/run:          Start WildFly server
+REM   - stop:               Stop WildFly server
+REM   - log:                View recent log entries
+REM   - tlog/logt:          Tail the log continuously
+REM   - version:            Show WildFly version (brief)
+REM   - vversion/vversionv: Show detailed version info
+REM
+REM Environment variables:
+REM   - WF_VERSION:       WildFly version (e.g., 27)
+REM   - WF_URL:           Management URL (default: http://127.0.0.1:9990)
+REM   - WF_JDK:           Java version to use
+REM ===================================================================
+
 setlocal enabledelayedexpansion
 call:init_env
 set "WF_ACTION="
@@ -11,15 +37,29 @@ setlocal enabledelayedexpansion
 
 call:init_env
 call:init_mgmt_user
-call <NUL :%WF_ACTION%
+if "%WF_ACTION:log=%" == "%WF_ACTION%" (
+  call:%WF_ACTION%
+) else (
+  call <NUL :%WF_ACTION%
+)
 endlocal
 goto:eof
 
+REM ===================================================================
+REM                   MAIN COMMAND FUNCTIONS
+REM ===================================================================
+
+REM -------------------------------------------------------------------
+REM STATUS - Check if WildFly server is running
+REM -------------------------------------------------------------------
 :status
 call:get_wildfly_state
 %_ok% "Wildfly Status: '%WILDFLY_STATE%'"
 goto:eof
 
+REM -------------------------------------------------------------------
+REM START/RUN - Start the WildFly server if not already running
+REM -------------------------------------------------------------------
 :start
 :run
 call:get_wildfly_state
@@ -36,6 +76,129 @@ if "%WILDFLY_STATE%" == "not started" (
 )
 goto:eof
 
+REM -------------------------------------------------------------------
+REM STOP - Stop the WildFly server if currently running
+REM -------------------------------------------------------------------
+:stop
+call:get_wildfly_state
+if "%WILDFLY_STATE%" == "not started" (
+  %_ok% "Wildfly '%WF_VERSION%' already stopped"
+  exit /b 0
+)
+if "%WILDFLY_STATE%" == "failed" (
+  %_fatal% "Wildfly '%WF_VERSION%' failed to stop" 142
+)
+if "%WILDFLY_STATE%" == "running" (
+  %_task% "Must stop Wildfly '%WF_VERSION%'"
+  call:stop_wildfly
+)
+goto:eof
+
+REM -------------------------------------------------------------------
+REM LOG - Display recent log entries
+REM -------------------------------------------------------------------
+:tlog
+:logt
+set "tail_log=1"
+:log
+set "latest_log="
+for /f "delims=" %%a in ('dir /b /a-d /od "wildfly_27_*.log" ^| grep -E "start|run"^|tail -1') do set "latest_log=%%a"
+
+if defined latest_log (
+  if defined tail_log (
+    set "tail_log="
+    tail -f "%latest_log%"
+    exit /b 0
+  )
+  tail -n 50 "%latest_log%"
+) else (
+  %_error% "No matching log file found in %CD%"
+)
+exit /b 0
+goto:eof
+
+REM -------------------------------------------------------------------
+REM VVERSION/VVERSIONV - Display detailed version information
+REM -------------------------------------------------------------------
+:versionv
+:vversion
+call:version verbose
+goto:eof
+
+REM -------------------------------------------------------------------
+REM VERSION - Display WildFly version information
+REM -------------------------------------------------------------------
+:version
+set "verbose=%1"
+%_task% "Version: Must check WF state first"
+call :get_wildfly_state
+%_info% "Version: WF state '%WF_STATE%'"
+if "%WILDFLY_STATE%"=="running" ( goto:version_running )
+set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\jboss\as\ee\main\wildfly-ee-*.Final.jar"
+set "WF_EE_JAR="
+for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
+    set "WF_EE_JAR=%%a"
+)
+if defined WF_EE_JAR (
+    for /f "delims=" %%a in ('echo !WF_EE_JAR! ^| sed -E "s/.*wildfly-ee-(.*).jar/\1/"') do (
+        set "WF_EE_VERSION=%%a"
+    )
+) else (
+    %_fatal% "No matching file found for pattern: %glob_pattern%" 171
+)
+if not defined verbose (
+  echo %WF_EE_VERSION%
+  exit /b 0
+)
+set "verbose="
+set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\wildfly\bootable-jar\main\wildfly-jar-runtime-*.jar"
+set "WF_JAR="
+for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
+    set "WF_JAR=%%a"
+)
+if defined WF_JAR (
+    for /f "delims=" %%a in ('echo !WF_JAR! ^| sed -E "s/.*wildfly-jar-runtime-(.*).jar/\1/"') do (
+        set "WF_CORE_VERSION=%%a"
+    )
+) else (
+    %_fatal% "No matching file found for pattern: %glob_pattern%" 172
+)
+set "manifest_file=%WF_HOME%\modules\system\layers\base\org\jboss\as\product\main\dir\META-INF\MANIFEST.MF"
+set "WF_NAME="
+for /f "tokens=2 delims=: " %%a in ('findstr "JBoss-Product-Release-Name:" "%manifest_file%"') do set "WF_NAME=%%a"
+if not defined WF_NAME (
+    %_fatal% "No 'JBoss-Product-Release-Name' found in '%manifest_file%'" 173
+)
+echo Product name: %WF_NAME%, version: %WF_EE_VERSION%, release version: %WF_CORE_VERSION%
+exit /b 0
+REM -------------------------------------------------------------------
+REM version_running - Get version info from a running WildFly instance
+REM -------------------------------------------------------------------
+:version_running
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-resource\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+rem @echo on
+for /f "tokens=*" %%i in ('%curl_cmd%') do (
+    rem echo i=%%i
+    set "RESPONSE=%%i"
+)
+rem @echo off
+if not defined verbose (
+  rem echo echo %RESPONSE% ^| "%PRGS%\jqs\current\jq-win64.exe" -r '.result."product-version"'
+  echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r ".result.\"product-version\""
+  exit /b 0
+)
+echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r "\"Product name: \" + .result.\"product-name\" + \", version: \" + .result.\"product-version\" + \", release version: \" + .result.\"release-version\""
+exit /b 0
+goto:eof
+
+
+REM ===================================================================
+REM                 INTERNAL UTILITY FUNCTIONS
+REM ===================================================================
+
+REM -------------------------------------------------------------------
+REM runWildFly - Internal function to start the WildFly server
+REM -------------------------------------------------------------------
 :runWildFly
 call:prepare_log_for_action
 echo wildfly_log_file start='%wildfly_log_file%'
@@ -60,22 +223,9 @@ if "%WILDFLY_STATE%"=="running" (
 )
 goto:eof
 
-
-:stop
-call:get_wildfly_state
-if "%WILDFLY_STATE%" == "not started" (
-  %_ok% "Wildfly '%WF_VERSION%' already stopped"
-  exit /b 0
-)
-if "%WILDFLY_STATE%" == "failed" (
-  %_fatal% "Wildfly '%WF_VERSION%' failed to stop" 142
-)
-if "%WILDFLY_STATE%" == "running" (
-  %_task% "Must stop Wildfly '%WF_VERSION%'"
-  call:stop_wildfly
-)
-goto:eof
-
+REM -------------------------------------------------------------------
+REM stop_wildfly - Internal function to stop the WildFly server
+REM -------------------------------------------------------------------
 :stop_wildfly
 call:prepare_log_for_action
 rem @echo on
@@ -99,89 +249,9 @@ if "%WILDFLY_STATE%"=="not started" (
 )
 goto:eof
 
-:tlog
-:logt
-set "tail_log=1"
-:log
-set "latest_log="
-for /f "delims=" %%a in ('dir /b /a-d /od "wildfly_27_*.log" ^| grep -E "start|run"^|tail -1') do set "latest_log=%%a"
-
-if defined latest_log (
-  if defined tail_log (
-    set "tail_log="
-    tail -f "%latest_log%"
-    exit /b 0
-  )
-  tail -n 50 "%latest_log%"
-) else (
-  %_error% "No matching log file found in %CD%"
-)
-exit /b 0
-goto:eof
-
-:vversionv
-:vversion
-call:version verbose
-goto:eof
-:version
-set "verbose=%1"
-%_task% "Version: Must check WF state first"
-call :get_wildfly_state
-%_info% "Version: WF state '%WF_STATE%'"
-if "%WILDFLY_STATE%"=="running" ( goto:version_running )
-set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\jboss\as\ee\main\wildfly-ee-*.Final.jar"
-set "WF_EE_JAR="
-for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
-    set "WF_EE_JAR=%%a"
-)
-if defined WF_EE_JAR (
-    for /f "delims=" %%a in ('echo !WF_EE_JAR! ^| sed -E "s/.*wildfly-ee-(.*).jar/\1/"') do (
-        set "WF_EE_VERSION=%%a"
-    )
-) else (
-    %_fatal% "No matching file found for pattern: %glob_pattern%" 171
-)
-if not defined verbose (
-  echo %WF_EE_VERSION%
-  exit /b 0
-)
-set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\wildfly\bootable-jar\main\wildfly-jar-runtime-*.jar"
-set "WF_JAR="
-for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
-    set "WF_JAR=%%a"
-)
-if defined WF_JAR (
-    for /f "delims=" %%a in ('echo !WF_JAR! ^| sed -E "s/.*wildfly-jar-runtime-(.*).jar/\1/"') do (
-        set "WF_CORE_VERSION=%%a"
-    )
-) else (
-    %_fatal% "No matching file found for pattern: %glob_pattern%" 172
-)
-set "manifest_file=%WF_HOME%\modules\system\layers\base\org\jboss\as\product\main\dir\META-INF\MANIFEST.MF"
-set "WF_NAME="
-for /f "tokens=2 delims=: " %%a in ('findstr "JBoss-Product-Release-Name:" "%manifest_file%"') do set "WF_NAME=%%a"
-if not defined WF_NAME (
-    %_fatal% "No 'JBoss-Product-Release-Name' found in '%manifest_file%'" 173
-)
-echo Product name: %WF_NAME%, version: %WF_EE_VERSION%, release version: %WF_CORE_VERSION%
-exit /b 0
-:version_running
-set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-resource\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
-rem @echo on
-for /f "tokens=*" %%i in ('%curl_cmd%') do (
-    rem echo i=%%i
-    set "RESPONSE=%%i"
-)
-rem @echo off
-if not defined verbose (
-  rem echo echo %RESPONSE% ^| "%PRGS%\jqs\current\jq-win64.exe" -r '.result."product-version"'
-  echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r ".result.\"product-version\""
-  exit /b 0
-)
-echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r "\"Product name: \" + .result.\"product-name\" + \", version: \" + .result.\"product-version\" + \", release version: \" + .result.\"release-version\""
-exit /b 0
-goto:eof
-
+REM -------------------------------------------------------------------
+REM init_mgmt_user - Initialize WildFly management user credentials
+REM -------------------------------------------------------------------
 :init_mgmt_user
 if not exist wildfly_mgmt_user.txt (
   %_fatal% "No wildfly_mgmt_user file present in %CD%" 122
@@ -218,7 +288,9 @@ if errorlevel 1 (
 %_ok% "User '%WF_MGMT_USER%' added to '%WF_MGMT_USERS_FILE%'"
 goto:eof
 
-
+REM -------------------------------------------------------------------
+REM get_wildfly_state - Check the current state of WildFly server
+REM -------------------------------------------------------------------
 :get_wildfly_state
 set "STATE_TO_CHECK=%~1"
 set "WILDFLY_STATE="
@@ -253,7 +325,9 @@ rem echo.%WILDFLY_STATE%
 exit /b 0
 goto:eof
 
-
+REM -------------------------------------------------------------------
+REM checkWildFlyState - Check if WildFly state matches expected state
+REM -------------------------------------------------------------------
 :checkWildFlyState
 set "WILDFLY_URL=http://localhost:9990/management"
 set "STATE_TO_CHECK=%~1"
@@ -268,6 +342,9 @@ if "%CURRENT_STATE%"=="%STATE_TO_CHECK%" (
 )
 goto:eof
 
+REM -------------------------------------------------------------------
+REM prepare_log_for_action - Set up logging for the current action
+REM -------------------------------------------------------------------
 :prepare_log_for_action
 if not defined WF_ACTION (
   %_fatal% "Cannot prepare log if no action" 151
@@ -280,6 +357,9 @@ rem mklink /J %wildfly_log% %wildfly_log_file%
 %_info% "WildFly log for '%WF_ACTION%' is available at '%wildfly_log_file%'"
 goto:eof
 
+REM -------------------------------------------------------------------
+REM init_env - Initialize environment and load required scripts
+REM -------------------------------------------------------------------
 :init_env
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
@@ -289,6 +369,9 @@ for %%i in ("%PRGS%\setup") do (
 )
 goto:eof
 
+REM -------------------------------------------------------------------
+REM init_params - Process command-line parameters
+REM -------------------------------------------------------------------
 :init_params
 REM Initialize parameter array
 set "args_count=0"
@@ -358,6 +441,9 @@ if not defined WF_URL (
 )
 goto:eof
 
+REM -------------------------------------------------------------------
+REM check_param - Check for parameter in arguments or environment vars
+REM -------------------------------------------------------------------
 :check_param
 set "param_name=%~1"
 set "mandatory=%~2"
