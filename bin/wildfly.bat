@@ -104,19 +104,24 @@ if not defined WF_MGMT_PASS (
 set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-attribute\",\"name\":\"server-state\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
 rem %_info% "curl_cmd='%curl_cmd:"='%'"
 rem echo %curl_cmd%
+set "RESPONSE="
 for /f "tokens=*" %%i in ('%curl_cmd%') do (
     set "RESPONSE=%%i"
 )
-set "RESPONSE=%RESPONSE:"=%"
+if defined RESPONSE (
+    set "RESPONSE=%RESPONSE:"=%"
+)
 rem echo RESPONSE='%RESPONSE%'
 rem @echo on
-for /f "delims=" %%a in ('echo {outcome : success, result : running} ^| awk "{sub(/}/, \"\", $NF); print $NF}"') do (
-    set "WILDFLY_STATE=%%a"
+if defined RESPONSE (
+    for /f "delims=" %%a in ('echo %RESPONSE% ^| awk "{sub(/}/, \"\", $NF); print $NF}"') do (
+        set "WILDFLY_STATE=%%a"
+    )
 )
 rem @echo off
 
 if not defined WILDFLY_STATE ( set "WILDFLY_STATE=not started" )
-echo.%WILDFLY_STATE%
+rem echo.%WILDFLY_STATE%
 exit /b 0
 goto:eof
 
