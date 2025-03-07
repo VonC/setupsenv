@@ -227,6 +227,14 @@ if not defined WF_ACTION (
 )
 rem echo WF_ACTION='%WF_ACTION%'
 rem set "WF_JDK=17"
+if defined WF_JDK (
+  if exist "%PRGS%\javas\jdk%WF_JDK%" (
+    if "%JAVA_HOME%" == "%PRGS%\javas\jdk%WF_JDK%" (
+      %_info% "JDK '%WF_JDK%' already set as JAVA_HOME"
+      goto:check_param_version
+    )
+  )
+)
 call:check_param jdk "Must be a version number like 17"
 set "jdk_version=%param_value%"
 if not exist "%PRGS%\javas\jdk%jdk_version%" (
@@ -235,6 +243,13 @@ if not exist "%PRGS%\javas\jdk%jdk_version%" (
 call switchjdk %jdk_version%
 %_ok% "jdk version '%jdk_version%' exists as '%PRGS%\javas\jdk%jdk_version%'"
 
+:check_param_version
+if defined WF_VERSION (
+  if exist "%PRGS%\wildflys\wildfly%WF_VERSION%" (
+      %_info% "Wildfly '%WF_VERSION%' already set"
+      goto:check_param_url
+  )
+)
 call:check_param version "Must be a version number like 27"
 set "WF_VERSION=%param_value%"
 if not exist "%PRGS%\wildflys\wildfly%WF_VERSION%" (
@@ -242,9 +257,15 @@ if not exist "%PRGS%\wildflys\wildfly%WF_VERSION%" (
 )
 %_info% "Wildfly version '%WF_VERSION%' selected."
 
+:check_param_url
+if defined WF_URL (
+      %_info% "Wildfly '%WF_URL%' already set"
+      goto:eof
+  )
+)
 call:check_param url
 set "WF_URL=%param_value%"
-if not defined wildfly_console_url (
+if not defined WF_URL (
   %_warning% "url param missing (Wildfly console URL). Use http://127.0.0.1:9990"
   set "WF_URL=http://127.0.0.1:9990"
 )
