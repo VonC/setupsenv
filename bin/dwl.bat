@@ -691,3 +691,23 @@ set "file=%prgname%_%version%_Windows_x86_64.zip"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_jq
+set "repo=jqlang/jq"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "[%~nx0] Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-win64.exe
+set "file=jq-win64.exe"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
+set "target_local_file=%version%-win64.exe"
+if exist "%setup_dir%\%version%-win64.zip" (
+  %_ok% "[%~nx0] File '%setup_dir%\%version%-win64.zip' already exists"
+  goto:eof
+)
+call :curl
+mkdir "%setup_dir%\%version%-win64"
+copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\"
+copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq-win64.exe"
+copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq.exe"
+"%sz%" a -w"%setup_dir%" "%setup_dir%\%version%-win64.zip" "%version%-win64"
+goto:eof
