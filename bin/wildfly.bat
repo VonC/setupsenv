@@ -104,6 +104,47 @@ call:version verbose
 goto:eof
 :version
 set "verbose=%1"
+%_task% "Version: Must check WF state first"
+call :get_wildfly_state
+%_info% "Version: WF state '%WF_STATE%'"
+if "%WILDFLY_STATE%"=="running" ( goto:version_running )
+set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\jboss\as\ee\main\wildfly-ee-*.Final.jar"
+set "WF_EE_JAR="
+for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
+    set "WF_EE_JAR=%%a"
+)
+if defined WF_EE_JAR (
+    for /f "delims=" %%a in ('echo !WF_EE_JAR! ^| sed -E "s/.*wildfly-ee-(.*).jar/\1/"') do (
+        set "WF_EE_VERSION=%%a"
+    )
+) else (
+    %_fatal% "No matching file found for pattern: %glob_pattern%" 171
+)
+if not defined verbose (
+  echo %WF_EE_VERSION%
+  exit /b 0
+)
+set "glob_pattern=%WF_HOME%\modules\system\layers\base\org\wildfly\bootable-jar\main\wildfly-jar-runtime-*.jar"
+set "WF_JAR="
+for /f "delims=" %%a in ('dir /b /a-d "%glob_pattern%"') do (
+    set "WF_JAR=%%a"
+)
+if defined WF_JAR (
+    for /f "delims=" %%a in ('echo !WF_JAR! ^| sed -E "s/.*wildfly-jar-runtime-(.*).jar/\1/"') do (
+        set "WF_CORE_VERSION=%%a"
+    )
+) else (
+    %_fatal% "No matching file found for pattern: %glob_pattern%" 172
+)
+set "manifest_file=%WF_HOME%\modules\system\layers\base\org\jboss\as\product\main\dir\META-INF\MANIFEST.MF"
+set "WF_NAME="
+for /f "tokens=2 delims=: " %%a in ('findstr "JBoss-Product-Release-Name:" "%manifest_file%"') do set "WF_NAME=%%a"
+if not defined WF_NAME (
+    %_fatal% "No 'JBoss-Product-Release-Name' found in '%manifest_file%'" 173
+)
+echo Product name: %WF_NAME%, version: %WF_EE_VERSION%, release version: %WF_CORE_VERSION%
+exit /b 0
+:version_running
 set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"read-resource\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
 rem @echo on
 for /f "tokens=*" %%i in ('%curl_cmd%') do (
