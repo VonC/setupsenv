@@ -35,7 +35,19 @@ if "%WILDFLY_STATE%" == "not started" (
 )
 goto:eof
 
-endlocal
+:stop
+call:get_wildfly_state
+if "%WILDFLY_STATE%" == "not started" (
+  %_ok% "Wildfly '%WF_VERSION%' already stopped"
+  exit /b 0
+)
+if "%WILDFLY_STATE%" == "failed" (
+  %_fatal% "Wildfly '%WF_VERSION%' failed to stop" 142
+)
+if "%WILDFLY_STATE%" == "running" (
+  %_task% "Must stop Wildfly '%WF_VERSION%'"
+  call:stop_wildfly
+)
 goto:eof
 
 :init_mgmt_user
@@ -86,9 +98,29 @@ if "%WILDFLY_STATE%"=="running" (
 ) else if "%WILDFLY_STATE%"=="failed" (
     %_fatal% "WildFly failed to start." 121
 ) else (
-    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting..."
-    timeout /t 5 >nul  REM Wait for 5 seconds
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for start..."
+    REM Wait for 5 seconds
+    C:\Windows\System32\timeout.exe /t 5 >nul
     goto :monitor_wildfly
+)
+goto:eof
+
+:stop_wildfly
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+%curl_cmd%
+
+:monitor_stopping_wildfly
+call :get_wildfly_state
+if "%WILDFLY_STATE%"=="not started" (
+    %_ok% "WildFly stopped successfully."
+    exit /b 0
+) else if "%WILDFLY_STATE%"=="failed" (
+    %_fatal% "WildFly failed to stop." 141
+) else (
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for stop..."
+    REM Wait for 5 seconds
+    C:\Windows\System32\timeout.exe /t 5 >nul
+    goto :monitor_stopping_wildfly
 )
 goto:eof
 
