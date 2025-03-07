@@ -1,16 +1,27 @@
 @echo off
 setlocal enabledelayedexpansion
 call:init_env
+set "WF_ACTION="
 call:init_params %*
-%_info% "Wildfly URL '%WF_URL%' ."
-endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%" & set "WF_VERSION=%WF_VERSION%"
+%_info% "Wildfly URL '%WF_URL%', WF_ACTION='%WF_ACTION%'."
+endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%" & set "WF_VERSION=%WF_VERSION%" & set "WF_ACTION=%WF_ACTION%"
 set "WF_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%"
 
 setlocal enabledelayedexpansion
+
 call:init_env
 call:init_mgmt_user
+call:%WF_ACTION%
+endlocal
+goto:eof
+
+:status
 call:get_wildfly_state
 %_ok% "Wildfly Status: '%WILDFLY_STATE%'"
+goto:eof
+
+:run
+call:get_wildfly_state
 if "%WILDFLY_STATE%" == "running" (
   %_ok% "Wildfly '%WF_VERSION%' already started"
   exit /b 0
@@ -22,6 +33,7 @@ if "%WILDFLY_STATE%" == "not started" (
   %_task% "Must start Wildfly '%WF_VERSION%'"
   call:runWildFly
 )
+goto:eof
 
 endlocal
 goto:eof
@@ -148,6 +160,21 @@ for %%a in (%*) do (
     rem echo "Add '%%a' to param at '!args_count!'"
 )
 
+set "WF_ACTION=status"  REM Default value
+
+rem echo args_count='%args_count%', '!args_count!'
+
+if !args_count! == 0 (
+    set "WF_ACTION=status"
+) else (
+    set "WF_ACTION="
+    set /a remainder=!args_count! %% 2
+    if !remainder! == 0 ( set "WF_ACTION=status" )
+)
+if not defined WF_ACTION (
+  set "WF_ACTION=!param[%args_count%]!"
+)
+rem echo WF_ACTION='%WF_ACTION%'
 rem set "WF_JDK=17"
 call:check_param jdk "Must be a version number like 17"
 set "jdk_version=%param_value%"
