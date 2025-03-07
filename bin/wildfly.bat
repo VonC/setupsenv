@@ -20,6 +20,7 @@ call:get_wildfly_state
 %_ok% "Wildfly Status: '%WILDFLY_STATE%'"
 goto:eof
 
+:start
 :run
 call:get_wildfly_state
 if "%WILDFLY_STATE%" == "running" (
@@ -35,6 +36,29 @@ if "%WILDFLY_STATE%" == "not started" (
 )
 goto:eof
 
+:runWildFly
+call:prepare_log_for_action
+start /b cmd /c "%WF_HOME%\bin\standalone.bat" > %wildfly_log_file% 2>&1
+rem -c %STANDALONE_CONF%"
+
+rem set "ECHO_STATE=ON"
+rem @echo on
+:monitor_wildfly
+call :get_wildfly_state
+if "%WILDFLY_STATE%"=="running" (
+    %_ok% "WildFly started successfully."
+    exit /b 0
+) else if "%WILDFLY_STATE%"=="failed" (
+    %_fatal% "WildFly failed to start." 121
+) else (
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for start..."
+    REM Wait for 5 seconds
+    C:\Windows\System32\timeout.exe /t 5 >nul
+    goto :monitor_wildfly
+)
+goto:eof
+
+
 :stop
 call:get_wildfly_state
 if "%WILDFLY_STATE%" == "not started" (
@@ -49,6 +73,28 @@ if "%WILDFLY_STATE%" == "running" (
   call:stop_wildfly
 )
 goto:eof
+
+:stop_wildfly
+call:prepare_log_for_action
+rem @echo on
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+%curl_cmd% > %wildfly_log_file% 2>&1
+
+:monitor_stopping_wildfly
+call :get_wildfly_state
+if "%WILDFLY_STATE%"=="not started" (
+    %_ok% "WildFly stopped successfully."
+    exit /b 0
+) else if "%WILDFLY_STATE%"=="failed" (
+    %_fatal% "WildFly failed to stop." 141
+) else (
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for stop..."
+    REM Wait for 5 seconds
+    C:\Windows\System32\timeout.exe /t 5 >nul
+    goto :monitor_stopping_wildfly
+)
+goto:eof
+
 
 :init_mgmt_user
 if not exist wildfly_mgmt_user.txt (
@@ -86,43 +132,6 @@ if errorlevel 1 (
 %_ok% "User '%WF_MGMT_USER%' added to '%WF_MGMT_USERS_FILE%'"
 goto:eof
 
-:runWildFly
-start /b cmd /c "%WF_HOME%\bin\standalone.bat"
-rem -c %STANDALONE_CONF%"
-
-:monitor_wildfly
-call :get_wildfly_state
-if "%WILDFLY_STATE%"=="running" (
-    %_ok% "WildFly started successfully."
-    exit /b 0
-) else if "%WILDFLY_STATE%"=="failed" (
-    %_fatal% "WildFly failed to start." 121
-) else (
-    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for start..."
-    REM Wait for 5 seconds
-    C:\Windows\System32\timeout.exe /t 5 >nul
-    goto :monitor_wildfly
-)
-goto:eof
-
-:stop_wildfly
-set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
-%curl_cmd%
-
-:monitor_stopping_wildfly
-call :get_wildfly_state
-if "%WILDFLY_STATE%"=="not started" (
-    %_ok% "WildFly stopped successfully."
-    exit /b 0
-) else if "%WILDFLY_STATE%"=="failed" (
-    %_fatal% "WildFly failed to stop." 141
-) else (
-    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for stop..."
-    REM Wait for 5 seconds
-    C:\Windows\System32\timeout.exe /t 5 >nul
-    goto :monitor_stopping_wildfly
-)
-goto:eof
 
 :get_wildfly_state
 set "STATE_TO_CHECK=%~1"
@@ -172,11 +181,16 @@ if "%CURRENT_STATE%"=="%STATE_TO_CHECK%" (
 )
 goto:eof
 
-:prepare_new_log
+:prepare_log_for_action
+if not defined WF_ACTION (
+  %_fatal% "Cannot prepare log if no action" 151
+)
 for /f %%i in ('bash -c "date +%%Y%%m%%d_%%H%%M%%S"') do set "wildfly_log_timestamp=%%i"
-set "wildfly_log_file=wildfly_%wildfly_version%_%wildfly_log_timestamp%.log"
-if exist wildfly_log ( rmdir wildfly_log )
-mklink /J wildfly_log %wildfly_log_file%
+set "wildfly_log_file=wildfly_%WF_VERSION%_%WF_ACTION%_%wildfly_log_timestamp%.log"
+set "wildfly_log=wildfly_log_%WF_ACTION% "
+if exist %wildfly_log% ( rmdir %wildfly_log% )
+rem mklink /J %wildfly_log% %wildfly_log_file%
+%_info% "WildFly log for '%WF_ACTION%' is available at '%wildfly_log_file%'"
 goto:eof
 
 :init_env
