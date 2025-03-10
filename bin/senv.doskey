@@ -61,6 +61,7 @@ ssleep=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -d -t 0
 shutd=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -k -f -t 0
 shutr=%PRGS%\sysinternalsSuites\current\psshutdown64.exe -r -f -t 0
 pe=%PRGS%\sysinternalsSuites\current\procexp64.exe $*
+zi=%PRGS%\sysinternalsSuites\current\ZoomIt64.exe $*
 
 dl=dwl.bat $*
 download=dwl.bat $*
