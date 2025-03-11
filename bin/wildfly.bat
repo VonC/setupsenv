@@ -30,12 +30,13 @@ call:init_env
 set "WF_ACTION="
 call:init_params %*
 %_info% "Wildfly URL '%WF_URL%', WF_ACTION='%WF_ACTION%'."
-endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%" & set "WF_VERSION=%WF_VERSION%" & set "WF_ACTION=%WF_ACTION%"
+endlocal & set "PATH=%PATH%" & set "WF_URL=%WF_URL%" & set "WF_VERSION=%WF_VERSION%" & set "WF_ACTION=%WF_ACTION%" & set "JAVA_HOME=%JAVA_HOME%"
 set "WF_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%"
 
 setlocal enabledelayedexpansion
 
 call:init_env
+rem @echo on
 call:init_mgmt_user
 if "%WF_ACTION:log=%" == "%WF_ACTION%" (
   call:%WF_ACTION%
@@ -257,11 +258,11 @@ if exist wildfly_mgmt_user.txt (
   for /f "tokens=1,2 delims= " %%a in (wildfly_mgmt_user.txt) do (
     set "WF_MGMT_USER=%%a"
     set "WF_MGMT_PASS=%%b"
-    %_ok% "Wildfly management user '!WF_MGMT_USER!' and password read from wildfly_mgmt_user.txt"
+    call "%batdir%\echos.bat" :ok "Wildfly management user '!WF_MGMT_USER!' and password read from wildfly_mgmt_user.txt"
   )
 ) else (
-  set "WF_MGMT_USER=%USERPROFILE%_adm"
-  set "WF_MGMT_PASS=%USERPROFILE%_adm_pwd"
+  set "WF_MGMT_USER=%USERNAME%-adm"
+  set "WF_MGMT_PASS=%USERNAME%-adm-pwd"
   %_ok% "Wildfly default management user '!WF_MGMT_USER!' auto-generated"
   echo !WF_MGMT_USER! !WF_MGMT_PASS!> wildfly_mgmt_user.txt
 )
@@ -415,6 +416,7 @@ if not exist "%PRGS%\javas\jdk%jdk_version%" (
 )
 call switchjdk %jdk_version%
 %_ok% "jdk version '%jdk_version%' exists as '%PRGS%\javas\jdk%jdk_version%'"
+set "JAVA_HOME=%PRGS%\javas\jdk%jdk_version%"
 
 :check_param_version
 if defined WF_VERSION (
