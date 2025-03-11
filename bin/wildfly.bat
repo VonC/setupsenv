@@ -253,21 +253,24 @@ REM -------------------------------------------------------------------
 REM init_mgmt_user - Initialize WildFly management user credentials
 REM -------------------------------------------------------------------
 :init_mgmt_user
-if not exist wildfly_mgmt_user.txt (
-  %_fatal% "No wildfly_mgmt_user file present in %CD%" 122
+if exist wildfly_mgmt_user.txt (
+  for /f "tokens=1,2 delims= " %%a in (wildfly_mgmt_user.txt) do (
+    set "WF_MGMT_USER=%%a"
+    set "WF_MGMT_PASS=%%b"
+    %_ok% "Wildfly management user '!WF_MGMT_USER!' and password read from wildfly_mgmt_user.txt"
+  )
+) else (
+  set "WF_MGMT_USER=%USERPROFILE%_adm"
+  set "WF_MGMT_PASS=%USERPROFILE%_adm_pwd"
+  %_ok% "Wildfly default management user '!WF_MGMT_USER!' auto-generated"
+  echo !WF_MGMT_USER! !WF_MGMT_PASS!> wildfly_mgmt_user.txt
 )
-for /f "tokens=1,2 delims= " %%a in (wildfly_mgmt_user.txt) do (
-  set "WF_MGMT_USER=%%a"
-  set "WF_MGMT_PASS=%%b"
-)
-
 if not defined WF_MGMT_USER (
   %_fatal% "Could not read username from wildfly_mgmt_user.txt in '%CD%'" 123
 )
 if not defined WF_MGMT_PASS (
   %_fatal% "Could not read password from wildfly_mgmt_user.txt in '%CD%'" 124
 )
-%_ok% "Wildfly management user '%WF_MGMT_USER%' and password read from wildfly_mgmt_user.txt"
 set "WF_MGMT_USERS_FILE=%WF_HOME%\standalone\configuration\mgmt-users.properties"
 if not exist "%WF_MGMT_USERS_FILE%" (
   %_fatal% "No mgmt-users.properties file present in '%WF_MGMT_USERS_FILE%'" 125
