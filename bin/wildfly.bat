@@ -315,6 +315,11 @@ rem echo RESPONSE0='%RESPONSE%'
 if defined RESPONSE (
     set "RESPONSE=%RESPONSE:"=%"
 )
+echo "%RESPONSE%" | findstr /C:"Error" /C:"503" >nul
+if %errorlevel% == 0 (
+  set "WILDFLY_STATE=service_unavailable"
+  exit /b 0
+)
 rem echo RESPONSE='%RESPONSE%'
 rem @echo on
 if defined RESPONSE (
