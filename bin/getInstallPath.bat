@@ -30,6 +30,7 @@ if "%prgname%"=="ghs" (
 )
 if "%prgname%"=="npps" (
 	set "instPath=C:\Program Files\Notepad++"
+	if not exist "!instPath!" ( set "instPath=C:\Program Files (x86)\Notepad++" )
 	goto:endlocal
 )
 
