@@ -63,6 +63,12 @@ awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 
 echo Reminder: conventional commit means: the title must start with `^<type^>[optional scope]: description`, with 52 characters max>> tmp.txt
 echo Types other than `fix:` and `feat:` are `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.>> tmp.txt
 echo Do not add a footer. Do not add an introduction like 'The title should be...'. Just print the title and the body of the commit message without any other comment.>> tmp.txt
+echo the title must not exceed 52 characters>> tmp.txt
+echo the body and footer lines must not exceed 80 characters, and must not be indented, no prefix spaces.>> tmp.txt
+echo If I provide an additional prompt explaining the context of this diff, do include that into your generated commit message.>> tmp.txt
+echo Make sure the body includes two sections, Why and What.>> tmp.txt
+echo In the 'why' section, do not use generic 'Improved xxx' without explaining why xxx is improved.>> tmp.txt
+echo In the 'what' section, make a list of modifications, each line starting with a dash.>> tmp.txt
 echo.>> tmp.txt
 echo The following git diff, with its lines starting with plus or minus, does contain changes to the codebase:>> tmp.txt
 echo.>> tmp.txt
