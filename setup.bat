@@ -244,7 +244,6 @@ findstr /i "npps" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=npp.*.portable.x64.zip" )
 call:install "%pattern%" "npps" || exit /b
 call:install "gum_*_Windows_x86_64.zip" "gums" || exit /b 1
-call:install "%pattern%" "npps" || exit /b 1
 
 findstr /i "sysinternalsSuites" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=SysinternalsSuite-*.zip" )
