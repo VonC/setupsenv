@@ -13,19 +13,19 @@ cd /d "%script_dir%"
 call %senv_dir%\batcolors\echos_macros.bat
 set "custom_dir=%script_dir%"
 
-%_info% "[%~nx0] called as: setupsdir.bat %1 %2 %3"
+%_info% "called as: setupsdir.bat %1 %2 %3"
 
 set "profile=%1"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined profile (
-    %_fatal% "[%~nx0] first parameter must be provided (profile)" 1
+    %_fatal% "first parameter must be provided (profile)" 1
 )
 set profile=%profile:"=%
 
 set "driveUNCPath=%2"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined driveUNCPath (
-    %_fatal% "[%~nx0] second parameter must be provided (driveUNCPath)" 1
+    %_fatal% "second parameter must be provided (driveUNCPath)" 1
 )
 set driveUNCPath=%driveUNCPath:"=%
 set driveUNCPath=%driveUNCPath:^==%
@@ -34,7 +34,7 @@ set driveUNCPath=%driveUNCPath:^==%
 set "localPath=%3"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined localPath (
-    %_fatal% "[%~nx0] third parameter must be provided (localPath)" 1
+    %_fatal% "third parameter must be provided (localPath)" 1
 )
 set localPath=%localPath:"=%
 
@@ -54,47 +54,47 @@ for /f "tokens=*" %%A in ('findstr /i /c:"[%profile%]" "%SKIPPED_PROFILES_FILE%"
     set "skipped_profile=%%A"
 )
 if defined skipped_profile (
-    %_info% "[%~nx0] (SENV_PUBLISH_FORCE_RECHECK=%SENV_PUBLISH_FORCE_RECHECK%)"
+    %_info% "(SENV_PUBLISH_FORCE_RECHECK=%SENV_PUBLISH_FORCE_RECHECK%)"
     if "%SENV_PUBLISH_FORCE_RECHECK%"=="%profile%" (
-        %_task% "[%~nx0] Must force re-check of profile '%profile%' (marked as skipped: '%skipped_profile%')"
+        %_task% "Must force re-check of profile '%profile%' (marked as skipped: '%skipped_profile%')"
         goto:recheck
     )
     if "%SENV_PUBLISH_FORCE_RECHECK%"=="all" (
-        %_task% "[%~nx0] Must force re-check of all profiles ('%profile%' marked as skipped: '%skipped_profile%')"
+        %_task% "Must force re-check of all profiles ('%profile%' marked as skipped: '%skipped_profile%')"
         goto:recheck
     )
     set "errorMessage=Profile path is marked as SKIPPED: %skipped_profile%"
     goto:endlocal_ko_noadd
 ) else (
-    %_ok% "[%~nx0] Profile '%profile%' is not marked as skipped (SENV_PUBLISH_FORCE_RECHECK='%SENV_PUBLISH_FORCE_RECHECK%')"
+    %_ok% "Profile '%profile%' is not marked as skipped (SENV_PUBLISH_FORCE_RECHECK='%SENV_PUBLISH_FORCE_RECHECK%')"
 )
 
 :recheck
 
-%_task% "[%~nx0] [drive detection] Must test access to driveUNCPath '%driveUNCPath%'"
+%_task% "[drive detection] Must test access to driveUNCPath '%driveUNCPath%'"
 dir "%driveUNCPath%" 1>NUL: 2>NUL:
 if errorlevel 1 (
     set "errorMessage=Unable to access network UNC path '%driveUNCPath%'"
     goto:endlocalko
 )
-%_ok% "[%~nx0] driveUNCPath '%driveUNCPath%' is accessible"
+%_ok% "driveUNCPath '%driveUNCPath%' is accessible"
 
 call "%senv_dir%\installs\drive_detection.bat" "%driveUNCPath%"
 set "dl=%custom_dir%\driverLetter.bat"
-%_info% "[%~nx0] === first call to drive_detection: type '%dl%'"
+%_info% "=== first call to drive_detection: type '%dl%'"
 rem type "%dl%"
 call "%dl%"
 del "%dl%"
-rem %_info% "[%~nx0] RES driveLetter='%driveLetter%'"
+rem %_info% "RES driveLetter='%driveLetter%'"
 if "%driveLetter%"=="" (
-    %_warning% "[%~nx0] [%profile%] Must map '%driveUNCPath%' to a drive letter:"
+    %_warning% "[%profile%] Must map '%driveUNCPath%' to a drive letter:"
     net use * "%driveUNCPath%" /PERSISTENT:YES
     if errorlevel 1 (
-        %_warning% "[%~nx0] [%profile%] Unable to map '%driveUNCPath%' to a drive letter" 112
+        %_warning% "[%profile%] Unable to map '%driveUNCPath%' to a drive letter" 112
         goto:networkPathOnly
     )
     call "%senv_dir%\installs\drive_detection.bat" "%driveUNCPath%"
-    %_info% "[%~nx0] === second callgi to drive_detection: type '%custom_dir%\driverLetter.bat'"
+    %_info% "=== second callgi to drive_detection: type '%custom_dir%\driverLetter.bat'"
     type "%custom_dir%\driverLetter.bat"
     call "%custom_dir%\driverLetter.bat"
     del "%custom_dir%\driverLetter.bat"
@@ -112,10 +112,10 @@ if not "%driveLetter%"=="" (
     if errorlevel 1 ( goto:endlocalko )
     dir "!setupsdir!" 1>NUL: 2>NUL:
     if errorlevel 1 (
-        %_warning% "[%~nx0] [%profile%] UNABLE to access drive path '!setupsdir!' with driveLetter '%driveLetter%'. Fall back to network path '%driveUNCPath%' for setup"
+        %_warning% "[%profile%] UNABLE to access drive path '!setupsdir!' with driveLetter '%driveLetter%'. Fall back to network path '%driveUNCPath%' for setup"
         set "driveLetter="
     ) else (
-        %_ok% "[%~nx0] [%profile%] Able to access drive path '!setupsdir!' with driveLetter '%driveLetter%'"
+        %_ok% "[%profile%] Able to access drive path '!setupsdir!' with driveLetter '%driveLetter%'"
     )
 )
 :networkPathOnly
@@ -133,14 +133,14 @@ if "%driveLetter%"=="" (
 goto:endlocal
 
 :endlocalko
-%_error% "[%~nx0] [%profile%] %errorMessage%: marked as skipped in '%SKIPPED_PROFILES_FILE%'"
+%_error% "[%profile%] %errorMessage%: marked as skipped in '%SKIPPED_PROFILES_FILE%'"
 echo [%profile%] %errorMessage%>> "%SKIPPED_PROFILES_FILE%"
 set SKIPPED_PROFILES_FILE_ADDED=1
 :endlocal_ko_noadd
 set "setupsdir="
 set "setupsdirsenv="
 if not defined SKIPPED_PROFILES_FILE_ADDED (
-    %_error% "[%~nx0] [%profile%] %errorMessage%"
+    %_error% "[%profile%] %errorMessage%"
 )
 set "SKIPPED_PROFILES_FILE_ADDED="
 endlocal & set "setupsdir=" & set "setupsdirsenv="
@@ -164,13 +164,13 @@ goto:eof
 
 :check_setupsdir
 if not exist "%setupsdir%" (
-    %_task% "[%~nx0] [%profile%] Must create remote senv path '%setupsdir%'"
+    %_task% "[%profile%] Must create remote senv path '%setupsdir%'"
     mkdir "%setupsdir%"
     if errorlevel 1 (
         set "errorMessage=Drive '%driveLetter%' accessible, but unable to create remote senv path '%setupsdir%'"
         exit /b 1
     )
-    %_ok% "[%~nx0] [%profile%] Remote senv path '%setupsdir%' created"
+    %_ok% "[%profile%] Remote senv path '%setupsdir%' created"
 ) else (
-    %_ok% "[%~nx0] [%profile%] Remote senv path '%setupsdir%' already exists"
+    %_ok% "[%profile%] Remote senv path '%setupsdir%' already exists"
 )

@@ -14,12 +14,12 @@ for %%i in ("%~dp0..\custom") do SET "custom_dir=%%~fi"
 cd "%custom_dir%"
 if errorlevel 1  ( %_fatal% "Unable to access custom folder" 1 )
 for /F "delims=" %%f in ('cd') do ( set "custom_dir=%%f" )
-%_info% "[%~nx0] Custom folder full path: '%custom_dir%'"
+%_info% "Custom folder full path: '%custom_dir%'"
 
 if "%1"=="" (
     if not exist "%custom_dir%\profile" (
-        %_fatal% "[%~nx0] Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
-        rem %_fatal% "[%~nx0] Must have a profile file in custom folder" 1
+        %_fatal% "Must have setupsdir profile xx, for calling setupsdir_xx.bat" 1
+        rem %_fatal% "Must have a profile file in custom folder" 1
     ) else (
         for /F "delims=" %%f in ('type "%custom_dir%\profile"') do ( set "profile=%%f" )
     )
@@ -29,16 +29,16 @@ if "%1"=="" (
 
 cd ..
 if not exist custom (
-    %_fatal% "[%~nx0] current folder must be named custom" 1
+    %_fatal% "current folder must be named custom" 1
 )
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
-%_info% "[%~nx0] senv folder full path: '%senv_dir%'"
+%_info% "senv folder full path: '%senv_dir%'"
 
 if not exist builds (
-    %_fatal% "[%~nx0] builds must be in senv folder" 1
+    %_fatal% "builds must be in senv folder" 1
 )
 set "builds_dir=%senv_dir%\builds"
-%_info% "[%~nx0] builds folder full path: '%builds_dir%'"
+%_info% "builds folder full path: '%builds_dir%'"
 
 set "sbem=SENV_BUILD_ERROR_MODE='%SENV_BUILD_ERROR_MODE%'"
 for /f "delims=" %%x in ('git -C "%custom_dir%" status --porcelain') do set "st=%%x"
@@ -49,21 +49,21 @@ if defined SENV_BUILD_SKIP_STATUS (
 %_info% "SENV_BUILD_SKIP_STATUS not set: check git status in senv and senv\custom"
 if not "%st%"=="" (
     if "%SENV_BUILD_ERROR_MODE%"=="custom" (
-        %_error% "[%~nx0] Not a clean git status in custom '%custom_dir%' (%sbem%)"
+        %_error% "Not a clean git status in custom '%custom_dir%' (%sbem%)"
     ) else if "%SENV_BUILD_ERROR_MODE%"=="both" (
-        %_error% "[%~nx0] Not a clean git status in custom '%custom_dir%' (%sbem%)"
+        %_error% "Not a clean git status in custom '%custom_dir%' (%sbem%)"
     ) else (
-        %_fatal% "[%~nx0] Not a clean git status in custom '%custom_dir%' (%sbem%)" 1
+        %_fatal% "Not a clean git status in custom '%custom_dir%' (%sbem%)" 1
     )
 )
 for /f "delims=" %%x in ('git -C "%senv_dir%" status --porcelain') do set "st=%%x"
 if not "%st%"=="" (
     if "%SENV_BUILD_ERROR_MODE%"=="senv" (
-        %_error% "[%~nx0] Not a clean git status in senv '%senv_dir%' (%sbem%)"
+        %_error% "Not a clean git status in senv '%senv_dir%' (%sbem%)"
     ) else if "%SENV_BUILD_ERROR_MODE%"=="both" (
-        %_error% "[%~nx0] Not a clean git status in senv '%senv_dir%' (%sbem%)"
+        %_error% "Not a clean git status in senv '%senv_dir%' (%sbem%)"
     ) else (
-        %_fatal% "[%~nx0] Not a clean git status in senv '%senv_dir%' (%sbem%)" 1
+        %_fatal% "Not a clean git status in senv '%senv_dir%' (%sbem%)" 1
     )
 )
 rem @echo on
@@ -72,7 +72,7 @@ rem @echo on
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%" describe --long --all HEAD') do SET "vcsenv=%%i"
 for /f "tokens=* delims=" %%i in ('git -C "%custom_dir%\.." describe --long --all HEAD') do SET "vcsenv=!vcsenv! - %%i"
 echo %vcsenv%>"%custom_dir%\version"
-rem %_fatal% "[%~nx0] stop for now" 1
+rem %_fatal% "stop for now" 1
 
 if exist "%builds_dir%\build.pre.bat" ( call "%builds_dir%\build.pre.bat" )
 
@@ -86,7 +86,7 @@ if exist "%custom_dir%\%s%" (
     call:build_for_profile
     goto:eof
 )
-%_warning% "[%~nx0] setupsdir script '%s%' does not exist"
+%_warning% "setupsdir script '%s%' does not exist"
 %_task% "Must look for any 'setupsdir_%profile%*.bat' script in '%custom_dir%'"
 
 set "foundMatch="
@@ -95,39 +95,39 @@ for %%F in ("%custom_dir%\setupsdir_%profile%*.bat") do (
     rem Remove the "setupsdir_" prefix and ".bat" suffix to form the new profile value
     set "newProfile=!fname:setupsdir_=!"
     set "newProfile=!newProfile:.bat=!"
-    %_info% "[%~nx0] Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
+    %_info% "Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
     set "profile=!newProfile!"
     call :build_for_profile
     set "foundMatch=1"
 )
 if not defined foundMatch (
-    %_fatal% "[%~nx0] No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
+    %_fatal% "No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
 )
 goto:eof
 
 :build_for_profile
 call "%custom_dir%\setupsdir_%profile%.bat"
 if errorlevel 1 (
-    %_error% "[%~nx0] Unable to call '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
+    %_error% "Unable to call '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
-%_info% "[%~nx0] setupsdir='%setupsdir%'"
+%_info% "setupsdir='%setupsdir%'"
 for %%i in ("%setupsdir%\..") do ( set "remote_senv_dir=%%~fi" )
 
 if not exist "%remote_senv_dir%\version" (
-    %_ok% "[%~nx0] New publication"
+    %_ok% "New publication"
     goto:build_and_publish
 )
 if defined senv_force_build (
-    %_warning% "[%~nx0] senv_force_build env var is defined"
-    %_task% "[%~nx0] Force build senv '%profile%' with '%vcsenv%'"
+    %_warning% "senv_force_build env var is defined"
+    %_task% "Force build senv '%profile%' with '%vcsenv%'"
     goto:build_and_publish
 )
 for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
     if "%%a"=="%vcsenv%" (
-        %_ok% "[%~nx0] Already published senv '%profile%' with '%vcsenv%' (senv_force_build not defined)"
+        %_ok% "Already published senv '%profile%' with '%vcsenv%' (senv_force_build not defined)"
         goto:eof
     ) else (
-        %_task% "[%~nx0] Update senv '%profile%' with '%vcsenv%' (from '%%a')"
+        %_task% "Update senv '%profile%' with '%vcsenv%' (from '%%a')"
     )
     goto :build_and_publish
 )
@@ -135,7 +135,7 @@ for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
 :build_and_publish
 cd "%builds_dir%"
 del "senv_%profile%-zip.exe"
-%_info% "[%~nx0] zip '[%PRGS%\]senv' to '%builds_dir%\senv_%profile%.zip'"
+%_info% "zip '[%PRGS%\]senv' to '%builds_dir%\senv_%profile%.zip'"
 copy "%senv_dir%\.git\config" "%builds_dir%\senv_git_config.bkp"
 copy "%builds_dir%\senv_git_config.fixed" "%senv_dir%\.git\config"
 copy "%custom_dir%\.git\config" "%builds_dir%\custom_git_config.bkp"
@@ -149,14 +149,14 @@ if not "%ERRORLEVEL%"=="0" (
     copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
     copy "%builds_dir%\custom_git_config.bkp" "%custom_dir%\.git\config"
     copy "%builds_dir%\senv_git_config.bkp" "%senv_dir%\.git\config"
-    %_fatal% "[%~nx0] Unable 7z '%builds_dir%\senv' to '%CD%' 'senv_%profile%-zip.exe'" && exit /b 1
+    %_fatal% "Unable 7z '%builds_dir%\senv' to '%CD%' 'senv_%profile%-zip.exe'" && exit /b 1
 )
 copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
 copy "%builds_dir%\custom_git_config.bkp" "%custom_dir%\.git\config"
 copy "%builds_dir%\senv_git_config.bkp" "%senv_dir%\.git\config"
 cd "%custom_dir%"
 
-%_task% "[%~nx0] Must update 'senv_%profile%-zip.exe' from '%builds_dir%' to '%setupsdir%'"
+%_task% "Must update 'senv_%profile%-zip.exe' from '%builds_dir%' to '%setupsdir%'"
 rem @echo on
 set OK="KO"
 robocopy "%builds_dir%" "%setupsdir%" "senv_%profile%-zip.exe" /Z /R:2 /W:2 /TBD /MT:16 /NJH /NJS
@@ -167,49 +167,58 @@ IF %ERRORLEVEL% LSS 8 (
     set OK=%ERRORLEVEL%
 )
 rem echo "OK='%OK%' '!OK!'"
-if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%builds_dir%\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && goto:eof)
-%_ok% "[%~nx0] senv_%profile%-zip.exe updated from '%builds_dir%' to '%setupsdir%'"
+if not "%OK%"=="ok" ( %_error% "Unable to robocopy '%builds_dir%\senv_%profile%-zip.exe' to '%setupsdir%': errorlevel '%OK%'" && goto:eof)
+%_ok% "senv_%profile%-zip.exe updated from '%builds_dir%' to '%setupsdir%'"
 
 copy /Y "%custom_dir%\version" "%remote_senv_dir%\version"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'version' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'version' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
 copy /Y "%bc%\echos_macros.bat" "%remote_senv_dir%\echos_macros.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'echos_macros.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'echos_macros.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 copy /Y "%bc%\echos.bat" "%remote_senv_dir%\echos.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'echos.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'echos.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
 copy /Y "%custom_dir%\remote_setup.bat" "%remote_senv_dir%\remote_setup.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'remote_setup.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'remote_setup.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
 copy /Y "%custom_dir%\setup.ini.bat" "%remote_senv_dir%\setup.ini.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'setup.ini.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'setup.ini.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 copy /Y "%custom_dir%\detection_VDI.bat" "%remote_senv_dir%\detection_VDI.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'detection_VDI.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'detection_VDI.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 copy /Y "%custom_dir%\ss.bat" "%setupsdir%\s.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 's.bat' from '%custom_dir%' to '%setupsdir%'" && exit /b 1)
+    %_fatal% "Unable to copy 's.bat' from '%custom_dir%' to '%setupsdir%'" && exit /b 1)
 )
 copy /Y "%custom_dir%\..\check_migrate_home.bat" "%setupsdir%\check_migrate_home.bat"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy 'check_migrate_home.bat' from '%custom_dir%\..' to '%setupsdir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'check_migrate_home.bat' from '%custom_dir%\..' to '%setupsdir%'" && exit /b 1)
 )
 
 
 if "%setupsdirsenv%"=="" (
-    %_fatal% "[%~nx0] setupsdirsenv empty. Check '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
+    %_fatal% "setupsdirsenv empty. Check '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
 echo call remote_setup.bat %profile%>"%setupsdirsenv%\s.bat"
 rem echo call %setupsdirsenv%\remote_setup.bat %profile%>%setupsdir%\s.bat
 if exist "%builds_dir%\build.post.bat" ( call "%builds_dir%\build.post.bat" )
+goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

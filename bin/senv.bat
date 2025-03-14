@@ -112,15 +112,15 @@ set "vscodei="
 
 DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 if errorlevel 1 (
-   %_warning% "[%~nx0] Issue setting global (all) aliases from '%HOME%\bin\senv.doskey'"
+   %_warning% "Issue setting global (all) aliases from '%HOME%\bin\senv.doskey'"
 )
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
 if errorlevel 1 (
-   %_warning% "[%~nx0] Issue setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
+   %_warning% "Issue setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
 )
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 if errorlevel 1 (
-   %_warning% "[%~nx0] Issue setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
+   %_warning% "Issue setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
 )
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
@@ -129,7 +129,7 @@ if exist "%script_dir_bin%\profile" (
    if exist "%HOME%\bin\senv.custom.%senv_profile%.doskey" (
       DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
       if errorlevel 1 (
-         %_warning% "[%~nx0] Issue setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
+         %_warning% "Issue setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
       )
    )
 )
@@ -139,7 +139,7 @@ if "%internalsenvcall%"=="1" (
    set "senv_dir="
    goto:eof
 )
-%_ok% "[%~nx0] %local_senv%%no_local_senv%senv activated: senv_dir='%senv_dir%'"
+%_ok% "%local_senv%%no_local_senv%senv activated: senv_dir='%senv_dir%'"
 set "senv_dir="
 set ASCII27=
 set "local_senv="
@@ -154,5 +154,13 @@ set "script_dir_bin="
 set "senv_dir="
 set ASCII27=
 set local_senv=
-%_fatal% "[%~nx0] %~1" %~2
+%_fatal% "%~1" %~2
+goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
 goto:eof

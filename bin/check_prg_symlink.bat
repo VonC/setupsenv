@@ -14,44 +14,44 @@ if not defined sln (
 )
 
 if not exist "%PRGS%\%prgs_folder%\" (
-    %_task% "[%~nx0] Must create '%PRGS%\%prgs_folder%' for '%sln%' to reference '%prg_folder%'"
+    %_task% "Must create '%PRGS%\%prgs_folder%' for '%sln%' to reference '%prg_folder%'"
     mkdir "%PRGS%\%prgs_folder%"
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to create '%PRGS%\%prgs_folder%' for '%sln%' to reference '%prg_folder%'" 1
+        %_fatal% "Unable to create '%PRGS%\%prgs_folder%' for '%sln%' to reference '%prg_folder%'" 1
     )
-    %_ok% "[%~nx0] Folder '%prgs_folder%' created"
+    %_ok% "Folder '%prgs_folder%' created"
 ) else (
-    %_ok% "[%~nx0] Folder '%prgs_folder%' already exists"
+    %_ok% "Folder '%prgs_folder%' already exists"
 )
 
 if not exist "%PRGS%\%prgs_folder%\%sln%" (
-    %_info% "[%~nx0] Must create '%sln%' to reference '%prg_folder%'"
+    %_info% "Must create '%sln%' to reference '%prg_folder%'"
     goto:create
 )
-%_task% "[%~nx0] Must check if symlink '%sln%' does reference p '%prg_folder%'"
+%_task% "Must check if symlink '%sln%' does reference p '%prg_folder%'"
 rem @echo on
 for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%prgs_folder%"^|C:\Windows\System32\findstr %sln%') do (set s=%%a)
 rem echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr "%prg_folder%" 1>NUL: 2>NUL:
 if errorlevel 1 (
-    %_info% "[%~nx0] Must update '%sln%' to reference '%prg_folder%' from '%s%'"
-    %_task% "[%~nx0] Must delete '%sln%' before creating '%sln%' for '%prg_folder%'"
+    %_info% "Must update '%sln%' to reference '%prg_folder%' from '%s%'"
+    %_task% "Must delete '%sln%' before creating '%sln%' for '%prg_folder%'"
     rmdir "%PRGS%\%prgs_folder%\%sln%" 2>nul
     if exist "%PRGS%\%prgs_folder%\%sln%" (
-        %_error% "[%~nx0] Unable to rmdir '%PRGS%\%prgs_folder%\%sln%': probably not a symlink, folder not empty"
-        %_task% "[%~nx0] Must rm -Rf '%sln%' before creating '%sln%' for '%prg_folder%'"
+        %_error% "Unable to rmdir '%PRGS%\%prgs_folder%\%sln%': probably not a symlink, folder not empty"
+        %_task% "Must rm -Rf '%sln%' before creating '%sln%' for '%prg_folder%'"
         rm -Rf "%PRGS%\%prgs_folder%\%sln%" 2>nul
         if errorlevel 1 (
-            %_fatal% "[%~nx0] Unable to rm -Rf '%PRGS%\%prgs_folder%\%sln%'" 43
+            %_fatal% "Unable to rm -Rf '%PRGS%\%prgs_folder%\%sln%'" 43
         ) else (
-            %_ok% "[%~nx0] Folder '%PRGS%\%prgs_folder%\%sln%' rm -Rf  successfully"
+            %_ok% "Folder '%PRGS%\%prgs_folder%\%sln%' rm -Rf  successfully"
         )
     ) else (
-        %_ok% "[%~nx0] Symlink '%PRGS%\%prgs_folder%\%sln%' rmdir successfully"
+        %_ok% "Symlink '%PRGS%\%prgs_folder%\%sln%' rmdir successfully"
     )
     goto:create
 )
-%_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%prg_folder%'"
+%_ok% "symlink '%sln%' already exist, and references p '%prg_folder%'"
 goto:eof
 
 :create
@@ -63,70 +63,70 @@ if not "%instPath%"=="" (
 set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
 :loop_check_subdir
 set "subdir="
-%_info% "[%~nx0] Check subdirectory for tpath '%tpath%'"
+%_info% "Check subdirectory for tpath '%tpath%'"
 call :check_subdir "%tpath%"
 if defined subdir (
-    %_warning% "[%~nx0] one subdirectory detected '%subdir%': looping on tpath '%tpath%'"
+    %_warning% "one subdirectory detected '%subdir%': looping on tpath '%tpath%'"
     goto:loop_check_subdir
 )
 :mklink_tpath
-%_task% "[%~nx0] Must create %sln% symlink for '!tpath!'"
+%_task% "Must create %sln% symlink for '!tpath!'"
 mklink /J "%PRGS%\%prgs_folder%\%sln%" "!tpath!"
 if errorlevel 1 (
-    %_warning% "[%~nx0] Unable to create %sln% symlink for '!tpath!')"
+    %_warning% "Unable to create %sln% symlink for '!tpath!')"
 ) else (
-    %_ok% "[%~nx0] symlink '%sln%' created for '!tpath!'"
+    %_ok% "symlink '%sln%' created for '!tpath!'"
 )
 goto:eof
 
 
 :network
-%_warning% "[%~nx0] Check if '%prg_folder%' exists on network drive '%drive%' (%PRGS%)"
+%_warning% "Check if '%prg_folder%' exists on network drive '%drive%' (%PRGS%)"
 if exist "%PRGS%\%prgs_folder%\%sln%" (
     if not exist "%PRGS%\%prgs_folder%\_%prg_folder%" (
-        %_warning% "[%~nx0] Must delete folder '%sln%' before renaming '%prg_folder%' to '%sln%'"
+        %_warning% "Must delete folder '%sln%' before renaming '%prg_folder%' to '%sln%'"
         rmdir /S /Q "%PRGS%\%prgs_folder%\%sln%"
         if errorlevel 1 (
-            %_fatal% "[%~nx0] Must delete '%sln%' in folder '%prgs_folder%', needed to rename '%prg_folder%' to '%sln%'" 1
+            %_fatal% "Must delete '%sln%' in folder '%prgs_folder%', needed to rename '%prg_folder%' to '%sln%'" 1
         )
         ping 127.0.0.1 -n 4 > nul
     ) else (
-        %_ok% "[%~nx0] Symlink '%sln%' already reference program '%prg_folder%'"
+        %_ok% "Symlink '%sln%' already reference program '%prg_folder%'"
         goto:eof
     )
 )
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%" (
-    %_fatal% "[%~nx0] '%prg_folder%' is missing in folder '%prgs_folder%'" 3
+    %_fatal% "'%prg_folder%' is missing in folder '%prgs_folder%'" 3
 )
 set "tpath=%PRGS%\%prgs_folder%\%prg_folder%"
 :loop_network_check_subdir
 set "subdir="
 call :check_subdir "%tpath%"
 if defined subdir (
-    %_warning% "[%~nx0] (network) one subdirectory detected '%subdir%': looping"
+    %_warning% "(network) one subdirectory detected '%subdir%': looping"
     goto:loop_network_check_subdir
 )
-%_task% "[%~nx0] Must rename program '%prg_folder%' (!tpath!) to '%sln%'"
-%_fatal% "[%~nx0] stop" 1
+%_task% "Must rename program '%prg_folder%' (!tpath!) to '%sln%'"
+%_fatal% "stop" 1
 move "!tpath!" "%PRGS%\%prgs_folder%\%sln%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to rename program '%prg_folder%' to '%sln%' in folder '%prgs_folder%'" 2
+    %_fatal% "Unable to rename program '%prg_folder%' to '%sln%' in folder '%prgs_folder%'" 2
 )
-%_ok% "[%~nx0] Program '%prg_folder%' renamed to '%sln%' in folder '%prgs_folder%'"
+%_ok% "Program '%prg_folder%' renamed to '%sln%' in folder '%prgs_folder%'"
 ping 127.0.0.1 -n 4 > nul
 if exist "%prg_folder%" (
     rmdir "%prg_folder%"
     if errorlevel 1 (
-        %_warning% "[%~nx0] Unable to delete empty directory '%prg_folder%' in folder '%prgs_folder%'" 6
+        %_warning% "Unable to delete empty directory '%prg_folder%' in folder '%prgs_folder%'" 6
     )
     ping 127.0.0.1 -n 4 > nul
 )
 echo "%prg_folder%"> "%PRGS%\%prgs_folder%\_%prg_folder%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to create file '%prg_folder%' in folder '%prgs_folder%'" 5
+    %_fatal% "Unable to create file '%prg_folder%' in folder '%prgs_folder%'" 5
 )
 if not exist "%PRGS%\%prgs_folder%\%sln%" (
-    %_fatal% "[%~nx0] '%sln%' is still missing in folder '%prgs_folder%'" 3
+    %_fatal% "'%sln%' is still missing in folder '%prgs_folder%'" 3
 )
 goto:eof
 

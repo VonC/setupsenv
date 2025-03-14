@@ -70,34 +70,34 @@ for /f "tokens=* delims=" %%i in ('type "%script_dir%\tmp_drive"') do (
     )
 )
 :found
-%_info% "[%~nx0] done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'"
+%_info% "done, driveLetter='%driveLetter%', drRefresh='%drRefresh%'"
 del "%script_dir%\tmp_drive"
 del "%script_dir%\tmp_drive_echo"
 if not "%driveLetter%"=="" ( goto:drive_found )
-%_warning% "[%~nx0] No drive letter found for driveUNCPath '%driveUNCPath%'"
+%_warning% "No drive letter found for driveUNCPath '%driveUNCPath%'"
 :: Test if UNC path is accessible by using dir command
 dir /b "%unc_path%" >nul 2>nul
-if errorlevel 1 ( %_fatal% "[%~nx0] Directory '%driveUNCPath%' is not accessible." 119 )
-%_task% "[%~nx0] Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
+if errorlevel 1 ( %_fatal% "Directory '%driveUNCPath%' is not accessible." 119 )
+%_task% "Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
 net use * "%driveUNCPath%" >nul 2>nul
 set "NEEL=%ERRORLEVEL%"
 if "%NEEL%"=="0" (
-    %_ok% "[%~nx0] Drive mapped successfully for driveUNCPath '%driveUNCPath%'."
+    %_ok% "Drive mapped successfully for driveUNCPath '%driveUNCPath%'."
     goto:search_driveLetter
 ) else (
-    %_fatal% "[%~nx0] Failed to map drive for driveUNCPath '%driveUNCPath%'. Exiting..." %NEEL%
+    %_fatal% "Failed to map drive for driveUNCPath '%driveUNCPath%'. Exiting..." %NEEL%
 )
 
 :drive_found
-%_info% "[%~nx0] Drive found for '%driveUNCPath%': '%driveLetter%'"
+%_info% "Drive found for '%driveUNCPath%': '%driveLetter%'"
 if not "%drRefresh%"=="" (
-    %_task% "[%~nx0] Must refresh '%driveLetter%'"
+    %_task% "Must refresh '%driveLetter%'"
     call :ActivateMappedNetworkDrive "%driveLetter%"
     dir "%driveLetter%" 1>NUL 2>NUL
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to access drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%'" 118
+        %_fatal% "Unable to access drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%'" 118
     )
-    %_ok% "[%~nx0] Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
+    %_ok% "Drive letter '%driveLetter%' for driveUNCPath '%driveUNCPath%' refreshed and accessible"
 )
 
 set "dl=%custom_dir%\driverLetter.bat"

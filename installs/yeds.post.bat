@@ -3,10 +3,10 @@ if "%script_dir%"=="" ( set "standalone_%~nx0=true" ) else ( set "standalone_%~n
 setlocal enabledelayedexpansion
 for %%i in ("%~dp0..") do SET "script_dir=%%~fi"
 call "%script_dir%\batcolors\echos_macros.bat"
-%_info% "[%~nx0] ~~~~~~~~~~~~ yEd post installation ~~~~~~~~~~~~"
-%_task% "[%~nx0] Must check presence of i4jruntime.jar in '%PRGS%\yEds\current\.install4j'"
+%_info% "~~~~~~~~~~~~ yEd post installation ~~~~~~~~~~~~"
+%_task% "Must check presence of i4jruntime.jar in '%PRGS%\yEds\current\.install4j'"
 if exist "%PRGS%\yEds\current\.install4j\i4jruntime.jar" (
-    %_ok% "[%~nx0] i4jruntime.jar exists in '%PRGS%\yEds\current\.install4j'"
+    %_ok% "i4jruntime.jar exists in '%PRGS%\yEds\current\.install4j'"
     goto:endlocal
 )
 for %%i in ("%PRGS%\setup") do (
@@ -30,7 +30,7 @@ if exist "%setup_dir%\i4jruntime.jar" (
 set "custom_dir=%PRGS%\senv\custom"
 if not exist "%custom_dir%\profile" (
     endlocal && call:fatal "[%~nx0] Must have '%custom_dir%\profile' file with a declared 'xx' profile, for calling setupsdir_xx.bat" 1
-    rem %_fatal% "[%~nx0] Must have a profile file in custom folder" 1
+    rem %_fatal% "Must have a profile file in custom folder" 1
 ) else (
     for /F "delims=" %%f in ('type "%custom_dir%\profile"') do ( set "profile=%%f" )
 )
@@ -44,7 +44,7 @@ if errorlevel 1 (
     endlocal && call:fatal "[%~nx0] Unable to call '%custom_dir%\setupsdir_%profile%.bat'" 11)
 )
 set "remote_setup_dir=%setupsdir%"
-%_ok% "[%~nx0] remote_setup_dir='%remote_setup_dir%'"
+%_ok% "remote_setup_dir='%remote_setup_dir%'"
 
 if not exist "%remote_setup_dir%\i4jruntime.jar" (
     endlocal && call:fatal "[%~nx0] i4jruntime.jar does not exist in remote setup dir '%remote_setup_dir%'" 3
@@ -54,7 +54,7 @@ if not exist "%remote_setup_dir%\i4jruntime.jar" (
 %_task% "Must copy i4jruntime.jar from remote setup dir '%remote_setup_dir%' to '%PRGS%\yEds\current\.install4j'"
 copy "%remote_setup_dir%\i4jruntime.jar" "%PRGS%\yEds\current\.install4j"
 if errorlevel 1 (
-    endlocal && call:fatal "Unable to copy i4jruntime.jar from remote_setup_dir '%remote_setup_dir%' to '%PRGS%\yEds\current\.install4j'" 4
+    endlocal && call:fatal "[%~nx0] Unable to copy i4jruntime.jar from remote_setup_dir '%remote_setup_dir%' to '%PRGS%\yEds\current\.install4j'" 4
 ) else (
     %_ok% "i4jruntime.jar copied from remote_setup_dir '%remote_setup_dir%' to '%PRGS%\yEds\current\.install4j'"
     goto:endlocal
@@ -73,6 +73,14 @@ if defined standalone_%~nx0 (
     set "batdir="
 )
 set "standalone_%~nx0="
+goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
 goto:eof
 
 :fatal

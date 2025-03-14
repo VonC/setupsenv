@@ -7,7 +7,7 @@ cd /d "%script_dir%"
 call "%senv_dir%\batcolors\echos_macros.bat"
 
 if not exist "%PRGS%\gits\current\usr\bin\cat.exe" (
-  %_info% "[%~nx0] Skip gits.config.utils: cat non available in path"
+  %_info% "Skip gits.config.utils: cat non available in path"
   goto:eof
 )
 
@@ -32,31 +32,31 @@ goto:eof
 "%_cat%" %HOME%\.gitconfig >NUL
 "%_grep%" "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to read %HOME%\.gitconfig: content corrupted (%*)" 666
+  %_fatal% "Unable to read %HOME%\.gitconfig: content corrupted (%*)" 666
 )
 copy /Y %HOME%\.gitconfig %HOME%\.gitconfig.ori >NUL
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to copy %HOME%\.gitconfig: content corrupted (%*)" 667
+  %_fatal% "Unable to copy %HOME%\.gitconfig: content corrupted (%*)" 667
 )
-%_ok% "[%~nx0] %HOME%\.gitconfig copied to %HOME%\.gitconfig.ori (%*)"
+%_ok% "%HOME%\.gitconfig copied to %HOME%\.gitconfig.ori (%*)"
 goto:eof
 
 :restore_gitconfig
 if not exist "%HOME%\.gitconfig.ori" (
-  %_info% "[%~nx0] skip  gits.config.utils restore_gitconfig: no .gitconfig.ori"
+  %_info% "skip  gits.config.utils restore_gitconfig: no .gitconfig.ori"
   goto:eof
 )
 "%_grep%" "st = status" %HOME%\.gitconfig.ori >NUL
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to read %HOME%\.gitconfig.ori: content corrupted (%*)" 668
+  %_fatal% "Unable to read %HOME%\.gitconfig.ori: content corrupted (%*)" 668
 )
 copy /Y %HOME%\.gitconfig.ori %HOME%\.gitconfig >NUL
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to copy %HOME%\.gitconfig.ori: content corrupted (%*)" 669
+  %_fatal% "Unable to copy %HOME%\.gitconfig.ori: content corrupted (%*)" 669
 )
 "%_grep%" "st = status" %HOME%\.gitconfig >NUL
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to confirm read %HOME%\.gitconfig: content corrupted (%*)" 670
+  %_fatal% "Unable to confirm read %HOME%\.gitconfig: content corrupted (%*)" 670
 )
-%_ok% "[%~nx0] %HOME%\.gitconfig.ori copied to %HOME%\.gitconfig (%*)"
+%_ok% "%HOME%\.gitconfig.ori copied to %HOME%\.gitconfig (%*)"
 goto:eof

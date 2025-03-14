@@ -8,7 +8,7 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
-%_info% "[%~nx0] 'script_dir(inst_prg)='%script_dir%'"
+%_info% "'script_dir(inst_prg)='%script_dir%'"
 
 :: Define the output file
 set "man_file=man_inst_prg.txt"
@@ -53,7 +53,7 @@ if "%~1"=="/?" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
 if "%~1"=="-h" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
 if "%~1"=="--help" ( set "ECHOS_POST_FILE=%script_dir%\%man_file%" )
 if defined ECHOS_POST_FILE (
-    %_info% "[%~nx0] Usage:"
+    %_info% "Usage:"
     del "%script_dir%\%man_file%" 2>NUL
     set "ECHOS_POST_FILE="
     goto:eof
@@ -64,7 +64,7 @@ echo %prg_name% | findstr /C:"*" >nul 2>&1
 if errorlevel 1 (
     call "%script_dir%\select_prg.bat" "%~1" "inst_prg"
     if not defined prg_id (
-        %_fatal% "[%~nx0] empty prg_id after selecting prg from '%prg_name%'" 9
+        %_fatal% "empty prg_id after selecting prg from '%prg_name%'" 9
     )
     if defined prg_pattern (
         if not "!prg_pattern!"=="%~2" (
@@ -84,19 +84,19 @@ if errorlevel 1 (
 ) else (
     set "prg_name=ls"
     set "prg_pattern=%~1"
-    %_info% "[%~nx0] Mode 'ls' activated: prg_pattern='!prg_pattern!'"
+    %_info% "Mode 'ls' activated: prg_pattern='!prg_pattern!'"
 )
-%_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
+%_info% "prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
 
 pushd "%USERPROFILE%\Downloads"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
+if errorlevel 1 %_fatal% "Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
 
 if defined INST_PRG_DEBUG (
-    %_ok% "[%~nx0] INST_PRG_DEBUG defined, all intermediate messages will be displayed"
+    %_ok% "INST_PRG_DEBUG defined, all intermediate messages will be displayed"
 ) else (
-    %_warning% "[%~nx0] INST_PRG_DEBUG not defined, only final profile and folder names will be displayed"
+    %_warning% "INST_PRG_DEBUG not defined, only final profile and folder names will be displayed"
     set "ECHOS_OFF=1"
 )
 set "profile_filename="
@@ -108,17 +108,17 @@ if not defined profile_filename (
 set "profile_name="
 if defined profile_filename (
     for /f %%a in (%profile_filename%) do ( set profile_name=%%a)
-    %_info% "[%~nx0] profile name found: '!profile_name!'"
+    %_info% "profile name found: '!profile_name!'"
 )
 if not defined profile_name ( goto:proceed)
 set "s=setupsdir_%profile_name%.bat"
 set "custom_dir=%PRGS%\senv\custom"
 if not exist "%custom_dir%\%s%" (
-    %_fatal% "[%~nx0] setupsdir script '%s%' does not exist" 2
+    %_fatal% "setupsdir script '%s%' does not exist" 2
 )
 call "%custom_dir%\%s%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to call '%custom_dir%\%s%'" 111)
+    %_fatal% "Unable to call '%custom_dir%\%s%'" 111)
 )
 
 :proceed
@@ -130,7 +130,7 @@ echo - remote setupsdir='%setupsdir%'
 echo -------------------------------------
 ) > "post_FILE.txt"
 set "ECHOS_POST_FILE=post_FILE.txt"
-%_info% "[%~nx0] Install '%prg_name%' for profile '%profile_name%', pattern '%prg_pattern%'"
+%_info% "Install '%prg_name%' for profile '%profile_name%', pattern '%prg_pattern%'"
 set "ECHOS_POST_FILE="
 del "post_FILE.txt"
 
@@ -156,10 +156,10 @@ call:check_folder "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 :not_found
 if defined sfound_most_recent (
-    %_info% "[%~nx0] sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
+    %_info% "sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
     set "sfound_path=%sfound_most_recent_folder%"
     set "sfound=%sfound_most_recent_name%"
-    %_info% "[%~nx0] One latest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
+    %_info% "One latest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
     goto:proceed_install
 )
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
@@ -174,18 +174,18 @@ if not "%count%"=="1" (
         %_fatal%  "'%count%' (More than one match) in '%sfound%' for pattern '%~2'" 7
 )
 for /F "delims=" %%f in (a) do ( set fname=%%f)
-%_info% "[%~nx0] One match found in '%sfound%': '%fname%'"
+%_info% "One match found in '%sfound%': '%fname%'"
 del a
 :proceed_install
 if not "%sfound%"=="setup" (
-    %_task% "[%~nx0] Must move match '%fname%' from '%sfound%' to local setup"
+    %_task% "Must move match '%fname%' from '%sfound%' to local setup"
     rem call:rbc dst src
     call:rbc "%setup_dir%" "%sfound_path%"
-    %_ok% "[%~nx0] '%fname%' moved from '%sfound%' ('%sfound_path%') to local setup ('%%')"
+    %_ok% "'%fname%' moved from '%sfound%' ('%sfound_path%') to local setup ('%%')"
 )
 if exist "%dl_dir%\%fname%" (
     del "%dl_dir%\%fname%"
-    if errorlevel 1 %_fatal% "[%~nx0] Unable to delete '%dl_dir%\%fname%'" 88
+    if errorlevel 1 %_fatal% "Unable to delete '%dl_dir%\%fname%'" 88
 )
 
 set "prg_name=%~1"
@@ -198,42 +198,42 @@ if not defined sln ( set "sln=current" )
 set "prgs_folder=%prg_id%s"
 
 if not exist "%PRGS%\%prgs_folder%" (
-    %_task% "[%~nx0] Must create folder '%PRGS%\%prgs_folder%'"
+    %_task% "Must create folder '%PRGS%\%prgs_folder%'"
     mkdir "%PRGS%\%prgs_folder%"
-    if errorlevel 1 %_fatal% "[%~nx0] Unable to create folder '%PRGS%\%prgs_folder%'" 3
-    %_ok% "[%~nx0] Folder '%PRGS%\%prgs_folder%' created"
+    if errorlevel 1 %_fatal% "Unable to create folder '%PRGS%\%prgs_folder%'" 3
+    %_ok% "Folder '%PRGS%\%prgs_folder%' created"
 )
 
 if not exist "%PRGS%\%prgs_folder%" (
-    %_fatal% "[%~nx0] Target folder '%PRGS%\%prgs_folder%' does not exist"
+    %_fatal% "Target folder '%PRGS%\%prgs_folder%' does not exist"
 )
 
 for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder=%%~ni"
 
-%_task% "[%~nx0] '%prg_name%': Must check/install fname '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
+%_task% "'%prg_name%': Must check/install fname '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
-    %_ok% "[%~nx0] Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
+    %_ok% "Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
     goto:check_symlink
 )
 
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 pushd "%PRGS%\%prgs_folder%"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access '%PRGS%\%prgs_folder%'" 8
+if errorlevel 1 %_fatal% "Unable to access '%PRGS%\%prgs_folder%'" 8
 if not exist "%fname%" (
     call:rbc "%PRGS%\%prgs_folder%"
 )
-%_task% "[%~nx0] Must uncompress with 7z '%PRGS%\setup\%fname%' to '%PRGS%\%prgs_folder%'"
+%_task% "Must uncompress with 7z '%PRGS%\setup\%fname%' to '%PRGS%\%prgs_folder%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\%prgs_folder%\%fname%"
 if errorlevel 1 (
     rm -Rf "%PRGS%\%prgs_folder%\%prgs_folder%"
     popd
-    %_fatal% "[%~nx0] Error on 7z uncompression of '%fname%' to '%PRGS%\%prgs_folder%\%prgs_folder%'" 1
+    %_fatal% "Error on 7z uncompression of '%fname%' to '%PRGS%\%prgs_folder%\%prgs_folder%'" 1
 )
-%_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
+%_ok% "'%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
 :check_symlink
-%_task% "[%~nx0] Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
+%_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
 call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
 popd
 goto:eof
@@ -244,8 +244,8 @@ set "dst=%~1"
 set "src=%~2"
 if "%src%"=="" ( set "src=%setup_dir%" )
 call "%script_dir%\rbc.bat" "%src%" "%dst%" "%fname%"
-if not "%ERRORLEVEL%"=="0" ( %_fatal% "[%~nx0] Unable to copy '%src%\%fname%' to '%dst%\' errorlevel '%ERRORLEVEL%'" && exit /b 1)
-%_ok% "[%~nx0] Setup '%fname%' copied locally to '%dst%'"
+if not "%ERRORLEVEL%"=="0" ( %_fatal% "Unable to copy '%src%\%fname%' to '%dst%\' errorlevel '%ERRORLEVEL%'" && exit /b 1)
+%_ok% "Setup '%fname%' copied locally to '%dst%'"
 goto:eof
 
 :symlink_name
@@ -281,24 +281,24 @@ goto:eof
 set "folder=%~1"
 set "pattern=%~2"
 if not "%pattern:latest=%"=="%pattern%" ( goto:record_latest )
-if "%prg_name%"=="ls" ( %_task% "[%~nx0] Ls: Must look for '%prg_pattern%' in '%folder%'" ) else (
-    %_info% "[%~nx0]   Check folder '%folder%' for pattern '%pattern%'" )
+if "%prg_name%"=="ls" ( %_task% "Ls: Must look for '%prg_pattern%' in '%folder%'" ) else (
+    %_info% "  Check folder '%folder%' for pattern '%pattern%'" )
 dir /b "%folder%\%pattern%" >a 2>NUL
 if not errorlevel 1 (
     if not "%prg_name%"=="ls" ( goto:eof )
-    %_ok% "[%~nx0] Ls: pattern '%pattern%' found in '%folder%'"
+    %_ok% "Ls: pattern '%pattern%' found in '%folder%'"
     dir /B /OD "%folder%\%pattern%"
     exit /b 1
 )
 if "%prg_name%"=="ls" (
-    %_error% "[%~nx0] Ls: No '%prg_pattern%' pattern found in '%folder%'"
+    %_error% "Ls: No '%prg_pattern%' pattern found in '%folder%'"
     exit /b 1
 )
 rem if env var pattern value does not start with '*', add '*' at its beginning
 set "start_pattern="
 if not "%pattern:~0,1%"=="*" set "start_pattern=*%pattern%"
 if defined start_pattern (
-    %_info% "[%~nx0]   Check folder '%folder%' for start pattern '%start_pattern%'"
+    %_info% "  Check folder '%folder%' for start pattern '%start_pattern%'"
     dir /b "%folder%\%start_pattern%" >a 2>NUL
     if not errorlevel 1 (
         set "pattern=%start_pattern%"
@@ -309,7 +309,7 @@ rem if env var pattern value does not end with '*', add '*' at its end
 set "end_pattern="
 if not "%pattern:~-1%"=="*" set "end_pattern=%pattern%*"
 if defined end_pattern (
-    %_info% "[%~nx0]   Check folder '%folder%' for end pattern '%end_pattern%'"
+    %_info% "  Check folder '%folder%' for end pattern '%end_pattern%'"
     dir /b "%folder%\%end_pattern%" >a 2>NUL
     if not errorlevel 1 (
         set "pattern=%end_pattern%"
@@ -319,7 +319,7 @@ if defined end_pattern (
 if defined start_pattern (
     if defined end_pattern (
         set "pattern=*%pattern%*"
-        %_info% "[%~nx0]   Check folder '%folder%' for start-end pattern '!pattern!'"
+        %_info% "  Check folder '%folder%' for start-end pattern '!pattern!'"
         dir /b "%folder%\!pattern!" >a 2>NUL
         if not errorlevel 1 ( goto:eof )
     )
@@ -328,26 +328,26 @@ set "pattern="
 exit /b 1
 :record_latest
 if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( set "pattern=%pattern:-latest=%" )
-if not defined pattern ( %_fatal% "[%~nx0] check_folder/record_latest: pattern empty from '%~2'" 33 )
-%_info% "[%~nx0]   Record latest from folder '%folder%' for pattern '%pattern%', prg_pattern='%prg_pattern%'"
+if not defined pattern ( %_fatal% "check_folder/record_latest: pattern empty from '%~2'" 33 )
+%_info% "  Record latest from folder '%folder%' for pattern '%pattern%', prg_pattern='%prg_pattern%'"
 for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir%\dir_by_date.ps1" "%folder%" "%pattern%" "%sfound_most_recent%"') do (
-    %_info% "[%~nx0] Found most recent '%%a' in '%folder%' for pattern '%pattern%', vs. sfound_most_recent '%sfound_most_recent%'"
+    %_info% "Found most recent '%%a' in '%folder%' for pattern '%pattern%', vs. sfound_most_recent '%sfound_most_recent%'"
     if defined sfound_most_recent (
         if not "!sfound_most_recent!"=="%%a" (
             set "sfound_most_recent_folder=%folder%"
             set "fname=%%a"
             set "fname=!fname:* =!"
             set "sfound_most_recent_name=%sfound%"
-            %_ok% "[%~nx0] set new sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
+            %_ok% "set new sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
         ) else (
-            %_warning% "[%~nx0] sfound_most_recent unchanged ('%%a'), keep '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
+            %_warning% "sfound_most_recent unchanged ('%%a'), keep '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
         )
     ) else (
         set "sfound_most_recent_folder=%folder%"
         set "fname=%%a"
         set "fname=!fname:* =!"
         set "sfound_most_recent_name=%sfound%"
-        %_ok% "[%~nx0] sfound_most_recent not defined, set sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
+        %_ok% "sfound_most_recent not defined, set sfound_most_recent_folder '!sfound_most_recent_folder!' (!sfound_most_recent_name!), fname '!fname!'"
     )
     set "sfound_most_recent=%%a"
 )

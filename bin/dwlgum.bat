@@ -15,7 +15,7 @@ goto:eof
 :dwl_prg
 set "repo=charmbracelet/gum"
 set "prgname=gum"
-%_info% "[%~nx0] Dwl '%repo%'"
+%_info% "Dwl '%repo%'"
 call "%script_dir%\dwl_prg.bat" "%repo%" "%prgname%"
 goto:eof
 

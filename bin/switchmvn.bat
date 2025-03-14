@@ -12,22 +12,22 @@ call %senv_dir%\batcolors\echos_macros.bat
 set MAVENS_ROOT=%PRGS%\mavens
 pushd "%MAVENS_ROOT%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to change to MAVENS_ROOT directory '%MAVENS_ROOT%'" 1
+    %_fatal% "Unable to change to MAVENS_ROOT directory '%MAVENS_ROOT%'" 1
 )
 
 if not "%1" == "" (
     echo %1| findstr /r "^[0-9].[0-9].[0-9]$" >nul
     if errorlevel 1 (
-        %_fatal% "[%~nx0] First argument '%1' must be x.y.z, like 3.3.9 or 3.6.0 or 3.9.9" 2
+        %_fatal% "First argument '%1' must be x.y.z, like 3.3.9 or 3.6.0 or 3.9.9" 2
     )
 )
 
 set "switchver_todelete=maven"
 call "%script_dir%\switchver.bat" mavens mvn "mvn[0-9]\.[0-9]*\.[0-9]*$" "bin\mvn.cmd" "%~1"
 set "switchver_todelete="
-%_ok% "[%~nx0] Maven version chosen: '%SELECTED_VERSION%'"
+%_ok% "Maven version chosen: '%SELECTED_VERSION%'"
 if defined SWITCHVER_DEBUG (
-    %_ok% "[%~nx0] Maven PATH updated: '%newPath%'"
+    %_ok% "Maven PATH updated: '%newPath%'"
 )
 popd
 

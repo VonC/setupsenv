@@ -11,10 +11,10 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 set "installs_dir=%senv_dir%\installs"
 call %senv_dir%\batcolors\echos_macros.bat
 
-%_info% "[%~nx0] install vscode %PRGS%\setup\%fs%"
+%_info% "install vscode %PRGS%\setup\%fs%"
 set "install_ok=check_symlink"
 "%PRGS%\setup\%fs%" /DIR="%PRGS%\vscode" /VERYSILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /MERGETASKS=!runcode
-if errorlevel 1 ( %_fatal% "[%~nx0] Issue when installing vscode" 1 )
+if errorlevel 1 ( %_fatal% "Issue when installing vscode" 1 )
 call "%installs_dir%\vscodes.pre.bat"
 call "%installs_dir%\vscodes.post.bat" "update"
 endlocal & set "install_ok=%install_ok%"

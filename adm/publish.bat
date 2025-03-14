@@ -7,19 +7,19 @@ cd ..
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
 set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "[%~nx0] script_dir(publish)='%script_dir%'"
+%_info% "script_dir(publish)='%script_dir%'"
 
 cd "%senv_dir%\..\setup"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
+if errorlevel 1 %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
 cd "%senv_dir%\..\dl"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to %USERPROFILE%\Downloads)'" 5
+if errorlevel 1 %_fatal% "Unable to access dl folder at '%senv_dir%/../dl (must link to %USERPROFILE%\Downloads)'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
 set "custom_dir=%senv_dir%\custom"
 cd "%custom_dir%"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder" 1
-%_info% "[%~nx0] Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
+if errorlevel 1 %_fatal% "Unable to access custom folder" 1
+%_info% "Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if "%1"=="" (
     %_fatal%  "Usage: publish xxx [profile/local/all] [force] (pattern to search for in Downloads or setup). No profile means publish to local only." 4
@@ -44,11 +44,11 @@ if not "%count%"=="1" (
         %_fatal%  "'%count%' (More than one match) in '%sfound%' for pattern '%1'" 7
 )
 for /F "delims=" %%f in (a) do ( set fname=%%f)
-%_info% "[%~nx0] One match found in '%sfound%': '%fname%'"
+%_info% "One match found in '%sfound%': '%fname%'"
 del a
 
 if "%sfound%"=="Downloads" (
-    %_info% "[%~nx0] Must move match '%fname%' from Downloads to setup"
+    %_info% "Must move match '%fname%' from Downloads to setup"
     call:rbc "%setup_dir%" "%dl_dir%"
     del "%dl_dir%\%fname%"
 )
@@ -59,68 +59,68 @@ if not "%2"=="" (
     set "team=local"
 )
 if "%team%"=="local" (
-    %_ok% "[%~nx0] '%fname% published only for local setup '%setup_dir%'"
+    %_ok% "'%fname% published only for local setup '%setup_dir%'"
     goto:eof
 )
 if "%team%"=="all" (
-    %_task% "[%~nx0] Must publish '%fname%' for all teams"
+    %_task% "Must publish '%fname%' for all teams"
 ) else (
-    %_task% "[%~nx0] Must publish '%fname%' for team '%team%'"
+    %_task% "Must publish '%fname%' for team '%team%'"
 )
 
 set "forcePB="
 if "%~3"=="force" (
     set "forcePB=true"
-    %_ok% "[%~nx0] third 'force' param: force publish activated"
+    %_ok% "third 'force' param: force publish activated"
 ) else (
-    %_warning% "[%~nx0] No third 'force' param: force publish not activated"
+    %_warning% "No third 'force' param: force publish not activated"
 )
 
 pushd "%custom_dir%"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder" 1
+if errorlevel 1 %_fatal% "Unable to access custom folder" 1
 REM https://stackoverflow.com/questions/4956873/how-to-cut-first-n-and-last-n-columns/51005303#51005303
 call:execcmd "ls -1 setupsdir*_*|cut -d'_' -f2-|cut -d'.' -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
-    rem %_info% "[%~nx0] profile exec(%%n)='!output[%%n]!'"
+    rem %_info% "profile exec(%%n)='!output[%%n]!'"
     set "profiles[%%n]=!output[%%n]!"
-    rem %_info% "[%~nx0] profile stored(%%n)='!profiles[%%n]!'"
+    rem %_info% "profile stored(%%n)='!profiles[%%n]!'"
 )
 
 rem @echo on
 set "name="
 call %senv_dir%\bin\select_prg.bat "%fname%" "inst_prg"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to select program for '%fname%'" 101
+    %_fatal% "Unable to select program for '%fname%'" 101
 )
 set "name=prg_id"
-if "%name%"=="" ( podp && %_fatal% "[%~nx0] Unknown name for fname for publish: '%fname%'" 228 )
+if "%name%"=="" ( podp && %_fatal% "Unknown name for fname for publish: '%fname%'" 228 )
 
 if not defined SENV_FORCE_PB (
-    %_warning% "[%~nx0] SENV_FORCE_PB not defined: force publish not activated unless its value includes '-%name%-'"
+    %_warning% "SENV_FORCE_PB not defined: force publish not activated unless its value includes '-%name%-'"
     goto:noSenv_force_pb
 )
 for %%i in (%SENV_FORCE_PB:-= %) do (
-    %_info% "[%~nx0] Process '%%i' or '%%is' from SENV_FORCE_PB='%SENV_FORCE_PB%' for name '%name%'"
+    %_info% "Process '%%i' or '%%is' from SENV_FORCE_PB='%SENV_FORCE_PB%' for name '%name%'"
     if "%%i"=="%name%" (
-        %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
+        %_ok% "'%name%' is in SENV_FORCE_PB: force publish activated"
         set "forcePB=true"
     )
     if "%%is"=="%name%" (
-        %_ok% "[%~nx0] '%name%' is in SENV_FORCE_PB: force publish activated"
+        %_ok% "'%name%' is in SENV_FORCE_PB: force publish activated"
         set "forcePB=true"
     )
 )
 if not defined forcePB (
-    %_warning% "[%~nx0] SENV_FORCE_PB does not include '%name%': force publish not activated"
+    %_warning% "SENV_FORCE_PB does not include '%name%': force publish not activated"
 )
 :noSenv_force_pb
 
 call:execcmd "ls -1 setupsdir*_*"
-%_info% "[%~nx0] output_cnt='%output_cnt%' or '!output_cnt!'"
+%_info% "output_cnt='%output_cnt%' or '!output_cnt!'"
 if "%output_cnt%"=="0" (
     cd
     popd
-    %_fatal% "[%~nx0] No s*_* detected in custom" 1
+    %_fatal% "No s*_* detected in custom" 1
 )
 for /L %%n in (1 1 !output_cnt!) DO (
     set "sc=!output[%%n]!"
@@ -132,62 +132,62 @@ for /L %%n in (1 1 !output_cnt!) DO (
     set "skip="
     if not "%team%"=="all" (
         if not "%team%"=="!profile!" (
-            %_warning% "[%~nx0] Team '%team%' does not match profile '!profile!': skipping."
+            %_warning% "Team '%team%' does not match profile '!profile!': skipping."
             set "skip=1"
         ) else (
-            %_ok% "[%~nx0] Team matches profile"
+            %_ok% "Team matches profile"
         )
     )
     if "!skip!"=="" (
         call "%custom_dir%\!sc!"
         set "spath=!setupsdir!"
-        %_info% "[%~nx0] sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
+        %_info% "sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
         if "!spath!"=="" (
-            %_error% "[%~nx0] spath is empty: skipped"
+            %_error% "spath is empty: skipped"
             set "skip=1"
         )
         dir "!spath!" > NUL
         if errorlevel 1 (
-            %_error% "[%~nx0] Target path '!spath!' not accessible: skipped"
+            %_error% "Target path '!spath!' not accessible: skipped"
             set "skip=1"
         )
     )
     if "!skip!"=="" (
-        %_task% "[%~nx0] Check name '%name%' (fname='%fname%')"
+        %_task% "Check name '%name%' (fname='%fname%')"
         call:check_name
-        rem %_info% "[%~nx0] name_ok2='!name_ok!'"
+        rem %_info% "name_ok2='!name_ok!'"
         if "!name_ok!"=="false" (
-            %_warning% "[%~nx0] Name '%name%' not part of install_!profile!.list: skip copy"
+            %_warning% "Name '%name%' not part of install_!profile!.list: skip copy"
             if exist "!spath!\%fname%" (
-                %_warning% "[%~nx0] Must delete '%fname%' in '!spath!'"
+                %_warning% "Must delete '%fname%' in '!spath!'"
                 del "!spath!\%fname%"
                 if errorlevel 1 (
                     popd
-                    %_fatal% "[%~nx0] Unable to delete '!spath!\%fname%'" 23
+                    %_fatal% "Unable to delete '!spath!\%fname%'" 23
                 )
             )
         ) else (
             rem Check if file exists
             if exist "!spath!\%fname%" (
-                %_ok% "[%~nx0] File '%fname%' already exists in '!spath!'"
+                %_ok% "File '%fname%' already exists in '!spath!'"
                 rem Check if remote file size is the same as the local one
                 :: Get the file sizes
                 for %%A in ("..\..\setup\%fname%") do set "size1=%%~zA"
                 for %%A in ("!spath!\%fname%") do set "size2=%%~zA"
                 :: Compare size
                 if !size1! EQU !size2! (
-                    %_ok% "[%~nx0] The files are the same size."
+                    %_ok% "The files are the same size."
                     goto:continue
                 )
-                %_warning% "[%~nx0] The files are different sizes."
-                %_warning% "[%~nx0] Must delete '%fname%' in '!spath!'"
+                %_warning% "The files are different sizes."
+                %_warning% "Must delete '%fname%' in '!spath!'"
                 del "!spath!\%fname%"
                 if errorlevel 1 (
                     popd
-                    %_fatal% "[%~nx0] Unable to delete '!spath!\%fname%'" 23
+                    %_fatal% "Unable to delete '!spath!\%fname%'" 23
                 )
             )
-            %_task% "[%~nx0] Must copy '%name%' to '!spath!'"
+            %_task% "Must copy '%name%' to '!spath!'"
             call:rbc "!spath!"
         )
     )
@@ -202,16 +202,16 @@ set "name_ok=false"
 grep "%name%" "install_!profile!.list"
 if not errorlevel 1 (
     set "name_ok=true"
-    %_ok% "[%~nx0] Name '%name%' is part of install_!profile!.list"
+    %_ok% "Name '%name%' is part of install_!profile!.list"
 ) else if defined prg_is_global (
     set "name_ok=true"
-    %_ok% "[%~nx0] Name '%name%' is global"
+    %_ok% "Name '%name%' is global"
 )
 if defined forcePB (
-    %_ok% "[%~nx0] Force published activated for name '%name%': check_name OK"
+    %_ok% "Force published activated for name '%name%': check_name OK"
     set "name_ok=true"
 )
-rem %_info% "[%~nx0] name_ok='%name_ok%'"
+rem %_info% "name_ok='%name_ok%'"
 goto:eof
 
 :rbc
@@ -219,8 +219,8 @@ cd
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
-%_task% "[%~nx0]   [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
-%_info% "[%~nx0] Robocopy '%fname%' from '%src%' to '%dst%'"
+%_task% "  (%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+%_info% "Robocopy '%fname%' from '%src%' to '%dst%'"
 robocopy /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS %src% %dst% %fname%
 IF %ERRORLEVEL% LSS 8 (
     rem echo "ERRORLEVEL='%ERRORLEVEL%'"
@@ -229,8 +229,8 @@ IF %ERRORLEVEL% LSS 8 (
     set OK=%ERRORLEVEL%
 )
 rem echo "OK='%OK%' '!OK!'"
-if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
-%_ok% "[%~nx0] %name% updated from '%src%' to '%dst%'"
+if not "%OK%"=="ok" ( %_error% "Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
+%_ok% "%name% updated from '%src%' to '%dst%'"
 goto:eof
 
 :execcmd
@@ -251,5 +251,5 @@ for /F "delims=" %%f in (a) do (
 del a
 if errorlevel 1 (
     pwd
-    %_fatal% "[%~nx0] unable to delete a" 2
+    %_fatal% "unable to delete a" 2
 )

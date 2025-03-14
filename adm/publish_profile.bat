@@ -7,19 +7,19 @@ cd ..
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
 set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "[%~nx0] script_dir(profile)='%script_dir%'"
+%_info% "script_dir(profile)='%script_dir%'"
 
 cd "%senv_dir%\..\setup"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
+if errorlevel 1 %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
 cd "%senv_dir%\..\dl"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
+if errorlevel 1 %_fatal% "Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
 set "custom_dir=%senv_dir%\custom"
 cd "%custom_dir%"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder" 1
-%_info% "[%~nx0] Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
+if errorlevel 1 %_fatal% "Unable to access custom folder" 1
+%_info% "Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if exist "%custom_dir%\profile" (
     for /f "delims=" %%x in (%custom_dir%\profile) do set profile=%%x
@@ -59,13 +59,13 @@ for %%F in ("%custom_dir%\setupsdir_%profile%*.bat") do (
     rem Remove the "setupsdir_" prefix and ".bat" suffix to form the new profile value
     set "newProfile=!fname:setupsdir_=!"
     set "newProfile=!newProfile:.bat=!"
-    %_info% "[%~nx0] Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
+    %_info% "Found alternative setupsdir: %%F, setting profile to '!newProfile!'"
     set "profile=!newProfile!"
     call :publish_profile
     set "foundMatch=1"
 )
 if not defined foundMatch (
-    %_fatal% "[%~nx0] No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
+    %_fatal% "No setupsdir script matching 'setupsdir_%profile%*.bat' exists" 22
 )
 
 goto:eof
@@ -73,11 +73,11 @@ goto:eof
 :publish_profile
 set "fprofile=%custom_dir%\install_%profile%.list"
 if not exist "%fprofile%" (
-    call:error_or_fatal "'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
+    call:error_or_fatal "[%~nx0]'%fprofile%' does not exist (list of tools to install for profile '%profile%')" 44
     if defined publish_all ( goto:eof )
 )
 
-%_info% "[%~nx0] Profile '%profile%' to be published from setup_dir '%setup_dir%'"
+%_info% "Profile '%profile%' to be published from setup_dir '%setup_dir%'"
 set "spath="
 set "fsetupsdir=setupsdir_%profile%.bat"
 set "l_only=1"
@@ -88,7 +88,7 @@ if "%spath%"=="" (
     call:error_or_fatal "[%~nx0](%profile%) No target spath found in '%fsetupsdir%'" 111
     if defined publish_all ( goto:eof )
 )
-%_info% "[%~nx0](%profile%) Target path spath: '%spath%'"
+%_info% "(%profile%) Target path spath: '%spath%'"
 
 call:is_system_tool "peazips"
 if errorlevel 1 ( call:publishOne "peazip_portable-*.zip" "peazips" )
@@ -112,7 +112,7 @@ for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (
         set "mandatory="
         for /F %%f in ('findstr /i /c:"!name!#" "%custom_dir%\system.list.tmp"') do ( set "mandatory=%%f" )
         if "!mandatory!"=="" (
-            %_ok% "[%~nx0](%profile%) Skip system tool '!name!'"
+            %_ok% "(%profile%) Skip system tool '!name!'"
         )
     )
 )
@@ -142,7 +142,7 @@ if "%fname%"=="" (
     call:error_or_fatal "[%~nx0](%profile%) Unknown name pattern '%pattern%', not found in '%setup_dir%'" 23
     if defined publish_all ( goto:eof )
 )
-%_task% "[%~nx0](%profile%) Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
+%_task% "(%profile%) Must check/publish fname: '%fname%' for pattern '%pattern%' in setup_dir '%setup_dir%'"
 
 if "%name%"=="" (
     del "%custom_dir%\system.list.tmp" 2>NUL
@@ -151,7 +151,7 @@ if "%name%"=="" (
 )
 
 if exist "!spath!\%fname%" (
-    %_ok% "[%~nx0](%profile%) Skip '%name% '%fname%': already in '!spath!'"
+    %_ok% "(%profile%) Skip '%name% '%fname%': already in '!spath!'"
 ) else (
     call:rbc "!spath!"
 )
@@ -161,7 +161,7 @@ goto:eof
 set "dst=%1"
 set "src=%2"
 if "%src%"=="" ( set "src=%setup_dir%" )
-%_task% "  [%~nx0](%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
+%_task% "  (%profile%) Must robocopy '%name%': '%fname%' from '%src%' to '%dst%'"
 REM Explain the robocopy options:
 REM /Z: copy in restartable mode (survive network glitches)
 REM /R:5: retry 5 times
@@ -178,8 +178,8 @@ IF %ERRORLEVEL% LSS 8 (
     set OK=%ERRORLEVEL%
 )
 rem echo "OK='%OK%' '!OK!'"
-if not "%OK%"=="ok" ( %_error% "[%~nx0] Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
-%_ok% "[%~nx0] %name% updated from '%src%' to '%dst%'"
+if not "%OK%"=="ok" ( %_error% "Unable to robocopy '%src%\%name%' to '%dst%': errorlevel '%OK%'" && goto:eof)
+%_ok% "%name% updated from '%src%' to '%dst%'"
 goto:eof
 
 :is_system_tool
@@ -188,7 +188,7 @@ for /f "tokens=1,2 delims= " %%f in ('findstr /i /c:" %name%" "%fprofile%"') do 
     set "pattern=%%f"
 )
 if "%pattern%"=="system" (
-    %_ok% "[%~nx0](%profile%) Skip mandatory tool '%name%' (system)"
+    %_ok% "(%profile%) Skip mandatory tool '%name%' (system)"
     exit /b 0
 )
 exit /b 1

@@ -12,13 +12,13 @@ set "echos_standalone=%~dp0standalone_%~nx0.flag"
 rem @echo on
 set "prgname=%~1"
 set "prgpattern=%~2"
-%_task% "[%~nx0] Must get installation path instpath of '%prgname%' pattern '%prgpattern%'"
+%_task% "Must get installation path instpath of '%prgname%' pattern '%prgpattern%'"
 rem @echo on
 if "%prgname%"=="" (
-	%_fatal% "[%~nx0] prgname must be provided (ex: VSCode)" 1
+	%_fatal% "prgname must be provided (ex: VSCode)" 1
 )
 if "%prgpattern%"=="" (
-	%_fatal% "[%~nx0] prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
+	%_fatal% "prgpattern (searched in HKCU/HKLM) must be provided (ex: code)" 2
 )
 set "nofatal=%~3"
 set "subkey_path="
@@ -45,14 +45,14 @@ if not defined key_value ( set "key_value=InstallLocation" )
 set reg=HKCU
 reg query "%reg%\%subkey_path%" /v "%key_value%" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "[%~nx0] %prgname% is installed"
+		rem %_info% "%prgname% is installed"
 ) else (
-		rem %_info% "[%~nx0] %prgname% is NOT installed"
+		rem %_info% "%prgname% is NOT installed"
 		set reg=HKLM
 )
 reg query "%reg%\%subkey_path%" /v "%key_value%" /s | findstr /i %prgpattern% 1>NUL
 if not errorlevel 1 (
-		rem %_info% "[%~nx0] %prgname% is installed"
+		rem %_info% "%prgname% is installed"
 ) else (
 		call:error_or_fatal "[%~nx0] %prgname% is NOT installed for pattern '%prgpattern%'" 1
 		if defined nofatal ( exit /b 1 )

@@ -21,30 +21,30 @@ set "sln=%~3"
 set "msgsln='%sln%'"
 
 if "%p%"=="system" (
-    rem %_fatal% "[%~nx0] Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
+    rem %_fatal% "Pre-check 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 31
     set "p=system-%f:~0,-1%"
 )
 if "%sln%"=="system" (
-    rem %_fatal% "[%~nx0] Post-check symlink 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 32
+    rem %_fatal% "Post-check symlink 'system' must be followed by pattern to be searched in registry: ex 'system-code'" 32
     set "sln=system-%f:~0,-1%"
 )
 if not "%p:system-=%"=="%p%" (
     set "ipattern=%p:system-=%"
-    %_task% "[%~nx0] check_symlink (p): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
+    %_task% "check_symlink (p): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
     call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Pre-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 32
+        %_fatal% "Pre-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 32
     )
     set "p=!instPath!"
     if "!p!"=="" (
-        %_fatal% "[%~nx0] Pre-check 'system' empty instaPath unable to get installation for '%f%' pattern '!ipattern!'" 33
+        %_fatal% "Pre-check 'system' empty instaPath unable to get installation for '%f%' pattern '!ipattern!'" 33
     )
     set "msgp='!p!' [system]"
-    rem %_fatal% "[%~nx0] instPath='!instPath!',p='!p!', msgp='!msgp!'" 320
+    rem %_fatal% "instPath='!instPath!',p='!p!', msgp='!msgp!'" 320
     rem set "instPath="
 )
 echo sln='%sln%', p='%p%'
-rem %_fatal% "[%~nx0] instPath='%instPath%',sln='%sln%', msgsln='%msgsln%'" 321
+rem %_fatal% "instPath='%instPath%',sln='%sln%', msgsln='%msgsln%'" 321
 rem @echo on
 rem echo sln minus system='%sln:system-=%'
 rem echo sln='%sln%'
@@ -52,19 +52,19 @@ if "%sln%"=="" ( set "sln=current" )
 set "msgsln='%sln%'"
 if not "%sln:system-=%"=="%sln%" (
     set "ipattern=%sln:system-=%"
-    %_task% "[%~nx0] check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
+    %_task% "check_symlink (sln): Must get installation path 'instpath' of '%p%' pattern '!ipattern!'"
     call "%senv_dir%\bin\getInstallPath.bat" "%f%" "!ipattern!"
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
+        %_fatal% "Post-check 'system' unable to get installation for '%f%' pattern '!ipattern!'" 42
     )
     set "sln=current"
     if "!instPath!"=="" (
-        %_fatal% "[%~nx0] Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
+        %_fatal% "Post-check 'system' empty instPath unable to get installation for '%f%' pattern '!ipattern!'" 43
     )
     set "msgsln='!sln!' [system to instPath '!instPath!']"
 )
 
-%_info% "[%~nx0] Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
+%_info% "Check symlink with p=%msgp%, f='%f%' and sln=%msgsln%"
 rem @echo on
 
 if exist "%script_dir%\%f%.sln.bat" (
@@ -75,10 +75,10 @@ if exist "%senv_dir%\custom\installs\%f%.sln.bat" (
 )
 if "%sln%"=="" ( set "sln=current" )
 rem @echo off
-if "%PRGS%"=="" ( %_fatal% "[%~nx0] No PRGS defined" 1 )
+if "%PRGS%"=="" ( %_fatal% "No PRGS defined" 1 )
 
 set "drive=%PRGS:~0,1%"
-rem %_info% "[%~nx0] drive '%drive%'" 1
+rem %_info% "drive '%drive%'" 1
 if not "%drive%"=="C" (
     if not "%drive%"=="c" (
         if not "%drive%"=="D" (
@@ -90,34 +90,34 @@ if not "%drive%"=="C" (
 )
 
 if not "%instPath%"=="" (
-    %_info% "[%~nx0] For system installation, change p '%p%' to '%instPath%'"
+    %_info% "For system installation, change p '%p%' to '%instPath%'"
     set "p=%instPath%"
 )
 
 if not exist "%PRGS%\%f%\" (
-    %_task% "[%~nx0] Must create '%PRGS%\%f%' for '%sln%' to reference '%p%'"
+    %_task% "Must create '%PRGS%\%f%' for '%sln%' to reference '%p%'"
     mkdir "%PRGS%\%f%"
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to create '%PRGS%\%f%' for '%sln%' to reference '%p%'" 1
+        %_fatal% "Unable to create '%PRGS%\%f%' for '%sln%' to reference '%p%'" 1
     )
 ) else (
-    %_ok% "[%~nx0] Folder '%f%' already exists"
+    %_ok% "Folder '%f%' already exists"
 )
 
 if not exist "%PRGS%\%f%\%sln%" (
-    %_info% "[%~nx0] Must create '%sln%' to reference '%p%'"
+    %_info% "Must create '%sln%' to reference '%p%'"
     goto:create
 )
-%_task% "[%~nx0] Must check if symlink '%sln%' does reference p '%p%' in '%PRGS%\%f%'"
+%_task% "Must check if symlink '%sln%' does reference p '%p%' in '%PRGS%\%f%'"
 for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr /C:%sln%') do (set s=%%a)
 echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr /C:"%p%" 1>NUL: 2>NUL:
 if errorlevel 1 (
-    %_info% "[%~nx0] Must update '%sln%' to reference '%p%' from '%s%' in '%PRGS%\%f%'"
+    %_info% "Must update '%sln%' to reference '%p%' from '%s%' in '%PRGS%\%f%'"
     rmdir "%PRGS%\%f%\%sln%"
     goto:create
 )
-%_ok% "[%~nx0] symlink '%sln%' already exist, and references p '%p%' in '%PRGS%\%f%'"
+%_ok% "symlink '%sln%' already exist, and references p '%p%' in '%PRGS%\%f%'"
 goto:endlocal_sln
 
 :create
@@ -128,51 +128,51 @@ if "%instPath%"=="" (
 )
 mklink /J "%PRGS%\%f%\%sln%" "!tpath!"
 if errorlevel 1 (
-    %_warning% "[%~nx0] Unable to create %sln% symlink for '%f%\%p%' (!tpath!)"
+    %_warning% "Unable to create %sln% symlink for '%f%\%p%' (!tpath!)"
     set "sln="
 )
 goto:endlocal_sln
 
 
 :network
-%_warning% "[%~nx0] Check if '%p%' exists on network drive '%drive%' (%PRGS%)"
+%_warning% "Check if '%p%' exists on network drive '%drive%' (%PRGS%)"
 if exist "%PRGS%\%f%\%sln%" (
     if not exist "%PRGS%\%f%\_%p%" (
-        %_warning% "[%~nx0] Must delete '%sln%' before renaming '%p%' to '%sln%'"
+        %_warning% "Must delete '%sln%' before renaming '%p%' to '%sln%'"
         rmdir /S /Q "%PRGS%\%f%\%sln%"
         if errorlevel 1 (
-            %_fatal% "[%~nx0] Must delete '%sln%' in folder '%f%', needed to rename '%p%' to '%sln%'" 1
+            %_fatal% "Must delete '%sln%' in folder '%f%', needed to rename '%p%' to '%sln%'" 1
         )
         ping 127.0.0.1 -n 4 > nul
     ) else (
-        %_ok% "[%~nx0] Symlink '%sln%' already reference program '%p%'"
+        %_ok% "Symlink '%sln%' already reference program '%p%'"
         goto:endlocal_sln
     )
 )
 if not exist "%PRGS%\%f%\%p%" (
-    %_fatal% "[%~nx0] '%p%' is missing in folder '%f%'" 3
+    %_fatal% "'%p%' is missing in folder '%f%'" 3
 )
 call :check_subdir
-%_warning% "[%~nx0] Must rename program '%p%' (!tpath!) to '%sln%'"
-rem %_fatal% "[%~nx0] stop" 1
+%_warning% "Must rename program '%p%' (!tpath!) to '%sln%'"
+rem %_fatal% "stop" 1
 move "!tpath!" "%PRGS%\%f%\%sln%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to rename program '%p%' to '%sln%' in folder '%f%'" 2
+    %_fatal% "Unable to rename program '%p%' to '%sln%' in folder '%f%'" 2
 )
 ping 127.0.0.1 -n 4 > nul
 if exist "%p%" (
     rmdir "%p%"
     if errorlevel 1 (
-        %_warning% "[%~nx0] Unable to delete empty directory '%p%' in folder '%f%'" 6
+        %_warning% "Unable to delete empty directory '%p%' in folder '%f%'" 6
     )
     ping 127.0.0.1 -n 4 > nul
 )
 echo "%p%"> "%PRGS%\%f%\_%p%"
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to create file '%p%' in folder '%f%'" 5
+    %_fatal% "Unable to create file '%p%' in folder '%f%'" 5
 )
 if not exist "%PRGS%\%f%\%sln%" (
-    %_fatal% "[%~nx0] '%sln%' is still missing in folder '%f%'" 3
+    %_fatal% "'%sln%' is still missing in folder '%f%'" 3
 )
 
 goto:endlocal_sln
@@ -229,6 +229,6 @@ exit /b
 goto:eof
 
 :endlocal_sln
-%_info% "[%~nx0] pre-endlocal symlink '%sln%' for '%f%'"
+%_info% "pre-endlocal symlink '%sln%' for '%f%'"
 endlocal & set "sln=%sln%"
-%_info% "[%~nx0] post-endlocal symlink '%sln%' for '%f%'"
+%_info% "post-endlocal symlink '%sln%' for '%f%'"

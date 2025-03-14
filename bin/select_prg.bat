@@ -19,9 +19,9 @@ set "senv_home=%USERPROFILE%\senv_home"
 
 if not exist "%PRGS%\gums\current\gum.exe" (
   if defined standalone_call (
-    %_fatal% "[%~nx0] gum.exe not found in '%PRGS%\gums\current'" 1
+    %_fatal% "gum.exe not found in '%PRGS%\gums\current'" 1
   )
-  %_warning% "[%~nx0] gum.exe not found in '%PRGS%\gums\current', but non-standalone call, so does not matter"
+  %_warning% "gum.exe not found in '%PRGS%\gums\current', but non-standalone call, so does not matter"
 ) else (
   set "PATH=%PRGS%\gums\current;%PATH%"
 )
@@ -45,7 +45,7 @@ if "%prg_name%"=="" (
   if defined standalone_call (
     call:select_program
   ) else (
-    %_fatal% "[%~nx0] non-standalone call: prg_name first parameter is missing" 12
+    %_fatal% "non-standalone call: prg_name first parameter is missing" 12
   )
 )
 if "%prg_name%"=="choose" (
@@ -69,9 +69,9 @@ if not defined prg_line (
   )
 )
 if not defined prg_line (
-  %_fatal% "[%~nx0] prg_name '%prg_name%' not found in available program list" 11
+  %_fatal% "prg_name '%prg_name%' not found in available program list" 11
 )
-%_ok% "[%~nx0] prg_name '%prg_name%' matches prg_line '%prg_line%'"
+%_ok% "prg_name '%prg_name%' matches prg_line '%prg_line%'"
 for /f "tokens=1-5 delims=~" %%a in ('echo "%prg_line%"') do (
   set "prg_names=%%a"
   set "prg_versions=%%b"
@@ -91,10 +91,10 @@ if defined prg_patterns ( set "prg_patterns=%prg_patterns:#=%" )
 for /f "tokens=1 delims=/" %%a in ('echo "%prg_names%"') do ( set "prg_name=%%a" )
 set "prg_name=%prg_name:"=%"
 if not defined prg_folders (
-  %_fatal% "[%~nx0] prg_folders not defined for '%prg_name%'" 15
+  %_fatal% "prg_folders not defined for '%prg_name%'" 15
 )
 set "prg_id=%prg_folders:~0,-1%"
-%_info% "[%~nx0] prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
+%_info% "prg_name='%prg_name%': prg_names='%prg_names%', prg_versions='%prg_versions%', prg_folders='%prg_folders%', prg_patterns='%prg_patterns%'"
 
 REM Step 2: check the version
 set "prg_version=%~2"
@@ -107,12 +107,12 @@ if not defined prg_version (
 if not defined prg_version (
   if defined prg_versions (
     if not defined standalone_call (
-      %_fatal% "[%~nx0] non-standalone call: prg_version second parameter is missing. Should be one of '%prg_versions%'" 13
+      %_fatal% "non-standalone call: prg_version second parameter is missing. Should be one of '%prg_versions%'" 13
     )
     call:select_version
-    %_ok% "[%~nx0] Selected version: latest of '!prg_version!'"
+    %_ok% "Selected version: latest of '!prg_version!'"
   ) else (
-    %_info% "[%~nx0] No version provided, and prg_versions not defined: assume 'latest'"
+    %_info% "No version provided, and prg_versions not defined: assume 'latest'"
     set "prg_version=latest"
   )
 ) else if defined prg_versions (
@@ -132,34 +132,34 @@ if not defined prg_version (
   if not defined prg_version_found (
     if "%prg_version%"=="latest" (
       if defined latest_version (
-        %_ok% "[%~nx0] version '%prg_version%' means version !latest_version!"
+        %_ok% "version '%prg_version%' means version !latest_version!"
         set "prg_version=!latest_version!"
         set "prg_version_found=true"
       )
     )
     if "%prg_version%"=="LTS" (
-      %_fatal% "[%~nx0] no version '%prg_version%' found for '%prg_name%', versions '%prg_versions%'" 19
+      %_fatal% "no version '%prg_version%' found for '%prg_name%', versions '%prg_versions%'" 19
     )
   )
   if not defined prg_version_found (
     if not defined standalone_call (
-      %_fatal% "[%~nx0] Invalid prg_version '!prg_version!', should be one of '%prg_versions%'" 14
+      %_fatal% "Invalid prg_version '!prg_version!', should be one of '%prg_versions%'" 14
     )
-    %_error% "[%~nx0] Invalid prg_version '!prg_version!', Select one of '%prg_versions%'"
+    %_error% "Invalid prg_version '!prg_version!', Select one of '%prg_versions%'"
     call:select_version
-    %_ok% "[%~nx0] Selected fixed version: latest of '!prg_version!'"
+    %_ok% "Selected fixed version: latest of '!prg_version!'"
   ) else (
     if defined lts_version (
-      %_ok% "[%~nx0] LTS version selected: !lts_version!"
+      %_ok% "LTS version selected: !lts_version!"
       set "prg_version=!lts_version!"
     )
-    %_ok% "[%~nx0] Valid version '!prg_version!', one of '%prg_versions%'"
+    %_ok% "Valid version '!prg_version!', one of '%prg_versions%'"
   )
 ) else (
-  %_ok% "[%~nx0] prg_version '%prg_version%' preserved, since no prg_versions defined"
+  %_ok% "prg_version '%prg_version%' preserved, since no prg_versions defined"
 )
 :prg_version_inst_prg
-%_info% "[%~nx0] prg_version='%prg_version%'"
+%_info% "prg_version='%prg_version%'"
 endlocal & set "prg_name=%prg_name%" & set "prg_id=%prg_id%" & set "prg_version=%prg_version%" & set "prg_pattern=%prg_patterns%" & set "prg_folders=%prg_folders%" & set "senv_dir=%senv_dir%" & set "prg_is_global=%prg_is_global%"
 if defined standalone_call (
   call %senv_dir%\batcolors\echos_macros.bat unset
@@ -188,10 +188,10 @@ goto:eof
 :select_version
 for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose %prg_versions%"') do ( set "prg_version=%%p" )
 if "%prg_version%"=="" (
-  %_fatal% "[%~nx0] No program version selected from '%prg_versions%'" 1
+  %_fatal% "No program version selected from '%prg_versions%'" 1
 )
 set "prg_version=%prg_version:-LTS=%"
-%_ok% "[%~nx0] Program version selected: %prg_version%"
+%_ok% "Program version selected: %prg_version%"
 goto:eof
 
 :parse_prgs_list
@@ -200,7 +200,7 @@ if not defined prg_line (
   for /f "delims=" %%p in ('findstr /I /R /C:"/%prg_name%[/~]" "%~1"') do set "prg_line=%%p"
 )
 if defined prg_line (
-  %_ok% "[%~nx0] prg_name '%prg_name%' found in '%~1': prg_line '%prg_line%'"
+  %_ok% "prg_name '%prg_name%' found in '%~1': prg_line '%prg_line%'"
 )
 goto:eof
 
@@ -217,7 +217,15 @@ rem goto:eof
 sed "s/[~#/,].*$//g" "%script_dir%\prgs.list" > "%script_dir%\prg_names.tmp"
 for /f "delims=" %%p in ('bash -c "'%PRGS%\gums\current\gum.exe' choose --limit 1 $(sed "s/\S+.*?$\r\n/\n/g" '%script_dir%\prg_names.tmp')"') do set "prg_name=%%p"
 if "%prg_name%"=="" (
-  %_fatal% "[%~nx0] No program selected" 1
+  %_fatal% "No program selected" 1
 )
-%_ok% "[%~nx0] Program selected: %prg_name%"
+%_ok% "Program selected: %prg_name%"
+goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
 goto:eof

@@ -32,7 +32,7 @@ if "%_task%"=="" ( set _task=echo )
 if "%_error%"=="" ( set _error=echo )
 if "%_fatal%"=="" ( set _fatal=echo )
 
-%_task% "[%~nx0] Check for pattern '%old_line%' in filename '%filename%', updated to '%new_line%'"
+%_task% "Check for pattern '%old_line%' in filename '%filename%', updated to '%new_line%'"
 if not exist "%filename%" (
     "%_ok%" "filename '%filename%' does not exist, nothing to do"
     goto :eof
@@ -84,21 +84,21 @@ for /f "usebackq tokens=*" %%a in ("%filename%") do (
     rem if !errorlevel! equ 0 (
     if "!line!"=="!new_line!" (
         set found_new=true
-        %_ok% "[%~nx0] Pattern F '!pattern!' found in filename '!filename!', found_new true"
+        %_ok% "Pattern F '!pattern!' found in filename '!filename!', found_new true"
     ) else (
-        %_info% "[%~nx0] Pattern NF '!pattern!'  in filename '!filename!', found_new remains '!found_new!'"
+        %_info% "Pattern NF '!pattern!'  in filename '!filename!', found_new remains '!found_new!'"
     )
 )
 
 if not "%found_old%"=="true" (
     if not "!found_new!"=="true" (
-        %_ok% "[%~nx0] Pattern '!pattern!' not found in filename '%filename%', adding it"
+        %_ok% "Pattern '!pattern!' not found in filename '%filename%', adding it"
         echo %new_line%>>"%tempfile%"
     ) else (
-        %_ok% "[%~nx0] Pattern '%pattern%' found in filename '%filename%', nothing to do"
+        %_ok% "Pattern '%pattern%' found in filename '%filename%', nothing to do"
     )
 ) else (
-    %_ok% "[%~nx0] Pattern '!old_line!' found in filename '%filename%', replaced with '!new_line!'"
+    %_ok% "Pattern '!old_line!' found in filename '%filename%', replaced with '!new_line!'"
 )
 
 move /y "%tempfile%" "%filename%" >nul

@@ -7,27 +7,27 @@ cd ..
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
 set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "[%~nx0] script_dir(build_all)='%script_dir%'"
+%_info% "script_dir(build_all)='%script_dir%'"
 set "custom_dir=%senv_dir%\custom"
 set "builds_dir=%senv_dir%\builds"
 
 cd "%custom_dir%"
-if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder '%custom_dir%'" 1
+if errorlevel 1 %_fatal% "Unable to access custom folder '%custom_dir%'" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
-%_info% "[%~nx0] Custom folder full path: '%cpwd%'"
+%_info% "Custom folder full path: '%cpwd%'"
 
 call:execcmd "ls -1 setupsdir*_*|cut -d _ -f 2|cut -d . -f 1"
 for /L %%n in (1 1 !output_cnt!) DO (
-    rem %_info% "[%~nx0] profile exec(%%n)='!output[%%n]!'"
+    rem %_info% "profile exec(%%n)='!output[%%n]!'"
     set "profiles[%%n]=!output[%%n]!"
-    rem %_info% "[%~nx0] profile stored(%%n)='!profiles[%%n]!'"
+    rem %_info% "profile stored(%%n)='!profiles[%%n]!'"
 )
 
 set "build_all_log=%builds_dir%\build_all.log"
 del /F "%build_all_log%" 2>NUL
 for /L %%n in (1 1 !output_cnt!) DO (
     set "profile=!profiles[%%n]!"
-    %_info% "[%~nx0] profile='!profile!'"
+    %_info% "profile='!profile!'"
     call build.bat !profile!
     if errorlevel 1 (
         echo build.bat !profile! failed>> "%build_all_log%"
@@ -39,7 +39,7 @@ if not exist "%build_all_log%" (
     goto:eof
 )
 
-%_warning% "[%~nx0] Some Build failed:"
+%_warning% "Some Build failed:"
 type "%build_all_log%"
 
 goto:eof
@@ -62,5 +62,5 @@ for /F "delims=" %%f in (a) do (
 del a
 if errorlevel 1 (
     pwd
-    %_fatal% "[%~nx0] unable to delete a" 2
+    %_fatal% "unable to delete a" 2
 )

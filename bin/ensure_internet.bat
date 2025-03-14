@@ -7,21 +7,21 @@ call %senv_dir%\batcolors\echos_macros.bat
 
 call "%script_dir%\testinternet.bat"
 if "%ERRORLEVEL%" == "0" (
-    %_ok% "[%~nx0] Internet connection there. Proceed"
+    %_ok% "Internet connection there. Proceed"
     goto:eof
 )
 if not defined HTTPS_PROXY (
-    %_fatal% "[%~nx0] Internet access missing: no download possible" 21
+    %_fatal% "Internet access missing: no download possible" 21
 )
 if not exist "%HOME%\bin\pxkill.bat" (
-    %_fatal% "[%~nx0] pxkill missing: unable to reset Internet access" 22
+    %_fatal% "pxkill missing: unable to reset Internet access" 22
 )
 call "%HOME%\bin\pxkill.bat"
 if not exist "%HOME%\bin\px.bat" (
-    %_fatal% "[%~nx0] px missing: unable to reset Internet access" 23
+    %_fatal% "px missing: unable to reset Internet access" 23
 )
 call "%HOME%\bin\px.bat"
 call "%script_dir%\testinternet.bat"
 if not "%ERRORLEVEL%" == "0" (
-   %_fatal% "[%~nx0] Internet access still missing after reset" 22
+   %_fatal% "Internet access still missing after reset" 22
 )

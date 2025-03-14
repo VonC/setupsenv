@@ -6,12 +6,12 @@ cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& exit /b 1
 
 set "bc=%script_dir%\batcolors"
 call "%bc%\echos_macros.bat"
-%_info% "[%~nx0] script_dir='%script_dir%'"
+%_info% "script_dir='%script_dir%', batdir='%batdir%'"
 set "senv_dir=%script_dir%"
 if not exist "%senv_dir%\..\setup" (
     mkdir "%senv_dir%\..\setup"
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to create setup folder at '%senv_dir%/../setup'" 3
+        %_fatal% "Unable to create setup folder at '%senv_dir%/../setup'" 3
     )
 )
 cd "%senv_dir%\..\setup"
@@ -36,9 +36,9 @@ if /i "%prgtoinstall:~0,1%"=="_" (
     )
     set instlist=install_!profile!.list
 )
-%_info% "[%~nx0] profile='%profile%', instlist='%instlist%' prgtoinstall='%prgtoinstall%'"
+%_info% "profile='%profile%', instlist='%instlist%' prgtoinstall='%prgtoinstall%'"
 if not exist custom\%instlist% (
-    %_fatal% "[%~nx0] Installation instlist '%instlist%' does not exist in '%script_dir%\custom" 1
+    %_fatal% "Installation instlist '%instlist%' does not exist in '%script_dir%\custom" 1
 )
 rem echo "prgtoinstall='%prgtoinstall%'"
 
@@ -73,13 +73,14 @@ if not exist custom\setup.ini.bat (
     %_fatal%  "Fill out first %script_dir%\custom\setup.ini.bat (PRGS, HOME, PROG)" 1
 )
 
-%_info% "[%~nx0] senv_noconfirm='%senv_noconfirm%' '!senv_noconfirm!'"
-call custom\setup.ini.bat || %_fatal% "[%~nx0] custom/setup.ini.bat error" 2
+%_info% "senv_noconfirm='%senv_noconfirm%' '!senv_noconfirm!'"
+call custom\setup.ini.bat
+if errorlevel 1 %_fatal% "custom/setup.ini.bat error" 2
 
-if "%PRGS%"=="" ( %_fatal% "[%~nx0] PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
-if "%HOME%"=="" ( %_fatal% "[%~nx0] HOME must be defined in custom/setup.ini.bat" && exit /b 1 )
-if "%PROG%"=="" ( %_fatal% "[%~nx0] PROG (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
-if "%REMOTE_HOME%"=="" ( %_fatal% "[%~nx0] REMOTE_HOME (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
+if "%PRGS%"=="" ( %_fatal% "PRGS (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
+if "%HOME%"=="" ( %_fatal% "HOME must be defined in custom/setup.ini.bat" && exit /b 1 )
+if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
+if "%REMOTE_HOME%"=="" ( %_fatal% "REMOTE_HOME (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 
 echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
 echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
@@ -92,55 +93,55 @@ if not "%HOMEDRIVE%"=="C:" (
 )
 doskey senv=
 
-%_info% "[%~nx0] PRGS='%PRGS%'"
-%_info% "[%~nx0] HOME='%HOME%'"
-%_info% "[%~nx0] PROG='%PROG%'"
+%_info% "PRGS='%PRGS%'"
+%_info% "HOME='%HOME%'"
+%_info% "PROG='%PROG%'"
 
 if not exist "%HOME%\bin" (
     mkdir "%HOME%\bin"
 )
 
-%_task% "[%~nx0] Must copy script_dir\bin '%script_dir%\bin\' to HOME\bin '%HOME%\bin'"
+%_task% "Must copy script_dir\bin '%script_dir%\bin\' to HOME\bin '%HOME%\bin'"
 copy "%script_dir%\bin\*" "%HOME%\bin" 1>NUL:
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
+    %_fatal% "Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
 )
-%_ok% "[%~nx0] script_dir\bin '%script_dir%\bin\' COPIED to HOME\bin '%HOME%\bin'"
-%_task% "[%~nx0] Must copy script_dir\custom\ custom-files '%script_dir%\custom\' to HOME\bin '%HOME%\bin'"
+%_ok% "script_dir\bin '%script_dir%\bin\' COPIED to HOME\bin '%HOME%\bin'"
+%_task% "Must copy script_dir\custom\ custom-files '%script_dir%\custom\' to HOME\bin '%HOME%\bin'"
 copy "%script_dir%\custom\*.custom.*" "%HOME%\bin" 1>NUL:
 if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to copy '%script_dir%\custom\*.custom.*' to '%HOME%\bin'" 231
+    %_fatal% "Unable to copy '%script_dir%\custom\*.custom.*' to '%HOME%\bin'" 231
 )
-%_ok% "[%~nx0] '%script_dir%\custom\*.custom.*' COPIED to '%HOME%\bin'"
+%_ok% "'%script_dir%\custom\*.custom.*' COPIED to '%HOME%\bin'"
 
 if not defined profile ( goto:skip_custom_cleanup)
 
-%_task% "[%~nx0] Must cleanup custom.[profile].[bat,doskey] files"
+%_task% "Must cleanup custom.[profile].[bat,doskey] files"
 dir /B "%HOME%\bin\*.custom.*.bat" > "%script_dir%\setup_cleanup.tmp"
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to list custom bat files in %HOME%\bin" 51
+  %_fatal% "Unable to list custom bat files in %HOME%\bin" 51
 )
 dir /B "%HOME%\bin\*.custom.*.doskey" >> "%script_dir%\setup_cleanup.tmp"
 if errorlevel 1 (
-  %_fatal% "[%~nx0] Unable to list custom doskey files in %HOME%\bin" 52
+  %_fatal% "Unable to list custom doskey files in %HOME%\bin" 52
 )
 findstr /R /V /C:".*custom\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
 if errorlevel 1 (
-  %_info% "[%~nx0] No other profile than '%profile%' in '%script_dir%\setup_cleanup.tmp'"
+  %_info% "No other profile than '%profile%' in '%script_dir%\setup_cleanup.tmp'"
 )
 for /f "delims=" %%a in ('type "%script_dir%\setup_cleanup_filtered.tmp"') do (
   set "custom_file_to_delete=%%a"
   rem echo Must delete '!custom_file_to_delete!'
   del "%HOME%\bin\!custom_file_to_delete!"
   if errorlevel 1 (
-    %_fatal% "[%~nx0] Unable to delete custom file '!custom_file_to_delete!' in %HOME%\bin" 54
+    %_fatal% "Unable to delete custom file '!custom_file_to_delete!' in %HOME%\bin" 54
   )
 )
 del "%script_dir%\setup_cleanup.tmp"
 del "%script_dir%\setup_cleanup_filtered.tmp"
-%_ok% "[%~nx0] All custom file from different profiles than '%profile%' have been deleted from HOME\bin '%HOME%\bin'"
+%_ok% "All custom file from different profiles than '%profile%' have been deleted from HOME\bin '%HOME%\bin'"
 
-rem %_fatal% "[%~nx0] stop for now" 22
+rem %_fatal% "stop for now" 22
 
 :skip_custom_cleanup
 if not exist "%HOME%\.config" ( mkdir "%HOME%\.config" )
@@ -148,42 +149,42 @@ if not exist "%HOME%\.config\git" ( mkdir "%HOME%\.config\git" )
 if not exist "%HOME%\.config\git\config" ( copy "%script_dir%\.config.git.config" "%HOME%\.config\git\config" )
 
 if exist "%script_dir%\custom\profile" (
-    %_task% "[%~nx0] Copy/Update '%HOME%\bin\profile' with '%script_dir%\custom\profile'"
+    %_task% "Copy/Update '%HOME%\bin\profile' with '%script_dir%\custom\profile'"
     copy /Y "%script_dir%\custom\profile" "%HOME%\bin" 1>NUL:
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to copy '%script_dir%\custom\profile' to '%HOME%\bin'" 23
+        %_fatal% "Unable to copy '%script_dir%\custom\profile' to '%HOME%\bin'" 23
     )
-    %_ok% "[%~nx0] Profile custom aliases updated '%HOME%\bin\profile'"
+    %_ok% "Profile custom aliases updated '%HOME%\bin\profile'"
 )
 
 if not exist "%script_dir%\custom\senv.custom.doskey" (
-    %_info% "[%~nx0] No Custom alias file '%script_dir%\custom\senv.custom.doskey'"
+    %_info% "No Custom alias file '%script_dir%\custom\senv.custom.doskey'"
 ) else (
-    %_task% "[%~nx0] Copy/Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.doskey'"
+    %_task% "Copy/Update '%HOME%\bin\senv.custom.doskey' with '%script_dir%\custom\senv.custom.doskey'"
     copy /Y "%script_dir%\custom\senv.custom.doskey" "%HOME%\bin" 1>NUL:
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to copy '%script_dir%\custom\senv.custom.doskey' to '%HOME%\bin'" 23
+        %_fatal% "Unable to copy '%script_dir%\custom\senv.custom.doskey' to '%HOME%\bin'" 23
     )
-    %_ok% "[%~nx0] Profile custom aliases updated '%HOME%\bin\senv.custom.doskey'"
+    %_ok% "Profile custom aliases updated '%HOME%\bin\senv.custom.doskey'"
 )
 
 if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
-    %_info% "[%~nx0] No Custom alias file '%script_dir%\custom\senv.custom.%profile%.doskey'"
+    %_info% "No Custom alias file '%script_dir%\custom\senv.custom.%profile%.doskey'"
 ) else (
-    %_task% "[%~nx0] Copy/Update '%HOME%\bin\senv.custom.%profile%.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
+    %_task% "Copy/Update '%HOME%\bin\senv.custom.%profile%.doskey' with '%script_dir%\custom\senv.custom.%profile%.doskey'"
     copy /Y "%script_dir%\custom\senv.custom.%profile%.doskey" "%HOME%\bin" 1>NUL:
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to copy '%script_dir%\custom\senv.custom.%profile%.doskey' to '%HOME%\bin'" 23
+        %_fatal% "Unable to copy '%script_dir%\custom\senv.custom.%profile%.doskey' to '%HOME%\bin'" 23
     )
-    %_ok% "[%~nx0] Profile custom '%profile%' aliases updated '%HOME%\bin\senv.custom.%profile%.doskey'"
+    %_ok% "Profile custom '%profile%' aliases updated '%HOME%\bin\senv.custom.%profile%.doskey'"
 )
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
 if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set "PRGS=%PRGS%"%NL%set "PROG=%PROG%"%NL%set "REMOTE_HOME=%REMOTE_HOME%"%NL%set "HOME=%HOME%"%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
 if not exist "%script_dir%\custom\setup.senv.local.pre.bat" (
-    %_info% "[%~nx0] No '%script_dir%\custom\setup.senv.local.pre.bat' found"
+    %_info% "No '%script_dir%\custom\setup.senv.local.pre.bat' found"
 ) else (
-    %_info% "[%~nx0] Call "%script_dir%\custom\setup.senv.local.pre.bat"
+    %_info% "Call "%script_dir%\custom\setup.senv.local.pre.bat"
     call "%script_dir%\custom\setup.senv.local.pre.bat"
 )
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
@@ -205,22 +206,22 @@ if "%setupsdir%"=="" (
     if exist "%script_dir%\setups" (
         set "setupsdir=%script_dir%\setups"
     ) else if exist "%script_dir%\custom\%setupsdirbat%" (
-        %_info% "[%~nx0] call '%script_dir%\custom\%setupsdirbat%'"
+        %_info% "call '%script_dir%\custom\%setupsdirbat%'"
         call "%script_dir%\custom\%setupsdirbat%"
     )
     if "!setupsdir!"=="" (
-        %_fatal% "[%~nx0] Define '%script_dir%\custom\%setupsdirbat%' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
+        %_fatal% "Define '%script_dir%\custom\%setupsdirbat%' with in it 'set setupsdir=/path/to/setups/archives'" && exit /b 1
     )
 )
-%_info% "[%~nx0] setupsdir='%setupsdir%'"
+%_info% "setupsdir='%setupsdir%'"
 cd /d "%script_dir%"
 if exist installs\python.install.bat (
-    %_task% "[%~nx0] Must delete installs\python.install.bat in '%script_dir%'"
+    %_task% "Must delete installs\python.install.bat in '%script_dir%'"
     del installs\python.install.bat
     if errorlevel 1 (
-        %_fatal% "[%~nx0] Unable to delete installs\python.install.bat in '%script_dir%'" 165
+        %_fatal% "Unable to delete installs\python.install.bat in '%script_dir%'" 165
     )
-    %_ok% "[%~nx0] installs\python.install.bat in '%script_dir%' deleted"
+    %_ok% "installs\python.install.bat in '%script_dir%' deleted"
 )
 rem goto:alldone
 findstr /i "peazips" "custom\%instlist%" >nul
@@ -234,7 +235,7 @@ call:install "%pattern%" "gits" || exit /b 1
 
 
 if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
-    %_info% "[%~nx0] REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
+    %_info% "REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
     type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
 )
 cd /d "%script_dir%"
@@ -254,8 +255,8 @@ if not exist "%script_dir%\custom\%instlist%" (
     goto:alldone
 )
 
-%_info% "[%~nx0] =========="
-%_info% "[%~nx0] processing custom installation list '%instlist%'"
+%_info% "=========="
+%_info% "processing custom installation list '%instlist%'"
 @echo off
 for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do (
   set fnpl=%%a
@@ -272,12 +273,12 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   )
 )
 if not exist "%locald%\install.list" (
-    %_ok% "[%~nx0] no local install list '%locald%\install.list', so no more list to process"
+    %_ok% "no local install list '%locald%\install.list', so no more list to process"
     goto:alldone
 )
 set "setupsdir=%locald%\setups"
-%_info% "[%~nx0] =========="
-%_info% "[%~nx0] processing local installation list in '%locald%\install.list'"
+%_info% "=========="
+%_info% "processing local installation list in '%locald%\install.list'"
 for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
   set fnpl=%%a
   set fl=%%b
@@ -286,7 +287,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 
 
 :alldone
-%_ok% "[%~nx0] All done"
+%_ok% "All done"
 ENDLOCAL
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%"
@@ -294,7 +295,7 @@ cd
 call custom\setup.ini.bat "set"
 set "err=%ERRORLEVEL%"
 if not "%err%"=="0" (
- %_fatal% "[%~nx0] custom/setup.ini.bat still missing" %err%
+ %_fatal% "custom/setup.ini.bat still missing" %err%
 )
 echo HOME='%HOME%'
 echo script_dir='%script_dir%'
@@ -323,7 +324,7 @@ set script_dir=
 set profile=
 set setupsdirbat=
 set setupsdir=
-echo [%~nx0] calling senv.bat: You are good to go!
+echo calling senv.bat: You are good to go!
 call "%HOME%\bin\senv.bat"
 goto:eof
 
@@ -333,7 +334,7 @@ set "f=%~2"
 set "sys=%~3"
 if not "%prgtoinstall%"=="" (
     if not "%prgtoinstall%"=="%f%" (
-        %_warning% "[%~nx0] Skip '%f%' installation (for '%prgtoinstall%')"
+        %_warning% "Skip '%f%' installation (for '%prgtoinstall%')"
         rem @echo on
         goto:eof
     )
@@ -352,40 +353,40 @@ rem echo fname='%fname%'
 rem echo pname='%pname%'
 if "%pname%"=="" (
     if exist "%setupsdir%\_%f%" (
-        %_warning% "[%~nx0] Skip '%f%' installation (test found) in '%setupsdir%\_%f%'"
+        %_warning% "Skip '%f%' installation (test found) in '%setupsdir%\_%f%'"
         goto:eof
     )
-    %_warning% "[%~nx0] No setup file found in '%setupsdir%' for '%f%', pattern '%p%'"
+    %_warning% "No setup file found in '%setupsdir%' for '%f%', pattern '%p%'"
 ) else ( goto:info )
-%_task% "[%~nx0] Must check if '%f%', pattern '%p%' is in local setup dir '%setup_dir%'"
+%_task% "Must check if '%f%', pattern '%p%' is in local setup dir '%setup_dir%'"
 if exist "%setup_dir%\%p%" (
     for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%p%"`) do set "fname=%%~nxi"&& set "pname=%%~ni"
 )
 if "%pname%"=="" (
     if exist "%setup_dir%\_%f%" (
-        %_warning% "[%~nx0] Skip '%f%' installation (test found) in local '%setup_dir%\_%f%'"
+        %_warning% "Skip '%f%' installation (test found) in local '%setup_dir%\_%f%'"
         goto:eof
     )
-    %_fatal% "[%~nx0] No setup file found in local '%setup_dir%' for '%f%', pattern '%p%'" 112
+    %_fatal% "No setup file found in local '%setup_dir%' for '%f%', pattern '%p%'" 112
 )
 :info
-%_info% "[%~nx0] --------------"
-%_info% "[%~nx0] folder: '%f%': pattern '%pname%' system: '%sys%'"
-%_info% "[%~nx0] --------------"
+%_info% "--------------"
+%_info% "folder: '%f%': pattern '%pname%' system: '%sys%'"
+%_info% "--------------"
 set "sln="
 if exist "%HOME%\.gitconfig" (
     call "%script_dir%\installs\gits.config.utils.bat" :save_gitconfig Install '%f%': '%pname%'
 )
 set pre_ok=false
 call :check_pre "%f%" "%fname%" "%pname%" || exit /b 1
-%_info% "[%~nx0] pname='%pname%', f='%f%', fname='%fname%' means sys='%sys%'"
+%_info% "pname='%pname%', f='%f%', fname='%fname%' means sys='%sys%'"
 if "%pre_ok%"=="true" (
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
-    %_ok% "[%~nx0] pre-check ok for %f%: nothing more to do"&& exit /b 0
+    %_ok% "pre-check ok for %f%: nothing more to do"&& exit /b 0
 )
 set "tpath=%PRGS%\%f%\_%pname%"
 if exist "%tpath%" (
-    %_ok% "[%~nx0] Program '%pname%' already installed in '%PRGS%\%f%'"
+    %_ok% "Program '%pname%' already installed in '%PRGS%\%f%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
@@ -393,7 +394,7 @@ if exist "%tpath%" (
 )
 set "tpath=%PRGS%\%f%\%pname%"
 if exist "%tpath%" (
-    %_ok% "[%~nx0] Program '%pname%' already installed2 in '%PRGS%\%f%', sln '%sys%'"
+    %_ok% "Program '%pname%' already installed2 in '%PRGS%\%f%', sln '%sys%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
@@ -403,22 +404,22 @@ if not exist "%PRGS%\setup\" (
     mkdir "%PRGS%\setup\"
 )
 if not exist "%PRGS%\setup\%fname%" (
-    %_info% "[%~nx0] Copying '%fname%' from '%setupsdir%'"
+    %_info% "Copying '%fname%' from '%setupsdir%'"
     (robocopy "%setupsdir%" "%PRGS%\setup" "%fname%" /Z /R:5 /W:5 /TBD /MT:16 /NJH /NJS) ^& IF %ERRORLEVEL% LSS 8 SET ERRORLEVEL = 0
-    if not "%ERRORLEVEL%"=="0" ( %_fatal% "[%~nx0] Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
-    %_ok% "[%~nx0] Setup '%fname%' copied locally"
+    if not "%ERRORLEVEL%"=="0" ( %_fatal% "Unable to copy '%setupsdir%\%fname%' to '%PRGS%\setup\'" && exit /b 1)
+    %_ok% "Setup '%fname%' copied locally"
 )
 set install_ok=false
 call:check_install "%f%" "%fname%" "%pname%" || exit /b 1
 if "%install_ok%"=="true" (
-    %_ok% "[%~nx0] install ok for %f%: nothing more to do"&& exit /b 0
+    %_ok% "install ok for %f%: nothing more to do"&& exit /b 0
 )
 if "%install_ok%"=="check_symlink" (
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     exit /b 0
 )
 if "%f%"=="vscodes" (
-    %_warning% "[%~nx0] should not be here"&& exit /b 1
+    %_warning% "should not be here"&& exit /b 1
 )
 if not exist "%PRGS%\setup" ( mkdir "%PRGS%\setup")
 if not exist "%PRGS%\%f%" ( mkdir "%PRGS%\%f%" )
@@ -430,11 +431,11 @@ rem https://stackoverflow.com/questions/17546016/how-can-you-zip-or-unzip-from-t
 rem powershell.exe -nologo -noprofile -command "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('foo.zip', 'bar'); }"
 if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     if "%szdone%"=="true" ( %fatal% "7z should be here" && exit /b 1 )
-    %_task% "[%~nx0] Must uncompress with powershell '%fname%' to '%tpath%'"
+    %_task% "Must uncompress with powershell '%fname%' to '%tpath%'"
     rem https://stackoverflow.com/questions/33729801/returning-exit-code-from-a-batch-file-in-a-powershell-script-block#comment55261380_33730519
     powershell.exe -nologo -noprofile -ExecutionPolicy UnRestricted; $var = "& { Add-Type -A 'System.IO.Compression.FileSystem'; [IO.Compression.ZipFile]::ExtractToDirectory('%PRGS%\setup\%fname%', '%tpath%'); $res=$?; Write-Host \"LASTEXITCODE='$res'\";if (-not $res) { return 1; }; return 0;}"; exit $var
-    if errorlevel 1 ( %_fatal% "[%~nx0] Error on powershell uncompression"&& exit /b 1 )
-    %_ok% "[%~nx0] '%fname%' uncompressed (powershell) to '%tpath%'"
+    if errorlevel 1 ( %_fatal% "Error on powershell uncompression"&& exit /b 1 )
+    %_ok% "'%fname%' uncompressed (powershell) to '%tpath%'"
     call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
     call:check_post "%f%" "!sln!" || exit /b 1
     cd /d "%script_dir%"
@@ -443,13 +444,13 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 cd /d "%PRGS%\%f%"
-%_task% "[%~nx0] Must uncompress with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
+%_task% "Must uncompress with 7z '%PRGS%\setup\%fname%' to '%tpath%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\setup\%fname%"
 if errorlevel 1 (
     rmdir /s /q "%tpath%"
-    %_fatal% "[%~nx0] Error on 7z uncompression" 1
+    %_fatal% "Error on 7z uncompression" 1
 )
-%_ok% "[%~nx0] '%fname%' uncompressed (7z) to '%tpath%'"
+%_ok% "'%fname%' uncompressed (7z) to '%tpath%'"
 :postinstall
 call "%script_dir%\installs\check_symlink.bat" "%pname%" "%f%" "%sys%"
 call:check_post "%f%" "!sln!" || exit /b 1
@@ -462,9 +463,9 @@ goto:eof
 set "f=%~1"
 set "sln=%~2"
 if not defined sln (
-    %_fatal% "[%~nx0] No symlink name defined for '%f%' check_post" 79
+    %_fatal% "No symlink name defined for '%f%' check_post" 79
 )
-%_info% "[%~nx0] check_post for '%f%' sln '%sln%'"
+%_info% "check_post for '%f%' sln '%sln%'"
 if exist "%script_dir%\installs\%f%.post.bat" (
     call "%script_dir%\installs\%f%.post.bat" "%sln%" || exit /b 1
 )
@@ -506,3 +507,10 @@ if exist "%locald%\%f%.pre.bat" (
 )
 goto:eof
 
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

@@ -10,19 +10,19 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 set "bin_dir=%senv_dir%\bin"
 
 call %senv_dir%\batcolors\echos_macros.bat
-%_info% "[%~nx0] vscodes.pre: vscode"
+%_info% "vscodes.pre: vscode"
 
 set "pre_ok="
 call "%bin_dir%\getInstallPath.bat" VSCode code nofatal
-%_info% "[%~nx0] vscodes.pre: instPath='%instPath%'"
+%_info% "vscodes.pre: instPath='%instPath%'"
 rem @echo on
 if exist "%instPath%\bin\code.cmd" (
   set "pre_ok=true"
 	if "%1"=="" (
-		%_ok% "[%~nx0] VSCode already installed in '%instPath%"
+		%_ok% "VSCode already installed in '%instPath%"
 	)
 ) else (
-	%_warning% "[%~nx0] VSCode not installed. To be installed by next step."
+	%_warning% "VSCode not installed. To be installed by next step."
 )
 endlocal & set "pre_ok=%pre_ok%"
 set "vscodei="

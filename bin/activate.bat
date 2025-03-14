@@ -13,29 +13,29 @@ for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
 set "project_name=%project_name: =_%"
 
 if not exist venvs (
-    call:fatal "execute activate where venvs\xxx has been created by switchpy.bat" 1
+    call:fatal "[%~nx0] execute activate where venvs\xxx has been created by switchpy.bat" 1
 )
 set "venv_name="
 if defined VIRTUAL_ENV (
     for %%j in ("%VIRTUAL_ENV%") do ( set "venv_name=%%~nxj" )
 )
 if defined venv_name (
-    %_info% "[%~nx0] Current venv activated: '%venv_name%'"
+    %_info% "Current venv activated: '%venv_name%'"
     if exist "venvs\%venv_name%" (
-        %_ok% "[%~nx0] Venv '%venv_name%' already! activated for project '%project_name%'"
+        %_ok% "Venv '%venv_name%' already! activated for project '%project_name%'"
         where python.exe 1>nul 2>nul
         if errorlevel 1 (
-            %_warning% "[%~nx0] VIRTUAL_ENV set, but not added to the PATH: re-activating."
+            %_warning% "VIRTUAL_ENV set, but not added to the PATH: re-activating."
             goto:activate
         )
         goto:eof
     )
-    %_task% "[%~nx0] Must deactivate old current venv '%venv_name%' before activating the one from '%project_name%'"
+    %_task% "Must deactivate old current venv '%venv_name%' before activating the one from '%project_name%'"
     call "%VIRTUAL_ENV%\Scripts\deactivate.bat"
     if errorlevel 1 (
-        call:fatal "Unable to deactivate old current venv '%venv_name%' while in project '%project_name%'" 2
+        call:fatal "[%~nx0] Unable to deactivate old current venv '%venv_name%' while in project '%project_name%'" 2
     )
-    %_ok% "[%~nx0] Old current venv '%venv_name%' deactivated"
+    %_ok% "Old current venv '%venv_name%' deactivated"
 )
 
 :activate
@@ -49,21 +49,21 @@ for /f "tokens=*" %%i in ('dir /b /ad "venvs\python_*" 2^>nul') do (
 )
 
 if %folder_count% == 0 (
-    call:fatal "No venv found in 'venvs' folder for project '%project_name%'" 3
+    call:fatal "[%~nx0] No venv found in 'venvs' folder for project '%project_name%'" 3
 )
 
 if not %folder_count% == 1 (
-    call:fatal "More than one venv found in 'venvs' folder for project '%project_name%'" 4
+    call:fatal "[%~nx0] More than one venv found in 'venvs' folder for project '%project_name%'" 4
 )
 
-%_ok% "[%~nx0] Venv detected '%last_folder%'"
+%_ok% "Venv detected '%last_folder%'"
 
-%_task% "[%~nx0] Must activate venv '%last_folder%'"
+%_task% "Must activate venv '%last_folder%'"
 call venvs\%last_folder%\Scripts\activate.bat
 if errorlevel 1 (
     call:fatal "Unable to activate venv '%last_folder%' for project '%project_name%'" 5
 )
-%_ok% "[%~nx0] Venv '%last_folder%' activated for project '%project_name%'"
+%_ok% "Venv '%last_folder%' activated for project '%project_name%'"
 doskey deactivate=%ccd%\venvs\%last_folder%\Scripts\deactivate.bat
 
 call:unset
@@ -74,6 +74,14 @@ set "msg=%~1"
 set "error=%~2"
 call:unset
 call "%HOME%\batcolors\echos.bat" :fatal "%msg%" %error%
+goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
 goto:eof
 
 :unset
