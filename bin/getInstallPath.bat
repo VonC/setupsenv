@@ -28,6 +28,7 @@ if "%prgname%"=="ghs" (
 	set "instPath=C:\Program Files\GitHub CLI"
 	goto:endlocal
 )
+rem echo on
 if "%prgname%"=="npps" (
 	set "instPath=C:\Program Files\Notepad++"
 	if not exist "!instPath!" ( set "instPath=C:\Program Files (x86)\Notepad++" )
@@ -88,7 +89,9 @@ rem set ASCII27=←
 
 if exist "%~dp0standalone_%~nx0.flag" (
 
-	echo %ASCII27%[106;30m INFO  %ASCII27%[0m: instPath='%instPath%'
+	echo !instPath!
+	rem echo instPath='%instPath%'
+	rem echo %ASCII27%[106;30m INFO  %ASCII27%[0m: instPath='%instPath%'
 	set "instPath="
 	set "standaloneGetInstallPath="
 	set "ASCII27="
