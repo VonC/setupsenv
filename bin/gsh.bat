@@ -15,8 +15,11 @@ if %ERRORLEVEL% == 0 (
 
 if "%~1"=="prompt" ( call:dump_prompt && exit /b 0 )
 
+set "npp_settings="
+if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir="%PRGS%\npps\settings""
+
 set "mods=%GOBIN%\mods.exe"
-set "EDITOR=%PRGS%\npps\current\notepad++.exe -multiInst -notabbar -nosession -noPlugin"
+set "EDITOR=%PRGS%\npps\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
 
 set model=gemini
 if defined GEMINI_MODEL (
@@ -34,7 +37,7 @@ if %ERRORLEVEL% == 1 (
 )
 %_ok% "Analyzed staged changes"
 :commit_with_analyzed_message
-set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
+set "EDITOR="%PRGS%\npps\current\notepad++.exe%npp_settings%" -multiInst -notabbar -nosession -noPlugin"
 %_task% "Must commit staged changes with analyzed message"
 mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); if (index($0, "```")==0) { print $0 }; next; } found == 1 { if (index($0, "```")==0) { print $0 } }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 | git commit -F -
 if %ERRORLEVEL% == 1 (
