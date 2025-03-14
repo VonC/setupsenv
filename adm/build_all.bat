@@ -11,7 +11,8 @@ call "%bc%\echos_macros.bat"
 set "custom_dir=%senv_dir%\custom"
 set "builds_dir=%senv_dir%\builds"
 
-cd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder '%custom_dir%'" 1
+cd "%custom_dir%"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder '%custom_dir%'" 1
 for /F "delims=" %%f in ('pwd') do ( set cpwd=%%f )
 %_info% "[%~nx0] Custom folder full path: '%cpwd%'"
 

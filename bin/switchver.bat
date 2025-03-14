@@ -53,7 +53,8 @@ set "prg_name=%first_letter%%prgs_name:~1%"
 set "prg_name=%prg_name:~0,-1%"
 rem %_fatal% "[%~nx0] prgs_name='%prgs_name%' vs. prg_name=%prg_name%'" 1
 
-pushd %PRGS_ROOT% || %_fatal% "[%~nx0] unable to cd to PRGS_ROOT '%PRGS_ROOT%'" 1
+pushd %PRGS_ROOT%
+if errorlevel 1 %_fatal% "[%~nx0] unable to cd to PRGS_ROOT '%PRGS_ROOT%'" 1
 %_info% "[%~nx0] Switch Ver from PRGS_ROOT '%PRGS_ROOT%'"
 rem @echo on
 rem Initialize counter

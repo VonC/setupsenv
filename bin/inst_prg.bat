@@ -88,7 +88,8 @@ if errorlevel 1 (
 )
 %_info% "[%~nx0] prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
 
-pushd "%USERPROFILE%\Downloads" || %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
+pushd "%USERPROFILE%\Downloads"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access '%USERPROFILE%\Downloads')'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 popd
 
@@ -183,7 +184,8 @@ if not "%sfound%"=="setup" (
     %_ok% "[%~nx0] '%fname%' moved from '%sfound%' ('%sfound_path%') to local setup ('%%')"
 )
 if exist "%dl_dir%\%fname%" (
-    del "%dl_dir%\%fname%" || %_fatal% "[%~nx0] Unable to delete '%dl_dir%\%fname%'" 88
+    del "%dl_dir%\%fname%"
+    if errorlevel 1 %_fatal% "[%~nx0] Unable to delete '%dl_dir%\%fname%'" 88
 )
 
 set "prg_name=%~1"
@@ -197,7 +199,8 @@ set "prgs_folder=%prg_id%s"
 
 if not exist "%PRGS%\%prgs_folder%" (
     %_task% "[%~nx0] Must create folder '%PRGS%\%prgs_folder%'"
-    mkdir "%PRGS%\%prgs_folder%" || %_fatal% "[%~nx0] Unable to create folder '%PRGS%\%prgs_folder%'" 3
+    mkdir "%PRGS%\%prgs_folder%"
+    if errorlevel 1 %_fatal% "[%~nx0] Unable to create folder '%PRGS%\%prgs_folder%'" 3
     %_ok% "[%~nx0] Folder '%PRGS%\%prgs_folder%' created"
 )
 
@@ -216,7 +219,8 @@ if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
 
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
-pushd "%PRGS%\%prgs_folder%" || %_fatal% "[%~nx0] Unable to access '%PRGS%\%prgs_folder%'" 8
+pushd "%PRGS%\%prgs_folder%"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access '%PRGS%\%prgs_folder%'" 8
 if not exist "%fname%" (
     call:rbc "%PRGS%\%prgs_folder%"
 )

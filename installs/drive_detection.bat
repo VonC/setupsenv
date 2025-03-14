@@ -76,7 +76,8 @@ del "%script_dir%\tmp_drive_echo"
 if not "%driveLetter%"=="" ( goto:drive_found )
 %_warning% "[%~nx0] No drive letter found for driveUNCPath '%driveUNCPath%'"
 :: Test if UNC path is accessible by using dir command
-dir /b "%unc_path%" >nul 2>nul || ( %_fatal% "[%~nx0] Directory '%driveUNCPath%' is not accessible." 119 )
+dir /b "%unc_path%" >nul 2>nul
+if errorlevel 1 ( %_fatal% "[%~nx0] Directory '%driveUNCPath%' is not accessible." 119 )
 %_task% "[%~nx0] Directory '%driveUNCPath%' is accessible. Attempting to map drive..."
 net use * "%driveUNCPath%" >nul 2>nul
 set "NEEL=%ERRORLEVEL%"

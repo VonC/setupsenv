@@ -14,9 +14,11 @@ if not exist "%senv_dir%\..\setup" (
         %_fatal% "[%~nx0] Unable to create setup folder at '%senv_dir%/../setup'" 3
     )
 )
-cd "%senv_dir%\..\setup" || %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
+cd "%senv_dir%\..\setup"
+if errorlevel 1 ( %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3 )
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
-cd /d "%script_dir%" || %_fatal% "[%~nx0] unable to cd again to '%script_dir%'" 2
+cd /d "%script_dir%"
+if errorlevel 1 ( %_fatal% "unable to cd again to '%script_dir%'" 2 )
 set profile=
 set profil=
 set script_dir_bin=
@@ -40,8 +42,9 @@ if not exist custom\%instlist% (
 )
 rem echo "prgtoinstall='%prgtoinstall%'"
 
-rem cd setups || %_fatal% "[%~nx0] fatal!" && echo "nope." && exit /b 1
-rem %_ok% "[%~nx0] ok..."
+rem cd setups
+rem if errorlevel 1 %_fatal% "fatal!" && echo "nope." && exit /b 1
+rem %_ok% "ok..."
 rem goto:eof
 
 REM https://stackoverflow.com/questions/132799/how-can-i-echo-a-newline-in-a-batch-file

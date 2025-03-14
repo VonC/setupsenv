@@ -9,13 +9,16 @@ set "bc=%senv_dir%\batcolors"
 call "%bc%\echos_macros.bat"
 %_info% "[%~nx0] script_dir(profile)='%script_dir%'"
 
-cd "%senv_dir%\..\setup" || %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
+cd "%senv_dir%\..\setup"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access setup folder at '%senv_dir%/../setup'" 3
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
-cd "%senv_dir%\..\dl" || %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
+cd "%senv_dir%\..\dl"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access dl folder at '%senv_dir%/../dl (must link to C:\%USERNAME%\Downloads)'" 5
 for /F "delims=" %%f in ('cd') do ( set dl_dir=%%f)
 
 set "custom_dir=%senv_dir%\custom"
-cd "%custom_dir%" || %_fatal% "[%~nx0] Unable to access custom folder" 1
+cd "%custom_dir%"
+if errorlevel 1 %_fatal% "[%~nx0] Unable to access custom folder" 1
 %_info% "[%~nx0] Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if exist "%custom_dir%\profile" (
