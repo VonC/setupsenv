@@ -9,7 +9,7 @@ for %%i in ("%script_dir%") do (
 for %%i in ("%script_dir%\..\batcolors") do ( set "bc=%%~fi" )
 call "%bc%\echos_macros.bat"
 %_info% "script_dir(bundle)='%script_dir%'"
-@echo on
+rem @echo on
 for %%i in ("%~dp0..\custom") do SET "custom_dir=%%~fi"
 cd "%custom_dir%"
 if errorlevel 1  ( %_fatal% "Unable to access custom folder" 1 )
