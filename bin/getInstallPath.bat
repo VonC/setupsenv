@@ -107,3 +107,11 @@ if defined nofatal (
 )
 %_fatal% "%msg%" %code_error%
 goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

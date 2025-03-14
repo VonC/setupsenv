@@ -123,3 +123,13 @@ if errorlevel 1 (
 if defined SENV_PPATH_DEBUG ( %_ok% "[contains_all_params] empty first param for line '%line%' [SENV_PPATH_DEBUG]" )
 shift
 goto:check_next_param
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

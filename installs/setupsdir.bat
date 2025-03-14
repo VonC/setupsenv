@@ -174,3 +174,13 @@ if not exist "%setupsdir%" (
 ) else (
     %_ok% "[%profile%] Remote senv path '%setupsdir%' already exists"
 )
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

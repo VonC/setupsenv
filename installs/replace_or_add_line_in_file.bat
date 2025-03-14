@@ -103,3 +103,13 @@ if not "%found_old%"=="true" (
 
 move /y "%tempfile%" "%filename%" >nul
 goto :eof
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

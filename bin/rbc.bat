@@ -107,3 +107,11 @@ goto:eof
 %_info% "[rbc.bat]  "
 %_info% "[rbc.bat]   If env var RBC_ERROR is defined, failure to robocopy triggers error, not fatal"
 goto:eof
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

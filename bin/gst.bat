@@ -19,3 +19,13 @@ goto:eof
 
 :replace_date
 bash -c 'res=$(git show -s --format=%%N "${tag_name}" ^| tail -n +4 ^| sed "1s/^.*\? --/${tag_name} --/"); echo -n "${res}"'
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

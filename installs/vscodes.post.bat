@@ -32,3 +32,13 @@ if not errorlevel 1 (
 :eoflocal
 endlocal
 exit /b 0
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

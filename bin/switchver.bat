@@ -180,3 +180,13 @@ if exist "%~dp0standalone_%~nx0.flag" (
     set "SELECTED_VERSION="
     del "%~dp0standalone_%~nx0.flag"
 )
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

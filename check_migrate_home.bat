@@ -208,3 +208,13 @@ goto:eof
 REM write the current local %state% environment variable to %REMOTE_HOME%\state, after having removed any space in it.
 set "state=%state: =%%1"
 echo %state%> "%REMOTE_HOME%\state
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

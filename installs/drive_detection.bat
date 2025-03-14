@@ -156,3 +156,12 @@ set trimmed=%j:~0,-1%
 set "eeee=%trimmed%"
 rem echo TRIMMED '%eeee%'
 goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

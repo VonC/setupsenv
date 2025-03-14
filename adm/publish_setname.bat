@@ -37,3 +37,13 @@ if not "%fname:chromev=%"=="%fname%" ( set "name=chromiums" )
 if not "%fname:superfile-windows-v=%"=="%fname%" ( set "name=superfiles" )
 if not "%fname:git-cliff-=%"=="%fname%" ( set "name=git-cliffs" )
 if "%name%"=="" ( %_fatal% "Unknown name for fname '%fname%'" 22 )
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

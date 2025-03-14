@@ -111,3 +111,13 @@ if defined update_message (
     %_task% "Should update local senv from remote_senv '%remote_senv%'"
     %_task% "Type cdis, then s when you want to update your senv"
 )
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

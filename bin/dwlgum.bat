@@ -24,3 +24,12 @@ rem https://github.com/charmbracelet/gum/releases/download/v0.14.1/gum_0.14.1_Wi
 set "version=%~2"
 echo %prgname%_%version%_Windows_x86_64.zip
 goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

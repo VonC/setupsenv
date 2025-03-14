@@ -75,3 +75,13 @@ python "%script_dir%\git-filter-repo.py" %*
 
 endlocal
 set "GIT_FILTER_REPO_CHECK_UPDATE="
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

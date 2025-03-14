@@ -25,3 +25,13 @@ call "%script_dir%\testinternet.bat"
 if not "%ERRORLEVEL%" == "0" (
    %_fatal% "Internet access still missing after reset" 22
 )
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

@@ -24,3 +24,13 @@ if not exist "%PRGS%\peazips\current\res\7z\7z.exe" (
     %_fatal% "unable to access 7z.exe in '%PRGS%\peazips\current\res\7z'" 1
 )
 %_ok% " 7z.exe in '%PRGS%\peazips\current\res\7z' is accessible"
+goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof

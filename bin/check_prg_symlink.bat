@@ -181,3 +181,12 @@ set Params=%*
 for /f "tokens=1*" %%a in ("!Params!") do EndLocal & set %1=%%b
 exit /b
 goto:eof
+
+
+:call_echos_stack
+if not defined ECHOS_STACK (
+    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+) else (
+    call "%batdir%\echos.bat" :stack %~nx0
+)
+goto:eof
