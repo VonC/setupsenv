@@ -16,6 +16,10 @@ if not defined profile (
     set "profile=%senv_profile%"
 )
 
+if not defined HOME (
+    %_fatal% "HOME not defined" 20
+)
+
 %_info% "for profile '%profile%' ~~~~~~~~~~~~"
 set "HOMEBIN=%HOME%\bin"
 %_info% " Checking/updating '%HOMEBIN%' content, script_dir='%script_dir%', prgtoinstall='%prgtoinstall%', f='%f%'"
@@ -73,6 +77,10 @@ if not "%prgtoinstall%"=="" (
     )
 )
 
+if not defined PRGS (
+    %_fatal% "PRGS not defined" 21
+)
+
 @echo off
 set "mgrname=manager"
 :: The command to get the version string
@@ -93,6 +101,15 @@ if !major! LEQ 2 (
 )
 if "%mgrname%"=="manager" (
     %_info% "Install: Keep 'manager' as credential helper for Git !major!.!minor!"
+)
+
+if not exist "%PRGS%\gits\current\bin\git.exe" %_fatal% "git.exe missing at '%PRGS%\gits\current\bin'" 23
+where git >NUL 2>NUL
+if errorlevel 1 (
+    set "GH=%PRGS%\gits\current"
+    set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+) else (
+    %_ok% "git.exe is on the PATH"
 )
 
 git config --system credential.helper 1>NUL 2>NUL

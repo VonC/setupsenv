@@ -43,7 +43,7 @@ if "%PRGS%"=="" ( call:fatal "PRGS (installation folder) must be defined" 102 )
 if "%HOME%"=="" ( call:fatal "HOME must be defined" 103 )
 if "%PROG%"=="" ( call:fatal "PROG (data folder) must be defined" 104 )
 
-set GH=%PRGS%\gits\current
+set "GH=%PRGS%\gits\current"
 set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
 
 set LANG=en_US.UTF-8
