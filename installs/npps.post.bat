@@ -7,7 +7,7 @@ call "%script_dir%\batcolors\echos_macros.bat"
 %_task% "Must check presence of settings in '%PRGS%\npps'"
 if exist "%PRGS%\npps\settings" (
     %_ok% "settings exists in '%PRGS%\npps'"
-    goto:endlocal
+    goto:check_global_config_editor
 )
 mkdir "%PRGS%\npps\settings"
 if errorlevel 1 (
@@ -15,6 +15,29 @@ if errorlevel 1 (
 ) else (
     %_ok% "settings created in '%PRGS%\npps'"
 )
+:check_global_config_editor
+%_task% "Must check HOME global Git config at '%HOME%\.gitconfig'"
+if not exist "%HOME%\.gitconfig" (
+    %_warning% "HOME global Git config at '%HOME%\.gitconfig' not accessible"
+    goto:endlocal
+)
+findstr /i /r /c:"editor.*notepad.*settingsDir" "%HOME%\.gitconfig" >NUL 2>NUL
+if errorlevel 0 (
+    %_ok% "Global Git config editor already using Notepad++ with settingsDir=settings"
+    goto:endlocal
+)
+findstr /i /r /c:"editor.*notepad" "%HOME%\.gitconfig" >NUL 2>NUL
+if errorlevel 0 (
+    git config --global core.editor "%PRGS:\=/%/npps/current/notepad++.exe -settingsDir='%PRGS:\=/%/npps/settings' -multiInst -notabbar -nosession -noPlugin"
+    if errorlevel 1 (
+        call:fatal "[%~nx0] Unable to set global Git config editor using Notepad++" 12
+    ) else (
+        %_ok% "Global Git config editor now using Notepad++ with settingsDir=settings"
+        goto:endlocal
+    )
+)
+%_ok% "Global Git config editor not using notepad: nothing more to set"
+git config --global core.editor
 
 :endlocal
 endlocal
