@@ -135,7 +135,7 @@ for /f "delims=" %%a in ('type "%remote_senv_dir%\version"') do (
 :build_and_publish
 cd "%builds_dir%"
 del "senv_%profile%-zip.exe"
-%_info% "zip '[%PRGS%\]senv' to '%builds_dir%\senv_%profile%.zip'"
+%_info% "zip '[%PRGS%\]senv' to '%builds_dir%\senv_%profile%-zip.exe'"
 copy "%senv_dir%\.git\config" "%builds_dir%\senv_git_config.bkp"
 copy "%builds_dir%\senv_git_config.fixed" "%senv_dir%\.git\config"
 copy "%custom_dir%\.git\config" "%builds_dir%\custom_git_config.bkp"
@@ -143,7 +143,7 @@ copy "%custom_dir%\custom_git_config.fixed" "%custom_dir%\.git\config"
 copy "%custom_dir%\profile" "%builds_dir%\profile.bkp"
 echo %profile%>"%custom_dir%\profile"
 rem https://stackoverflow.com/questions/38297172/7-zip-command-line-incorrect-wildcard-type-marker
-%sz% a -sfx7z.sfx "%builds_dir%\senv_%profile%-zip.exe" "%PRGS%\senv" -x^^!*.fixed -x^^!\*.bkp -xr^^!venvs -xr^^!builds\ -x^^!\*.zip.exe -x^^!\wild*.txt -x^^!\wild*.log
+%sz% a -sfx7z.sfx "%builds_dir%\senv_%profile%-zip.exe" "%PRGS%\senv" -x^^!*.fixed -x^^!\*.bkp -xr^^!venvs -xr^^!builds\ -x^^!\*.zip.exe -xr^^!wild*.txt -xr^^!wild*.log
 rem C:\Users\vonc\prgs\senv\builds>%sz% e senv_home-zip.exe senv\.git\config -so
 if not "%ERRORLEVEL%"=="0" (
     copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
