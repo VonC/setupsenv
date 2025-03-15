@@ -4,6 +4,7 @@ set "mods=%GOBIN%\mods.exe"
 set "npp_settings="
 if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir="%PRGS%\npps\settings""
 set "EDITOR=%PRGS%\npps\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
+rem echo mods: '%EDITOR%'
 call "%mods%" %*
 goto:eof
 if false==true (
