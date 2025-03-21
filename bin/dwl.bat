@@ -712,6 +712,16 @@ copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq.exe"
 "%sz%" a -w"%setup_dir%" "%setup_dir%\%version%-win64.zip" "%version%-win64"
 goto:eof
 
+:dwl_xrmtoolbox
+set "repo=MscrmTools/XrmToolBox"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/MscrmTools/XrmToolBox/releases/download/v1.2024.9.69/XrmToolbox.zip
+set "file=%prgname%-%version%.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/XrmToolbox.zip"
+call :curl
+goto:eof
+
 
 :call_echos_stack
 if not defined ECHOS_STACK (
