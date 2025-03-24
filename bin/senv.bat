@@ -21,7 +21,7 @@ set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\Syst
 
 set "admPath="
 if defined local_senv (
-   set "admPath=%PRGS%\senv\adm;%PRGS%\senv\bin;%PRGS%\senv\installs;"
+   set "admPath=%PRGS%\senv\adm;%PRGS%\senv\bin;%PRGS%\senv\installs;;%PRGS%\senv\custom\bin;"
    doskey ba=build_all.bat $*
    doskey pb=publish.bat $*
    doskey pp=publish_profile.bat $*
