@@ -393,7 +393,7 @@ set "url=https://www.python.org/ftp/python/%version%/%file%"
 call :curl
 goto:eof
 
-:dwl_sysinternals
+:dwl_sysinternalsSuite
 set "cmd=curl -skL https://learn.microsoft.com/en-us/sysinternals/downloads/sysinternals-suite"
 %cmd% > "%script_dir%\sysinternalsSuite.tmp"
 if errorlevel 1 (
