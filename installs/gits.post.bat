@@ -36,7 +36,32 @@ set LASTNAME=
 call "%HOMEBIN%\senv.local.pre.bat"
 %_info% "   [senv.local.pre.bat called]"
 grep FIRSTNAME "%HOMEBIN%\senv.local.pre.bat">NUL
-if "%ERRORLEVEL%"=="0" ( goto:userset )
+rem if "%ERRORLEVEL%"=="0" ( goto:userset )
+for /f "tokens=* usebackq delims=" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$input = '%USERNAME%'; $input.ToLower()"`) do ( set "usernamel=%%a" )
+set "USERMAIL="
+if exist "%custom_dir%\bin\get_name_email.bat" (
+    %_task% "Must get name email from custom script"
+    for /f "tokens=* usebackq delims=" %%a in (`call "%custom_dir%\bin\get_name_email.bat" "%usernamel%"`) do (
+        set /a "line_count+=1"
+        if !line_count! EQU 1 (
+            set "FIRSTNAME=%%a"
+        ) else if !line_count! EQU 2 (
+            set "LASTNAME=%%a"
+        ) else if !line_count! EQU 3 (
+            set "FULLNAME=%%a"
+        ) else if !line_count! EQU 4 (
+            set "USERMAIL=%%a"
+            goto :break_loop
+        )
+    )
+)
+:break_loop
+if exist "%custom_dir%\bin\get_name_email.bat" (
+    if not defined USERMAIL (
+        %_error% "Unable to find name through custom/bin/get_name_email.bat, will ask the user directly"
+    )
+)
+%_info% "'%usernamel%': FIRSTNAME='%FIRSTNAME%', LASTNAME='%LASTNAME%', FULLNAME='%FULLNAME%' and USERMAIL='%USERMAIL%'"
 if "%FIRSTNAME%"=="" (
     set /P FIRSTNAME="Enter your first name (no quotes needed, can be empty): "
 )
@@ -46,6 +71,7 @@ if "%LASTNAME%"=="" (
 if "%LASTNAME%"=="" (
     set "LASTNAME=%USERNAME%"
 )
+rem %_fatal% "stop" 11
 call "%bin_dir%\check_trailing_newline.bat" "%HOMEBIN%\senv.local.pre.bat"
 if "%ERRORLEVEL%"=="2" ( echo.>> "%HOMEBIN%\senv.local.pre.bat" )
 echo set ^"FIRSTNAME=%FIRSTNAME%^"%NL%set ^"LASTNAME=%LASTNAME%^"%NL%>> "%HOMEBIN%\senv.local.pre.bat"
