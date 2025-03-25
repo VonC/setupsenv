@@ -36,7 +36,7 @@ set LASTNAME=
 call "%HOMEBIN%\senv.local.pre.bat"
 %_info% "   [senv.local.pre.bat called]"
 grep FIRSTNAME "%HOMEBIN%\senv.local.pre.bat">NUL
-rem if "%ERRORLEVEL%"=="0" ( goto:userset )
+if "%ERRORLEVEL%"=="0" ( goto:userset )
 for /f "tokens=* usebackq delims=" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$input = '%USERNAME%'; $input.ToLower()"`) do ( set "usernamel=%%a" )
 set "USERMAIL="
 if exist "%custom_dir%\bin\get_name_email.bat" (
