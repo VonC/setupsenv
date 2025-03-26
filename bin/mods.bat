@@ -2,10 +2,12 @@
 setlocal enabledelayedexpansion
 set "mods=%GOBIN%\mods.exe"
 set "npp_settings="
-if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir="%PRGS%\npps\settings""
-set "EDITOR=%PRGS%\npps\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
-rem echo mods: '%EDITOR%'
+if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir=settings"
+set "EDITOR=.\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
+@pushd "%PRGS%\npps\"
+rem echo mods EDITORS: '%EDITOR%'
 call "%mods%" %*
+@popd
 goto:eof
 if false==true (
 default-model: gemini-1.5-pro-latest
