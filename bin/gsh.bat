@@ -70,10 +70,10 @@ if not exist "%config_path%\mods.yml" (
     %_warning% "Mods configuration directory not found: '%config_path%\mods.yml'"
     goto:create_tmp_txt
 )
-awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line ^!= e) print line } }" "%config_path%\mods.yml" > tmp.txt
+awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line == e ? 0 : 1) print line } }" "%config_path%\mods.yml" >tmp.txt 2>&1
 :create_tmp_txt
 @echo off
-if not exit tmp.txt (
+if not exist tmp.txt (
   %_task% "Must create prompt from gsh.bat itself"
   (
     echo you are a shell, Linux or CMD Windows, Golang, Python and Git expert
