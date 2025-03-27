@@ -730,3 +730,13 @@ if not defined ECHOS_STACK (
     call "%batdir%\echos.bat" :stack %~nx0
 )
 goto:eof
+
+:dwl_drawio
+set "repo=jgraph/drawio-desktop"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/jgraph/drawio-desktop/releases/download/v26.1.1/draw.io-26.1.1-windows-no-installer.exe
+set "file=draw.io-%version%-windows-no-installer.exe"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof

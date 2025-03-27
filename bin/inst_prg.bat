@@ -9,6 +9,8 @@ for %%i in ("%PRGS%\setup") do (
 )
 
 %_info% "'script_dir(inst_prg)='%script_dir%'"
+set "install_dir=%senv_dir%\installs"
+rem set "custom_install_dir=%senv_dir%\custom\installs"
 
 :: Define the output file
 set "man_file=man_inst_prg.txt"
@@ -217,6 +219,12 @@ if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     goto:check_symlink
 )
 
+if exist "%install_dir%\%prgs_folder%.install.bat" (
+    %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
+    call "%install_dir%\%prgs_folder%.install.bat"
+    goto:check_symlink
+)
+
 set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 pushd "%PRGS%\%prgs_folder%"
@@ -232,6 +240,7 @@ if errorlevel 1 (
     %_fatal% "Error on 7z uncompression of '%fname%' to '%PRGS%\%prgs_folder%\%prgs_folder%'" 1
 )
 %_ok% "'%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
+
 :check_symlink
 %_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
 call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
