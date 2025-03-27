@@ -241,10 +241,24 @@ if errorlevel 1 (
 )
 %_ok% "'%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
 
+if exist "%install_dir%\%prgs_folder%.post.bat" (
+    %_task% "Must use post-install in '%install_dir%' for '%prgs_folder%'"
+    call "%install_dir%\%prgs_folder%.post.bat"
+    goto:check_symlink
+)
+
 :check_symlink
 %_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
 call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
+
+if exist "%install_dir%\%prgs_folder%.alias.bat" (
+    %_task% "Must check alias in '%install_dir%' for '%prgs_folder%'"
+    call "%install_dir%\%prgs_folder%.alias.bat"
+)
+
 popd
+endlocal
+DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 goto:eof
 
 :rbc
