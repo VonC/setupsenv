@@ -39,3 +39,5 @@ Mods/mod~#~modss~mods_*_Windows_x86_64.zip
 jq~#~jqs~jq-*-win64.zip
 XrmToolBox/xrm/xrmtb~#~xrmtoolboxs~XrmToolbox-*.zip
 drawio-desktop/drawio~#~drawios~draw.io-*-windows-no-installer.exe
+Artifactory/arti~#~artifactorys~jfrog-artifactory-oss-*-windows.zip
+Nexus/nx/nex~#~nexuss~nexus-*-java*-win64.zip

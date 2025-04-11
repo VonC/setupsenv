@@ -150,12 +150,16 @@ if exist "%setup_dir%\%target_local_file%" (
     goto:eof
 )
 
-%_task% "Download latest to '%setup_dir%\%target_local_file%' from URL '!url!'"
+if not defined version (
+  set "version=latest"
+)
+
+%_task% "Download '%version%' to '%setup_dir%\%target_local_file%' from URL '!url!'"
 rem bash -c "a="2,3"; echo _${a/,/%}_"
 rem @echo on
 rem for /f "delims=" %%a in ('cygpath -u "%setup_dir%\%target_local_file%"') do set "target_full_unix_path=%%a"
 rem bash -c "url="%url%"; url="${url/,/^%%}"; echo "url='${url}'"; dst="%target_full_unix_path%"; curl -fkL "${url}" -o "${dst}""
-curl -fkL "%url%" -o "%setup_dir%\%target_local_file%"
+curl -fkL --url "%url%" -o "%setup_dir%\%target_local_file%"
 if not "%ERRORLEVEL%" == "0" (
   if not defined next_url (
     %_fatal% "Unable to download '%setup_dir%\%target_local_file%' from latest, URL '%url%'" 191
@@ -722,6 +726,38 @@ set "url=https://github.com/%repo%/releases/download/v%version%/XrmToolbox.zip"
 call :curl
 goto:eof
 
+
+:dwl_artifactory
+curl -fkLs "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/"  | grep -oE "[0-9]+\.[0-9]+\.[0-9]+/" | tr -d "/" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 > "%script_dir%\dwl_artifactory.tmp"
+for /f "delims=" %%a in ('type "%script_dir%\dwl_artifactory.tmp"') do ( set "version=%%a" )
+del "%script_dir%\dwl_treesize.tmp"
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/%5BRELEASE%5D/jfrog-artifactory-oss-%5BRELEASE%5D-windows.zip
+set "file=jfrog-artifactory-oss-%version%-windows.zip"
+set "url=https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_nexus
+curl -fkLs "https://help.sonatype.com/en/download-archives---repository-manager-3.html" | grep -Eo "https://download.sonatype.com/nexus/3/nexus[^^\"]*java17-win6[^^\"]*.zip" | head -1 > "%script_dir%\dwl_nexus.tmp"
+@echo on
+set "url="
+for /f "usebackq delims=" %%a in ("%script_dir%\dwl_nexus.tmp") do (set "url=%%a")
+if not defined url (
+  %_fatal% "Cannot get URL from help.sonatype.com for Nexus Repository Manager" 1
+)
+set "tmp_url=%url:*/nexus/3/nexus-=%"
+set "version="
+for /f "tokens=1,2 delims=-" %%a in ("-%tmp_url%") do (
+  set "version=%%a-%%b"
+)
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem %_fatal% "stop here" 11
+rem https://download.sonatype.com/nexus/3/nexus-3.79.1-04-win-x86_64.zip
+set "file=nexus-%version%-java17-win64.zip"
+set "url=https://download.sonatype.com/nexus/3/%file%"
+call :curl
+goto:eof
 
 :call_echos_stack
 if not defined ECHOS_STACK (
