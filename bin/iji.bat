@@ -27,8 +27,8 @@ for %%i in ("%cd%") do (
 )
 
 rem --- Define IDEA Executable Path based on %PRGS% ---
-mkdir "%PRGS%\ideas" 2>nul
-set "IDEA_BASE_PATH=%PRGS%\ideas\current"
+mkdir "%PRGS%\ideaics" 2>nul
+set "IDEA_BASE_PATH=%PRGS%\ideaics\current"
 set "IDEA_EXECUTABLE=%IDEA_BASE_PATH%\bin\idea64.exe"
 set "IDEA_ALT_EXECUTABLE=%IDEA_BASE_PATH%\bin\idea.bat" ' Optional fallback
 
@@ -71,7 +71,7 @@ if not defined IDEA_EXECUTABLE (
 )
 :FoundIdeaBat
 
-rmdir "%PRGS%\ideas\current" /q 2>nul
+rmdir "%PRGS%\ideaics\current" /q 2>nul
 if defined IDEA_EXECUTABLE (
     for /f "delims=" %%i in ("%IDEA_EXECUTABLE%") do (
         set "IDEA_BIN_DIR=%%~dpi"
@@ -79,8 +79,8 @@ if defined IDEA_EXECUTABLE (
     for %%i in ("%IDEA_BIN_DIR%..") do (
         set "IDEA_PARENT_DIR=%%~fi"
     )
-    %_task% "Creating junction %PRGS%\ideas\current pointing to %IDEA_PARENT_DIR%"
-    mklink /J "%PRGS%\ideas\current" "%IDEA_PARENT_DIR%"
+    %_task% "Creating junction %PRGS%\ideaics\current pointing to %IDEA_PARENT_DIR%"
+    mklink /J "%PRGS%\ideaics\current" "%IDEA_PARENT_DIR%"
     if errorlevel 1 (
         %_error% "Failed to create junction for IntelliJ IDEA installation"
         set "IDEA_EXECUTABLE="
