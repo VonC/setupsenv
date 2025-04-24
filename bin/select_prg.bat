@@ -123,6 +123,7 @@ if not defined prg_version (
     if "%%a"=="%prg_version%" ( set "prg_version_found=true" )
     set "prg_version_item=%%a"
     set "prg_version_item=!prg_version_item:-LTS=!"
+    set "prg_version=!prg_version:-LTS=!"
     if not "!prg_version_item!"=="%%a" (
       if "%prg_version%"=="LTS" ( set "prg_version_found=true" && set "lts_version=!prg_version_item!" )
     )
