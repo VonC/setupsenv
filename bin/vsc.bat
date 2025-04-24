@@ -71,7 +71,7 @@ if exist "%workspace_file%" (
 )
 
 :unset
-@echo on
+@echo off
 if defined standalone_call (
   set "script_dir="
 )
