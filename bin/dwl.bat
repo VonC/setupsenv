@@ -785,3 +785,14 @@ rem https://github.com/walles/moar/releases/download/v1.31.5/moar-v1.31.5-window
 set "file=moar-v%version%-windows-amd64.exe"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
+goto:eof
+
+:dwl_riff
+set "repo=walles/riff"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/walles/riff/releases/download/3.3.10/riff-3.3.10-x86_64-windows.exe
+set "file=riff-%version%-x86_64-windows.exe"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
+call :curl
+goto:eof
