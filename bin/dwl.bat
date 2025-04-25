@@ -776,3 +776,12 @@ set "file=draw.io-%version%-windows-no-installer.exe"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
+
+:dwl_moar
+set "repo=walles/moar"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/walles/moar/releases/download/v1.31.5/moar-v1.31.5-windows-amd64.exe
+set "file=moar-v%version%-windows-amd64.exe"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
