@@ -31,7 +31,8 @@ gcm=git commit -m "$*"
 gcma=git commit --amend -m "$*"
 ga=git add .
 gs=git st
-gp=git push
+gp=git push $*
+gpf=git push --force $*
 gpft=git push --follow-tags $*
 grc=cmd /V /C "set "GIT_EDITOR=true" && git rebase --continue"
 gdni=git diff --no-index --color-words=. $*
