@@ -223,6 +223,16 @@ if exist "%install_dir%\%prgs_folder%.install.bat" (
     %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
     call "%install_dir%\%prgs_folder%.install.bat"
     goto:check_symlink
+) else (
+    %_ok% "No custom install in '%install_dir%' for '%prgs_folder%'"
+)
+
+if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
+    %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%'"
+    call "%PRGS%\senv\installs\%prgs_folder%.install.bat"
+    goto:check_symlink
+) else (
+    %_ok% "No custom install in '%PRGS%\senv\installs' for '%prgs_folder%'"
 )
 
 set pz=%PRGS%\peazips\current
