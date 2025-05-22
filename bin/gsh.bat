@@ -8,7 +8,7 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
-git diff --cached --quiet
+git diff -w --cached --quiet
 if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
 )
@@ -31,7 +31,7 @@ if defined GEMINI_MODEL (
 set "param=%~1"
 if defined param ( goto:commit_with_analyzed_message )
 %_task% "Must analyze staged changes"
-git diff --cached | "%mods%" --role=cm-shell --model=%model%
+git diff -w --cached | "%mods%" --role=cm-shell --model=%model%
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to analyze staged changes" 12
 )
@@ -100,14 +100,18 @@ echo Make sure the body includes two sections, Why and What.>> tmp.txt
 echo In the 'why' section, do not use generic 'Improved xxx' without explaining why xxx is improved.>> tmp.txt
 echo In the 'what' section, make a list of modifications, each line starting with a dash.>> tmp.txt
 echo.>> tmp.txt
+echo Note that git diff output includes context lines (lines that start with neither '+' nor '-').>> tmp.txt
+echo These context lines show code that exists before or after the changes but were not modified.>> tmp.txt
+echo Only analyze the actual changes (lines starting with '+' or '-') when generating the commit message.>> tmp.txt
+echo.>> tmp.txt
 echo The following git diff, with its lines starting with plus or minus, does contain changes to the codebase:>> tmp.txt
 echo.>> tmp.txt
 echo ```>> tmp.txt
-git diff --cached>> tmp.txt
+git diff -w --cached>> tmp.txt
 echo ```>> tmp.txt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 echo Prompt and Git diff --cached copied to the clipboard.
-del tmp.txt
+rem del tmp.txt
 goto:eof
 
 
