@@ -111,7 +111,7 @@ git diff -w --cached>> tmp.txt
 echo ```>> tmp.txt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 echo Prompt and Git diff --cached copied to the clipboard.
-rem del tmp.txt
+del tmp.txt
 goto:eof
 
 
