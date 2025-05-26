@@ -29,6 +29,7 @@ set "NO_MODS=true"
 :after_mods_checks
 
 set "role=commit_diff"
+set "exclude=":(exclude)*.md" ":(exclude)*.txt""
 if "%~1"=="doc" ( set "role=commit_documentation" && shift )
 if "%~1"=="rel" ( set "role=analyze_release" && shift )
 
@@ -78,7 +79,8 @@ cat "%script_dir%\mods_role_%role%.md" > tmp.txt
 if errorlevel 1 (
   %_fatal% "Failed to write role prompt to tmp.txt" 21
 )
-git diff -w --cached >> tmp.txt
+@echo on
+git diff -w --cached %exclude% >> tmp.txt
 if errorlevel 1 (
   %_fatal% "Failed to append Git diff to tmp.txt" 22
 )
@@ -92,7 +94,7 @@ goto:eof
 
 :list_languages
 set "languages="
-git diff -w --name-only --cached ":(exclude)*.md" ":(exclude)*.txt" | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
+git diff -w --name-only --cached %exclude% | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
 if errorlevel 1 (
   %_fatal% "Failed to list languages from Git diff" 24
 )
