@@ -13,30 +13,46 @@ if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
 )
 
+set "NO_MODS="
+set "MODS_SETTINGS=%LOCALAPPDATA%\mods\mods.yml"
+set "MODS=%GOBIN%\mods.exe"
+if exist "%MODS%" (
+  if exist "%MODS_SETTINGS%" (
+    goto:after_mods_checks
+  ) else (
+    %_warning% "Mods settings are missing at LOCALAPPDATA: '%MODS_SETTINGS%'"
+  )
+) else (
+  %_warning% "Mods executable is missing at GOBIN: '%MODS%'"
+)
+set "NO_MODS=true"
+:after_mods_checks
+
+set "role=commit_diff"
+if "%~1"=="doc" ( set "role=commit_documentation" && shift )
+if "%~1"=="rel" ( set "role=analyze_release" && shift )
+
+call:write_prompt
+
 if "%~1" == "prompt" ( call:dump_prompt && exit /b 0 )
+if defined NO_MODS (
+  %_info% "No mods means dump prompt mode (will be copied to the clipboard)"
+  call:dump_prompt && exit /b 0
+)
 
-set "npp_settings="
-if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir="%PRGS%\npps\settings""
-
-set "mods=%GOBIN%\mods.exe"
-set "EDITOR=%PRGS%\npps\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
-
-set model=gemini
+set model=2.5-flash
 if defined GEMINI_MODEL (
   %_warning% "GEMINI_MODEL is defined: '%GEMINI_MODEL%'"
   set "model=%GEMINI_MODEL%"
 ) else (
-  %_warning% "GEMINI_MODEL is not defined: use gemini, alias for 'gemini-1.5-pro-latest'"
+  %_warning% "GEMINI_MODEL is not defined: use "%model%", alias for 'gemini-2.5-flash-preview-05-20'"
 )
-set "param=%~1"
-if defined param ( goto:commit_with_analyzed_message )
-%_task% "Must analyze staged changes"
-git diff -w --cached | "%mods%" --role=cm-shell --model=%model%
+call:configure_mods
+
+type tmp.txt | "%mods%" --role=git-diff --model=%model%
 if %ERRORLEVEL% == 1 (
-  %_fatal% "Failed to analyze staged changes" 12
+  %_fatal% "Failed to analyze staged changes with mods" 12
 )
-%_ok% "Analyzed staged changes"
-:commit_with_analyzed_message
 set "EDITOR="%PRGS%\npps\current\notepad++.exe"%npp_settings% -multiInst -notabbar -nosession -noPlugin"
 %_task% "Must commit staged changes with analyzed message"
 rem echo gsh: '%EDITOR%'
@@ -53,71 +69,121 @@ if %ERRORLEVEL% == 1 (
 %_ok% "Committed changes message edited"
 goto:eof
 
-:dump_prompt
+:write_prompt
 del tmp.txt 2>NUL
-where mods.exe
-if "%ERRORLEVEL%" == "1" (
-    %_warning% "mods.exe not available"
-    goto:create_tmp_txt
+if not exist "%script_dir%\mods_role_%role%.md" (
+  %_fatal% "Role file '%script_dir%\mods_role_%role%.txt' is missing" 20
 )
-for /f "tokens=2* delims=:" %%a in ('mods.exe --dirs ^| findstr "Configuration"') do (
-    set "config_path=%%a:%%b"
+cat "%script_dir%\mods_role_%role%.md" > tmp.txt
+if errorlevel 1 (
+  %_fatal% "Failed to write role prompt to tmp.txt" 21
 )
-REM Optionally remove any leading space
-set "config_path=%config_path:~1%"
-echo %config_path%
-if not exist "%config_path%\mods.yml" (
-    %_warning% "Mods configuration directory not found: '%config_path%\mods.yml'"
-    goto:create_tmp_txt
+git diff -w --cached >> tmp.txt
+if errorlevel 1 (
+  %_fatal% "Failed to append Git diff to tmp.txt" 22
 )
-awk -ve= "/cm-shell:/ { flag=1 } flag { if ($0 ~ /^[[:space:]]*#/) exit; if ($0 ~ /^[[:space:]]*-[[:space:]]/) { line=$0; sub(/^[[:space:]]*-[[:space:]]/, e, line); if (line == e ? 0 : 1) print line } }" "%config_path%\mods.yml" >tmp.txt 2>&1
-:create_tmp_txt
-@echo off
-if not exist tmp.txt (
-  %_task% "Must create prompt from gsh.bat itself"
-  (
-    echo you are a shell, Linux or CMD Windows, Golang, Python and Git expert
-    echo you analyse the Git diff provided and generate a commit message based on the 'conventional commit' convention
-    echo Reminder, conventional commit means, the title must start with 'type-optional scope, description', with 52 characters max
-    echo Types other than `fix:` and `feat:` are `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.
-    echo Do not add a footer. Do not add an introduction like 'The title should be...'. Just print the title and the body of the commit message without any other comment.
-    echo the title must not exceed 52 characters
-    echo the body and footer lines must not exceed 80 characters, and must not be indented, no prefix spaces.
-    echo If I provide an additional prompt explaining the context of this diff, do include that into your generated commit message.
-    echo Make sure the body includes two sections, Why and What.
-    echo In the 'why' section, do not use generic 'Improved xxx' without explaining why xxx is improved.
-    echo in the 'what' section, make a list of modifications, each line starting with a dash
-  ) > tmp.txt
-  %_ok% "Prompt from ghs.bat created."
+echo ``` >> tmp.txt
+call:list_languages
+sed -i "s/,languages,/%languages%/g" tmp.txt >nul 2>&1
+if errorlevel 1 (
+  %_fatal% "Failed to replace languages in tmp.txt" 23
 )
-echo Reminder: conventional commit means: the title must start with `^<type^>[optional scope]: description`, with 52 characters max>> tmp.txt
-echo Types other than `fix:` and `feat:` are `build:`, `chore:`, `ci:`, `docs:`, `style:`, `refactor:`, `perf:`, `test:`, and others.>> tmp.txt
-echo Do not add a footer. Do not add an introduction like 'The title should be...'. Just print the title and the body of the commit message without any other comment.>> tmp.txt
-echo the title must not exceed 52 characters>> tmp.txt
-echo the body and footer lines must not exceed 80 characters, and must not be indented, no prefix spaces.>> tmp.txt
-echo If I provide an additional prompt explaining the context of this diff, do include that into your generated commit message.>> tmp.txt
-echo Make sure the body includes two sections, Why and What.>> tmp.txt
-echo In the 'why' section, do not use generic 'Improved xxx' without explaining why xxx is improved.>> tmp.txt
-echo In the 'what' section, make a list of modifications, each line starting with a dash.>> tmp.txt
-echo.>> tmp.txt
-echo Note that git diff output includes context lines (lines that start with neither '+' nor '-').>> tmp.txt
-echo These context lines show code that exists before or after the changes but were not modified.>> tmp.txt
-echo Only analyze the actual changes (lines starting with '+' or '-') when generating the commit message.>> tmp.txt
-echo.>> tmp.txt
-echo The following git diff, with its lines starting with plus or minus, does contain changes to the codebase:>> tmp.txt
-echo.>> tmp.txt
-echo ```>> tmp.txt
-git diff -w --cached>> tmp.txt
-echo ```>> tmp.txt
+goto:eof
+
+:list_languages
+set "languages="
+git diff -w --name-only --cached ":(exclude)*.md" ":(exclude)*.txt" | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
+if errorlevel 1 (
+  %_fatal% "Failed to list languages from Git diff" 24
+)
+
+REM Count non-empty lines to determine the last item
+set count=0
+for /f "usebackq tokens=*" %%a in (tmp.lg) do (
+  if not "%%a"=="" set /a count+=1
+)
+
+REM Process each line with appropriate separators
+set current=0
+for /f "usebackq tokens=*" %%a in (tmp.lg) do (
+  if not "%%a"=="" (
+    set /a current+=1
+    if !current! equ !count! (
+      set "languages=!languages! and %%a"
+    ) else (
+      if defined languages (
+        set "languages=!languages!, %%a"
+      ) else (
+        set "languages=%%a"
+      )
+    )
+  )
+)
+if defined languages (
+  set "languages=, also expert in languages like: !languages!"
+)
+goto:eof
+
+:dump_prompt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 echo Prompt and Git diff --cached copied to the clipboard.
 del tmp.txt
 goto:eof
 
+:configure_mods
+%_task% "Must check or configure mods settings at '%MODS_SETTINGS%'"
+grep "git-diff" "%MODS_SETTINGS%" >nul 2>&1
+if not errorlevel 1 (
+  %_ok% "git-diff role is already configured in '%MODS_SETTINGS%'"
+  goto:check_model
+)
+awk -f "%script_dir%\mods_add_git-diff_role.awk" "%LOCALAPPDATA%\mods\mods.yml" > "%LOCALAPPDATA%\mods\mods.yml.new"
+if errorlevel 1 (
+  %_fatal% "Failed to add git-diff role in '%MODS_SETTINGS%'" 15
+)
+copy /Y "%LOCALAPPDATA%\mods\mods.yml.new" "%MODS_SETTINGS%" >nul 2>&1
+if errorlevel 1 (
+  %_fatal% "Failed to copy new mods settings with 'git-diff' role to '%MODS_SETTINGS%'" 16
+)
+%_ok% "git-diff role added in '%MODS_SETTINGS%'"
+
+:check_model
+%_task% "Must check or configure model '%model%' in '%MODS_SETTINGS%'"
+grep -E "aliases:.*%model%" "%MODS_SETTINGS%" >nul 2>&1
+if not errorlevel 1 (
+  %_ok% "Model '%model%' is already configured in '%MODS_SETTINGS%'"
+  goto:check_default_model
+)
+awk -f "%script_dir%\mods_add_gemini_model.awk" "%LOCALAPPDATA%\mods\mods.yml" > "%LOCALAPPDATA%\mods\mods.yml.new"
+if errorlevel 1 (
+  %_fatal% "Failed to add model '%model%' in '%MODS_SETTINGS%'" 15
+)
+copy /Y "%LOCALAPPDATA%\mods\mods.yml.new" "%MODS_SETTINGS%" >nul 2>&1
+if errorlevel 1 (
+  %_fatal% "Failed to copy new mods settings with model '%model%' to '%MODS_SETTINGS%'" 16
+)
+%_ok% "Model '%model%' added in '%MODS_SETTINGS%'"
+
+:check_default_model
+%_task% "Must check/set default model to '%model%'"
+grep "default-model: %model%" "%MODS_SETTINGS%" >nul 2>&1
+if not errorlevel 1 (
+  %_ok% "Default model '%model%' is already set in '%MODS_SETTINGS%'"
+  goto:configure_mods_done
+)
+sed -i "s/^default-model: .*$/default-model: %model%/g" "%MODS_SETTINGS%" >nul 2>&1
+if errorlevel 1 (
+  %_fatal% "Failed to set default model '%model%' in '%MODS_SETTINGS%'" 17
+)
+%_ok% "Default model '%model%' set in '%MODS_SETTINGS%'"
+
+:configure_mods_done
+%_info% "'%MODS_SETTINGS%' setting all set (model '%model%'): ready to use"
+goto:eof
 
 :call_echos_stack
 if not defined ECHOS_STACK (
-    set "CURRENT_SCRIPT=%~nx0" & goto:eof
+    set "CURRENT_SCRIPT=%~nx0" && goto:eof
 ) else (
     call "%batdir%\echos.bat" :stack %~nx0
 )
