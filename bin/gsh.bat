@@ -8,11 +8,17 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
+set "rel="
+if "%~1"=="rel" (
+  set "rel=true"
+  goto:skip_index_check
+)
 git diff -w --cached --quiet
 if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
 )
 
+:skip_index_check
 set "NO_MODS="
 set "MODS_SETTINGS=%LOCALAPPDATA%\mods\mods.yml"
 set "MODS=%GOBIN%\mods.exe"
@@ -29,13 +35,22 @@ set "NO_MODS=true"
 :after_mods_checks
 
 set "role=commit_diff"
-set "exclude=":(exclude)*.md" ":(exclude)*.txt""
-if "%~1"=="doc" ( set "role=commit_documentation" && shift )
-if "%~1"=="rel" ( set "role=analyze_release" && shift )
+set "file_filter=":(exclude)*.md" ":(exclude)*.txt""
+if not "%~1"=="doc" ( goto:arg_check_rel )
+set "role=commit_documentation"
+set "file_filter=":(glob)**/*.md" ":(glob)**/*.txt""
+shift
+:arg_check_rel
+if not "%~1"=="rel" ( goto:arg_check_done )
+set "role=analyze_release"
+set "file_filter=":(exclude)*.md""
+shift
 
+:arg_check_done
 call:write_prompt
 
 if "%~1" == "prompt" ( call:dump_prompt && exit /b 0 )
+if "%~1" == "dump" ( call:dump_prompt && exit /b 0 )
 if defined NO_MODS (
   %_info% "No mods means dump prompt mode (will be copied to the clipboard)"
   call:dump_prompt && exit /b 0
@@ -50,11 +65,29 @@ if defined GEMINI_MODEL (
 )
 call:configure_mods
 
+call "%script_dir%\ensure_internet.bat"
+if errorlevel 1 (
+  %_fatal% "Internet connection is required to use mods" 10
+)
+%_task% "Must analyze changes with mods role '%role%' and model '%model%'"
 type tmp.txt | "%mods%" --role=git-diff --model=%model%
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to analyze staged changes with mods" 12
 )
+%_ok% "Analyzed staged changes with mods role '%role%' and model '%model%'"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe"%npp_settings% -multiInst -notabbar -nosession -noPlugin"
+
+if not defined rel ( goto:commit_changes )
+%_task% "Must copy release notes to the clipboard"
+mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); print; next; } found == 1 { print }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 > tmp.txt
+if errorlevel 1 (
+  %_fatal% "Failed to write release notes analysis to tmp.txt" 22
+)
+powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
+%_ok% "release notes analysis copied to the clipboard"
+goto:eof
+
+:commit_changes
 %_task% "Must commit staged changes with analyzed message"
 rem echo gsh: '%EDITOR%'
 mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); if (index($0, "```")==0) { print $0 }; next; } found == 1 { if (index($0, "```")==0) { print $0 } }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 | git commit -F -
@@ -79,10 +112,16 @@ cat "%script_dir%\mods_role_%role%.md" > tmp.txt
 if errorlevel 1 (
   %_fatal% "Failed to write role prompt to tmp.txt" 21
 )
-@echo on
-git diff -w --cached %exclude% >> tmp.txt
-if errorlevel 1 (
-  %_fatal% "Failed to append Git diff to tmp.txt" 22
+if not defined rel (
+  git diff -w --cached %file_filter% >> tmp.txt
+  if errorlevel 1 (
+    %_fatal% "Failed to append Git diff to tmp.txt" 22
+  )
+) else (
+  bash -c "$(cygpath -u '%script_dir%/git-log-filtered.sh')" >> tmp.txt
+  if errorlevel 1 (
+    %_fatal% "Failed to append Git log to tmp.txt" 122
+  )
 )
 echo ``` >> tmp.txt
 call:list_languages
@@ -94,11 +133,17 @@ goto:eof
 
 :list_languages
 set "languages="
-git diff -w --name-only --cached %exclude% | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
-if errorlevel 1 (
-  %_fatal% "Failed to list languages from Git diff" 24
+if not defined rel (
+  git diff -w --name-only --cached %file_filter% | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
+  if errorlevel 1 (
+    %_fatal% "Failed to list languages from Git diff" 24
+  )
+) else (
+  bash -c "$(cygpath -u '%script_dir%/git-log-filtered.sh' log)" | awk -F"." "{if (NF>1) {print $NF}}" | sort -u > tmp.lg
+  if errorlevel 1 (
+    %_fatal% "Failed to list languages from Git log" 124
+  )
 )
-
 REM Count non-empty lines to determine the last item
 set count=0
 for /f "usebackq tokens=*" %%a in (tmp.lg) do (

@@ -9,4 +9,4 @@ for %%i in ("%PRGS%\setup") do (
 )
 
 set "GEMINI_MODEL="
-call "%senv_dir%\bin\gsh.bat" prompt %*
+call "%senv_dir%\bin\gsh.bat" %* prompt

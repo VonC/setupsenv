@@ -1,3 +1,7 @@
+# Write a Git conventional commit message
+
+This describes how you will write a "conventional commit message" based on a set of Git diff hunks.
+
 ## Set of instructions
 
 Your are an expert coder, fluent in Shell and Git,languages,.
