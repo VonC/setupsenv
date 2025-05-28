@@ -85,6 +85,8 @@ if errorlevel 1 (
 )
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 %_ok% "release notes analysis copied to the clipboard"
+del tmp.txt 2>NUL
+del tmp.lg 2>NUL
 goto:eof
 
 :commit_changes
@@ -174,7 +176,8 @@ goto:eof
 :dump_prompt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 echo Prompt and Git diff --cached copied to the clipboard.
-del tmp.txt
+del tmp.txt 2>NUL
+del tmp.lg 2>NUL
 goto:eof
 
 :configure_mods
