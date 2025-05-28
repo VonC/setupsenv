@@ -158,7 +158,11 @@ for /f "usebackq tokens=*" %%a in (tmp.lg) do (
   if not "%%a"=="" (
     set /a current+=1
     if !current! equ !count! (
-      set "languages=!languages! and %%a"
+      if !count! grt 1 (
+        set "languages=!languages! and %%a"
+      ) else (
+        set "languages=%%a"
+      )
     ) else (
       if defined languages (
         set "languages=!languages!, %%a"
