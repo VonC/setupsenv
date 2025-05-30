@@ -28,7 +28,7 @@ Maven/mvn~#~mavens~apache-maven-*-bin.zip
 Terminal/term/cmd~#~terminals~Microsoft.WindowsTerminal_*_x64.zip
 Git-Cliff/gitcliff/gcliff/cliff~#~git-cliffs~git-cliff-*-x86_64-pc-windows-msvc.zip~global
 ripgrep/rg~#~ripgreps~ripgrep-*-x86_64-pc-windows-msvc.zip
-Wildfly/wf/wfly~27.0.1~wildflys~wildfly-*.Final.zip
+Wildfly/wf/wfly~#~wildflys~wildfly-*.Final.zip
 Git_Cred/gitcred/gitcreds~#~gits~gitcred.exe~global
 Lsd_ll_ls/ll/ls/lsd~#~lsds~lsd-*-x86_64-pc-windows-msvc.zip
 Bat/cat~#~bats~bat-v*-x86_64-pc-windows-msvc.zip

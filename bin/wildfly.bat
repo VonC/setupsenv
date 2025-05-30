@@ -185,10 +185,10 @@ for /f "tokens=*" %%i in ('%curl_cmd%') do (
 rem @echo off
 if not defined verbose (
   rem echo echo %RESPONSE% ^| "%PRGS%\jqs\current\jq-win64.exe" -r '.result."product-version"'
-  echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r ".result.\"product-version\""
+  echo %RESPONSE% | "%PRGS%\jqs\current\jq-win64.exe" -r ".result.\"product-version\""
   exit /b 0
 )
-echo %RESPONSE% | "C:\Public\SOFTWARE\jqs\current\jq-win64.exe" -r "\"Product name: \" + .result.\"product-name\" + \", version: \" + .result.\"product-version\" + \", release version: \" + .result.\"release-version\""
+echo %RESPONSE% | "%PRGS%\jqs\current\jq-win64.exe" -r "\"Product name: \" + .result.\"product-name\" + \", version: \" + .result.\"product-version\" + \", release version: \" + .result.\"release-version\""
 exit /b 0
 goto:eof
 

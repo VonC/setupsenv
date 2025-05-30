@@ -471,11 +471,38 @@ goto:eof
 set "repo=wildfly/wildfly"
 set "version=%version:.Final=%"
 set "version=%version:.final=%"
-if "%version%"=="latest" ( call :get_latest_version_from_github ) else ( set "version=%version%.Final")
-rem %_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+if "%version%"=="latest" (
+    call :get_latest_version_from_github
+    goto:dwl_wildfly_continue
+)
+
+echo %version% | findstr "\." >nul
+if %ERRORLEVEL%==0 (
+    rem Version contains a dot, add .Final
+    set "version=%version%.Final"
+    goto:dwl_wildfly_continue
+)
+
+rem Version is just a major number without dots, find the latest matching version
+%_task% "Finding most recent WildFly version matching '%version%'"
+for /f "delims=" %%a in ('cygpath -u "%script_dir%"') do set "unix_script_dir=%%a"
+for /f "delims=" %%a in ('bash -c "OWNER=wildfly REPO=wildfly PATTERN=%version%\\. %unix_script_dir%/get_all_github_data.sh" ^|^| echo ERROR_BASH_FAILED') do (
+    set "result=%%a"
+    if "!result!"=="ERROR_BASH_FAILED" (
+        %_fatal% "Failed to execute get_all_github_data.sh for WildFly version pattern '%version%'" 18
+    )
+    goto :got_wildfly_version
+)
+
+:got_wildfly_version
+set "version=%result%"
+%_ok% "Selected WildFly version: '%version%'"
+
+:dwl_wildfly_continue
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
 set "file=wildfly-%version%.zip"
 rem https://github.com/wildfly/wildfly/releases/download/34.0.0.Final/wildfly-34.0.0.Final.zip
-set "url=https://github.com/wildfly/wildfly/releases/download/%version%/%file%"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 call :curl
 goto:eof
 
