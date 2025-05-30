@@ -1,3 +1,28 @@
+@REM ********************************************************************
+@REM * GSH - Git Smart Helper
+@REM * 
+@REM * This script enhances Git workflow by using AI to analyze changes
+@REM * and generate meaningful commit messages. It integrates with the
+@REM * 'mods' tool to leverage AI models (primarily Gemini) for analyzing
+@REM * Git diffs and producing contextual commit messages or release notes.
+@REM *
+@REM * Key features:
+@REM * - Analyzes code changes to create smart commit messages
+@REM * - Special handling for documentation changes
+@REM * - Release notes generation from Git history
+@REM * - Automatic language detection for better AI context
+@REM * - Configurable AI model selection
+@REM *
+@REM * Usage:
+@REM *   gsh         - Analyze staged changes and create commit
+@REM *   gsh doc     - Analyze documentation changes only
+@REM *   gsh rel     - Analyze changes for release notes
+@REM *   gsh prompt  - Just dump the prompt (for debugging)
+@REM *                 Can be combined with doc or rel: gsh doc prompt
+@REM *   gsh dump    - Synonym for 'prompt', dumps the prompt to clipboard
+@REM *                 Can be combined with doc or rel: gsh doc dump
+@REM ********************************************************************
+
 @echo off
 setlocal enabledelayedexpansion
 
@@ -18,6 +43,7 @@ if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
 )
 
+@REM Skip checking for staged changes when in release mode
 :skip_index_check
 set "NO_MODS="
 set "MODS_SETTINGS=%LOCALAPPDATA%\mods\mods.yml"
@@ -32,6 +58,7 @@ if exist "%MODS%" (
   %_warning% "Mods executable is missing at GOBIN: '%MODS%'"
 )
 set "NO_MODS=true"
+@REM Continue execution after checking for mods tool availability
 :after_mods_checks
 
 set "role=commit_diff"
@@ -40,12 +67,14 @@ if not "%~1"=="doc" ( goto:arg_check_rel )
 set "role=commit_documentation"
 set "file_filter=":(glob)**/*.md" ":(glob)**/*.txt""
 shift
+@REM Check for 'doc' argument and set appropriate role and file filter
 :arg_check_rel
 if not "%~1"=="rel" ( goto:arg_check_done )
 set "role=analyze_release"
 set "file_filter=":(exclude)*.md""
 shift
 
+@REM Continue after argument parsing
 :arg_check_done
 call:write_prompt
 
@@ -89,6 +118,7 @@ del tmp.txt 2>NUL
 del tmp.lg 2>NUL
 goto:eof
 
+@REM Perform the actual Git commit with AI-generated message
 :commit_changes
 %_task% "Must commit staged changes with analyzed message"
 rem echo gsh: '%EDITOR%'
@@ -105,6 +135,20 @@ if %ERRORLEVEL% == 1 (
 %_ok% "Committed changes message edited"
 goto:eof
 
+@REM -----------------------------------------------------------------------------
+@REM Function: write_prompt
+@REM
+@REM Prepares the AI prompt by combining a role-specific template with Git diff or
+@REM log information. It loads the appropriate prompt template based on the current
+@REM role (commit_diff, commit_documentation, or analyze_release), then appends
+@REM the relevant Git information (diff or log).
+@REM
+@REM The function also handles language detection and replaces placeholders in the
+@REM prompt template with the detected programming languages.
+@REM
+@REM Parameters: None
+@REM Returns: None (writes to tmp.txt)
+@REM -----------------------------------------------------------------------------
 :write_prompt
 del tmp.txt 2>NUL
 if not exist "%script_dir%\mods_role_%role%.md" (
@@ -133,6 +177,21 @@ if errorlevel 1 (
 )
 goto:eof
 
+@REM -----------------------------------------------------------------------------
+@REM Function: list_languages
+@REM
+@REM Identifies programming languages used in the changed files by analyzing file
+@REM extensions. Creates a formatted list of languages to inform the AI about
+@REM the technical context of the changes.
+@REM
+@REM For regular and doc modes, it analyzes file extensions in the staged changes.
+@REM For release mode, it analyzes file extensions in the Git log.
+@REM
+@REM The function handles proper comma and "and" formatting for the language list.
+@REM
+@REM Parameters: None
+@REM Returns: Sets %languages% environment variable with the formatted list
+@REM -----------------------------------------------------------------------------
 :list_languages
 set "languages="
 if not defined rel (
@@ -177,6 +236,20 @@ if defined languages (
 )
 goto:eof
 
+@REM -----------------------------------------------------------------------------
+@REM Function: dump_prompt
+@REM
+@REM Copies the generated AI prompt to the system clipboard for inspection or
+@REM manual processing. This function is used when:
+@REM - The mods tool is unavailable
+@REM - The user explicitly requests the prompt (via 'prompt' or 'dump' argument)
+@REM - For debugging purposes
+@REM
+@REM It also cleans up temporary files after copying.
+@REM
+@REM Parameters: None
+@REM Returns: None (outputs message to console, copies to clipboard)
+@REM -----------------------------------------------------------------------------
 :dump_prompt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 echo Prompt and Git diff --cached copied to the clipboard.
@@ -184,6 +257,20 @@ del tmp.txt 2>NUL
 del tmp.lg 2>NUL
 goto:eof
 
+@REM -----------------------------------------------------------------------------
+@REM Function: configure_mods
+@REM
+@REM Ensures that the mods tool is properly configured with:
+@REM 1. The git-diff role - Adds it if missing
+@REM 2. The specified AI model - Adds model configuration if missing
+@REM 3. Sets the default model - Updates if needed
+@REM
+@REM This function modifies the mods configuration file (mods.yml) as needed
+@REM to ensure the script can properly interface with the AI model.
+@REM
+@REM Parameters: None
+@REM Returns: None
+@REM -----------------------------------------------------------------------------
 :configure_mods
 %_task% "Must check or configure mods settings at '%MODS_SETTINGS%'"
 grep "git-diff" "%MODS_SETTINGS%" >nul 2>&1
@@ -201,6 +288,7 @@ if errorlevel 1 (
 )
 %_ok% "git-diff role added in '%MODS_SETTINGS%'"
 
+@REM Check if the specified model is configured in mods
 :check_model
 %_task% "Must check or configure model '%model%' in '%MODS_SETTINGS%'"
 grep -E "aliases:.*%model%" "%MODS_SETTINGS%" >nul 2>&1
@@ -218,6 +306,7 @@ if errorlevel 1 (
 )
 %_ok% "Model '%model%' added in '%MODS_SETTINGS%'"
 
+@REM Check/set the default model in mods configuration
 :check_default_model
 %_task% "Must check/set default model to '%model%'"
 grep "default-model: %model%" "%MODS_SETTINGS%" >nul 2>&1
@@ -231,10 +320,22 @@ if errorlevel 1 (
 )
 %_ok% "Default model '%model%' set in '%MODS_SETTINGS%'"
 
+@REM Configuration of mods is complete
 :configure_mods_done
 %_info% "'%MODS_SETTINGS%' setting all set (model '%model%'): ready to use"
 goto:eof
 
+@REM -----------------------------------------------------------------------------
+@REM Function: call_echos_stack
+@REM
+@REM Handles script tracing and logging by integrating with an external echo
+@REM utility for better debugging and error reporting. It checks if the ECHOS_STACK
+@REM variable is defined and either sets the current script name or calls the
+@REM echos.bat script with the current script name.
+@REM
+@REM Parameters: None
+@REM Returns: None
+@REM -----------------------------------------------------------------------------
 :call_echos_stack
 if not defined ECHOS_STACK (
     set "CURRENT_SCRIPT=%~nx0" && goto:eof
