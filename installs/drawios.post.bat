@@ -15,6 +15,11 @@ call %senv_dir%\batcolors\echos_macros.bat
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_fatal% "'%prg_folder%' in '%PRGS%\%prgs_folder%' is missing" 81
 )
+if exist "%PRGS%\%prgs_folder%\%prg_folder%\draw.io.exe" (
+    %_ok% "'draw.io.exe' in '%PRGS%\%prgs_folder%\%prg_folder%\' present: 27.0.9 or more recent."
+    exit /b 0
+    goto:eof
+)
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%\$PLUGINSDIR" (
     %_fatal% "'$PLUGINSDIR' in '%PRGS%\%prgs_folder%\%prg_folder%' is missing" 82
 )
