@@ -16,9 +16,8 @@ jq() {
 
 # Check if jq exists and is executable
 if [[ ! -x "$JQ_UNIX_PATH" ]]; then
-    error "jq executable not found at: $JQ_UNIX_PATH"
-    error "Please make sure %PRGS%/jqs/current/jq-win64.exe exists and is executable"
-    exit 10
+    error "jq executable not found at: '${JQ_UNIX_PATH}'ERROR_BASH_FAILED"
+    fatal "Please make sure %PRGS%/jqs/current/jq-win64.exe exists and is executable.ERROR_BASH_FAILED" 10
 fi
 
 # --- Check environment variables ---
@@ -85,7 +84,7 @@ fi
 
 # Exit if mandatory variables are missing
 if [[ "$MISSING_VARS" = true ]]; then
-    fatal "Exiting due to missing mandatory environment variables" 11
+    fatal "Exiting due to missing mandatory environment variablesERROR_BASH_FAILED" 11
 fi
 
 # --- Configuration ---
@@ -121,7 +120,7 @@ while [ -n "$CURRENT_URL" ]; do
     # Validate JSON response
     if ! echo "$body" | jq -e . >/dev/null; then
         info "$body"
-        fatal "Failed to fetch valid JSON from $CURRENT_URL" 12
+        fatal "Failed to fetch valid JSON from '${CURRENT_URL}'ERROR_BASH_FAILED" 12
     fi
 
     # If pattern is set, check for matches in this page
@@ -130,7 +129,7 @@ while [ -n "$CURRENT_URL" ]; do
         FIELD_NAME=$([ "$ENDPOINT" = "tags" ] && echo "name" || echo "tag_name")
         
         # Get all items and matching items
-        all_items=$(echo "$body" | jq -r --arg field "$FIELD_NAME" '.[] | .[$field]')
+        all_items=$(echo "${body}" | jq -r --arg field "$FIELD_NAME" '.[] | .[$field]')
         matches=$(echo "$body" | jq -r --arg pat "$PATTERN" --arg field "$FIELD_NAME" \
             '.[] | .[$field] | select(startswith($pat))')
         

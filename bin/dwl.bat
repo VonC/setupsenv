@@ -486,12 +486,26 @@ if %ERRORLEVEL%==0 (
 rem Version is just a major number without dots, find the latest matching version
 %_task% "Finding most recent WildFly version matching '%version%'"
 for /f "delims=" %%a in ('cygpath -u "%script_dir%"') do set "unix_script_dir=%%a"
-for /f "delims=" %%a in ('bash -c "OWNER=wildfly REPO=wildfly PATTERN=%version%\\. %unix_script_dir%/get_all_github_data.sh" ^|^| echo ERROR_BASH_FAILED') do (
+set "get_all_github_data_failed="
+for /f "delims=" %%a in ('bash -c "OWNER=wildfly REPO=wildfly PATTERN=%version%\\. %unix_script_dir%/get_all_github_data.sh || echo ERROR_BASH_FAILED2"') do (
     set "result=%%a"
-    if "!result!"=="ERROR_BASH_FAILED" (
-        %_fatal% "Failed to execute get_all_github_data.sh for WildFly version pattern '%version%'" 18
+    if not "!result:ERROR_BASH_FAILED=!"=="!result!" (
+        if not defined get_all_github_data_failed (
+            set "get_all_github_data_failed=1"
+            if not "!result:ERROR_BASH_FAILED=!"=="2" (
+              %_post% "Error message from get_all_github_data.sh:"
+            )
+        )
+        if not "!result:ERROR_BASH_FAILED=!"=="2" (
+            %_post% "'!result:ERROR_BASH_FAILED=!'"
+        )
     )
-    goto :got_wildfly_version
+    if not defined get_all_github_data_failed (
+      goto :got_wildfly_version
+    )
+)
+if defined get_all_github_data_failed (
+    %_fatal% "Failed to execute get_all_github_data.sh for WildFly version pattern '%version%'" 18
 )
 
 :got_wildfly_version
