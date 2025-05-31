@@ -813,7 +813,14 @@ set "repo=jgraph/drawio-desktop"
 if "%version%"=="latest" ( call :get_latest_version_from_github )
 %_info% "Dwl (%prgname%)'%repo%' version '%version%'"
 rem https://github.com/jgraph/drawio-desktop/releases/download/v26.1.1/draw.io-26.1.1-windows-no-installer.exe
-set "file=draw.io-%version%-windows-no-installer.exe"
+rem https://github.com/jgraph/drawio-desktop/releases/download/v27.0.9/draw.io-27.0.9-windows.zip
+rem Check if version is greater than 27.0.8
+call :version_compare "%version%" "27.0.8"
+if %errorlevel% GTR 0 (
+    set "file=draw.io-%version%-windows.zip"
+) else (
+    set "file=draw.io-%version%-windows-no-installer.exe"
+)
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
@@ -836,4 +843,33 @@ rem https://github.com/walles/riff/releases/download/3.3.10/riff-3.3.10-x86_64-w
 set "file=riff-%version%-x86_64-windows.exe"
 set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 call :curl
+goto:eof
+
+
+:version_compare
+rem Compare versions numerically
+rem Returns: 1 if first version is greater, 0 if equal, -1 if less
+setlocal EnableDelayedExpansion
+set "v1=%~1"
+set "v2=%~2"
+
+for /f "tokens=1,2,3 delims=." %%a in ("%v1%") do (
+    set "v1_major=%%a"
+    set "v1_minor=%%b"
+    set "v1_patch=%%c"
+)
+
+for /f "tokens=1,2,3 delims=." %%a in ("%v2%") do (
+    set "v2_major=%%a"
+    set "v2_minor=%%b"
+    set "v2_patch=%%c"
+)
+
+if %v1_major% GTR %v2_major% exit /b 1
+if %v1_major% LSS %v2_major% exit /b -1
+if %v1_minor% GTR %v2_minor% exit /b 1
+if %v1_minor% LSS %v2_minor% exit /b -1
+if %v1_patch% GTR %v2_patch% exit /b 1
+if %v1_patch% LSS %v2_patch% exit /b -1
+exit /b 0
 goto:eof
