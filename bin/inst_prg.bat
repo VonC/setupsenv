@@ -141,20 +141,20 @@ set "sfound_path=%setup_dir%"
 set "sfound_most_recent="
 set "sfound_most_recent_folder="
 set "sfound_most_recent_name="
-call:check_folder "%sfound_path%" "%prg_pattern%"
+call:check_patterns "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 set "sfound=Downloads"
 set "sfound_path=%dl_dir%"
-call:check_folder "%sfound_path%" "%prg_pattern%"
+call:check_patterns "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 set "sfound=remote setup"
 set "sfound_path=%setupsdir%"
-call:check_folder "%sfound_path%" "%prg_pattern%"
+call:check_patterns "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 if not exist "%USERPROFILE%\senv_setups\setups" (goto:not_found)
 set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
-call:check_folder "%sfound_path%" "%prg_pattern%"
+call:check_patterns "%sfound_path%" "%prg_pattern%"
 if not errorlevel 1 ( goto:count )
 :not_found
 if defined sfound_most_recent (
@@ -387,6 +387,39 @@ for /f "tokens=*" %%a in ('powershell -ExecutionPolicy Bypass -File "%script_dir
 exit /b 1
 goto:eof
 
+
+// Add this new subroutine before the :eof
+
+:check_patterns
+set "folder=%~1"
+set "pattern_list=%~2"
+%_info% "Checking patterns '%pattern_list%' in folder '%folder%'"
+
+REM Check if pattern contains multiple patterns separated by /
+echo %pattern_list% | findstr /C:"/" >nul
+if errorlevel 1 (
+    REM No / separator found, use the original check_folder
+    call:check_folder "%folder%" "%pattern_list%"
+    exit /b %ERRORLEVEL%
+)
+
+REM Process each pattern separated by /
+for /F "tokens=1* delims=/" %%a in ("%pattern_list%") do (
+    %_info% "Trying pattern '%%a' in '%folder%'"
+    call:check_folder "%folder%" "%%a"
+    if not errorlevel 1 (
+        exit /b 0
+    )
+    
+    if not "%%b"=="" (
+        REM More patterns to check
+        call:check_patterns "%folder%" "%%b"
+        exit /b %ERRORLEVEL%
+    )
+)
+
+exit /b 1
+goto:eof
 
 :call_echos_stack
 if not defined ECHOS_STACK (
