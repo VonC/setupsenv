@@ -8,6 +8,12 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
+rem Ensure internet connectivity before proceeding
+call "%script_dir%\ensure_internet.bat"
+if errorlevel 1 (
+    %_fatal% "No internet connectivity detected. Cannot proceed with downloads." 1
+)
+
 set "repo="
 set "version="
 set "file="
