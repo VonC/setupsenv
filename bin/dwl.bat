@@ -774,7 +774,7 @@ mkdir "%setup_dir%\%version%-win64"
 copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\"
 copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq-win64.exe"
 copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq.exe"
-"%sz%" a -w"%setup_dir%" "%setup_dir%\%version%-win64.zip" "%version%-win64"
+"%sz%" a -w"%setup_dir%" "%setup_dir%\%version%-win64.zip" "%setup_dir%\%version%-win64"
 goto:eof
 
 :dwl_xrmtoolbox
