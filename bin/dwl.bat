@@ -495,10 +495,12 @@ if not exist "%PRGS%\jqs\current\jq.exe" (
   if errorlevel 1 (
     %_fatal% "Unable to download jq, needed for '%PRGS%\jqs\current\jq.exe'" 111
   )
+  %_ok% "jq downloaded, now installing jq in '%PRGS%\jqs\current\jq.exe'"
   call "%script_dir%\inst_prg.bat" jq
   if errorlevel 1 (
     %_fatal% "Unable to install jq, needed for '%PRGS%\jqs\current\jq.exe'" 112
   )
+  %_ok% "jq installed in '%PRGS%\jqs\current\jq.exe'"
 ) else (
   %_ok% "jq already installed in '%PRGS%\jqs\current\jq.exe'"
 )
