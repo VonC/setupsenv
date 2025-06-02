@@ -489,6 +489,20 @@ if %ERRORLEVEL%==0 (
     goto:dwl_wildfly_continue
 )
 
+if not exist "%PRGS%\jqs\current\jq.exe" (
+  %_task% "jq not found in '%PRGS%\jqs\current\jq.exe', must download and install jq"
+  call "%script_dir%\dwl.bat" jq latest
+  if errorlevel 1 (
+    %_fatal% "Unable to download jq, needed for '%PRGS%\jqs\current\jq.exe'" 111
+  )
+  call "%script_dir%\inst_prg.bat" jq
+  if errorlevel 1 (
+    %_fatal% "Unable to install jq, needed for '%PRGS%\jqs\current\jq.exe'" 112
+  )
+) else (
+  %_ok% "jq already installed in '%PRGS%\jqs\current\jq.exe'"
+)
+
 rem Version is just a major number without dots, find the latest matching version
 %_task% "Finding most recent WildFly version matching '%version%'"
 for /f "delims=" %%a in ('cygpath -u "%script_dir%"') do set "unix_script_dir=%%a"
