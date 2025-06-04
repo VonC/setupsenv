@@ -94,10 +94,12 @@ if defined GEMINI_MODEL (
 )
 call:configure_mods
 
+set "SENV_EI_DONE="
 call "%script_dir%\ensure_internet.bat"
 if errorlevel 1 (
   %_fatal% "Internet connection is required to use mods" 10
 )
+set "SENV_EI_DONE=1"
 %_task% "Must analyze changes with mods role '%role%' and model '%model%'"
 type tmp.txt | "%mods%" --role=git-diff --model=%model%
 if %ERRORLEVEL% == 1 (

@@ -5,6 +5,19 @@ set "npp_settings="
 if exist "%PRGS%\npps\settings" set "npp_settings= -settingsDir=settings"
 set "EDITOR=.\current\notepad++.exe%npp_settings% -multiInst -notabbar -nosession -noPlugin"
 @pushd "%PRGS%\npps\"
+
+for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
+for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+call %senv_dir%\batcolors\echos_macros.bat
+
+if defined SENV_EI_DONE ( goto:call_mods )
+call "%script_dir%\ensure_internet.bat"
+if errorlevel 1 (
+  %_fatal% "Internet connection is required to use mods" 10
+)
+SET "SENV_EI_DONE="
+
+:call_mods
 rem echo mods EDITORS: '%EDITOR%'
 call "%mods%" %*
 @popd
