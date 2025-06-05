@@ -333,6 +333,10 @@ if defined RESPONSE (
         set "WILDFLY_STATE=%%a"
     )
 )
+set "WILDFLY_STATE=%WILDFLY_STATE:}=%"
+if "%WILDFLY_STATE%"=="}=" (
+  set "WILDFLY_STATE=not started"
+)
 rem @echo off
 
 if not defined WILDFLY_STATE ( set "WILDFLY_STATE=not started" )
