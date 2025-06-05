@@ -236,24 +236,74 @@ REM -------------------------------------------------------------------
 :stop_wildfly
 call:prepare_log_for_action
 rem @echo on
-set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management"
+if not defined SENV_WF_MAX_STOP (
+    set "SENV_WF_MAX_STOP=30"
+    %_info% "Using default max stop attempts (SENV_WF_MAX_STOP): %SENV_WF_MAX_STOP%"
+) else (
+    %_info% "Using SENV_WF_MAX_STOP: %SENV_WF_MAX_STOP%"
+)
+if not defined SENV_WF_MAX_WAIT (
+    set "SENV_WF_MAX_WAIT=20"
+    %_info% "Using default shutdown command timeout (SENV_WF_MAX_WAIT): %SENV_WF_MAX_WAIT% seconds"
+) else (
+    %_info% "Using SENV_WF_MAX_WAIT: %SENV_WF_MAX_WAIT% seconds"
+)
+set "stop_attempt=0"
+set "curl_cmd=C:\Windows\System32\curl.exe -s -L -H "Content-Type: application/json" -d "{\"operation\":\"shutdown\"}" -u %WF_MGMT_USER%:%WF_MGMT_PASS% -x "" --digest %WF_URL%/management --connect-timeout %SENV_WF_MAX_WAIT% --max-time %SENV_WF_MAX_WAIT%"
 echo wildfly_log_file stop='%wildfly_log_file%'
 type nul > "%wildfly_log_file%"
-( %curl_cmd% ) >> "%wildfly_log_file%"
+
+%_task% "Must send shutdown command with %SENV_WF_MAX_WAIT% second timeout..."
+( %curl_cmd% ) >> "%wildfly_log_file%" 2>&1
+if %errorlevel% neq 0 (
+    %_warning% "Shutdown command timed out after %SENV_WF_MAX_WAIT% seconds. Continuing to monitor shutdown progress..."
+)
 
 :monitor_stopping_wildfly
+set /a "stop_attempt+=1"
 call :get_wildfly_state
 if "%WILDFLY_STATE%"=="not started" (
     %_ok% "WildFly stopped successfully."
     exit /b 0
 ) else if "%WILDFLY_STATE%"=="failed" (
     %_fatal% "WildFly failed to stop." 141
+) else if %stop_attempt% gtr %SENV_WF_MAX_STOP% (
+    %_warning% "Max stop attempts (%SENV_WF_MAX_STOP%) exceeded. Attempting to kill WildFly process..."
+    call :kill_wildfly_process
+    exit /b 0
 ) else (
-    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for stop..."
+    %_info% "WildFly state: '%WILDFLY_STATE%'. Waiting for stop... (%stop_attempt%/%SENV_WF_MAX_STOP%)"
     REM Wait for 5 seconds
     C:\Windows\System32\timeout.exe /t 5 >nul
     goto :monitor_stopping_wildfly
 )
+goto:eof
+
+REM -------------------------------------------------------------------
+REM kill_wildfly_process - Forcefully terminate the WildFly process
+REM -------------------------------------------------------------------
+:kill_wildfly_process
+%_task% "Attempting to forcefully terminate WildFly process"
+for /f "tokens=2" %%p in ('tasklist ^| grep -ai java') do (
+    set "pid=%%p"
+    %_info% "Checking Java process with PID: !pid!"
+    
+    for /f "tokens=*" %%c in ('wmic process where ProcessId^=!pid! get CommandLine /value ^| grep standalone.bat') do (
+        %_warning% "Found WildFly process: !pid!"
+        %_info% "Command line: %%c"
+        %_task% "Terminating process !pid!"
+        taskkill /F /PID !pid!
+        if !errorlevel! equ 0 (
+            %_ok% "Successfully terminated WildFly process with PID: !pid!"
+            exit /b 0
+        ) else (
+            %_error% "Failed to terminate process !pid! (Error: !errorlevel!)"
+        )
+        REM Only kill the first matching process
+        exit /b 1
+    )
+)
+%_warning% "No WildFly process found to terminate"
 goto:eof
 
 REM -------------------------------------------------------------------
