@@ -93,6 +93,12 @@ if "%WILDFLY_STATE%" == "running" (
   %_task% "Must stop Wildfly '%WF_VERSION%'"
   call:stop_wildfly
 )
+if "%WILDFLY_STATE%" == "restart-required" (
+  %_task% "Must stop Wildfly '%WF_VERSION%': restart-required"
+  call:stop_wildfly
+)
+call:get_wildfly_state
+%_fatal% "WildFly is in an unexpected state: '%WILDFLY_STATE%'" 113
 goto:eof
 
 REM -------------------------------------------------------------------
