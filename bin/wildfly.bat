@@ -98,6 +98,10 @@ if "%WILDFLY_STATE%" == "restart-required" (
   call:stop_wildfly
 )
 call:get_wildfly_state
+if "%WILDFLY_STATE%" == "not started" (
+  %_ok% "Wildfly '%WF_VERSION%' successfully stopped"
+  exit /b 0
+)
 %_fatal% "WildFly is in an unexpected state: '%WILDFLY_STATE%'" 113
 goto:eof
 
