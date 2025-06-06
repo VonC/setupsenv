@@ -135,6 +135,8 @@ if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to edit committed changes message" 14
 )
 %_ok% "Committed changes message edited"
+del tmp.txt 2>NUL
+del tmp.lg 2>NUL
 goto:eof
 
 @REM -----------------------------------------------------------------------------
