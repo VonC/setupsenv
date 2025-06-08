@@ -16,6 +16,7 @@
 @REM * Usage:
 @REM *   gsh         - Analyze staged changes and create commit
 @REM *   gsh doc     - Analyze documentation changes only
+@REM *   gsh docs    - Analyze documentation changes only
 @REM *   gsh rel     - Analyze changes for release notes
 @REM *   gsh prompt  - Just dump the prompt (for debugging)
 @REM *                 Can be combined with doc or rel: gsh doc prompt
@@ -63,7 +64,11 @@ set "NO_MODS=true"
 
 set "role=commit_diff"
 set "file_filter=":(exclude)*.md" ":(exclude)*.txt""
-if not "%~1"=="doc" ( goto:arg_check_rel )
+if not "%~1"=="doc" (
+  if not "%~1"=="docs" (
+    goto:arg_check_rel
+  )
+)
 set "role=commit_documentation"
 set "file_filter=":(glob)**/*.md" ":(glob)**/*.txt""
 shift
@@ -163,10 +168,17 @@ if errorlevel 1 (
   %_fatal% "Failed to write role prompt to tmp.txt" 21
 )
 if not defined rel (
+  echo git diff -w --cached %file_filter%
+  for %%A in (tmp.txt) do set before_size=%%~zA
   git diff -w --cached %file_filter% >> tmp.txt
   if errorlevel 1 (
     %_fatal% "Failed to append Git diff to tmp.txt" 22
   )
+  for %%A in (tmp.txt) do set after_size=%%~zA
+  if !before_size! equ !after_size! (
+    %_fatal% "No changes to commit - git diff is empty" 25
+  )
+  %_ok% "Git diff appended to tmp.txt"
 ) else (
   bash -c "$(cygpath -u '%script_dir%/git-log-filtered.sh')" >> tmp.txt
   if errorlevel 1 (
