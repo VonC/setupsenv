@@ -17,7 +17,9 @@ if exist "%script_dir%\testinternet.urls" (
 :got_url
 
 %_task% "Must check HTTP code by querying %url%"
-for /f "tokens=*" %%i in ('curl -Lks -o /dev/null -m 3 -w %%{http_code} %url%') do ( set "code=%%i" )
+"%PRGS%\gits\current\mingw64\bin\curl.exe" -Lks -o /dev/null -m 3 -w %%{http_code} %url% > "%TEMP%\http_code.txt"
+set /p code=<"%TEMP%\http_code.txt"
+del "%TEMP%\http_code.txt"
 if "%code%" == "200" (
   %_ok% "Internet connection is working"
   goto:eof
@@ -40,7 +42,7 @@ if "%code%" == "504" call:internet_ok "Server Error[504]: Gateway Timeout"
 if defined warning ( goto:eof )
 
 %_warning% "Code HTTP '%code%', check errorlevel:"
-curl -Lks -o /dev/null -m 3 -w %%{http_code}\n %url%
+"%PRGS%\gits\current\mingw64\bin\curl.exe" -Lks -o /dev/null -m 3 -w %%{http_code}\n %url%
 set "err=%ERRORLEVEL%"
 %_error% "Code HTTP '%code%', errorlevel '%err%'"
 if not "%err%" == "0" (
