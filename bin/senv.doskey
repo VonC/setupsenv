@@ -73,5 +73,9 @@ in=inst_prg $*
 ti=testinternet.bat $*
 ei=ensure_internet.bat $*
 
+up=update_profile.bat $*
+upg=update_profile.bat gits
+upa=update_profile.bat all
+
 gcliff="%PRGS%\git-cliffs\current\git-cliff.exe" $*
 mem=memory.bat
