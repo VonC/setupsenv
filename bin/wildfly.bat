@@ -212,6 +212,33 @@ REM runWildFly - Internal function to start the WildFly server
 REM -------------------------------------------------------------------
 :runWildFly
 call:prepare_log_for_action
+
+if not defined WF_MaxMetaspaceSize (
+  %_info% "Using default MaxMetaspaceSize (WF_MaxMetaspaceSize): 512m"
+  set "WF_MaxMetaspaceSize=512m"
+) else (
+  %_info% "Using user-defined WF_MaxMetaspaceSize before normalization: '%WF_MaxMetaspaceSize%'"
+  if "%WF_MaxMetaspaceSize%"=="" (
+    %_fatal% "WF_MaxMetaspaceSize cannot be empty" 122
+  )
+
+  REM Check if WF_MaxMetaspaceSize ends with 'M' and replace with 'm'
+  echo %WF_MaxMetaspaceSize% | findstr /r "M$" >nul
+  if %errorlevel% equ 0 (
+    for /f %%i in ('echo %WF_MaxMetaspaceSize% ^| sed "s/M$/m/"') do set "WF_MaxMetaspaceSize=%%i"
+    %_info% "Normalized WF_MaxMetaspaceSize: Changed 'M' to 'm' - '%WF_MaxMetaspaceSize%'"
+  ) else (
+    REM Check if WF_MaxMetaspaceSize doesn't end with 'm' and add 'm'
+    echo %WF_MaxMetaspaceSize% | findstr /r "m$" >nul
+    if %errorlevel% neq 0 (
+      set "WF_MaxMetaspaceSize=%WF_MaxMetaspaceSize%m"
+      %_info% "Normalized WF_MaxMetaspaceSize: Added 'm' - '%WF_MaxMetaspaceSize%'"
+    )
+  )
+  %_info% "Using normalized WF_MaxMetaspaceSize: '%WF_MaxMetaspaceSize%'"
+)
+set "JBOSS_JAVA_SIZING=-Xms64M -Xmx512M -XX:MetaspaceSize=96M -XX:MaxMetaspaceSize=%WF_MaxMetaspaceSize%"
+
 echo wildfly_log_file start='%wildfly_log_file%'
 type nul > "%wildfly_log_file%"
 start /b cmd /c ""%WF_HOME%\bin\standalone.bat" > "%wildfly_log_file%" 2>&1" 
