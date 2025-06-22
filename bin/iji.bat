@@ -116,6 +116,7 @@ if exist "%project_dir%\senv.bat" (
   if errorlevel 1 (
     call:unset && call "%bc%\echos.bat" :fatal "error calling '%project_dir%\senv.bat'" 4
   ) else (
+    call "%bc%\echos_macros.bat"
     %_ok% "called '%project_dir%\senv.bat'"
   )
 )
@@ -126,6 +127,7 @@ if exist "%project_dir%\tools\init.bat" (
   if errorlevel 1 (
     call:unset && call "%bc%\echos.bat" :fatal "error calling '%project_dir%\tools\init.bat'" 5
   ) else (
+    call "%bc%\echos_macros.bat"
     %_ok% "called '%project_dir%\tools\init.bat'"
   )
 )
