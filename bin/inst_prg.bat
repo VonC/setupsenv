@@ -142,20 +142,20 @@ set "sfound_most_recent="
 set "sfound_most_recent_folder="
 set "sfound_most_recent_name="
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:_count )
+if "%check_patterns_res%"=="0" ( goto:_count )
 set "sfound=Downloads"
 set "sfound_path=%dl_dir%"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:_count )
+if "%check_patterns_res%"=="0" ( goto:_count )
 set "sfound=remote setup"
 set "sfound_path=%setupsdir%"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:_count )
+if "%check_patterns_res%"=="0" ( goto:_count )
 if not exist "%USERPROFILE%\senv_setups\setups" (goto:_not_found)
 set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:_count )
+if "%check_patterns_res%"=="0" ( goto:_count )
 :_not_found
 if defined sfound_most_recent (
     %_info% "sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
@@ -277,7 +277,8 @@ set "dst=%~1"
 set "src=%~2"
 if "%src%"=="" ( set "src=%setup_dir%" )
 call "%script_dir%\rbc.bat" "%src%" "%dst%" "%fname%"
-if not "%ERRORLEVEL%"=="0" ( %_fatal% "Unable to copy '%src%\%fname%' to '%dst%\' errorlevel '%ERRORLEVEL%'" && exit /b 1)
+set "rbc_res=%ERRORLEVEL%"
+if not "%rbc_res%"=="0" ( %_fatal% "Unable to copy '%src%\%fname%' to '%dst%\' errorlevel '%rbc_res%'" && exit /b 1 && goto:eof )
 %_ok% "Setup '%fname%' copied locally to '%dst%'"
 goto:eof
 
@@ -313,19 +314,26 @@ goto:eof
 :check_folder
 set "folder=%~1"
 set "pattern=%~2"
+set "check_folder_res=1"
 if not "%pattern:latest=%"=="%pattern%" ( goto:record_latest )
 if "%prg_name%"=="ls" ( %_task% "Ls: Must look for '%prg_pattern%' in '%folder%'" ) else (
     %_info% "  Check folder '%folder%' for pattern '%pattern%'" )
 dir /b "%folder%\%pattern%" >a 2>NUL
 if not errorlevel 1 (
-    if not "%prg_name%"=="ls" ( goto:eof )
+    if not "%prg_name%"=="ls" (
+        set "check_folder_res=0"
+        exit /b 0
+        goto:eof
+    )
     %_ok% "Ls: pattern '%pattern%' found in '%folder%'"
     dir /B /OD "%folder%\%pattern%"
     exit /b 1
+    goto:eof
 )
 if "%prg_name%"=="ls" (
     %_error% "Ls: No '%prg_pattern%' pattern found in '%folder%'"
     exit /b 1
+    goto:eof
 )
 rem if env var pattern value does not start with '*', add '*' at its beginning
 set "start_pattern="
@@ -335,6 +343,8 @@ if defined start_pattern (
     dir /b "%folder%\%start_pattern%" >a 2>NUL
     if not errorlevel 1 (
         set "pattern=%start_pattern%"
+        set "check_folder_res=0"
+        exit /b 0
         goto:eof
     )
 )
@@ -346,6 +356,8 @@ if defined end_pattern (
     dir /b "%folder%\%end_pattern%" >a 2>NUL
     if not errorlevel 1 (
         set "pattern=%end_pattern%"
+        set "check_folder_res=0"
+        exit /b 0
         goto:eof
     )
 )
@@ -354,11 +366,13 @@ if defined start_pattern (
         set "pattern=*%pattern%*"
         %_info% "  Check folder '%folder%' for start-end pattern '!pattern!'"
         dir /b "%folder%\!pattern!" >a 2>NUL
-        if not errorlevel 1 ( goto:eof )
+        if not errorlevel 1 ( exit /b 0 && goto:eof )
     )
 )
 set "pattern="
 exit /b 1
+goto:eof
+
 :record_latest
 if "%pattern:latest=%"=="" ( set "pattern=%prg_pattern%" ) else ( set "pattern=%pattern:-latest=%" )
 if not defined pattern ( %_fatal% "check_folder/record_latest: pattern empty from '%~2'" 33 )
@@ -393,6 +407,7 @@ goto:eof
 :check_patterns
 set "folder=%~1"
 set "pattern_list=%~2"
+set "check_patterns_res=1"
 %_info% "Checking patterns '%pattern_list%' in folder '%folder%'"
 
 REM Check if pattern contains multiple patterns separated by /
@@ -400,21 +415,26 @@ echo %pattern_list% | findstr /C:"/" >nul
 if errorlevel 1 (
     REM No / separator found, use the original check_folder
     call:check_folder "%folder%" "%pattern_list%"
-    exit /b %ERRORLEVEL%
+    set "check_patterns_res=!check_folder_res!"
+    exit /b !check_folder_res!
+    goto:eof
 )
 
 REM Process each pattern separated by /
 for /F "tokens=1* delims=/" %%a in ("%pattern_list%") do (
     %_info% "Trying pattern '%%a' in '%folder%'"
     call:check_folder "%folder%" "%%a"
-    if not errorlevel 1 (
+    if "!check_folder_res!"=="0" (
+        set "check_patterns_res=!check_folder_res!"
         exit /b 0
+        goto:eof
     )
     
     if not "%%b"=="" (
         REM More patterns to check
         call:check_patterns "%folder%" "%%b"
-        exit /b %ERRORLEVEL%
+        exit /b !check_patterns_res!
+        goto:eof
     )
 )
 
