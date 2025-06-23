@@ -112,7 +112,7 @@ if defined profile_filename (
     for /f %%a in (%profile_filename%) do ( set profile_name=%%a)
     %_info% "profile name found: '!profile_name!'"
 )
-if not defined profile_name ( goto:proceed)
+if not defined profile_name ( goto:_proceed)
 set "s=setupsdir_%profile_name%.bat"
 set "custom_dir=%PRGS%\senv\custom"
 if not exist "%custom_dir%\%s%" (
@@ -123,7 +123,7 @@ if errorlevel 1 (
     %_fatal% "Unable to call '%custom_dir%\%s%'" 111)
 )
 
-:proceed
+:_proceed
 set "ECHOS_OFF="
 (
 echo - dl_dir          ='%dl_dir%'
@@ -142,31 +142,31 @@ set "sfound_most_recent="
 set "sfound_most_recent_folder="
 set "sfound_most_recent_name="
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:count )
+if not errorlevel 1 ( goto:_count )
 set "sfound=Downloads"
 set "sfound_path=%dl_dir%"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:count )
+if not errorlevel 1 ( goto:_count )
 set "sfound=remote setup"
 set "sfound_path=%setupsdir%"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:count )
-if not exist "%USERPROFILE%\senv_setups\setups" (goto:not_found)
+if not errorlevel 1 ( goto:_count )
+if not exist "%USERPROFILE%\senv_setups\setups" (goto:_not_found)
 set "sfound=user setup"
 set "sfound_path=%USERPROFILE%\senv_setups\setups"
 call:check_patterns "%sfound_path%" "%prg_pattern%"
-if not errorlevel 1 ( goto:count )
-:not_found
+if not errorlevel 1 ( goto:_count )
+:_not_found
 if defined sfound_most_recent (
     %_info% "sfound_most_recent='%sfound_most_recent%' in '%sfound_most_recent_folder%'"
     set "sfound_path=%sfound_most_recent_folder%"
     set "sfound=%sfound_most_recent_name%"
     %_info% "One latest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
-    goto:proceed_install
+    goto:_proceed_install
 )
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
 
-:count
+:_count
 rem https://stackoverflow.com/questions/42000037/how-to-count-the-occurrence-of-a-variable-in-log-file-matching-a-pattern-regex-i
 set COUNT=0
 for /F "tokens=*" %%N in (a) do set /a COUNT+=1
@@ -178,7 +178,7 @@ if not "%count%"=="1" (
 for /F "delims=" %%f in (a) do ( set fname=%%f)
 %_info% "One match found in '%sfound%': '%fname%'"
 del a
-:proceed_install
+:_proceed_install
 if not "%sfound%"=="setup" (
     %_task% "Must move match '%fname%' from '%sfound%' to local setup"
     rem call:rbc dst src
@@ -216,13 +216,13 @@ for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
-    goto:check_symlink
+    goto:_check_symlink
 )
 
 if exist "%install_dir%\%prgs_folder%.install.bat" (
     %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
     call "%install_dir%\%prgs_folder%.install.bat"
-    goto:check_symlink
+    goto:_check_symlink
 ) else (
     %_ok% "No custom install in '%install_dir%' for '%prgs_folder%'"
 )
@@ -230,7 +230,7 @@ if exist "%install_dir%\%prgs_folder%.install.bat" (
 if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
     %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%'"
     call "%PRGS%\senv\installs\%prgs_folder%.install.bat"
-    goto:check_symlink
+    goto:_check_symlink
 ) else (
     %_ok% "No custom install in '%PRGS%\senv\installs' for '%prgs_folder%'"
 )
@@ -254,10 +254,10 @@ if errorlevel 1 (
 if exist "%install_dir%\%prgs_folder%.post.bat" (
     %_task% "Must use post-install in '%install_dir%' for '%prgs_folder%'"
     call "%install_dir%\%prgs_folder%.post.bat"
-    goto:check_symlink
+    goto:_check_symlink
 )
 
-:check_symlink
+:_check_symlink
 %_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
 call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
 
