@@ -308,6 +308,13 @@ if not "%fname:apache-maven-=%"=="%fname%" (
     set "sln=!sln:-bin.zip=!"
     goto:eof
 )
+if not "%fname:wildfly-=%"=="%fname%" (
+    set "sln=%fname:wildfly-=%"
+    for /f "tokens=1 delims=." %%a in ("!sln!") do (
+        set "sln=wildfly%%a"
+    )
+    goto:eof
+)
 set "sln="
 goto:eof
 
