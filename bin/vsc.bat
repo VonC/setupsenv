@@ -63,7 +63,7 @@ if exist "%cd%\tools\init.bat" (
 %_info% "workspace_file: '%workspace_file%'"
 if exist "%workspace_file%" (
   %_task% "Must open workspace file: '%workspace_file%'"
-  "%PRGS%\vscodes\current\bin\code.cmd" -- "%workspace_file%"
+  call "%PRGS%\vscodes\current\bin\code.cmd" -- "%workspace_file%"
   if errorlevel 1 (
     call:unset
     %_fatal% "error opening workspace file: '%workspace_file%'" 2
