@@ -80,7 +80,7 @@ if defined standalone_call (
 )
 set "standalone_call="
 set "workspace_file="
-set "current_folder=
+set "current_folder="
 goto:eof
 
 :call_echos_stack
