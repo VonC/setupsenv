@@ -18,6 +18,8 @@
 @REM *   gsh doc     - Analyze documentation changes only
 @REM *   gsh docs    - Analyze documentation changes only
 @REM *   gsh rel     - Analyze changes for release notes
+@REM *   gsh context - Provide additional context for the AI analysis
+@REM *                 Can be combined with any mode: gsh context doc
 @REM *   gsh prompt  - Just dump the prompt (for debugging)
 @REM *                 Can be combined with doc or rel: gsh doc prompt
 @REM *   gsh dump    - Synonym for 'prompt', dumps the prompt to clipboard
@@ -35,6 +37,14 @@ for %%i in ("%PRGS%\setup") do (
 )
 
 set "rel="
+set "context_mode="
+
+@REM Check for context mode
+if /i "%~1"=="context" (
+  set "context_mode=true"
+  shift
+)
+
 if "%~1"=="rel" (
   set "rel=true"
   goto:skip_index_check
@@ -142,6 +152,7 @@ if %ERRORLEVEL% == 1 (
 %_ok% "Committed changes message edited"
 del tmp.txt 2>NUL
 del tmp.lg 2>NUL
+del tmp.context 2>NUL
 goto:eof
 
 @REM -----------------------------------------------------------------------------
@@ -186,10 +197,49 @@ if not defined rel (
   )
 )
 echo ``` >> tmp.txt
+
+@REM Handle additional context if context mode is enabled
+if defined context_mode (
+  call:create_context_file
+  if exist tmp.context (
+    echo. >> tmp.txt
+    type tmp.context >> tmp.txt
+    %_ok% "Additional context appended to analysis"
+  )
+)
+
 call:list_languages
 sed -i "s/,languages,/%languages%/g" tmp.txt >nul 2>&1
 if errorlevel 1 (
   %_fatal% "Failed to replace languages in tmp.txt" 23
+)
+goto:eof
+
+@REM -----------------------------------------------------------------------------
+@REM Function: create_context_file
+@REM
+@REM Creates a temporary file for the user to add additional context information
+@REM for the AI analysis. The introduction text varies based on the current mode.
+@REM
+@REM Parameters: None
+@REM Returns: None (creates tmp.context file)
+@REM -----------------------------------------------------------------------------
+:create_context_file
+del tmp.context 2>NUL
+
+@REM Create appropriate introduction based on current role
+if "%role%"=="commit_diff" (
+  echo To help in your analysis of code changes, consider also the following context:> tmp.context
+) else if "%role%"=="commit_documentation" (
+  echo To help in your analysis of documentation changes, consider also the following context:> tmp.context
+) else if "%role%"=="analyze_release" (
+  echo To help in your analysis for release notes, consider also the following context:> tmp.context
+)
+
+%_info% "Please add your context in the opening editor and save+close when done."
+%EDITOR% tmp.context
+if not exist tmp.context (
+  %_warning% "Context file was not saved, continuing without additional context"
 )
 goto:eof
 
@@ -271,6 +321,7 @@ powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'N
 echo Prompt and Git diff --cached copied to the clipboard.
 del tmp.txt 2>NUL
 del tmp.lg 2>NUL
+del tmp.context 2>NUL
 goto:eof
 
 @REM -----------------------------------------------------------------------------
