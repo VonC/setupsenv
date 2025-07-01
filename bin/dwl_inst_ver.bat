@@ -20,7 +20,7 @@ if "%prg_version%"=="" (
     set "usage=1"
 )
 if defined usage (
-    :: Example: switchver pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
+    rem Example: switchver pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
     %_fatal% "Usage: dwl_inst_ver prg_name prg_version" 2
 )
 set "usage="
