@@ -114,8 +114,20 @@ if %count% equ 1 (
     goto:selected
 )
 
-if %count% equ 0 (
-    %_fatal% "No prg_version '%prg_version%' version found in '%PRGS_ROOT%'" 3
+if not defined SWITCHVER_DWL_INST (
+    %_post% "SWITCHVER_DWL_INST not defined: no download/installation attempted"
+    %_warning% "No prg_version '%prg_version%' version found in '%PRGS_ROOT%'" 3
+) else (
+    %_post% "SWITCHVER_DWL_INST defined"
+    %_error% "No prg_version '%prg_version%' version found in '%PRGS_ROOT%'"
+    call "%script_dir%\dwl_inst_ver.bat" %prg_name% %prg_version%
+    if errorlevel 1 (
+        %_error% "Unable to download prg_name '%prg_name%' at prg_version '%prg_version%'"
+    ) else (
+        %_ok% "switchver can proceed"
+        set "SELECTED_VERSION=%prg_prefix%%prg_version%"
+        goto:selected
+    )
 )
 
 rem %_info% "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
