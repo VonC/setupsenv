@@ -127,6 +127,9 @@ if not defined prg_version (
     if not "!prg_version_item!"=="%%a" (
       if "%prg_version%"=="LTS" ( set "prg_version_found=true" && set "lts_version=!prg_version_item!" )
     )
+    if "%prg_version%"=="!prg_version_item!" (
+      set "prg_version_found=true"
+    )
     rem echo '%%a' for prg_version='%prg_version%', prg_version_found='!prg_version_found!', lts_version='!lts_version!'
     set "latest_version=%%a"
   )
