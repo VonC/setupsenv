@@ -321,7 +321,9 @@ if errorlevel 1 (
 %_ok% "Latest jdk version '%jdk_version%' means initially: '%version%'"
 set "version=%version:*hotspot_=%"
 set "version=%version:.zip=%"
-set "version=%version:~0,-2%"
+if not "%version:~0,-2%"=="" (
+  set "version=%version:~0,-2%"
+)
 set "replacement=+"
 set "dVersion=!version:_=%replacement%!"
 %_ok% "Latest jdk version '%jdk_version%' means: '%version%', dVersion: '!dVersion!'"
