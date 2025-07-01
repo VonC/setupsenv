@@ -41,6 +41,19 @@ if defined usage (
 set "usage="
 set "PRGS_ROOT=%PRGS%\%prgs_name%"
 
+if not exist "%PRGS_ROOT%" (
+    mkdir "%PRGS_ROOT%"
+    if errorlevel 1 (
+        %_fatal% "Unable to create PRGS_ROOT directory '%PRGS_ROOT%'" 1
+    )
+    %_ok% "Created PRGS_ROOT directory '%PRGS_ROOT%'"
+)
+pushd "%PRGS_ROOT%"
+if errorlevel 1 (
+    %_fatal% "Unable to change to PRGS_ROOT directory '%PRGS_ROOT%'" 1
+)
+
+
 :: Extract the first letter
 set "first_letter=%prgs_name:~0,1%"
 :: Convert the first letter to uppercase
@@ -56,6 +69,7 @@ rem %_fatal% "prgs_name='%prgs_name%' vs. prg_name=%prg_name%'" 1
 pushd %PRGS_ROOT%
 if errorlevel 1 %_fatal% "unable to cd to PRGS_ROOT '%PRGS_ROOT%'" 1
 %_info% "Switch Ver from PRGS_ROOT '%PRGS_ROOT%'"
+rem set ECHO_STATE=ON
 rem @echo on
 rem Initialize counter
 set count=0
