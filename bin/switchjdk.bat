@@ -7,70 +7,24 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
-:: Find JDKxx folders
-set JAVA_ROOT=%PRGS%\javas
-pushd "%JAVA_ROOT%"
-if errorlevel 1 (
-    %_fatal% "Unable to change to JAVA_ROOT directory '%JAVA_ROOT%'" 1
-)
-
-if not "%1" == "" (
-    echo %1| findstr /r "^[0-9][0-9]*$" >nul
+set "usage="
+set "JDK_VERSION=%~1"
+if defined JDK_VERSION (
+    echo %1| findstr /r "^[0-9]*$" >nul
     if errorlevel 1 (
-        %_fatal% "First argument '%1' must be a jdk version, like 8 or 17" 2
+        %_error% "First argument JDK_VERSION '%JDK_VERSION%' must be x, like 8 or 11 or 17 as version of JDK" 2
+        set "usage=1"
     )
 )
-
-rem Initialize counter
-set count=0
-set SELECTED_VERSION=
-set JAVA_VERSIONS=
-for /d %%f in (jdk*) do (
-    set "dirname=%%~nxf"
-    rem %_info% "dirname='!dirname!'"
-    echo !dirname!| findstr /r "^jdk[0-9][0-9]*$" >nul
-    if not errorlevel 1 (
-        set "JAVA_VERSIONS=!JAVA_VERSIONS! %%f"
-        set /a count+=1
-        if "%%f" == "jdk%1" (
-            set "SELECTED_VERSION=%%f"
-        )
-    )
+if defined usage (
+    %_fatal% "Usage: switchjdk [15 or 17 for JDK version] -- no version to chose amongst installed ones." 2
 )
-popd
+set "usage="
 
-if "%SELECTED_VERSION%" == "" (
-    if not "%1" == "" (
-        %_warning% "Your Java version argument '%1' was NOT found in JAVA_ROOT '%JAVA_ROOT%'"
-    )
-)
 
-:: if count == 1, set SELECTED_VERSION to JAVA_VERSIONS, and trim any space
-if %count% equ 1 (
-    %_info% "Only one Java version found: '%JAVA_VERSIONS: =%'"
-    for %%v in (%JAVA_VERSIONS%) do (
-        set "SELECTED_VERSION=%%~v"
-    )
-    goto:selected
-)
-
-if %count% equ 0 (
-    %_fatal% "No Java version found in '%JAVA_ROOT%'" 3
-)
-
-rem %_info% "JAVA_VERSIONS='%JAVA_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
-if "%SELECTED_VERSION%" == "" (
-    %_task% "Select Java version amongst '%count%' available"
-    :: Use gum for selection
-    set "gum=%PRGS%\gums\current\gum.exe"
-    for /f "tokens=*" %%a in ('!gum! choose %JAVA_VERSIONS%') do set SELECTED_VERSION=%%a
-)
-
-:selected
-
-if "%SELECTED_VERSION%" == "" (
-    %_fatal% "No Java version selected for JAVA_ROOT '%JAVA_ROOT%'" 3
-)
+set "switchver_todelete=java"
+call "%script_dir%\switchver.bat" javas jdk "jdk[0-9]*$" "bin\java.exe" "%JDK_VERSION%"
+set "switchver_todelete="
 %_ok% "Java version chosen: '%SELECTED_VERSION%'"
 
 set "must_switchjdk="
