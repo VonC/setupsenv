@@ -210,8 +210,10 @@ if errorlevel 1 (
 if "%setupsdirsenv%"=="" (
     %_fatal% "setupsdirsenv empty. Check '%custom_dir%\setupsdir_%profile%.bat'" && exit /b 1)
 )
-echo call remote_setup.bat %profile%>"%setupsdirsenv%\s.bat"
-rem echo call %setupsdirsenv%\remote_setup.bat %profile%>%setupsdir%\s.bat
+sed "s/_profile_/%profile%/g" "%script_dir%\call_remote_setup.bat" > "%setupsdirsenv%\s.bat"
+if errorlevel 1 (
+    %_fatal% "Unable to copy 'call_remote_setups.bat' from '%script_dir%' to '%setupsdirsenv%' as 's.bat'" && exit /b 1)
+)
 if exist "%builds_dir%\build.post.bat" ( call "%builds_dir%\build.post.bat" )
 goto:eof
 
