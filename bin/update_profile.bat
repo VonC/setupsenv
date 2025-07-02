@@ -38,19 +38,30 @@ pushd "%profileFolder%" || (
     %_fatal% "Unable to access profile setups at '%profileFolder%'" 112
     goto:eof
 )
+%_ok% "Successfully accessed profile setups at '%profileFolder%'"
 
+set "s_args=gits"
 REM Compute arguments for s.bat
-if "%1"=="all" if "%2"=="" (
+if "%~1"=="all" (
     REM Special case: one argument that is "all"
     set "s_args="
     %_info% "'all': Will call s.bat without arguments"
 ) else (
-    REM Normal case: pass all arguments
-    set "s_args=%*"
-    %_info% "Will call s.bat with arguments: '%s_args%'"
+    if "%~1"=="" (
+        REM No arguments: install gits only
+        set "s_args=gits"
+        %_info% "Will call s.bat with gits only, update HOME and install HOME/bin utilities"
+    ) else (
+        REM Normal case: pass all arguments
+        set "s_args=%*"
+        %_info% "Will call s.bat with arguments: '%s_args%'"
+    )
 )
+rem popd
+rem %_fatal% "s_args='%s_args%' stop for now" 98
 
 REM Call s.bat once with computed arguments
+%_task% "Executing remote profile setups upgrade at '%profileFolder%' with arguments '%s_args%'"
 call s.bat %s_args%
 if errorlevel 1 (
     %_error% "Failed to execute profile setups at '%profileFolder%'"
