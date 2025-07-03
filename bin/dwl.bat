@@ -908,6 +908,17 @@ set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 call :curl
 goto:eof
 
+:dwl_tailwindcss
+set "repo=tailwindlabs/tailwindcss"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.11/tailwindcss-windows-x64.exe
+set "file=tailwindcss-windows-x64.exe"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+set "target_local_file=tailwindcss-%version%-windows-x64.exe"
+call :curl
+goto:eof
+
 
 :version_compare
 rem Compare versions numerically
