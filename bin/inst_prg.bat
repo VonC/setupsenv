@@ -114,6 +114,7 @@ for /f %%a in (%profile_filename%) do ( set "profile_name=%%a" )
 
 :check_profile_name
 if not defined profile_name ( goto:_proceed)
+echo calling 'setupsdir_%profile_name%.bat'
 set "s=setupsdir_%profile_name%.bat"
 set "custom_dir=%PRGS%\senv\custom"
 if not exist "%custom_dir%\%s%" (
@@ -217,23 +218,7 @@ for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
-    goto:_check_post_install
-)
-
-if exist "%install_dir%\%prgs_folder%.install.bat" (
-    %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
-    call "%install_dir%\%prgs_folder%.install.bat"
-    goto:_check_symlink
-) else (
-    %_ok% "No custom install in '%install_dir%' for '%prgs_folder%'"
-)
-
-if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
-    %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%'"
-    call "%PRGS%\senv\installs\%prgs_folder%.install.bat"
-    goto:_check_symlink
-) else (
-    %_ok% "No custom install in '%PRGS%\senv\installs' for '%prgs_folder%'"
+    rem goto:_check_post_install
 )
 
 set pz=%PRGS%\peazips\current
@@ -243,6 +228,23 @@ if errorlevel 1 %_fatal% "Unable to access '%PRGS%\%prgs_folder%'" 8
 if not exist "%fname%" (
     call:rbc "%PRGS%\%prgs_folder%"
 )
+
+if exist "%install_dir%\%prgs_folder%.install.bat" (
+    %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
+    call "%install_dir%\%prgs_folder%.install.bat"
+    goto:_check_symlink
+) else (
+    %_ok% "No custom install '%prgs_folder%.install.bat' in '%install_dir%' for '%prgs_folder%'"
+)
+
+if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
+    %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%'"
+    call "%PRGS%\senv\installs\%prgs_folder%.install.bat"
+    goto:_check_symlink
+) else (
+    %_ok% "No custom install '%prgs_folder%.install.bat' in '%PRGS%\senv\installs' for '%prgs_folder%'"
+)
+
 %_task% "Must uncompress with 7z '%PRGS%\setup\%fname%' to '%PRGS%\%prgs_folder%'"
 call "%HOME%\bin\pzxx.bat" "%PRGS%\%prgs_folder%\%fname%"
 if errorlevel 1 (
