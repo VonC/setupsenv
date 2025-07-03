@@ -43,3 +43,4 @@ Artifactory/arti~#~artifactorys~jfrog-artifactory-oss-*-windows.zip
 Nexus/nx/nex~#~nexuss~nexus-*-java*-win64.zip
 Moar/more~#~moars~moar-*-windows-amd64.exe
 Riff/diff~#~riffs~riff-*-x86_64-windows.exe
+msys/msys2~#~msys2s~msys2-base-x86_64-*.tar.xz

@@ -125,7 +125,7 @@ if errorlevel 1 (
 set "url=https://api.github.com/repos/%repo%/releases/latest"
 set "version="
 set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/%repo%/releases/latest"
-rem echo.%cmd%
+echo.%cmd%
 for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
 if errorlevel 1 (
     %_fatal% "Cannot get latest version from github for repo '%repo%' with cmd '%cmd%'" 1
@@ -134,7 +134,36 @@ rem echo.Latest version URL='%gu%'
 for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
 set "tag=%version%"
 set "version=%version:v=%"
-%_ok% "version '%version%' is latest for repo '%repo%'"
+
+rem Check if version starts with "nightly"
+if not "%version:~0,7%"=="nightly" ( goto:version_found )
+%_warn% "Version '%version%' is a nightly build. This may not be what you want."
+%_task% "Must query more recent release to get a proper version."
+set "cmd=curl -kLs https://api.github.com/repos/%repo%/releases?per_page=1 ^^| grep releases/tag"
+echo.!cmd!
+for /f "tokens=* delims=" %%a in ('!cmd!') do (
+  set "tag_line=%%a"
+  goto:break_tag_line
+)
+:break_tag_line
+
+rem Extract tag from the result
+for /f "tokens=7 delims=/" %%a in ("!tag_line!") do (
+    set "tag=%%a"
+    rem Remove trailing quote if present
+    set "tag=!tag:"=!"
+    set "tag=!tag:,=!"
+)
+
+set "version=!tag:v=!"
+%_ok% "Found stable version: '!version!' from tag '!tag!'"
+
+if "%version%"=="" (
+    %_fatal% "Unable to get latest version from repo '%repo%'" 1
+)
+
+:version_found
+%_ok% "version '%version%' is latest for repo '%repo%', tag '%tag%'"
 set "url="
 goto:eof
 
@@ -865,6 +894,16 @@ if "%version%"=="latest" ( call :get_latest_version_from_github )
 %_info% "Dwl (%prgname%)'%repo%' version '%version%'"
 rem https://github.com/walles/riff/releases/download/3.3.10/riff-3.3.10-x86_64-windows.exe
 set "file=riff-%version%-x86_64-windows.exe"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_msys2
+set "repo=msys2/msys2-installer"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/msys2/msys2-installer/releases/download/2024-01-13/msys2-base-x86_64-20240113.tar.xz
+set "file=msys2-base-x86_64-%version:-=%.tar.xz"
 set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 call :curl
 goto:eof

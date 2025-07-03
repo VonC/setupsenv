@@ -108,10 +108,11 @@ if not defined profile_filename (
 )
 
 set "profile_name="
-if defined profile_filename (
-    for /f %%a in (%profile_filename%) do ( set profile_name=%%a)
-    %_info% "profile name found: '!profile_name!'"
-)
+if not defined profile_filename ( goto:check_profile_name )
+for /f %%a in (%profile_filename%) do ( set "profile_name=%%a" )
+%_info% "profile name found: '%profile_name%'"
+
+:check_profile_name
 if not defined profile_name ( goto:_proceed)
 set "s=setupsdir_%profile_name%.bat"
 set "custom_dir=%PRGS%\senv\custom"
@@ -216,7 +217,7 @@ for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
-    goto:_check_symlink
+    goto:_check_post_install
 )
 
 if exist "%install_dir%\%prgs_folder%.install.bat" (
@@ -251,6 +252,37 @@ if errorlevel 1 (
 )
 %_ok% "'%fname%' uncompressed (7z) to '%PRGS%\%prgs_folder%\%prgs_folder%'"
 
+rem Check if we're dealing with a .tar.xz file that needs additional extraction
+if not "%fname:~-7%"==".tar.xz" goto:_skip_tar_extraction
+
+set "tar_folder=%fname:.tar.xz=.tar%"
+if exist "%PRGS%\%prgs_folder%\%tar_folder%" (
+    %_task% "Found .tar.xz file, must extract the .tar file in '%tar_folder%' folder"
+    pushd "%PRGS%\%prgs_folder%\%tar_folder%"
+    
+    rem Find the .tar file in the folder
+    for /f "delims=" %%t in ('dir /b *.tar 2^>nul') do (
+        %_task% "Extracting %%t in the current directory"
+        call "%HOME%\bin\pzxx.bat" "%%t"
+        if errorlevel 1 (
+            popd
+            %_fatal% "Error on 7z uncompression of '%%t' in '%PRGS%\%prgs_folder%\%tar_folder%'" 1
+        )
+        %_ok% "Successfully extracted the tar file '%%t'"
+        %_task% "Removing the tar file '%%t' after extraction"
+        del "%%t"
+        if errorlevel 1 (
+            popd
+            %_fatal% "Unable to delete '%%t' in '%PRGS%\%prgs_folder%\%tar_folder%'" 1
+        )
+        %_ok% "Tar file '%%t' removed after extraction"
+    )
+    popd
+)
+
+:_skip_tar_extraction
+
+:_check_post_install
 if exist "%install_dir%\%prgs_folder%.post.bat" (
     %_task% "Must use post-install in '%install_dir%' for '%prgs_folder%'"
     call "%install_dir%\%prgs_folder%.post.bat"
