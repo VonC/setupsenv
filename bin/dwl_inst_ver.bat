@@ -16,12 +16,12 @@ if "%prg_name%"=="" (
 )
 set "prg_version=%~2"
 if "%prg_version%"=="" (
-    %_error% "switchver second param prg_version (ex: '3.9.9' or '3.6.0' or '22') is MISSING"
-    set "usage=1"
+    set "prg_version=latest"
 )
+
 if defined usage (
-    rem Example: switchver pythons python "python[2-9]\.[0-9]*\.[0-9]*$" python
-    %_fatal% "Usage: dwl_inst_ver prg_name prg_version" 2
+    rem Example: dwl_inst_ver python [1.13.1]
+    %_fatal% "Usage: dwl_inst_ver python [1.13.1]" 2
 )
 set "usage="
 
