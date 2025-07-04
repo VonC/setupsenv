@@ -66,7 +66,7 @@ if exist "%PRGS%\npps\settings" (
 )
 
 if exist "%PRGS%\gos\current" (
-   set CGO_ENABLED=1
+   set CGO_ENABLED=
    set "GOOGLE_API_KEY="
    set GO111MODULE=on
    set "GOROOT=%PRGS%\gos\current"
