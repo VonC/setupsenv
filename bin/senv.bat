@@ -57,6 +57,9 @@ set "EDITOR=%PRGS%\vscodes\current\bin\code.cmd"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
 doskey npp="%PRGS%\npps\current\notepad++.exe" $*
 
+set "DL=%USERPROFILE%\Downloads"
+set "DWL=%USERPROFILE%\Downloads"
+
 if exist "%PRGS%\npps\settings" (
    set "EDITOR="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" -multiInst -notabbar -nosession -noPlugin"
    doskey npp="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" $*
