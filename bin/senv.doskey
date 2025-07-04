@@ -65,6 +65,7 @@ pe=%PRGS%\sysinternalsSuites\current\procexp64.exe $*
 zi=%PRGS%\sysinternalsSuites\current\ZoomIt64.exe $*
 
 dl=dwl.bat $*
+div=dwl_inst_ver.bat $*
 download=dwl.bat $*
 install=inst_prg $*
 inst=inst_prg $*
