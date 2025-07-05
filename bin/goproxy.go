@@ -70,7 +70,8 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 	defer tmpFile.Close()
 
 	// Build the curl command arguments with browser headers.
-	args := []string{"-s", "-L", "-w", "%{http_code}", "-o", tmpFile.Name()}
+	// Add -v to get verbose output on stderr for debugging.
+	args := []string{"-s", "-L", "-v", "-w", "%{http_code}", "-o", tmpFile.Name()}
 	for _, h := range commonBrowserHeaders {
 		args = append(args, "-H", h)
 	}
@@ -100,19 +101,24 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 
 	log.Printf("curl (text) finished with status code: %d", statusCode)
 
-	// Write the status code header.
-	w.WriteHeader(statusCode)
+	// If the download failed, forward the error status code.
+	if statusCode != http.StatusOK {
+		// Log verbose output on 403 Forbidden
+		if statusCode == http.StatusForbidden {
+			log.Printf("==== CURL VERBOSE OUTPUT ON 403 FORBIDDEN (TEXT) ====\n%s\n============================================", stderrBuf.String())
+		}
+		w.WriteHeader(statusCode)
+		return
+	}
 
 	// If the status is OK, stream the body from the temp file.
-	if statusCode == http.StatusOK {
-		if _, err := tmpFile.Seek(0, 0); err != nil {
-			log.Printf("Failed to seek temp file: %v", err)
-			http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
-			return
-		}
-		if _, err := io.Copy(w, tmpFile); err != nil {
-			log.Printf("Error copying text response body from curl: %v", err)
-		}
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		log.Printf("Failed to seek temp file: %v", err)
+		http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
+		return
+	}
+	if _, err := io.Copy(w, tmpFile); err != nil {
+		log.Printf("Error copying text response body from curl: %v", err)
 	}
 }
 
@@ -129,7 +135,8 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 	defer tmpFile.Close()
 
 	// Build the curl command arguments with browser headers.
-	args := []string{"-s", "-L", "-w", "%{http_code}", "-o", tmpFile.Name()}
+	// Add -v to get verbose output on stderr for debugging.
+	args := []string{"-s", "-L", "-v", "-w", "%{http_code}", "-o", tmpFile.Name()}
 	for _, h := range commonBrowserHeaders {
 		args = append(args, "-H", h)
 	}
@@ -160,6 +167,10 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 
 	// If the download failed, forward the error status code.
 	if statusCode != http.StatusOK {
+		// Log verbose output on 403 Forbidden
+		if statusCode == http.StatusForbidden {
+			log.Printf("==== CURL VERBOSE OUTPUT ON 403 FORBIDDEN (ZIP) ====\n%s\n============================================", stderrBuf.String())
+		}
 		w.WriteHeader(statusCode)
 		return
 	}
