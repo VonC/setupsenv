@@ -1,14 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"bytes"
 	"fmt"
 	"io"
 	"log"
 	"net/http"
-	"net/textproto"
 	"net/url"
+	"os"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -30,83 +29,129 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	targetURL.Path = r.URL.Path
 	targetURL.RawQuery = r.URL.RawQuery
+	fullTargetURL := targetURL.String()
 
-	log.Printf("Proxying request via curl: %s\n", targetURL.String())
+	log.Printf("Proxying request via curl: %s\n", fullTargetURL)
 
-	// --- REVISED APPROACH: Execute curl.exe with -i to include headers ---
-	// We use `curl` which is known to work in your environment.
-	// -s: Silent mode (no progress meter).
-	// -L: Follow redirects.
-	// -i: Include protocol response headers in the output. This is more reliable
-	//     than trying to capture the status code from stderr.
-	cmd := exec.Command("curl.exe", "-s", "-L", "-i", targetURL.String())
+	// --- FINAL APPROACH: Handle .zip files and text files separately to prevent corruption ---
+	if strings.HasSuffix(fullTargetURL, ".zip") {
+		handleBinaryDownload(w, fullTargetURL, "application/zip")
+	} else {
+		// Handles .info, .mod, and list responses
+		handleTextDownload(w, fullTargetURL)
+	}
+}
 
+// handleTextDownload handles fetching text-based content like .mod, .info, or version lists.
+// It saves the body to a temp file to cleanly separate it from the status code.
+func handleTextDownload(w http.ResponseWriter, url string) {
+	// Create a temporary file to store the downloaded content.
+	tmpFile, err := os.CreateTemp("", "goproxy-*.txt")
+	if err != nil {
+		log.Printf("Failed to create temporary file: %v", err)
+		http.Error(w, "Failed to create temporary file", http.StatusInternalServerError)
+		return
+	}
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	// Use curl to download the body to the temp file and write the status code to stdout.
+	cmd := exec.Command("curl.exe", "-s", "-L", "-w", "%{http_code}", "-o", tmpFile.Name(), url)
 	var stdoutBuf, stderrBuf bytes.Buffer
 	cmd.Stdout = &stdoutBuf
 	cmd.Stderr = &stderrBuf
 
-	// Run the curl command.
-	err = cmd.Run()
-	if err != nil {
-		// This indicates an error launching or running curl itself.
-		log.Printf("Failed to execute curl command: %v", err)
-		log.Printf("Stderr from curl: %s", stderrBuf.String())
+	if err := cmd.Run(); err != nil {
+		log.Printf("Failed to execute curl command: %v\nStderr: %s", err, stderrBuf.String())
 		http.Error(w, "Failed to execute curl", http.StatusInternalServerError)
 		return
 	}
 
-	// The output from curl now contains the full HTTP response (headers and body).
-	// We use standard library tools to parse it.
-	responseReader := bufio.NewReader(&stdoutBuf)
-	tp := textproto.NewReader(responseReader)
-
-	// Read the first line (the status line) e.g., "HTTP/1.1 200 OK"
-	statusLine, err := tp.ReadLine()
+	// The status code is now the only thing in stdout.
+	statusCodeStr := strings.TrimSpace(stdoutBuf.String())
+	statusCode, err := strconv.Atoi(statusCodeStr)
 	if err != nil {
-		log.Printf("Could not read status line from curl response: %v", err)
-		http.Error(w, "Could not read status line from curl", http.StatusBadGateway)
-		return
-	}
-
-	// Parse the status code from the status line.
-	parts := strings.SplitN(statusLine, " ", 3)
-	if len(parts) < 2 {
-		log.Printf("Could not parse status line from curl: '%s'", statusLine)
-		http.Error(w, "Could not parse status line from curl", http.StatusBadGateway)
-		return
-	}
-
-	statusCode, err := strconv.Atoi(parts[1])
-	if err != nil {
-		log.Printf("Could not parse status code from curl status line ('%s'): %v", parts[1], err)
+		log.Printf("Could not parse status code from curl stdout ('%s'): %v", statusCodeStr, err)
 		http.Error(w, "Could not parse status code from curl", http.StatusBadGateway)
 		return
 	}
 
-	log.Printf("curl finished with status code: %d", statusCode)
+	log.Printf("curl (text) finished with status code: %d", statusCode)
 
-	// Read the MIME headers from the curl response.
-	mimeHeader, err := tp.ReadMIMEHeader()
+	// Write the status code header.
+	w.WriteHeader(statusCode)
+
+	// If the status is OK, stream the body from the temp file.
+	if statusCode == http.StatusOK {
+		// Seek to the beginning of the file before copying.
+		if _, err := tmpFile.Seek(0, 0); err != nil {
+			log.Printf("Failed to seek temp file: %v", err)
+			http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
+			return
+		}
+		if _, err := io.Copy(w, tmpFile); err != nil {
+			log.Printf("Error copying text response body from curl: %v", err)
+		}
+	}
+}
+
+// handleBinaryDownload handles fetching binary .zip files by saving them to a temporary file first.
+func handleBinaryDownload(w http.ResponseWriter, url string, contentType string) {
+	// Create a temporary file to store the downloaded zip.
+	tmpFile, err := os.CreateTemp("", "goproxy-*.zip")
 	if err != nil {
-		log.Printf("Could not read headers from curl response: %v", err)
-		http.Error(w, "Could not read headers from curl", http.StatusBadGateway)
+		log.Printf("Failed to create temporary file: %v", err)
+		http.Error(w, "Failed to create temporary file", http.StatusInternalServerError)
+		return
+	}
+	// Ensure cleanup happens even if there's an error.
+	defer os.Remove(tmpFile.Name())
+	defer tmpFile.Close()
+
+	// Use curl to download the file directly to the temp file path.
+	// -o tells curl to write the output to the specified file.
+	cmd := exec.Command("curl.exe", "-s", "-L", "-o", tmpFile.Name(), url)
+	var stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
+
+	if err := cmd.Run(); err != nil {
+		log.Printf("Failed to execute curl command for zip: %v\nStderr: %s", err, stderrBuf.String())
+		http.Error(w, "Failed to execute curl for zip", http.StatusInternalServerError)
 		return
 	}
 
-	// Copy the parsed headers to our response writer.
-	for key, values := range mimeHeader {
-		for _, value := range values {
-			w.Header().Add(key, value)
-		}
+	// Get file info to set the Content-Length header, which is good practice.
+	fileInfo, err := tmpFile.Stat()
+	if err != nil {
+		log.Printf("Failed to get temp file stats: %v", err)
+		http.Error(w, "Failed to get temp file stats", http.StatusInternalServerError)
+		return
 	}
 
-	// Write the status code header. This must be done after setting all other headers.
-	w.WriteHeader(statusCode)
+	// If the file is empty, it's likely an error (e.g., 404), so return Bad Gateway.
+	if fileInfo.Size() == 0 {
+		log.Printf("Downloaded zip file is empty. URL was likely not found: %s", url)
+		http.Error(w, "Upstream proxy returned an empty file", http.StatusBadGateway)
+		return
+	}
 
-	// The rest of the buffer is the body. Stream it to the response writer.
-	_, err = io.Copy(w, responseReader)
-	if err != nil {
-		log.Printf("Error copying response body from curl: %v", err)
+	log.Printf("curl (zip) finished successfully for %s", url)
+
+	// Set headers for the zip file response.
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
+	w.WriteHeader(http.StatusOK)
+
+	// Seek to the beginning of the file before copying.
+	if _, err := tmpFile.Seek(0, 0); err != nil {
+		log.Printf("Failed to seek temp file: %v", err)
+		http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
+		return
+	}
+
+	// Stream the file from disk to the response writer.
+	if _, err := io.Copy(w, tmpFile); err != nil {
+		log.Printf("Error copying zip file response body: %v", err)
 	}
 }
 
