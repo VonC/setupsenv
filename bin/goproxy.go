@@ -9,16 +9,19 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"os/user"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
 
 // targetProxyURL is the base URL for the module proxy.
-// User confirmed https://proxy.golang.org is working.
 const targetProxyURL = "https://proxy.golang.org"
 
+// logFilePath stores the full path to the current log file.
+var logFilePath string
+
 // commonBrowserHeaders are sent with every curl request to bypass bot detection services like Cloudflare.
-// This is a more comprehensive set to better mimic a real browser.
 var commonBrowserHeaders = []string{
 	"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36",
 	"Accept-Language: en-US,en;q=0.9",
@@ -31,6 +34,95 @@ var commonBrowserHeaders = []string{
 	"Sec-Fetch-User: ?1",
 	"Upgrade-Insecure-Requests: 1",
 	"Connection: keep-alive",
+}
+
+// main is the entry point for the application.
+func main() {
+	// Set up logging to a file before doing anything else.
+	setupLogging()
+
+	// Start the HTTP server. This is a blocking call that will keep the program running.
+	startHttpServer()
+}
+
+// setupLogging configures the log output to go to a file with rotation.
+func setupLogging() {
+	usr, err := user.Current()
+	if err != nil {
+		log.Fatalf("Failed to get current user: %v", err)
+	}
+	logDir := filepath.Join(usr.HomeDir, "go")
+	logFilePath = filepath.Join(logDir, "goproxy.log")
+
+	// Ensure the log directory exists.
+	if err := os.MkdirAll(logDir, 0755); err != nil {
+		log.Fatalf("Failed to create log directory %s: %v", logDir, err)
+	}
+
+	// Rotate existing logs.
+	if _, err := os.Stat(logFilePath); err == nil {
+		// Keep up to 10 old logs.
+		for i := 9; i >= 0; i-- {
+			var oldPath, newPath string
+			if i == 0 {
+				oldPath = logFilePath
+			} else {
+				oldPath = fmt.Sprintf("%s.%d", logFilePath, i)
+			}
+			newPath = fmt.Sprintf("%s.%d", logFilePath, i+1)
+
+			if _, err := os.Stat(oldPath); err == nil {
+				if i == 9 { // Remove the oldest log
+					if err := os.Remove(newPath); err != nil && !os.IsNotExist(err) {
+						log.Printf("Warning: could not remove oldest log file %s: %v", newPath, err)
+					}
+				}
+				if err := os.Rename(oldPath, newPath); err != nil {
+					log.Printf("Warning: could not rotate log file from %s to %s: %v", oldPath, newPath, err)
+				}
+			}
+		}
+	}
+
+	// Create and set the new log file as the output for the log package.
+	logFile, err := os.OpenFile(logFilePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatalf("Failed to open log file %s: %v", logFilePath, err)
+	}
+	// Redirect all log output to this file.
+	log.SetOutput(logFile)
+	log.Println("Logging configured.")
+}
+
+// startHttpServer initializes and runs the main proxy server.
+func startHttpServer() {
+	listenAddr := "127.0.0.1:8888"
+	http.HandleFunc("/", proxyHandler)
+	log.Printf("Starting HTTP server on %s", listenAddr)
+
+	// Start the server with clearer instructions.
+	fmt.Printf("Starting curl-based Go proxy on %s\n", listenAddr)
+	fmt.Printf("Logging to: %s\n", logFilePath)
+	fmt.Printf("Forwarding module requests to: %s\n", targetProxyURL)
+	fmt.Printf("Forwarding checksum requests to: https://sum.golang.org\n\n")
+	fmt.Println("--- HOW TO USE ---")
+	fmt.Println("1. Make sure 'curl.exe' is in your system's PATH.")
+	fmt.Println("2. Keep this terminal open to see request logs in real-time, or check the log file.")
+	fmt.Println("3. Open a NEW terminal.")
+	fmt.Println("4. In the new terminal, set BOTH environment variables:")
+	fmt.Println("   On Windows:")
+	fmt.Println("   set GOPROXY=http://" + listenAddr)
+	fmt.Println("   set GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
+	fmt.Println("   On macOS/Linux:")
+	fmt.Println("   export GOPROXY=http://" + listenAddr)
+	fmt.Println("   export GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
+	fmt.Println("5. Run your 'go install' or 'go get' command as normal.")
+	fmt.Println("---")
+	fmt.Println("Press Ctrl+C to stop.")
+
+	if err := http.ListenAndServe(listenAddr, nil); err != nil {
+		log.Fatalf("Failed to start server: %v", err)
+	}
 }
 
 // proxyHandler is the core of our proxy. It now intelligently routes requests
@@ -223,36 +315,5 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 	// Stream the file from disk to the response writer.
 	if _, err := io.Copy(w, tmpFile); err != nil {
 		log.Printf("Error copying zip file response body: %v", err)
-	}
-}
-
-func main() {
-	// The address and port for our local proxy server to listen on.
-	listenAddr := "127.0.0.1:8888"
-
-	// Register our handler function for all incoming requests.
-	http.HandleFunc("/", proxyHandler)
-
-	// Start the server with clearer instructions.
-	fmt.Printf("Starting curl-based Go proxy on %s\n", listenAddr)
-	fmt.Printf("Forwarding module requests to: %s\n", targetProxyURL)
-	fmt.Printf("Forwarding checksum requests to: https://sum.golang.org\n\n")
-	fmt.Println("--- HOW TO USE ---")
-	fmt.Println("1. Make sure 'curl.exe' is in your system's PATH.")
-	fmt.Println("2. Keep this terminal open to see request logs.")
-	fmt.Println("3. Open a NEW terminal.")
-	fmt.Println("4. In the new terminal, set BOTH environment variables:")
-	fmt.Println("   On Windows:")
-	fmt.Println("   set GOPROXY=http://" + listenAddr)
-	fmt.Println("   set GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
-	fmt.Println("   On macOS/Linux:")
-	fmt.Println("   export GOPROXY=http://" + listenAddr)
-	fmt.Println("   export GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
-	fmt.Println("5. Run your 'go install' or 'go get' command as normal.")
-	fmt.Println("---")
-
-	err := http.ListenAndServe(listenAddr, nil)
-	if err != nil {
-		log.Fatalf("Failed to start server: %v", err)
 	}
 }
