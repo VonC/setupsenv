@@ -14,7 +14,8 @@ import (
 )
 
 // targetProxyURL is the base URL of the actual Go module proxy we want to use.
-const targetProxyURL = "https://goproxy.io"
+// const targetProxyURL = "https://goproxy.io"
+const targetProxyURL = "https://proxy.golang.org"
 
 // commonBrowserHeaders are sent with every curl request to bypass bot detection services like Cloudflare.
 // This is a more comprehensive set to better mimic a real browser.
@@ -29,6 +30,7 @@ var commonBrowserHeaders = []string{
 	"Sec-Fetch-Site: none",
 	"Sec-Fetch-User: ?1",
 	"Upgrade-Insecure-Requests: 1",
+	"Connection: keep-alive",
 }
 
 // proxyHandler is the core of our proxy. It takes an incoming request,
@@ -76,7 +78,7 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 		args = append(args, "-H", h)
 	}
 	// Add a specific Accept header for text/html content.
-	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng;q=0.8,application/signed-exchange;v=b3;q=0.9")
 	args = append(args, url)
 
 	cmd := exec.Command("curl.exe", args...)
@@ -140,8 +142,8 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 	for _, h := range commonBrowserHeaders {
 		args = append(args, "-H", h)
 	}
-	// Add a comprehensive Accept header to mimic a browser for binary files as well.
-	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
+	// Add a specific Accept header that removes the generic */* and adds application/zip.
+	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,application/zip,application/signed-exchange;v=b3;q=0.9")
 	args = append(args, url)
 
 	cmd := exec.Command("curl.exe", args...)
