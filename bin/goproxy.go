@@ -13,8 +13,8 @@ import (
 	"strings"
 )
 
-// targetProxyURL is the base URL of the actual Go module proxy we want to use.
-// const targetProxyURL = "https://goproxy.io"
+// targetProxyURL is the base URL for the module proxy.
+// User confirmed https://proxy.golang.org is working.
 const targetProxyURL = "https://proxy.golang.org"
 
 // commonBrowserHeaders are sent with every curl request to bypass bot detection services like Cloudflare.
@@ -33,18 +33,32 @@ var commonBrowserHeaders = []string{
 	"Connection: keep-alive",
 }
 
-// proxyHandler is the core of our proxy. It takes an incoming request,
-// shells out to `curl.exe` to perform the fetch, and then reconstructs
-// the full HTTP response to send back to the client (the `go` tool).
+// proxyHandler is the core of our proxy. It now intelligently routes requests
+// for both the module proxy (GOPROXY) and the checksum database (GOSUMDB).
 func proxyHandler(w http.ResponseWriter, r *http.Request) {
+	var targetBase string
+	var pathForTarget string
+
+	// --- NEW: Route GOSUMDB requests ---
+	// Check if the request path is for the checksum database.
+	if strings.HasPrefix(r.URL.Path, "/sum.golang.org/") {
+		targetBase = "https://sum.golang.org"
+		// The path sent to the target should not include the hostname part.
+		pathForTarget = strings.TrimPrefix(r.URL.Path, "/sum.golang.org")
+	} else {
+		// Otherwise, it's a normal module proxy request.
+		targetBase = targetProxyURL
+		pathForTarget = r.URL.Path
+	}
+
 	// Construct the full target URL for curl to fetch.
-	targetURL, err := url.Parse(targetProxyURL)
+	targetURL, err := url.Parse(targetBase)
 	if err != nil {
 		log.Printf("Internal error: Failed to parse base proxy URL: %v", err)
 		http.Error(w, "Internal proxy configuration error", http.StatusInternalServerError)
 		return
 	}
-	targetURL.Path = r.URL.Path
+	targetURL.Path = pathForTarget
 	targetURL.RawQuery = r.URL.RawQuery
 	fullTargetURL := targetURL.String()
 
@@ -72,27 +86,31 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 	defer tmpFile.Close()
 
 	// Build the curl command arguments with browser headers.
-	// Add -v to get verbose output on stderr for debugging.
+	// -s: Silent mode (no progress meter).
+	// -L: Follow redirects.
+	// -v: Verbose output (for debugging headers).
+	// -w "%{http_code}": Write the final HTTP status code to stdout.
+	// -o <file>: Write the response body content to a file.
 	args := []string{"-s", "-L", "-v", "-w", "%{http_code}", "-o", tmpFile.Name()}
 	for _, h := range commonBrowserHeaders {
 		args = append(args, "-H", h)
 	}
-	// Add a specific Accept header for text/html content.
-	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng;q=0.8,application/signed-exchange;v=b3;q=0.9")
+	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
 	args = append(args, url)
 
 	cmd := exec.Command("curl.exe", args...)
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
+	cmd.Stdout = &stdoutBuf // Capture status code here
+	cmd.Stderr = &stderrBuf // Capture verbose output here
 
+	// Run the curl command.
 	if err := cmd.Run(); err != nil {
 		log.Printf("Failed to execute curl command: %v\nStderr: %s", err, stderrBuf.String())
 		http.Error(w, "Failed to execute curl", http.StatusInternalServerError)
 		return
 	}
 
-	// The status code is now the only thing in stdout.
+	// The status code is the only thing written to stdout by the -w flag.
 	statusCodeStr := strings.TrimSpace(stdoutBuf.String())
 	statusCode, err := strconv.Atoi(statusCodeStr)
 	if err != nil {
@@ -103,9 +121,8 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 
 	log.Printf("curl (text) finished with status code: %d", statusCode)
 
-	// If the download failed, forward the error status code.
+	// If the download failed, forward the error status code and log verbose output if needed.
 	if statusCode != http.StatusOK {
-		// Log verbose output on 403 Forbidden
 		if statusCode == http.StatusForbidden {
 			log.Printf("==== CURL VERBOSE OUTPUT ON 403 FORBIDDEN (TEXT) ====\n%s\n============================================", stderrBuf.String())
 		}
@@ -114,11 +131,13 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 	}
 
 	// If the status is OK, stream the body from the temp file.
+	// Seek to the beginning of the file before copying.
 	if _, err := tmpFile.Seek(0, 0); err != nil {
 		log.Printf("Failed to seek temp file: %v", err)
 		http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
 		return
 	}
+	// Copy the file content to the response writer.
 	if _, err := io.Copy(w, tmpFile); err != nil {
 		log.Printf("Error copying text response body from curl: %v", err)
 	}
@@ -137,26 +156,31 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 	defer tmpFile.Close()
 
 	// Build the curl command arguments with browser headers.
-	// Add -v to get verbose output on stderr for debugging.
+	// -s: Silent mode (no progress meter).
+	// -L: Follow redirects.
+	// -v: Verbose output (for debugging headers).
+	// -w "%{http_code}": Write the final HTTP status code to stdout.
+	// -o <file>: Write the response body content to a file.
 	args := []string{"-s", "-L", "-v", "-w", "%{http_code}", "-o", tmpFile.Name()}
 	for _, h := range commonBrowserHeaders {
 		args = append(args, "-H", h)
 	}
-	// Add a specific Accept header that removes the generic */* and adds application/zip.
-	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,application/zip,application/signed-exchange;v=b3;q=0.9")
+	args = append(args, "-H", "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9")
 	args = append(args, url)
 
 	cmd := exec.Command("curl.exe", args...)
 	var stdoutBuf, stderrBuf bytes.Buffer
-	cmd.Stdout = &stdoutBuf
-	cmd.Stderr = &stderrBuf
+	cmd.Stdout = &stdoutBuf // Capture status code here
+	cmd.Stderr = &stderrBuf // Capture verbose output here
 
+	// Run the curl command.
 	if err := cmd.Run(); err != nil {
 		log.Printf("Failed to execute curl command for zip: %v\nStderr: %s", err, stderrBuf.String())
 		http.Error(w, "Failed to execute curl for zip", http.StatusInternalServerError)
 		return
 	}
 
+	// The status code is the only thing written to stdout by the -w flag.
 	statusCodeStr := strings.TrimSpace(stdoutBuf.String())
 	statusCode, err := strconv.Atoi(statusCodeStr)
 	if err != nil {
@@ -167,9 +191,8 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 
 	log.Printf("curl (zip) finished with status code: %d", statusCode)
 
-	// If the download failed, forward the error status code.
+	// If the download failed, forward the error status code and log verbose output if needed.
 	if statusCode != http.StatusOK {
-		// Log verbose output on 403 Forbidden
 		if statusCode == http.StatusForbidden {
 			log.Printf("==== CURL VERBOSE OUTPUT ON 403 FORBIDDEN (ZIP) ====\n%s\n============================================", stderrBuf.String())
 		}
@@ -177,6 +200,7 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 		return
 	}
 
+	// Get file info to set the Content-Length header, which is good practice.
 	fileInfo, err := tmpFile.Stat()
 	if err != nil {
 		log.Printf("Failed to get temp file stats: %v", err)
@@ -189,12 +213,14 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 	w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 	w.WriteHeader(http.StatusOK)
 
+	// Seek to the beginning of the file before copying.
 	if _, err := tmpFile.Seek(0, 0); err != nil {
 		log.Printf("Failed to seek temp file: %v", err)
 		http.Error(w, "Failed to seek temp file", http.StatusInternalServerError)
 		return
 	}
 
+	// Stream the file from disk to the response writer.
 	if _, err := io.Copy(w, tmpFile); err != nil {
 		log.Printf("Error copying zip file response body: %v", err)
 	}
@@ -209,14 +235,19 @@ func main() {
 
 	// Start the server with clearer instructions.
 	fmt.Printf("Starting curl-based Go proxy on %s\n", listenAddr)
-	fmt.Printf("Forwarding requests to: %s\n\n", targetProxyURL)
+	fmt.Printf("Forwarding module requests to: %s\n", targetProxyURL)
+	fmt.Printf("Forwarding checksum requests to: https://sum.golang.org\n\n")
 	fmt.Println("--- HOW TO USE ---")
 	fmt.Println("1. Make sure 'curl.exe' is in your system's PATH.")
 	fmt.Println("2. Keep this terminal open to see request logs.")
 	fmt.Println("3. Open a NEW terminal.")
-	fmt.Println("4. In the new terminal, set GOPROXY to point to this script:")
-	fmt.Println("   On Windows: set GOPROXY=http://" + listenAddr)
-	fmt.Println("   On macOS/Linux: export GOPROXY=http://" + listenAddr)
+	fmt.Println("4. In the new terminal, set BOTH environment variables:")
+	fmt.Println("   On Windows:")
+	fmt.Println("   set GOPROXY=http://" + listenAddr)
+	fmt.Println("   set GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
+	fmt.Println("   On macOS/Linux:")
+	fmt.Println("   export GOPROXY=http://" + listenAddr)
+	fmt.Println("   export GOSUMDB=\"sum.golang.org http://" + listenAddr + "/sum.golang.org\"")
 	fmt.Println("5. Run your 'go install' or 'go get' command as normal.")
 	fmt.Println("---")
 
