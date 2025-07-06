@@ -131,7 +131,7 @@ func proxyHandler(w http.ResponseWriter, r *http.Request) {
 	var targetBase string
 	var pathForTarget string
 
-	// --- NEW: Route GOSUMDB requests ---
+	// --- Route GOSUMDB requests ---
 	// Check if the request path is for the checksum database.
 	if strings.HasPrefix(r.URL.Path, "/sum.golang.org/") {
 		targetBase = "https://sum.golang.org"
@@ -174,8 +174,16 @@ func handleTextDownload(w http.ResponseWriter, url string) {
 		http.Error(w, "Failed to create temporary file", http.StatusInternalServerError)
 		return
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			log.Printf("Warning: failed to remove temporary file %s: %v", tmpFile.Name(), err)
+		}
+	}()
+	defer func() {
+		if err := tmpFile.Close(); err != nil {
+			log.Printf("Warning: failed to close temporary file %s: %v", tmpFile.Name(), err)
+		}
+	}()
 
 	// Build the curl command arguments with browser headers.
 	// -s: Silent mode (no progress meter).
@@ -244,8 +252,16 @@ func handleBinaryDownload(w http.ResponseWriter, url string, contentType string)
 		http.Error(w, "Failed to create temporary file", http.StatusInternalServerError)
 		return
 	}
-	defer os.Remove(tmpFile.Name())
-	defer tmpFile.Close()
+	defer func() {
+		if err := os.Remove(tmpFile.Name()); err != nil {
+			log.Printf("Warning: failed to remove temporary file %s: %v", tmpFile.Name(), err)
+		}
+	}()
+	defer func() {
+		if err := tmpFile.Close(); err != nil {
+			log.Printf("Warning: failed to close temporary file %s: %v", tmpFile.Name(), err)
+		}
+	}()
 
 	// Build the curl command arguments with browser headers.
 	// -s: Silent mode (no progress meter).
