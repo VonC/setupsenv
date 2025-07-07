@@ -218,7 +218,7 @@ for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder
 
 if exist "%PRGS%\%prgs_folder%\%prg_folder%" (
     %_ok% "Program '%prg_folder%' already exists in '%PRGS%\%prgs_folder%'"
-    rem goto:_check_post_install
+    goto:_check_post_install
 )
 
 set pz=%PRGS%\peazips\current
