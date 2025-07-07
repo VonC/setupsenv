@@ -824,7 +824,7 @@ goto:eof
 :dwl_artifactory
 curl -fkLs "https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/"  | grep -oE "[0-9]+\.[0-9]+\.[0-9]+/" | tr -d "/" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1 > "%script_dir%\dwl_artifactory.tmp"
 for /f "delims=" %%a in ('type "%script_dir%\dwl_artifactory.tmp"') do ( set "version=%%a" )
-del "%script_dir%\dwl_treesize.tmp"
+del "%script_dir%\dwl_artifactory.tmp"
 %_info% "Dwl (%prgname%)'%repo%' version '%version%'"
 rem https://releases.jfrog.io/artifactory/bintray-artifactory/org/artifactory/oss/jfrog-artifactory-oss/%5BRELEASE%5D/jfrog-artifactory-oss-%5BRELEASE%5D-windows.zip
 set "file=jfrog-artifactory-oss-%version%-windows.zip"
@@ -916,6 +916,21 @@ rem https://github.com/tailwindlabs/tailwindcss/releases/download/v4.1.11/tailwi
 set "file=tailwindcss-windows-x64.exe"
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 set "target_local_file=tailwindcss-%version%-windows-x64.exe"
+call :curl
+goto:eof
+
+:dwl_ffmpeg
+set "repo=https://www.gyan.dev/ffmpeg/builds/"
+if not "%version%"=="latest" ( goto:_ffmpeg_info )
+curl -fkLs "https://www.gyan.dev/ffmpeg/builds/"|grep "release-version" | head -1 | grep -Eo "[0-9\.]+" > "%script_dir%\dwl_ffmpeg.tmp"
+for /f "delims=" %%a in ('type "%script_dir%\dwl_ffmpeg.tmp"') do ( set "version=%%a" )
+del "%script_dir%\dwl_ffmpeg.tmp"
+:_ffmpeg_info
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip  => ffmpeg-7.1.1-essentials_build.zip
+set "file=ffmpeg-release-essentials.zip"
+set "url=%repo%/%file%"
+set "target_local_file=ffmpeg-%version%-essentials_build.zip"
 call :curl
 goto:eof
 
