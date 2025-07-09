@@ -46,7 +46,7 @@ rem     %_ok% "Maven PATH updated: '%newPath%'"
 rem )
 popd
 
-endlocal & set "WF_VERSION=%SELECTED_VERSION:wildfly=%" & set "WF_JDK=%WF_JDK%" & set "WF_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%"
+endlocal & set "WF_VERSION=%SELECTED_VERSION:wildfly=%" & set "WF_JDK=%WF_JDK%" & set "WF_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%" & set "WILDFLY_HOME=%PRGS%\wildflys\wildfly%WF_VERSION%"
 rem echo M2_HOME='%M2_HOME%'
 exit /b 0
 goto:eof
