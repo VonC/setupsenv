@@ -71,7 +71,7 @@ if defined VIRTUAL_ENV (
             %_ok% "Py env for 'Python %OLD_PYTHON_VERSION%' deactivated"
         )
     ) else (
-        del "%ccd%\switchpy_virtual_env.tmp"
+        del "%ccd%\switchpy_virtual_env.tmp" 2>NUL
         %_ok% "Py env for 'Python %PYTHON_VERSION%' already activated"
         where python.exe >NUL 2>NUL
         if errorlevel 1 (
