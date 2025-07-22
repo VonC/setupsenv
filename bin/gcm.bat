@@ -46,6 +46,8 @@ if /i "%~1"=="prompt" set "param_special=true"
 if /i "%~1"=="dump" set "param_special=true"
 if /i "%~1"=="txt" set "param_special=true"
 if /i "%~1"=="md" set "param_special=true"
+if /i "%~1"=="--help" goto:usage
+if /i "%~1"=="-h" goto:usage
 
 if not defined param_special (
     set "all_special="
@@ -88,4 +90,48 @@ if not defined ECHOS_STACK (
 ) else (
     call "%batdir%\echos.bat" :stack %~nx0
 )
+goto:eof
+
+@REM -----------------------------------------------------------------------------
+@REM Function: usage
+@REM
+@REM Displays help information about the GCM (Git Commit Message Generator) script, 
+@REM including its purpose and available command-line options.
+@REM
+@REM Parameters: None
+@REM Returns: None (outputs help to console and exits)
+@REM -----------------------------------------------------------------------------
+:usage
+echo.
+%_info% "GCM - Git Commit Message Generator"
+echo.
+echo   This script makes a commit with the message passed in parameters,
+echo   or generates a commit message based on staged changes using AI,
+echo   depending on said parameters.
+echo.
+echo Usage:
+echo   gcm                - Call gsh.bat to analyze staged changes and generate
+echo                        a commit message using AI
+echo.
+echo   gcm x y z          - Make a commit with message 'x y z'
+echo.
+echo   gcm [special]      - Pass special parameters to gsh.bat
+echo.
+echo Special parameters (passed to gsh.bat):
+echo   doc/docs           - Analyze documentation changes only
+echo   rel                - Analyze changes for release notes
+echo   context            - Provide additional context for the AI analysis
+echo   prompt/dump        - Just dump the prompt (for debugging)
+echo   txt                - Include .txt files in analysis
+echo   md                 - Include .md files in analysis
+echo.
+echo Notes:
+echo   - If ALL parameters are from the special list above, gcm will call
+echo     gsh.bat with those parameters
+echo   - If ANY parameter is not from the special list, gcm will make a
+echo     direct git commit using all parameters as the commit message
+echo   - Use 'gsh.bat --help' for more details about the AI-based commit
+echo     message generation
+echo.
+exit /b 0
 goto:eof
