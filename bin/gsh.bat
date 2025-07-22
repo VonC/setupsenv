@@ -15,6 +15,7 @@
 @REM *
 @REM * Usage:
 @REM *   gsh         - Analyze staged changes and create commit
+@REM *                 SKip txt and md unless txt or/and md are specified
 @REM *   gsh doc     - Analyze documentation changes only
 @REM *   gsh docs    - Analyze documentation changes only
 @REM *   gsh rel     - Analyze changes for release notes
@@ -73,7 +74,42 @@ set "NO_MODS=true"
 :after_mods_checks
 
 set "role=commit_diff"
+set "file_filter="
+set "include_txt="
+set "include_md="
+if "%~1"=="txt" (
+  set "include_txt=true"
+  shift
+)
+if "%~1"=="md" (
+  set "include_md=true"
+  shift
+)
+if "%~1"=="txt" (
+  set "include_txt=true"
+  shift
+)
+if not defined include_md if not defined include_txt goto:exclude_both
+if not defined include_md if defined include_txt goto:exclude_md
+if defined include_md if not defined include_txt goto:exclude_txt
+goto:no_exclude
+
+:exclude_both
 set "file_filter=":(exclude)*.md" ":(exclude)*.txt""
+goto:filter_done
+
+:exclude_md
+set "file_filter=":(exclude)*.md""
+goto:filter_done
+
+:exclude_txt
+set "file_filter=":(exclude)*.txt""
+goto:filter_done
+
+:no_exclude
+set "file_filter="
+
+:filter_done
 if not "%~1"=="doc" (
   if not "%~1"=="docs" (
     goto:arg_check_rel
