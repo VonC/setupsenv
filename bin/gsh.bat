@@ -37,6 +37,18 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
+REM Check for help parameters in any position
+:check_help_params
+set "arg_count=0"
+:next_help_param
+if "%~1"=="" goto:help_check_done
+set /a "arg_count+=1"
+if /i "%~1"=="--help" goto:usage
+if /i "%~1"=="-h" goto:usage
+shift
+goto:next_help_param
+:help_check_done
+
 set "rel="
 set "context_mode="
 
@@ -445,4 +457,45 @@ if not defined ECHOS_STACK (
 ) else (
     call "%batdir%\echos.bat" :stack %~nx0
 )
+goto:eof
+
+@REM -----------------------------------------------------------------------------
+@REM Function: usage
+@REM
+@REM Displays help information about the GSH (Git Smart Helper) script, 
+@REM including its purpose and available command-line options.
+@REM
+@REM Parameters: None
+@REM Returns: None (outputs help to console and exits)
+@REM -----------------------------------------------------------------------------
+:usage
+echo.
+%_info% "GSH - Git Smart Helper"
+echo.
+echo   This script enhances Git workflow by using AI to analyze changes
+echo   and generate meaningful commit messages. It integrates with the
+echo   'mods' tool to leverage AI models (primarily Gemini) for analyzing
+echo   Git diffs and producing contextual commit messages or release notes.
+echo.
+echo Key features:
+echo   - Analyzes code changes to create smart commit messages
+echo   - Special handling for documentation changes
+echo   - Release notes generation from Git history
+echo   - Automatic language detection for better AI context
+echo   - Configurable AI model selection
+echo.
+echo Usage:
+echo   gsh                - Analyze staged changes and create commit
+echo                          (Skip txt and md unless txt or/and md are specified)
+echo   gsh txt            - Include .txt files in analysis
+echo   gsh md             - Include .md files in analysis
+echo   gsh doc/docs       - Analyze documentation changes only (txt/md files)
+echo   gsh rel            - Analyze changes for release notes (between last tagged commit and HEAD)
+echo   gsh context        - Provide additional context for the AI analysis
+echo                          (Can be combined with any mode: gsh context doc)
+echo   gsh prompt/dump    - Just dump the prompt (in clipboard, for copy/pasting elsewhere)
+echo                          (Can be combined with doc or rel: gsh doc prompt)
+echo   gsh -h, --help     - Display this help information
+echo.
+exit /b 0
 goto:eof
