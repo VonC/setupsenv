@@ -37,6 +37,13 @@ for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
 
+set "context_mode="
+set "include_txt="
+set "include_md="
+set "_dump_prompt="
+set "_doc="
+set "_rel="
+
 REM Check for help parameters in any position
 :check_help_params
 set "arg_count=0"
@@ -45,23 +52,22 @@ if "%~1"=="" goto:help_check_done
 set /a "arg_count+=1"
 if /i "%~1"=="--help" goto:usage
 if /i "%~1"=="-h" goto:usage
+if /i "%~1"=="context" set "context_mode=true"
+if /i "%~1"=="txt" set "include_txt=true"
+if /i "%~1"=="md" set "include_md=true"
+if /i "%~1"=="dump" set "_dump_prompt=true"
+if /i "%~1"=="prompt" set "_dump_prompt=true"
+if /i "%~1"=="doc" set "_doc=true"
+if /i "%~1"=="docs" set "_doc=true"
+if /i "%~1"=="rel" set "_rel=true"
 shift
 goto:next_help_param
 :help_check_done
 
-set "rel="
-set "context_mode="
-
-@REM Check for context mode
-if /i "%~1"=="context" (
-  set "context_mode=true"
-  shift
-)
-
-if "%~1"=="rel" (
-  set "rel=true"
+if defined _rel (
   goto:skip_index_check
 )
+
 git diff -w --cached --quiet
 if %ERRORLEVEL% == 0 (
   %_fatal% "No changes to commit" 11
@@ -87,20 +93,6 @@ set "NO_MODS=true"
 
 set "role=commit_diff"
 set "file_filter="
-set "include_txt="
-set "include_md="
-if "%~1"=="txt" (
-  set "include_txt=true"
-  shift
-)
-if "%~1"=="md" (
-  set "include_md=true"
-  shift
-)
-if "%~1"=="txt" (
-  set "include_txt=true"
-  shift
-)
 if not defined include_md if not defined include_txt goto:exclude_both
 if not defined include_md if defined include_txt goto:exclude_md
 if defined include_md if not defined include_txt goto:exclude_txt
@@ -122,27 +114,22 @@ goto:filter_done
 set "file_filter="
 
 :filter_done
-if not "%~1"=="doc" (
-  if not "%~1"=="docs" (
-    goto:arg_check_rel
-  )
-)
+if not defined _doc goto:arg_check_rel
+
 set "role=commit_documentation"
 set "file_filter=":(glob)**/*.md" ":(glob)**/*.txt""
-shift
+
 @REM Check for 'doc' argument and set appropriate role and file filter
 :arg_check_rel
-if not "%~1"=="rel" ( goto:arg_check_done )
+if not defined _rel ( goto:arg_check_done )
 set "role=analyze_release"
 set "file_filter=":(exclude)*.md""
-shift
 
 @REM Continue after argument parsing
 :arg_check_done
 call:write_prompt
 
-if "%~1" == "prompt" ( call:dump_prompt && exit /b 0 )
-if "%~1" == "dump" ( call:dump_prompt && exit /b 0 )
+if defined _dump_prompt ( call:dump_prompt && exit /b 0 )
 if defined NO_MODS (
   %_info% "No mods means dump prompt mode (will be copied to the clipboard)"
   call:dump_prompt && exit /b 0
@@ -171,7 +158,7 @@ if %ERRORLEVEL% == 1 (
 %_ok% "Analyzed staged changes with mods role '%role%' and model '%model%'"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe"%npp_settings% -multiInst -notabbar -nosession -noPlugin"
 
-if not defined rel ( goto:commit_changes )
+if not defined _rel ( goto:commit_changes )
 %_task% "Must copy release notes to the clipboard"
 mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); print; next; } found == 1 { print }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 > tmp.txt
 if errorlevel 1 (
@@ -226,7 +213,7 @@ cat "%script_dir%\mods_role_%role%.md" > tmp.txt
 if errorlevel 1 (
   %_fatal% "Failed to write role prompt to tmp.txt" 21
 )
-if not defined rel (
+if not defined _rel (
   echo git diff -w --cached %file_filter%
   for %%A in (tmp.txt) do set before_size=%%~zA
   git diff -w --cached %file_filter% >> tmp.txt
