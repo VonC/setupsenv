@@ -62,15 +62,17 @@ REM Remove leading space from params
 set "params=%params:~1%"
 
 REM If all parameters are special, call gsh with those parameters
-if "%all_special%"=="true" (
-    %_task% "Calling gsh.bat with parameters: %params%"
-    call "%script_dir%\gsh.bat" %params%
-    exit /b %errorlevel%
-) else (
-    REM Otherwise, perform git commit with the message
-    git commit -m "%params%"
-    exit /b %errorlevel%
-)
+if not "%all_special%"=="true" ( goto:_commit )
+
+%_task% "Calling gsh.bat with parameters: %params%"
+call "%script_dir%\gsh.bat" %params%
+exit /b %errorlevel%
+goto:eof
+
+:_commit
+REM Otherwise, perform git commit with the message
+git commit -m "%params%"
+exit /b %errorlevel%
 goto:eof
 
 @REM -----------------------------------------------------------------------------
