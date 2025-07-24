@@ -24,12 +24,12 @@ set profil=
 set script_dir_bin=
 set setupsdir=
 set setupsdirbat=
-set "prgtoinstall=%1"
+set "prgtoinstall=%~1"
 set instlist="install.list"
 if /i "%prgtoinstall:~0,1%"=="_" (
     set profile=!prgtoinstall:~1!
     set instlist=install_!profile!.list
-    set "prgtoinstall=%2"
+    set "prgtoinstall=%~2"
 ) else (
     if exist "%script_dir%\custom\profile" (
         for /f "delims=" %%x in (%script_dir%\custom\profile) do set profile=%%x
