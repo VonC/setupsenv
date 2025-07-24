@@ -30,12 +30,48 @@ if exist "%cd%\.vscode\*%current_folder%.code-workspace" (
     set "workspace_file=%cd%\.vscode\%current_folder%.code-workspace"
 )
 
-if not exist "%workspace_file%" (
+if exist "%workspace_file%" goto:_workspace_found
+
+
+REM Check if there are any .code-workspace files in the .vscode folder
+if not exist "%cd%\.vscode\*.code-workspace" (
   call:unset
   %_fatal% "workspace file not found: '%workspace_file%'" 3
   goto:eof
 )
 
+REM Count .code-workspace files
+set "workspace_count=0"
+set "single_workspace="
+for %%i in ("%cd%\.vscode\*.code-workspace") do (
+  set /a "workspace_count+=1"
+  set "single_workspace=%%~fi"
+)
+
+REM If exactly one workspace file exists
+if "%workspace_count%"=="1" (
+  %_warn% "Expected workspace file '%workspace_file%' not found, but using the only available: '%single_workspace%'"
+  set "workspace_file=%single_workspace%"
+  goto:_workspace_found
+)
+
+REM If multiple workspace files exist, list them
+if %workspace_count% gtr 1 (
+  %_error% "Multiple workspace files found in %cd%\.vscode\:"
+  for %%i in ("%cd%\.vscode\*.code-workspace") do (
+    %_info% " - %%~nxi"
+  )
+  call:unset
+  %_fatal% "Please keep only one workspace file" 9
+  goto:eof
+)
+
+call:unset
+%_fatal% "workspace file not found: '%workspace_file%'" 3
+goto:eof
+
+
+:_workspace_found
 if exist "%cd%\senv.bat" (
   %_task% "Must call '%cd%\senv.bat'"
   call "%cd%\senv.bat"
