@@ -14,6 +14,7 @@ REM Actions:
 REM   - status (default):   Check if WildFly is running
 REM   - start/run:          Start WildFly server
 REM   - stop:               Stop WildFly server
+REM   - restart:            Restart WildFly server (stop then start)
 REM   - log:                View recent log entries
 REM   - tlog/logt:          Tail the log continuously
 REM   - version:            Show WildFly version (brief)
@@ -103,6 +104,38 @@ if "%WILDFLY_STATE%" == "not started" (
   exit /b 0
 )
 %_fatal% "WildFly is in an unexpected state: '%WILDFLY_STATE%'" 113
+goto:eof
+
+REM -------------------------------------------------------------------
+REM RESTART - Restart the WildFly server (stop then start)
+REM -------------------------------------------------------------------
+:restart
+%_task% "Restarting Wildfly '%WF_VERSION%'"
+call:get_wildfly_state
+if "%WILDFLY_STATE%" == "not started" (
+  %_info% "Wildfly '%WF_VERSION%' is not running, starting it"
+  call:runWildFly
+  exit /b 0
+)
+if "%WILDFLY_STATE%" == "failed" (
+  %_fatal% "Wildfly '%WF_VERSION%' is in failed state, cannot restart" 161
+)
+if "%WILDFLY_STATE%" == "running" (
+  %_task% "Must stop Wildfly '%WF_VERSION%' before restart"
+  call:stop_wildfly
+)
+if "%WILDFLY_STATE%" == "restart-required" (
+  %_task% "Must stop Wildfly '%WF_VERSION%': restart-required"
+  call:stop_wildfly
+)
+call:get_wildfly_state
+if "%WILDFLY_STATE%" == "not started" (
+  %_task% "Must start Wildfly '%WF_VERSION%' after stop"
+  call:runWildFly
+  %_ok% "Wildfly '%WF_VERSION%' successfully restarted"
+  exit /b 0
+)
+%_fatal% "WildFly failed to stop properly during restart: '%WILDFLY_STATE%'" 162
 goto:eof
 
 REM -------------------------------------------------------------------
