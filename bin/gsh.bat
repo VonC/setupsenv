@@ -248,6 +248,9 @@ sed -i "s/,languages,/%languages%/g" tmp.txt >nul 2>&1
 if errorlevel 1 (
   %_fatal% "Failed to replace languages in tmp.txt" 23
 )
+
+echo. >> tmp.txt
+type "%script_dir%\mods_tone.md" >> tmp.txt
 goto:eof
 
 @REM -----------------------------------------------------------------------------
