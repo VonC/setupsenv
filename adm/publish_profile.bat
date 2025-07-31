@@ -100,7 +100,8 @@ call:is_system_tool "sysinternalsSuites"
 if errorlevel 1 ( call:publishOne "SysinternalsSuite-*.zip" "sysinternalsSuites" )
 call:publishOne "git-cliff*" "git-cliff"
 call:publishOne "gitcred*" "git-cred"
-set "system_list=peazips#gits#vscodes#gums#sysinternalsSuites#gitcred#git-cliff#"
+call:publishOne "jq-*" "jq"
+set "system_list=peazips#gits#vscodes#gums#sysinternalsSuites#gitcred#git-cliff#jq#"
 echo %system_list%>"%custom_dir%\system.list.tmp"
 
 for /F "tokens=1,2 delims= " %%f in ('type "%fprofile%"') do (

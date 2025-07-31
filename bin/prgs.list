@@ -36,7 +36,7 @@ fd/find~#~fds~fd-v*-x86_64-pc-windows-msvc.zip
 PowerToys/pt/toys/toy~#~powertoys~PowerToysUserSetup-*-x64.exe
 TreeSize/ts~#~treesizes~TreeSizeFree-Portable-*.zip
 Mods/mod~#~modss~mods_*_Windows_x86_64.zip
-jq~#~jqs~jq-*-win64.zip
+jq~#~jqs~jq-*-win64.zip~global
 XrmToolBox/xrm/xrmtb~#~xrmtoolboxs~XrmToolbox-*.zip
 drawio-desktop/drawio~#~drawios~draw.io-*-windows.zip/draw.io-*-windows-no-installer.exe
 Artifactory/arti~#~artifactorys~jfrog-artifactory-oss-*-windows.zip
