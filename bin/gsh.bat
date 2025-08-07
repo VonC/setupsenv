@@ -144,12 +144,10 @@ if defined GEMINI_MODEL (
 )
 call:configure_mods
 
-set "SENV_EI_DONE="
 call "%script_dir%\ensure_internet.bat"
 if errorlevel 1 (
   %_fatal% "Internet connection is required to use mods" 10
 )
-set "SENV_EI_DONE=1"
 %_task% "Must analyze changes with mods role '%role%' and model '%model%'"
 type tmp.txt | "%mods%" --role=git-diff --model=%model%
 if %ERRORLEVEL% == 1 (
@@ -164,8 +162,10 @@ mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assista
 if errorlevel 1 (
   %_fatal% "Failed to write release notes analysis to tmp.txt" 22
 )
+call:set_conversation_title tmp.txt
 powershell -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; Get-Content tmp.txt | Set-Clipboard"
 %_ok% "release notes analysis copied to the clipboard"
+
 del tmp.txt 2>NUL
 del tmp.lg 2>NUL
 goto:eof
@@ -174,7 +174,11 @@ goto:eof
 :commit_changes
 %_task% "Must commit staged changes with analyzed message"
 rem echo gsh: '%EDITOR%'
-mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); if (index($0, "```")==0) { print $0 }; next; } found == 1 { if (index($0, "```")==0) { print $0 } }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 | git commit -F -
+mods.bat -Sr | awk 'index($0, "**Assistant**: ")==1 { found=1; sub(/^\*\*Assistant\*\*: /, ""); if (index($0, "```")==0) { print $0 }; next; } found == 1 { if (index($0, "```")==0) { print $0 } }' | sed -e :a -e '/^^\n*$/{$d;N;ba' -e '}' | head -c -1 > tmp.txt
+if %ERRORLEVEL% == 1 (
+  %_fatal% "Failed to extract analyzed message" 130
+)
+type tmp.txt | git commit -F -
 if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to commit staged changes with analyzed message" 13
 )
@@ -185,9 +189,54 @@ if %ERRORLEVEL% == 1 (
   %_fatal% "Failed to edit committed changes message" 14
 )
 %_ok% "Committed changes message edited"
+:lll
+git log --pretty="format:%%s" -1 > tmp.txt
+call:set_conversation_title tmp.txt
 del tmp.txt 2>NUL
 del tmp.lg 2>NUL
 del tmp.context 2>NUL
+goto:eof
+
+@REM -----------------------------------------------------------------------------
+@REM Function: set_conversation_title
+@REM
+@REM Sets the conversation title in the mods tool based on the first line of the
+@REM specified file. The title format varies depending on the current role:
+@REM - For commit_documentation: "Doc changes: '[first line]'"
+@REM - For analyze_release: "Rel-notes analysis: '[first line]'"
+@REM - For other roles: "Commit msg: '[first line]'"
+@REM
+@REM The function also stores the title locally and reports success or failure.
+@REM
+@REM Parameters: %~1 - Path to the file containing the title text (first line)
+@REM Returns: Sets conversation_title variable, exits with error code on failure
+@REM -----------------------------------------------------------------------------
+:set_conversation_title
+set "title_file=%~1"
+set "first_line="
+for /f "usebackq delims=" %%a in ("%title_file%") do (
+  set "first_line=%%a"
+  goto:after_first_line
+)
+:after_first_line
+if not defined first_line (
+  %_fatal% "file '%title_file%' is empty or not properly formatted" 12
+  exit /b 12
+)
+if "%role%"=="commit_documentation" (
+  set "conversation_title=Doc changes: '%first_line%'"
+) else if "%role%"=="analyze_release" (
+  set "conversation_title=Rel-notes analysis: '%first_line%'"
+) else (
+  set "conversation_title=Commit msg: '%first_line%'"
+)
+%_task% "Must set conversation title to: '%conversation_title%'"
+echo "%mods%" -t "%conversation_title%"
+if errorlevel 1 (
+  %_fatal% "Failed to set conversation title in mods: '%conversation_title%'" 131
+)
+set "conversation_title=%first_line%"
+%_ok% "Conversation title set to: '%conversation_title%'"
 goto:eof
 
 @REM -----------------------------------------------------------------------------
