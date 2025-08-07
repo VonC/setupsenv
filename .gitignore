@@ -16,3 +16,5 @@ man_*.txt
 path_temp.txt
 wildfly_mgmt_user.txt
 wildfly*.log
+
+mods_i*
