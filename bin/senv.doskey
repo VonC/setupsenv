@@ -41,6 +41,10 @@ gdni=git diff --no-index --color-words=. $*
 gd=git diff --color-words=. $*
 gdc=git diff --cached --color-words=. $*
 gstr=cmd /v /c "set "REPLACE_DATE=1" && gst.bat $*"
+gsubu=git submodule update --init --recursive $*
+gsu=git submodule update --init --recursive $*
+gsubur=git submodule update --init --recursive --remote $*
+gsur=git submodule update --init --recursive --remote $*
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 aliase="%PRGS%\vscodes\current\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
