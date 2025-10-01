@@ -22,8 +22,8 @@ set "py_version=%fs:python-=%"
 set "py_version=%py_version:-amd64.exe=%"
 %_task% "Must install Python %PRGS%\setup\%fs%, version '%py_version%'"
 set "install_ok=check_symlink"
-rem "%PRGS%\setup\%fs%" /DIR="%PRGS%\vscode" /VERYSILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /MERGETASKS=!runcode
-"%PRGS%\setup\%fs%" /quiet TargetDir="%PRGS%\pythons\python-%py_version%-amd64" Include_launcher=0
+rem python-3.13.7-amd64.exe /passive /quiet TargetDir="%PRGS%\pythons\python-3.13.7-amd64" Shortcuts=0 Include_launcher=1 CompileAll=1 Include_debug=1 Include_symbols=1
+"%PRGS%\setup\%fs%" /passive /quiet TargetDir="%PRGS%\pythons\python-%py_version%-amd64" Shortcuts=0 Include_launcher=1 CompileAll=1 Include_debug=1 Include_symbols=1
 if errorlevel 1 ( %_fatal% "Issue when installing Python" 1 )
 rem call "%installs_dir%\vscodes.pre.bat"
 rem call "%installs_dir%\vscodes.post.bat" "update"
