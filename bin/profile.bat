@@ -109,7 +109,8 @@ if defined publish_message (
 if defined update_message (
     %_warning% "%update_message%"
     %_task% "Should update local senv from remote_senv '%remote_senv%'"
-    %_task% "Type cdis, then s when you want to update your senv"
+    %_task% "Type upg, for a quick update of your senv, upa for a full update"
+    %_task% "For older senv, type cdis, then s when you want to update your senv"
 )
 goto:eof
 
