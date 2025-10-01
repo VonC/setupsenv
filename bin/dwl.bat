@@ -934,6 +934,16 @@ set "target_local_file=ffmpeg-%version%-essentials_build.zip"
 call :curl
 goto:eof
 
+:dwl_postman
+set "repo=portapps/postman-portable"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/portapps/postman-portable/releases/download/11.62.7-64/postman-portable-win64-11.62.7-64.7z
+set "file=postman-portable-win64-%version%.7z"
+set "url=https://github.com/%repo%/releases/download/%version%/%file%"
+rem https://portapps.io/download/postman-portable-win64-11.52.5-63.7z/
+call :curl
+goto:eof
 
 :version_compare
 rem Compare versions numerically
