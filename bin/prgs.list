@@ -9,7 +9,7 @@ Chrome~#~chromiums~chromev*-r*.7z
 Peazip/pz/7z~#~peazips~peazip_portable-~global
 Firefox/ff~#~firefoxs~FirefoxPortable_*_English.paf.exe
 lg_(LazyGit)/lazygit/lg/lzg/lz~#~lazygits~lazygit_*_Windows_x86_64.zip
-Node~10 11 12 13 14 15 16 17 18 19 20 21 22-LTS 23~nodes~node-v*-win-x64.zip
+Node~10 11 12 13 14 15 16 17 18 19 20 21 22-LTS 23 24~nodes~node-v*-win-x64.zip
 Python/py~3.12 3.13~pythons~python-*-amd64.zip
 Sysinternals_Suite/sysinternals/sysinternal/sys/sysint~#~sysinternalsSuites~SysinternalsSuite-*.zip~global
 VSCode/code~#~vscodes~VSCodeUserSetup-x64-*.exe~global
