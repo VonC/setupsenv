@@ -8,6 +8,7 @@ profile
 driveLetter.bat
 driverLetter.bat
 a
+a.*
 tmp*
 *.tmp
 *.sha1
