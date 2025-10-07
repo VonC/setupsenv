@@ -1,31 +1,28 @@
 @echo off
-rem https://stackoverflow.com/questions/42582230/how-to-install-visual-studio-code-silently-without-auto-open-when-installation
-rem VSCodeSetup-1.10.1.exe /VERYSILENT /MERGETASKS=!runcode
-set install_ok=
-if "%script_dir%"=="" ( echo.>>"%~dp0standalone_%~nx0.flag")
 setlocal enabledelayedexpansion
-set "echos_standalone=%~dp0standalone_%~nx0.flag"
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 cd /d "%script_dir%" || echo "unable to cd to '%script_dir%'"&& goto:eof
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
-set "installs_dir=%senv_dir%\installs"
 call %senv_dir%\batcolors\echos_macros.bat
+set "bin_dir=%senv_dir%\bin"
 
-doskey /MACROS | findstr drawio >NUL
-if errorlevel 0 (
-    %_ok% "drawio alias in place"
-    exit /b 0
-    goto:eof
+set "f=%HOME%\bin\senv.local.doskey"
+if not exist "%f%"  ( goto:eoflocal )
+grep "drawio=" "%f%">NUL
+if errorlevel 1 (
+    %_info% "Make sure '%f%' does have drawio alias"
+    rem insert `doskey drawio="%PRGS%\drawios\current\draw.io.exe" $*` before the line `cdi=`, with a blank line before it
+    sed -i "/^cdi=.*$/i drawio=\"%PRGS:\=\\\\%\\\\drawios\\\\current\\\\draw.io.exe\" \$*\n" "%f%"
+    if errorlevel 1 ( %_error% "Issue when adding drawio alias to '%f%'" ) else ( %_ok% "drawio alias added to '%f%'" )
+    doskey drawio="%PRGS%\drawios\current\draw.io.exe" $*
+    if errorlevel 1 ( %_error% "Issue when adding drawio alias to current session" ) else ( %_ok% "drawio alias added to current session" )
+) else (
+    %_info% "drawio alias already present in '%f%'"
 )
-
-echo drawio=%%PRGS%%\drawios\current\draw.io.exe $*>> "%HOME%\bin\senv.local.doskey"
-if errorlevel 0 (
-    %_ok% "'drawio' alias added to '%HOME%\bin\senv.local.doskey'"
-    exit /b 0
-    goto:eof
-)
-%_fatal% "Unable to add 'drawio' alias to '%HOME%\bin\senv.local.doskey'" 85
+:eoflocal
+endlocal
+exit /b 0
 goto:eof
 
 
@@ -36,3 +33,4 @@ if not defined ECHOS_STACK (
     call "%batdir%\echos.bat" :stack %~nx0
 )
 goto:eof
+
