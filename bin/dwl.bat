@@ -263,9 +263,9 @@ goto:eof
 set "repo=Hibbiki/chromium-win64"
 if "%version%"=="latest" ( call :get_latest_version_from_github )
 %_info% "Dwl '%prgname%' version '%version%'"
-set "file=chrome.sync.7z"
+set "file=chrome.7z"
 set "target_local_file=chromev%version%.7z"
-rem https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.sync.7z
+rem https://github.com/Hibbiki/chromium-win64/releases/latest/download/chrome.7z
 set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
