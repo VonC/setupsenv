@@ -63,7 +63,10 @@ if not "%version%"=="" (
   )
   if "%prgname%"=="python" (
     set "python_cycle=%version%"
-    set "version=latest"
+    for /f "delims=" %%p in ('printf %version% ^| "s/[0-9]//g" ^| wc -m') do ( set "dot_number=%%p" )
+    if "!dot_number!"=="1" (
+      set "version=latest"
+    )
   )
   goto:proceed
 )
@@ -415,7 +418,8 @@ goto:eof
 :dwl_python
 if "%python_cycle%"=="" ( %_fatal% "python_cycle needs to be set (11, 12, 13, ...)" 12 )
 set "repo=python/cpython"
-%_info% "Dwl (%prgname%)'%repo%' python_cycle '%python_cycle%'"
+%_info% "Dwl (%prgname%)'%repo%' python_cycle '%python_cycle%', version='%version%'"
+if "%python_cycle%"=="%version%" ( goto:_skip_latest_version_fom_eol )
 %_task% "Must get latest version from endoflife.date for python cycle '%python_cycle%'"
 rem @echo on
 set "cmd=curl -skL --request GET --url https://endoflife.date/api/python/%python_cycle%.json --header "Accept: application/json""
@@ -424,6 +428,7 @@ if exist "%script_dir%\dwl_error_curl" (
   del "%script_dir%\dwl_error_curl"
   %_fatal% "Cannot get latest version from endoflife.date for Python cycle '%python_cycle%' with cmd '%cmd%'" 1
 )
+:_skip_latest_version_fom_eol
 set "version=%version:*latest=%"
 set "version=%version:"=%"
 set "version=%version::=%"

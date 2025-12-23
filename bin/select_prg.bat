@@ -130,7 +130,14 @@ if not defined prg_version (
     if "%prg_version%"=="!prg_version_item!" (
       set "prg_version_found=true"
     )
-    rem echo '%%a' for prg_version='%prg_version%', prg_version_found='!prg_version_found!', lts_version='!lts_version!'
+    @echo on
+    rem if %prg_version% starts with '!prg_version_item!.', then OK
+    for /f "delims=" %%p in ('echo _%prg_version% ^| sed "s/_!prg_version_item!\..*/ok/g"') do ( set "prg_version_compatible=%%p" )
+    if "!prg_version_compatible!"=="ok" (
+      set "prg_version_found=true"
+    )
+    @echo off
+    echo '%%a' for prg_version='%prg_version%', prg_version_found='!prg_version_found!', lts_version='!lts_version!'
     set "latest_version=%%a"
   )
   if not defined prg_version_found (
