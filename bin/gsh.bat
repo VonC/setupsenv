@@ -48,6 +48,7 @@ if defined HTTPS_PROXY (
   %_info% "HTTPS_PROXY is defined: '%HTTPS_PROXY%': switch to 8081 for mods"
   set "HTTPS_PROXY=http://127.0.0.1:8081"
   set "HTTP_PROXY=http://127.0.0.1:8081"
+  set "SENV_EI_DONE=true"
 )
 
 REM Check for help parameters in any position
@@ -150,10 +151,14 @@ if defined GEMINI_MODEL (
 )
 call:configure_mods
 
+if defined SENV_EI_DONE ( goto:call_gsh_mods )
 call "%script_dir%\ensure_internet.bat"
 if errorlevel 1 (
   %_fatal% "Internet connection is required to use mods" 10
 )
+SET "SENV_EI_DONE="
+
+:call_gsh_mods
 %_task% "Must analyze changes with mods role '%role%' and model '%model%'"
 type tmp.txt | "%mods%" --role=git-diff --model=%model%
 if %ERRORLEVEL% == 1 (

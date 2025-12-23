@@ -10,6 +10,12 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
+if defined HTTPS_PROXY (
+  %_info% "HTTPS_PROXY is defined: '%HTTPS_PROXY%': switch to 8081 for mods"
+  set "HTTPS_PROXY=http://127.0.0.1:8081"
+  set "HTTP_PROXY=http://127.0.0.1:8081"
+  set "SENV_EI_DONE=true"
+)
 if defined SENV_EI_DONE ( goto:call_mods )
 call "%script_dir%\ensure_internet.bat"
 if errorlevel 1 (
@@ -19,11 +25,6 @@ SET "SENV_EI_DONE="
 
 :call_mods
 rem echo mods EDITORS: '%EDITOR%'
-if defined HTTPS_PROXY (
-  %_info% "HTTPS_PROXY is defined: '%HTTPS_PROXY%': switch to 8081 for mods"
-  set "HTTPS_PROXY=http://127.0.0.1:8081"
-  set "HTTP_PROXY=http://127.0.0.1:8081"
-)
 call "%mods%" %*
 @popd
 goto:eof
