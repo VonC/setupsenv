@@ -166,6 +166,17 @@ if defined sfound_most_recent (
     %_info% "One latest match found in '!sfound!': fname '%fname%' in '!sfound_path!'"
     goto:_proceed_install
 )
+if not "%prg_pattern:python-=%"=="%prg_pattern%" (
+    if not "%prg_pattern:.zip=%"=="%prg_pattern%" (
+        %_error% "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs"
+        %_info% "try pythons.install %~2"
+        pythons.install.bat %~2
+        if not errorlevel 1 (
+             %_ok% "Python %~2 installed"
+            goto:_skip_checks
+        )
+    )
+)
 %_fatal%  "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs" 6
 
 :_count
@@ -230,8 +241,10 @@ if not exist "%fname%" (
 )
 
 if exist "%install_dir%\%prgs_folder%.install.bat" (
-    %_task% "Must use custom '%install_dir%' for '%prgs_folder%'"
-    call "%install_dir%\%prgs_folder%.install.bat"
+    %_task% "Must use custom '%install_dir%' for '%prgs_folder%' arg sln '%sln%'"
+    set "NO_DRY_RUN=1"
+    call "%install_dir%\%prgs_folder%.install.bat" "%sln%"
+    set "NO_DRY_RUN="
     goto:_check_symlink
 ) else (
     %_ok% "No custom install '%prgs_folder%.install.bat' in '%install_dir%' for '%prgs_folder%'"
@@ -299,6 +312,7 @@ if exist "%install_dir%\%prgs_folder%.alias.bat" (
     %_task% "Must check alias in '%install_dir%' for '%prgs_folder%'"
     call "%install_dir%\%prgs_folder%.alias.bat"
 )
+:_skip_checks
 
 popd
 endlocal

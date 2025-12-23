@@ -1,0 +1,32 @@
+The goal is to install a python version from a zip archive of said Python version, and to leave with no registered Python version installed in the Windows registry.
+
+The process needs to be idempotent: it can be interrupted at any point and resume without repeating previous steps.
+Each step and sub-step must be a subroutine (`:xxx` and `goto:eof`), called by a main section which will follow the steps listed below. 
+
+You need to be able to "check what is installed in the Windows registry" for a given minor version (X) of Python 3: `reg query "HKEY_CURRENT_USER\Software\Python\PythonCore\3.X" /v Version | sed "s/.* 3/3/g"`
+
+You need to be able if a Python is installed on target (`"%target%\Lib\site-packages\pip\_vendor\distlib\w64-arm.exe"` does exist), and at which version (`grep "What's New in Python" "%target%\NEWS.txt" |  head -1 | cut -f 5 -d " "`)
+
+For a given Python version 3.X.Y:
+
+- If the 3.X.Y zip is present, and if already installed on target et the right version
+  - If any Python 3.X is installed:
+    - uninstall it
+    - if it was the 3.X.Y version that was installed (in "%target%"):
+      - then unzip the zip to target
+      - else nothing more to do
+- If the zip is present, and if NOT already installed:
+  - If any Python 3.X is installed:
+    - uninstall it
+  - then unzip the zip to target
+
+- If the 3.X.Y zip is not present, it needs to be build
+  - if the 3.X.Y exe is not present, fatal error
+  - if the 3.X.Y exe is present, check what is installed in the Windows registry
+    - if no version is present, install from the exe to target
+    - if a version is present:
+      - if it is 3.X.Y, check if it is installed on target (right file and right version)
+        - if it is not installed on target, uninstall the exe
+        - if it is installed on target, build the zip
+      - if it is not 3.X.Y, uninstall it, then install the 3.X.Y exe and build the zip
+    - after building the zip, uninstall the exe, and unzip the zip to target.
