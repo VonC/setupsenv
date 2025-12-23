@@ -3,6 +3,7 @@
 	lg2 = log --graph --format=format:'%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n''          %C(white)%s%C(reset) %C(bold white)- %an%C(reset)' --abbrev-commit
 	lg = !"git lg2"
 	br = branch
+	lmsg = log --no-patch --pretty='format:%C(yellow)%h%Creset%Cred%>(12,trunc)%cs%Creset %C(auto)%s%Creset%n%n%b'
 [user]
 	useConfigOnly = true
 [core]

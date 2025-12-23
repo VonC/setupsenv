@@ -30,7 +30,8 @@ gcamm=git commit --amend -m "$*"
 # = Make sure gcm alias is emptied, since it is replaced with gcm.bat
 gcm=
 # =
-gcma=git commit --amend -m "$*"
+gdca=git diff --cached ^> a.diff ^& grep "^diff " a.diff ^| wc -l ^& git status --porcelain ^| grep -v "^[ \?]"
+gcma=gcm.bat a ^& git commit --amend
 ga=git add .
 gs=git st
 gp=git push $*
@@ -45,6 +46,10 @@ gsubu=git submodule update --init --recursive $*
 gsu=git submodule update --init --recursive $*
 gsubur=git submodule update --init --recursive --remote $*
 gsur=git submodule update --init --recursive --remote $*
+
+gtn=git tag -l --format="%(contents)" $*
+gtm=git tag -l --format="%(contents)" $*
+
 
 aliasr=DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"&& DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 aliase="%PRGS%\vscodes\current\bin\code.cmd" "%HOME%\bin\senv.local.doskey"
