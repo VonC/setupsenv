@@ -19,6 +19,11 @@ SET "SENV_EI_DONE="
 
 :call_mods
 rem echo mods EDITORS: '%EDITOR%'
+if defined HTTPS_PROXY (
+  %_info% "HTTPS_PROXY is defined: '%HTTPS_PROXY%': switch to 8081 for mods"
+  set "HTTPS_PROXY=http://127.0.0.1:8081"
+  set "HTTP_PROXY=http://127.0.0.1:8081"
+)
 call "%mods%" %*
 @popd
 goto:eof
