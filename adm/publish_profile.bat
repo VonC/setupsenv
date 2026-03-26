@@ -99,6 +99,7 @@ call:publishOne "gum_*.zip" "gums"
 call:is_system_tool "sysinternalsSuites"
 if errorlevel 1 ( call:publishOne "SysinternalsSuite-*.zip" "sysinternalsSuites" )
 call:publishOne "git-cliff*" "git-cliff"
+call:publishOne "Microsoft.WindowsTerminal_*_x64.zip" "terminals"
 call:publishOne "gitcred*" "git-cred"
 call:publishOne "jq-*" "jq"
 set "system_list=peazips#gits#vscodes#gums#sysinternalsSuites#gitcred#git-cliff#jq#"
