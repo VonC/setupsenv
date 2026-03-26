@@ -82,7 +82,10 @@ if "%HOME%"=="" ( %_fatal% "HOME must be defined in custom/setup.ini.bat" && exi
 if "%PROG%"=="" ( %_fatal% "PROG (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 if "%REMOTE_HOME%"=="" ( %_fatal% "REMOTE_HOME (installation folder) must be defined in custom/setup.ini.bat" && exit /b 1 )
 
-echo @echo off%NL%call %HOME%\bin\senv.bat> "%USERPROFILE%\senv.bat"
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "$PSModuleAutoloadingPreference = 'None'; Import-Module Microsoft.PowerShell.Management; $templatePath = '%script_dir%\senv.user_profile.tpl.bat'; $targetPath = '%USERPROFILE%\senv.bat'; $content = Get-Content -LiteralPath $templatePath -Raw; [System.IO.File]::WriteAllText($targetPath, $content.Replace('_HOME_', '%HOME%'), [System.Text.UTF8Encoding]::new($false))"
+if errorlevel 1 (
+    %_fatal% "Unable to write '%USERPROFILE%\senv.bat' from '%script_dir%\senv.user_profile.tpl.bat'" 24
+)
 echo @echo off%NL%call %HOME%\bin\gsenv.bat> "%USERPROFILE%\gsenv.bat"
 echo @echo off%NL%call "%%USERPROFILE%%\senv.bat"> "%HOME%\senv.bat"
 echo @echo off%NL%call "%%USERPROFILE%%\gsenv.bat"> "%HOME%\gsenv.bat"
