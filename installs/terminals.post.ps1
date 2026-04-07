@@ -32,17 +32,99 @@ function Write-Info([string]$Message)    { Write-Host $Message -ForegroundColor 
 function Write-Ok([string]$Message)      { Write-Host $Message -ForegroundColor Green }
 function Write-WarnMsg([string]$Message) { Write-Host $Message -ForegroundColor Yellow }
 
-function Get-WindowsTerminalSettingsPath {
-    $candidates = @(
+function Get-WindowsTerminalSettingsCandidates {
+    @(
         (Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"),
         (Join-Path $env:LOCALAPPDATA "Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json"),
         (Join-Path $env:LOCALAPPDATA "Microsoft\Windows Terminal\settings.json")
     )
+}
+
+function Get-WindowsTerminalSettingsPath {
+    $candidates = Get-WindowsTerminalSettingsCandidates
 
     foreach ($p in $candidates) {
         if (Test-Path -LiteralPath $p) { return $p }
     }
     return $null
+}
+
+function Get-WindowsTerminalExecutablePath {
+    $candidates = @()
+
+    if ($env:PRGS) {
+        $candidates += (Join-Path $env:PRGS "terminals\current\WindowsTerminal.exe")
+    }
+
+    $candidates += (Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\wt.exe")
+    $candidates += "wt.exe"
+
+    foreach ($p in $candidates) {
+        try {
+            if ($p -eq "wt.exe") {
+                $cmd = Get-Command wt.exe -ErrorAction Stop
+                if ($cmd -and $cmd.Source) { return $cmd.Source }
+            } elseif (Test-Path -LiteralPath $p) {
+                return $p
+            }
+        } catch {
+            # Continue trying other candidates.
+        }
+    }
+
+    return $null
+}
+
+function Initialize-WindowsTerminalSettingsIfMissing {
+    $existing = Get-WindowsTerminalSettingsPath
+    if ($existing) { return $existing }
+
+    $wtExe = Get-WindowsTerminalExecutablePath
+    if ($wtExe) {
+        Write-Info "settings.json is missing. Bootstrapping Windows Terminal with a hidden one-shot launch..."
+        try {
+            $proc = Start-Process -FilePath $wtExe -ArgumentList @("new-tab", "cmd /c exit") -WindowStyle Hidden -PassThru -ErrorAction Stop
+
+            # Wait briefly for first-run initialization.
+            $deadline = (Get-Date).AddSeconds(10)
+            do {
+                Start-Sleep -Milliseconds 250
+                $existing = Get-WindowsTerminalSettingsPath
+                if ($existing) {
+                    Write-Ok "Windows Terminal generated settings.json."
+                    return $existing
+                }
+            } while ((Get-Date) -lt $deadline)
+
+            if ($proc -and -not $proc.HasExited) {
+                Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            }
+        } catch {
+            Write-WarnMsg "Unable to start Windows Terminal silently: $($_.Exception.Message)"
+        }
+    } else {
+        Write-WarnMsg "No Windows Terminal executable found in known locations."
+    }
+
+    # Fallback: create a minimal valid settings file so post-install can proceed unattended.
+    $fallbackPath = (Get-WindowsTerminalSettingsCandidates)[2]
+    $parentDir = Split-Path -Parent $fallbackPath
+    if (-not (Test-Path -LiteralPath $parentDir)) {
+        New-Item -Path $parentDir -ItemType Directory -Force | Out-Null
+    }
+
+    if (-not (Test-Path -LiteralPath $fallbackPath)) {
+        Write-Info "Creating a bootstrap settings.json at: $fallbackPath"
+        $bootstrapSettings = [pscustomobject]@{
+            '$schema' = 'https://aka.ms/terminal-profiles-schema'
+            profiles  = [pscustomobject]@{ list = @() }
+        }
+        $bootstrapSettings |
+            ConvertTo-Json -Depth 10 |
+            Set-Content -LiteralPath $fallbackPath -Encoding UTF8
+    }
+
+    return $fallbackPath
 }
 
 function Install-UserFontIfMissing {
@@ -122,7 +204,7 @@ function Initialize-SettingsProfilesList {
 Install-UserFontIfMissing -FontRegDisplayName $FontRegName -FontFile $FontFileName -DownloadUrl $FontUrl
 
 # --- 2) Locate Windows Terminal settings ---
-$settingsPath = Get-WindowsTerminalSettingsPath
+$settingsPath = Initialize-WindowsTerminalSettingsIfMissing
 if (-not $settingsPath) {
     throw "Windows Terminal settings.json not found. Open Windows Terminal once, then rerun this script."
 }
