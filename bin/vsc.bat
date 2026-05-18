@@ -11,7 +11,7 @@ rem <a href="/products/yed">yEd Graph Editor 3.24</a> at https://www.yworks.com/
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 set "bc=%senv_dir%\batcolors"
-call %bc%\echos_macros.bat
+call "%bc%\echos_macros.bat" export
 for %%i in ("%PRGS%\setup") do (
     set "setup_dir=%%~fi"
 )
@@ -79,19 +79,19 @@ if exist "%cd%\senv.bat" (
     call:unset
     %_fatal% "error calling '%cd%\senv.bat'" 4
   ) else (
-    call "%bc%\echos_macros.bat"
+    call "%bc%\echos_macros.bat" export
     %_ok% "called '%cd%\senv.bat'"
   )
 )
 
-if exist "%cd%\tools\init.bat" (
+if not exist "%cd%\senv.bat" if exist "%cd%\tools\init.bat" (
   %_task% "Must call '%cd%\tools\init.bat'"
   call "%cd%\tools\init.bat"
   if errorlevel 1 (
     call:unset
     %_fatal% "error calling '%cd%\tools\init.bat'" 5
   ) else (
-    call "%bc%\echos_macros.bat"
+    call "%bc%\echos_macros.bat" export
     %_ok% "called '%cd%\tools\init.bat'"
   )
 )
