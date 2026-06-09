@@ -44,5 +44,6 @@
 				]
 			},
 		},
+		"github.copilot.chat.otel.dbSpanExporter.enabled": true,
 	}
 }
