@@ -242,6 +242,7 @@ if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
     type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
 )
 cd /d "%script_dir%"
+call:install "px-*" "pxs" || exit /b 1
 call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
 findstr /i "npps" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=npp.*.portable.x64.zip" )
@@ -270,6 +271,7 @@ for /f "tokens=1,2 delims= " %%a in ('type "%script_dir%\custom\%instlist%"') do
   if "!fl!"=="gits" ( set "cil_install=false" )
   if "!fl!"=="vscodes" ( set "cil_install=false" )
   if "!fl!"=="gums" ( set "cil_install=false" )
+  if "!fl!"=="pxs" ( set "cil_install=false" )
   if "!fl!"=="sysinternalsSuites" ( set "cil_install=false" )
   if "!fl!"=="npps" ( set "cil_install=false" )
   if "!fl!"=="terminals" ( set "cil_install=false" )
