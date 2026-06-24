@@ -939,6 +939,33 @@ set "target_local_file=ffmpeg-%version%-essentials_build.zip"
 call :curl
 goto:eof
 
+:dwl_codex
+set "repo=openai/codex"
+set "tag="
+if "%version%"=="latest" call :get_latest_version_from_github
+if "%version%"=="latest" set "version=%tag%"
+if "%version:~0,6%"=="rust-v" (
+  set "tag=%version%"
+  goto:_dwl_codex_with_tag
+)
+if "%version:~0,5%"=="rust-" (
+  set "tag=rust-v%version:rust-=%"
+  goto:_dwl_codex_with_tag
+)
+if "%version:~0,1%"=="v" (
+  set "tag=rust-%version%"
+  goto:_dwl_codex_with_tag
+)
+set "tag=rust-v%version%"
+:_dwl_codex_with_tag
+%_info% "Dwl (%prgname%)'%repo%' version '%tag%'"
+rem https://github.com/openai/codex/releases/download/rust-v0.141.0/codex-x86_64-pc-windows-msvc.exe.zip
+set "file=codex-x86_64-pc-windows-msvc.exe.zip"
+set "target_local_file=codex-%tag%-x86_64-pc-windows-msvc.zip"
+set "url=https://github.com/%repo%/releases/download/%tag%/%file%"
+call :curl
+goto:eof
+
 :dwl_postman
 set "repo=portapps/postman-portable"
 if "%version%"=="latest" ( call :get_latest_version_from_github )
