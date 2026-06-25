@@ -250,6 +250,9 @@ if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
 )
 cd /d "%script_dir%"
 call:install "px-*" "pxs" || exit /b 1
+if exist "%PRGS%\pxs\current\px.exe" (
+    call:activate_proxy_env || exit /b 1
+)
 call:install "VSCodeUserSetup-x64-*" "vscodes" "system-code" || exit /b 1
 findstr /i "npps" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=npp.*.portable.x64.zip" )
@@ -517,6 +520,23 @@ if errorlevel 1 (
     %_fatal% "awk.exe still not found on PATH after activating '%GH%\usr\bin'" 98
 )
 %_ok% "Git PATH activated from '%GH%'"
+goto:eof
+
+:activate_proxy_env
+if not defined HOME (
+    %_fatal% "HOME not defined: unable to activate proxy environment" 99
+)
+if not exist "%HOME%\bin\senv.custom.bat" (
+    %_fatal% "senv.custom.bat missing at '%HOME%\bin': unable to activate proxy environment" 100
+)
+call "%HOME%\bin\senv.custom.bat"
+if not defined HTTP_PROXY (
+    %_fatal% "HTTP_PROXY not defined after calling '%HOME%\bin\senv.custom.bat'" 101
+)
+if not defined HTTPS_PROXY (
+    %_fatal% "HTTPS_PROXY not defined after calling '%HOME%\bin\senv.custom.bat'" 102
+)
+%_ok% "Proxy environment activated: HTTP_PROXY='%HTTP_PROXY%', HTTPS_PROXY='%HTTPS_PROXY%'"
 goto:eof
 
 :check_install
