@@ -501,6 +501,29 @@ call :curl
 del "%script_dir%\dwl_sqldeveloper.tmp"
 goto:eof
 
+:dwl_graphviz
+set "target_local_file="
+if "%version%"=="latest" (
+  set "cmd=curl -skL https://gitlab.com/graphviz/graphviz/-/releases.atom"
+  !cmd! > "%script_dir%\dwl_graphviz.tmp"
+  if errorlevel 1 (
+    del "%script_dir%\dwl_graphviz.tmp"
+    %_fatal% "Cannot get Graphviz releases feed from GitLab with cmd '!cmd!'" 1
+  )
+  for /f "usebackq delims=" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$feed = [xml](Get-Content -Raw -Path '%script_dir%\dwl_graphviz.tmp'); $feed.feed.entry[0].title"`) do ( set "version=%%a" )
+  del "%script_dir%\dwl_graphviz.tmp"
+  if not defined version (
+    %_fatal% "Cannot find latest Graphviz release from GitLab releases feed" 2
+  )
+)
+rem Direct release artifact attached on https://gitlab.com/graphviz/graphviz/-/releases/%version%
+set "file=windows_10_cmake_Release_Graphviz-%version%-win64.zip"
+set "target_local_file=graphviz-%version%-win64.zip"
+set "url=https://gitlab.com/api/v4/projects/4207231/packages/generic/graphviz-releases/%version%/%file%"
+%_ok% "Resolved Graphviz version '%version%' from portable archive '%file%'"
+call :curl
+goto:eof
+
 :dwl_maven:
 rem https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.zip
 rem https://repo.maven.apache.org/maven2/org/apache/maven/apache-maven/3.3.9/apache-maven-3.3.9-bin.zip

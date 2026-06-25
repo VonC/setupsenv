@@ -14,6 +14,7 @@ Python/py~3.12 3.13~pythons~python-*-amd64.zip
 Sysinternals_Suite/sysinternals/sysinternal/sys/sysint~#~sysinternalsSuites~SysinternalsSuite-*.zip~global
 VSCode/code~#~vscodes~VSCodeUserSetup-x64-*.exe~global
 SQL_Developer/sqldeveloper/sqldev~#~sqldevelopers~sqldeveloper-*-x64.zip
+Graphviz/gv/dot/neato~#~graphvizs~graphviz-*-win64.zip
 IntelliJ_IDEA_Community_Edition/idea/intellij~#~ideas~ideaIC-*.win.zip
 Notepad++/notepadplusplus/notepad-plus-plus/npp~#~npps~npp.*.portable.x64.zip~global
 Filezilla/fz~#~filezillas~FileZilla_*_win64.zip
