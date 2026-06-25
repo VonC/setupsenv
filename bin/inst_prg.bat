@@ -88,6 +88,10 @@ if errorlevel 1 (
     set "prg_pattern=%~1"
     %_info% "Mode 'ls' activated: prg_pattern='!prg_pattern!'"
 )
+if "%prg_id%"=="sqldeveloper" (
+    if "%~2"=="" ( set "prg_pattern=sqldeveloper-*.*-x64.zip-latest" )
+    if "%~2"=="latest" ( set "prg_pattern=sqldeveloper-*.*-x64.zip-latest" )
+)
 %_info% "prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
 
 pushd "%USERPROFILE%\Downloads"
@@ -224,6 +228,7 @@ if not exist "%PRGS%\%prgs_folder%" (
 )
 
 for /F "usebackq" %%i in (`dir /OD /B "%setup_dir%\%fname%"`) do set "prg_folder=%%~ni"
+if "%prgs_folder%"=="sqldevelopers" ( call:check_sqldeveloper_archive )
 
 %_task% "'%prg_name%': Must check/install fname '%fname%' from '%setup_dir%' to '%PRGS%\%prgs_folder%\%prg_folder%' with symlink name '%sln%'"
 
@@ -328,6 +333,26 @@ call "%script_dir%\rbc.bat" "%src%" "%dst%" "%fname%"
 set "rbc_res=%ERRORLEVEL%"
 if not "%rbc_res%"=="0" ( %_fatal% "Unable to copy '%src%\%fname%' to '%dst%\' errorlevel '%rbc_res%'" && exit /b 1 && goto:eof )
 %_ok% "Setup '%fname%' copied locally to '%dst%'"
+goto:eof
+
+:check_sqldeveloper_archive
+if "%fname:sqldeveloper-=%"=="%fname%" (
+    %_fatal% "SQL Developer installation requires a sqldeveloper archive, not '%fname%'" 93
+)
+if "%fname:-x64.zip=%"=="%fname%" (
+    %_fatal% "SQL Developer installation requires a Windows x64 zip archive with a version, not '%fname%'" 94
+)
+set "sqldeveloper_version=%fname:sqldeveloper-=%"
+set "sqldeveloper_version=%sqldeveloper_version:-x64.zip=%"
+if "%sqldeveloper_version%"=="latest" (
+    %_fatal% "SQL Developer installation requires the versioned Oracle archive, not '%fname%'" 95
+)
+echo.%sqldeveloper_version%| findstr /R /C:"^[0-9]" >nul
+if errorlevel 1 (
+    %_fatal% "SQL Developer archive '%fname%' does not expose a numeric Oracle version" 96
+)
+set "prg_folder=sqldeveloper-%sqldeveloper_version%-x64"
+%_ok% "SQL Developer version '%sqldeveloper_version%' derived from archive '%fname%'"
 goto:eof
 
 :symlink_name

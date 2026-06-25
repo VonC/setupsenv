@@ -472,18 +472,31 @@ call :curl
 goto:eof
 
 :dwl_sqldeveloper
+set "file="
+set "url="
 set "cmd=curl -skL https://www.oracle.com/database/sqldeveloper/technologies/download/"
 %cmd% > "%script_dir%\dwl_sqldeveloper.tmp"
 if errorlevel 1 (
   del "%script_dir%\dwl_sqldeveloper.tmp"
   %_fatal% "Cannot get latest version from oracle/database/sqldeveloper for SQL Developer with cmd '%cmd%'" 1
 )
-for /f "tokens=2 delims=><" %%a in ('findstr /R /C:"Version .* - "  "%script_dir%\dwl_sqldeveloper.tmp"') do ( set "version=%%a" )
-for /f "tokens=2 delims=- " %%a in ('echo %version%') do ( set "version=%%a" )
-%_ok% "Latest SQL Developer version '%version%'"
+for /f "usebackq tokens=1,2 delims=|" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$text = Get-Content -Raw -Path '%script_dir%\dwl_sqldeveloper.tmp'; $prefix = if ('%version%' -eq 'latest') { '' } else { [regex]::Escape('%version%') }; $filePattern = if ($prefix) { 'sqldeveloper-' + $prefix + '[0-9A-Za-z\.\-]*-x64\.zip' } else { 'sqldeveloper-[0-9][0-9A-Za-z\.\-]*-x64\.zip' }; $urlPattern = 'https://download\.oracle\.com/[^\s\"<>]*' + $filePattern; $m = [regex]::Match($text, $urlPattern); if ($m.Success) { $u = $m.Value; $f = [IO.Path]::GetFileName($u); Write-Output ($u + '|' + $f); exit }; $m = [regex]::Match($text, $filePattern); if ($m.Success) { $f = $m.Value; Write-Output ('https://download.oracle.com/otn_software/java/sqldeveloper/' + $f + '|' + $f) }"`) do (
+  set "url=%%a"
+  set "file=%%b"
+)
+if not defined file (
+  if "%version%"=="latest" (
+    del "%script_dir%\dwl_sqldeveloper.tmp"
+    %_fatal% "Cannot get latest SQL Developer x64 archive from oracle/database/sqldeveloper with cmd '%cmd%'" 2
+  )
+  %_warn% "SQL Developer version '%version%' not found on current Oracle page; using explicit archive name"
+  set "file=sqldeveloper-%version%-x64.zip"
+  set "url=https://download.oracle.com/otn_software/java/sqldeveloper/%file%"
+)
+set "version=%file:sqldeveloper-=%"
+set "version=%version:-x64.zip=%"
+%_ok% "Resolved SQL Developer version '%version%' from archive '%file%'"
 rem https://download.oracle.com/otn_software/java/sqldeveloper/sqldeveloper-23.1.1.345.2114-x64.zip
-set "file=sqldeveloper-%version%-x64.zip"
-set "url=https://download.oracle.com/otn_software/java/sqldeveloper/%file%"
 call :curl
 del "%script_dir%\dwl_sqldeveloper.tmp"
 goto:eof
