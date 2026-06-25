@@ -235,6 +235,13 @@ cd /d "%script_dir%"
 findstr /i "gits" "custom\%instlist%" >nul
 if %errorlevel% equ 0 ( set "pattern=system" ) else ( set "pattern=PortableGit-*" )
 call:install "%pattern%" "gits" || exit /b 1
+if "%prgtoinstall%"=="" (
+    call:activate_git_path || exit /b 1
+) else if /i "%prgtoinstall%"=="gits" (
+    call:activate_git_path || exit /b 1
+) else if exist "%PRGS%\gits\current\bin\git.exe" (
+    call:activate_git_path || exit /b 1
+)
 
 
 if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
@@ -478,12 +485,38 @@ if not defined sln (
 if exist "%script_dir%\installs\%f%.post.bat" (
     call "%script_dir%\installs\%f%.post.bat" "%sln%" || exit /b 1
 )
+if /i "%f%"=="gits" (
+    call:activate_git_path || exit /b 1
+)
 if exist "%script_dir%\custom\%f%.post.bat" (
     call "%script_dir%\custom\%f%.post.bat" "%sln%" || exit /b 1
 )
 if exist "%locald%\%f%.post.bat" (
     call "%locald%\%f%.post.bat" "%sln%" || exit /b 1
 )
+goto:eof
+
+:activate_git_path
+if not defined PRGS (
+    %_fatal% "PRGS not defined: unable to activate Git PATH" 94
+)
+if not defined HOME (
+    %_fatal% "HOME not defined: unable to activate Git PATH" 95
+)
+set "GH=%PRGS%\gits\current"
+if not exist "%GH%\bin\git.exe" (
+    %_fatal% "git.exe missing at '%GH%\bin': unable to activate Git PATH" 96
+)
+set "PATH=%HOME%\bin;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+where git >NUL 2>NUL
+if errorlevel 1 (
+    %_fatal% "git.exe still not found on PATH after activating '%GH%'" 97
+)
+where awk >NUL 2>NUL
+if errorlevel 1 (
+    %_fatal% "awk.exe still not found on PATH after activating '%GH%\usr\bin'" 98
+)
+%_ok% "Git PATH activated from '%GH%'"
 goto:eof
 
 :check_install
