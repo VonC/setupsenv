@@ -1,0 +1,90 @@
+# Naming conventions
+
+Every rule of thumb senv relies on, in one page. The rationale is in
+[Junctions as a location contract](../explanation/junctions-as-a-contract.md).
+
+## Program folders
+
+| Convention | Example |
+| --- | --- |
+| family folder: tool name plus trailing `s`, under `%PRGS%` | `%PRGS%\javas`, `%PRGS%\gits` |
+| program id: family folder minus the `s` | `java`, `git` |
+| one subfolder per version, `<prefix><version>` | `jdk21`, `node22`, `mvn3.9.9`, `python3.13.1`, `wildfly35` |
+| junction to the active version, default name `current` | `%PRGS%\gits\current` |
+| versioned junction names for jdk, node, python, maven, wildfly | `%PRGS%\javas\jdk21` |
+| tools installed outside senv: `current` junction to the external path | `%PRGS%\vscodes\current` |
+
+On drives where junctions are not possible (network), the extracted folder
+is renamed to the junction name and a `_<original-name>` marker file records
+it.
+
+## Install hooks
+
+For a family folder `<tool>s`, hook scripts are looked up by name in
+`installs\` (public), then `custom\` (private), then the local folder:
+
+| Hook | Runs |
+| --- | --- |
+| `<tool>s.pre.bat` | before the install |
+| `<tool>s.install.bat` | instead of the default 7-Zip extraction |
+| `<tool>s.post.bat` | after extraction, before the junction |
+| `<tool>s.sln.bat` | during junction creation, prints the junction name |
+| `<tool>s.alias.bat` | after the junction, adds doskey aliases |
+| `<tool>s.test.bat` | manual diagnostics only |
+
+## Profile-keyed files (in `custom\`)
+
+The `<profile>` token must be identical across all of them:
+
+| File | Content |
+| --- | --- |
+| `profile` | one line: the active profile name |
+| `install_<profile>.list` | application list ([format](install-list-format.md)) |
+| `setupsdir_<profile>.bat` | resolves the team archive share |
+| `senv.custom.<profile>.bat` | per-profile environment variables |
+| `senv.custom.<profile>.doskey` | per-profile aliases |
+| `senv.custom.full.<profile>.bat` | optional, fully replaces `senv.custom.bat` |
+| `senv_<profile>-zip.exe` | built self-extracting archive (in `builds\`) |
+
+## Custom-wide files (all profiles)
+
+| File | Content |
+| --- | --- |
+| `setup.ini.bat` | detects and confirms `PRGS`, `HOME`, `PROG`, `REMOTE_HOME` |
+| `senv.custom.bat` | team environment variables, sourced by every session |
+| `senv.custom.doskey` | team aliases |
+| `gsenv.custom.bat` | team additions to the graphical session |
+
+## Senv-provided distribution scripts, in `adm\custom\`
+
+Generic machinery maintained in the public repository. A file with the same
+name in `custom\` takes precedence over the `adm\custom\` one:
+
+| File | Content |
+| --- | --- |
+| `remote_setup.bat` | client bootstrap/update from the team share |
+| `ss.bat` | published to the share as its `s.bat` |
+| `senv_update.bat` | push a built archive to the share and refresh locally |
+| `setup.senv.local.pre.bat` | registers the four location variables in `senv.local.pre.bat` |
+
+The share resolver called by `setupsdir_<profile>.bat` is
+`installs\setupsdir.bat`.
+
+## Local (personal) files, in `%HOME%\bin`
+
+Created once by `setup.bat`, never overwritten by an update:
+
+| File | Content |
+| --- | --- |
+| `senv.local.pre.bat` | authoritative `PRGS`, `HOME`, `PROG`, `REMOTE_HOME` |
+| `senv.local.bat` | personal environment variables |
+| `senv.local.doskey` | personal aliases (holds `cdi`, `cdis`) |
+| `gsenv.local.bat` | personal additions to the graphical session |
+
+## Load order
+
+Environment: `senv.local.pre.bat` → built-in senv settings →
+`senv.custom.bat` → `senv.local.bat` → `senv.custom.<profile>.bat`.
+
+Doskey: `senv.doskey` → `senv.custom.doskey` → `senv.local.doskey` →
+`senv.custom.<profile>.doskey`. Later files win.
