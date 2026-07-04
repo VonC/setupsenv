@@ -13,16 +13,16 @@ cd /d "%script_dir%"
 call %senv_dir%\batcolors\echos_macros.bat
 set "custom_dir=%script_dir%"
 
-%_info% "called as: setupsdir.bat %1 %2 %3"
+%_info% "called as: setupsdir.bat '%~1' '%~2' '%~3'"
 
-set "profile=%1"
+set "profile=%~1"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined profile (
     %_fatal% "first parameter must be provided (profile)" 1
 )
 set profile=%profile:"=%
 
-set "driveUNCPath=%2"
+set "driveUNCPath=%~2"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined driveUNCPath (
     %_fatal% "second parameter must be provided (driveUNCPath)" 1
@@ -31,7 +31,7 @@ set driveUNCPath=%driveUNCPath:"=%
 set driveUNCPath=%driveUNCPath:^==%
 
 
-set "localPath=%3"
+set "localPath=%~3"
 rem https://stackoverflow.com/questions/1964192/removing-double-quotes-from-variables-in-batch-file-creates-problems-with-cmd-en
 if not defined localPath (
     %_fatal% "third parameter must be provided (localPath)" 1
