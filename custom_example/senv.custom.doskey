@@ -1,0 +1,1 @@
+senvcustomhelp=echo Team aliases go in senv.custom.doskey, format: name=command $*
