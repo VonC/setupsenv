@@ -1,8 +1,10 @@
 !*.ori
 /*custom*/
+!/custom_example/
 /setups/
 /setups_example/
 *.local.*
+!/adm/custom/setup.senv.local.pre.bat
 /setups.ori
 profile
 driveLetter.bat
