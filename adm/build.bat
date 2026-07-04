@@ -184,9 +184,11 @@ if errorlevel 1 (
     %_fatal% "Unable to copy 'echos.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
-copy /Y "%custom_dir%\remote_setup.bat" "%remote_senv_dir%\remote_setup.bat"
+set "remote_setup_src=%script_dir%\custom\remote_setup.bat"
+if exist "%custom_dir%\remote_setup.bat" ( set "remote_setup_src=%custom_dir%\remote_setup.bat" )
+copy /Y "%remote_setup_src%" "%remote_senv_dir%\remote_setup.bat"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 'remote_setup.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
+    %_fatal% "Unable to copy 'remote_setup.bat' from '%remote_setup_src%' to '%remote_senv_dir%'" && exit /b 1)
 )
 
 copy /Y "%custom_dir%\setup.ini.bat" "%remote_senv_dir%\setup.ini.bat"
@@ -197,9 +199,11 @@ copy /Y "%custom_dir%\detection_VDI.bat" "%remote_senv_dir%\detection_VDI.bat"
 if errorlevel 1 (
     %_fatal% "Unable to copy 'detection_VDI.bat' from '%custom_dir%' to '%remote_senv_dir%'" && exit /b 1)
 )
-copy /Y "%custom_dir%\ss.bat" "%setupsdir%\s.bat"
+set "ss_src=%script_dir%\custom\ss.bat"
+if exist "%custom_dir%\ss.bat" ( set "ss_src=%custom_dir%\ss.bat" )
+copy /Y "%ss_src%" "%setupsdir%\s.bat"
 if errorlevel 1 (
-    %_fatal% "Unable to copy 's.bat' from '%custom_dir%' to '%setupsdir%'" && exit /b 1)
+    %_fatal% "Unable to copy 's.bat' from '%ss_src%' to '%setupsdir%'" && exit /b 1)
 )
 copy /Y "%custom_dir%\..\check_migrate_home.bat" "%setupsdir%\check_migrate_home.bat"
 if errorlevel 1 (

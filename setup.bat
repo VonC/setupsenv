@@ -184,11 +184,13 @@ if not exist "%script_dir%\custom\senv.custom.%profile%.doskey" (
 
 if not exist "%HOME%\bin\senv.local.bat" ( echo @echo off%NL%%NL%REM Custom settings go here> "%HOME%\bin\senv.local.bat")
 if not exist "%HOME%\bin\senv.local.pre.bat" ( echo @echo off%NL%set "PRGS=%PRGS%"%NL%set "PROG=%PROG%"%NL%set "REMOTE_HOME=%REMOTE_HOME%"%NL%set "HOME=%HOME%"%NL%rem ---> "%HOME%\bin\senv.local.pre.bat"  )
-if not exist "%script_dir%\custom\setup.senv.local.pre.bat" (
-    %_info% "No '%script_dir%\custom\setup.senv.local.pre.bat' found"
+set "sslpb=%script_dir%\adm\custom\setup.senv.local.pre.bat"
+if exist "%script_dir%\custom\setup.senv.local.pre.bat" ( set "sslpb=%script_dir%\custom\setup.senv.local.pre.bat" )
+if not exist "%sslpb%" (
+    %_info% "No '%sslpb%' found"
 ) else (
-    %_info% "Call "%script_dir%\custom\setup.senv.local.pre.bat"
-    call "%script_dir%\custom\setup.senv.local.pre.bat"
+    %_info% "Call "%sslpb%"
+    call "%sslpb%"
 )
 if not exist "%HOME%\bin\senv.local.doskey" ( echo cdi=cd /d "%script_dir%"> "%HOME%\bin\senv.local.doskey" )
 if not exist "%HOME%\bin\gsenv.local.bat" ( echo @echo off%NL%%NL%REM Custom gsenv settings go here> "%HOME%\bin\gsenv.local.bat")
