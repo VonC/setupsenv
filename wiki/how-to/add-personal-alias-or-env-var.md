@@ -18,16 +18,25 @@ and never touches them again — this is what makes them update-proof:
 
 Everything else in `%HOME%\bin` is overwritten on each `s` / `setup.bat` run.
 
+Two edit aliases drive the whole loop, each with its own reload:
+
+- `senve` — open `senv.local.bat` (your variables) in VSCode; a variable
+  change needs a full `senv` to be reloaded in the current session,
+- `aliase` — open `senv.local.doskey` (your aliases) in VSCode; an alias
+  change only needs `aliasr`, which reloads the doskey layers alone.
+
 ## Steps
 
-1. Add a variable or PATH entry — edit `%HOME%\bin\senv.local.bat`:
+1. Add a variable or PATH entry — type `senve` and edit
+   `%HOME%\bin\senv.local.bat`:
 
    ```bat
    set "MY_TOOL_HOME=%PRGS%\mytools\current"
    set "PATH=%MY_TOOL_HOME%\bin;%PATH%"
    ```
 
-2. Add an alias — append to `%HOME%\bin\senv.local.doskey`:
+2. Add an alias — type `aliase` and append to
+   `%HOME%\bin\senv.local.doskey`:
 
    ```text
    cdp=cd /d %PROG%\myproject
@@ -36,8 +45,8 @@ Everything else in `%HOME%\bin` is overwritten on each `s` / `setup.bat` run.
 
 3. Reload without reopening the terminal:
 
-   - `aliasr` reloads the three doskey layers,
-   - `senv` re-runs the whole activation (variables included).
+   - after `aliase`: `aliasr` reloads the three doskey layers, nothing else,
+   - after `senve`: `senv` re-runs the whole activation, variables included.
 
 ## Check
 

@@ -120,6 +120,17 @@ alias   &:: list every doskey alias
 alias cd  &:: list only the cd* navigation aliases
 ```
 
+And when you want to make senv yours, the customization trio:
+
+```cmd
+senve   &:: edit your personal variables (senv.local.bat) in VSCode
+senv    &:: reload everything, so the variable change takes effect
+aliase  &:: edit your personal aliases (senv.local.doskey) in VSCode
+aliasr  &:: reload only the aliases, enough after an aliase edit
+```
+
+Both files survive every senv update.
+
 Then close the window. Open a plain `CMD` again without typing `senv`: none
 of this exists there. That is the whole point — senv lives inside the
 session, and only there.

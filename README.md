@@ -107,9 +107,10 @@ install is the [first tutorial](wiki/tutorials/01-your-first-senv.md).
 
 ### After the first run
 
-- **Customize your session** — personal aliases go in
-  `%HOME%\bin\senv.local.doskey`, personal variables in `senv.local.bat`;
-  both survive every senv update
+- **Customize your session** — type `senve` to edit your personal
+  variables (`senv.local.bat`, reload with `senv`), or `aliase` to edit
+  your personal aliases (`senv.local.doskey`, reload with `aliasr`); both
+  files survive every senv update
   ([how-to](wiki/how-to/add-personal-alias-or-env-var.md)).
 - **Add tools on demand** — `div node`, or `dwl jdk 21` then `inst jdk`,
   then `switchjdk`/`switchnode` inside a session
@@ -133,6 +134,8 @@ will be) in the wiki reference pages:
 | `switchjdk`, `switchnode`, ... | put one tool version on the session PATH |
 | `up`, `upg`, `upa` | update the environment from the team share |
 | `alias [pattern]` | list the doskey aliases |
+| `senve` | edit your personal variables in VSCode; reload with `senv` |
+| `aliase` | edit your personal aliases in VSCode; reload with `aliasr` |
 | `ppath` | print and check the PATH, entry by entry |
 | `ti`, `ei` | test / restore internet access (proxy restart) |
 

@@ -9,6 +9,10 @@ overriding earlier ones:
 4. `%HOME%\bin\senv.custom.<profile>.doskey` — profile.
 
 `aliasr` reloads the first three; `alias [pattern]` lists what is loaded.
+`senve` and `aliase` open the two personal files (`senv.local.bat`,
+`senv.local.doskey`) in VSCode — they are the usual entry point for any
+customization. After `aliase`, `aliasr` is enough to reload the aliases;
+after `senve`, run `senv` to re-apply the variables in the session.
 
 ## Navigation
 
