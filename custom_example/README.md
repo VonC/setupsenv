@@ -59,6 +59,7 @@ Files shared by all profiles:
 | `senv.custom.bat` | team-wide environment variables, sourced by every session (typically `HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`) |
 | `senv.custom.doskey` | team-wide doskey aliases |
 | `gsenv.custom.bat` | team-wide additions to the graphical session (`gsenv`) |
+| `senv.custom.all_teams.gcua.list` | default git-hosting services for every profile: setup registers the git identity in every repository whose remotes all match those services |
 
 Files keyed by a profile name (see next section), for a profile `xyz`:
 
@@ -69,6 +70,7 @@ Files keyed by a profile name (see next section), for a profile `xyz`:
 | `senv.custom.xyz.bat` | environment variables for that team |
 | `senv.custom.xyz.doskey` | aliases for that team |
 | `senv.custom.full.xyz.bat` | optional: fully replaces `senv.custom.bat` for that team |
+| `senv.custom.xyz.gcua.list` | optional: the team git-hosting services (one per line), with priority over `senv.custom.all_teams.gcua.list` for that team |
 
 Optional install hooks, named after the program folder (`<tool>s`):
 

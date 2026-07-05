@@ -33,6 +33,20 @@ after `senve`, run `senv` to re-apply the variables in the session.
 | `cdls` | `%USERPROFILE%\senv_setups` |
 | `cdlss` | `%USERPROFILE%\senv_setups\setups` |
 
+`alias cd` lists them all: `alias <xxx>` shows every alias whose name or
+definition contains `xxx`.
+
+`cdg` is the conventional home of your clones: nothing stops a repository
+from living elsewhere, but keeping them all under `%PROG%\git` gives every
+script, colleague and future you one place to look, and pairs with the
+per-repository identity habit ([`gcu`](commands.md#git)). A common personal
+addition is a `cdp` alias in `senv.local.doskey` jumping to the current
+project, ideally under `cdg`:
+
+```text
+cdp=cd /d %PROG%\git\myproject
+```
+
 ## Session and editors
 
 | Alias | Expansion |

@@ -68,6 +68,39 @@ A useful test when adding a file: "could this line appear on a public
 GitHub page without anyone at the company minding?" If not, it belongs in
 custom.
 
+## One Git identity per repository
+
+The same boundary runs through every commit a contractor makes. The usual
+Git habit — one global `user.email` for the whole machine — is exactly
+wrong in a corporate context: the day a public repository is cloned and a
+commit pushed to an external hosting service, the professional email
+travels with it and becomes visible to everyone, forever. Conditional
+per-folder configuration (`includeIf`) looks like a fix but is fragile for
+the same human reason: nothing stops a repository from being cloned in the
+wrong folder, and the wrong identity silently applies.
+
+senv takes the strict route instead. Its Git configuration (see the
+[git configuration reference](../reference/git-configuration.md)) sets
+`user.useConfigOnly=true` and no global identity at all: `git commit`
+refuses to run until `user.name` and `user.email` are set **in that
+repository**. Declaring the identity is a one-word step — `gcu`, generated
+at install time from the name and email registered in
+`senv.local.pre.bat` — so the cost is one command per clone, and the
+benefit is that no commit can ever carry an identity nobody chose. For a
+personal repository, setting a personal email by hand is the same
+one-command effort.
+
+A team can automate even that last command, without giving up the choice:
+when the custom repository names the git-hosting services — in
+`senv.custom.all_teams.gcua.list` for every profile at once, or in a
+`senv.custom.<profile>.gcua.list` that takes priority for one team —
+every setup or update run stamps the professional identity into the
+repositories whose remotes **all** belong to those services. The rule is deliberately strict — one remote pointing anywhere
+else, `github.com` for example, and the repository is skipped — because a
+repository that pushes to both an internal and a public service is
+precisely the case where a human must decide. The list itself names
+internal hosts, so it lives in the private custom repository, per profile.
+
 ## The trust consequence
 
 `adm\build.bat` packs the **whole senv tree, custom included**, into the

@@ -44,6 +44,7 @@ The `<profile>` token must be identical across all of them:
 | `senv.custom.<profile>.bat` | per-profile environment variables |
 | `senv.custom.<profile>.doskey` | per-profile aliases |
 | `senv.custom.full.<profile>.bat` | optional, fully replaces `senv.custom.bat` |
+| `senv.custom.<profile>.gcua.list` | optional, team git-hosting services: setup then applies the git identity to matching repositories ([git configuration](git-configuration.md)) |
 | `senv_<profile>-zip.exe` | built self-extracting archive (in `builds\`) |
 
 ## Custom-wide files (all profiles)
@@ -54,6 +55,7 @@ The `<profile>` token must be identical across all of them:
 | `senv.custom.bat` | team environment variables, sourced by every session |
 | `senv.custom.doskey` | team aliases |
 | `gsenv.custom.bat` | team additions to the graphical session |
+| `senv.custom.all_teams.gcua.list` | default git-hosting services for every profile; a `senv.custom.<profile>.gcua.list` has priority over it ([git configuration](git-configuration.md)) |
 
 ## Senv-provided distribution scripts, in `adm\custom\`
 

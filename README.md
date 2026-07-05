@@ -77,7 +77,10 @@ previous:
 therefore ship its own `senv.bat` that calls the global one and then, for
 example, runs `switchjdk 17` and `switchnode 20`: opening a session in that
 project gives the exact tool versions the project needs, found at their
-conventional `%PRGS%` locations.
+conventional `%PRGS%` locations. `senv all` runs the global activation
+first and the project one on top — handy for a Windows Terminal tab per
+project
+([how-to](wiki/how-to/open-project-tabs-in-windows-terminal.md)).
 
 ## Quick start
 
@@ -133,11 +136,22 @@ will be) in the wiki reference pages:
 | `dwl`, `inst`, `div` | download / uncompress / both, for one tool |
 | `switchjdk`, `switchnode`, ... | put one tool version on the session PATH |
 | `up`, `upg`, `upa` | update the environment from the team share |
-| `alias [pattern]` | list the doskey aliases |
+| `alias [pattern]` | list the doskey aliases, filtered by name or content (`alias cd`) |
+| `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
+| `gcu` | register your name/email in the current repository (see below) |
 | `senve` | edit your personal variables in VSCode; reload with `senv` |
 | `aliase` | edit your personal aliases in VSCode; reload with `aliasr` |
 | `ppath` | print and check the PATH, entry by entry |
 | `ti`, `ei` | test / restore internet access (proxy restart) |
+
+### Git identity, per repository
+
+senv sets no global Git email: with `user.useConfigOnly=true`, a commit is
+refused until the repository has its own identity. Clone under `cdg`
+(`%PROG%\git`), run `gcu` once in the clone, done — a professional email
+can no longer slip into a public repository by accident. Details in the
+[git configuration reference](wiki/reference/git-configuration.md) and the
+[reasoning](wiki/explanation/public-engine-private-data.md#one-git-identity-per-repository).
 
 ## Repository layout
 

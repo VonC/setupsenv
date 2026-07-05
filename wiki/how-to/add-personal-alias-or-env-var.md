@@ -39,9 +39,13 @@ Two edit aliases drive the whole loop, each with its own reload:
    `%HOME%\bin\senv.local.doskey`:
 
    ```text
-   cdp=cd /d %PROG%\myproject
+   cdp=cd /d %PROG%\git\myproject
    ll=lsd -al $*
    ```
+
+   `cdp` is the customary name for "my current project", ideally under the
+   `cdg` clone home (`%PROG%\git`) — nothing enforces it, but one common
+   root keeps every repository findable.
 
 3. Reload without reopening the terminal:
 

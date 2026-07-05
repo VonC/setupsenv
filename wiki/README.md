@@ -29,6 +29,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - [Migrate HOME to a local drive](how-to/migrate-home-to-local.md)
 - [Work behind a corporate proxy](how-to/work-behind-a-corporate-proxy.md)
 - [Manage Python virtual environments](how-to/manage-python-virtual-environments.md)
+- [Open project tabs in Windows Terminal](how-to/open-project-tabs-in-windows-terminal.md)
 - [Update senv and diagnose version drift](how-to/update-senv-and-diagnose-version-drift.md)
 
 ## Reference
@@ -41,6 +42,7 @@ Exact, dry descriptions of commands, formats and conventions.
 - [Naming conventions](reference/naming-conventions.md)
 - [Environment variables](reference/environment-variables.md)
 - [Doskey aliases](reference/doskey-aliases.md)
+- [Git configuration](reference/git-configuration.md)
 - [Exit codes](reference/exit-codes.md)
 
 ## Explanation

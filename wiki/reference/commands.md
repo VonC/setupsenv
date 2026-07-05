@@ -10,15 +10,25 @@ Related pages: [doskey aliases](doskey-aliases.md),
 
 ## Session
 
-### `senv`
+### `senv [global|all]`
 
 ```text
 senv
+senv global
+senv all
 ```
 
-Doskey alias for `call "%USERPROFILE%\senv.bat"`. That generated launcher
-calls a `senv.bat` present in the current directory if there is one
-(project-specific senv), otherwise `%HOME%\bin\senv.bat`. The activator:
+Doskey alias for `call "%USERPROFILE%\senv.bat" $*`. That generated
+launcher calls a `senv.bat` present in the current directory if there is
+one (project-specific senv), otherwise `%HOME%\bin\senv.bat`.
+
+| Argument | Behavior |
+| --- | --- |
+| none | project `senv.bat` if the current folder has one, else global |
+| `global` | always the global activation, current folder ignored |
+| `all` | global activation first, then the project `senv.bat` on top ([Windows Terminal how-to](../how-to/open-project-tabs-in-windows-terminal.md)) |
+
+The activator:
 
 - resets `PATH` to the minimal Windows folders,
 - sources `%HOME%\bin\senv.local.pre.bat` (defines `PRGS`, `HOME`, `PROG`,
@@ -191,12 +201,40 @@ one venv is present.
 Finds the profile setups folder from the `cdis` alias, refreshes the mapped
 drive, and re-runs `s.bat` there.
 
+## Git
+
+### `gcu`
+
+Sets `user.name` and `user.email` in the current repository, from the
+`FULLNAME` and `USERMAIL` registered in `%HOME%\bin\senv.local.pre.bat`.
+Run it once after each clone: the senv Git configuration sets
+`user.useConfigOnly=true`, so commits are refused until the repository has
+its own identity. Generated into `%HOME%\bin\gcu.bat` by the `gits` install
+hook. Full option list and rationale:
+[git configuration](git-configuration.md).
+
+### `gcua [<folder>] [<hosts-list>|-] [--force] [--dry-run]`
+
+Applies the `gcu` identity to every first-level repository under
+`<folder>` (default `%PROG%\git`), reporting each repository with the
+name/email set, kept, or the skip reason. Skips repositories that already
+have a local `user.email` (`--force` overrides). With a hosts list — by
+default `%HOME%\bin\senv.custom.<profile>.gcua.list` — a repository is
+stamped only when all URLs of all its remotes match a listed service; `-`
+disables the filter; `senv.custom.all_teams.gcua.list` is the fallback shared by every
+profile. Without a list and without `-`, does nothing. `--dry-run` prints
+the report without writing. `setup.bat` runs it automatically at the end
+of each install or update when either list applies to the active profile.
+Details: [git configuration](git-configuration.md).
+
 ## Diagnostics
 
 ### `alias [-l] [<pattern>]`
 
 No argument: lists all doskey macros. With a pattern: filters them through
-`findstr /i`. `-l` is accepted and ignored.
+`findstr /i`, so the pattern matches anywhere in the name **or the
+definition** — `alias cd` lists the `cd*` navigation aliases, `alias git`
+everything that runs git.
 
 ### `ppath [/i] [<term> ...]`
 

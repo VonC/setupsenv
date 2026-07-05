@@ -48,6 +48,19 @@ git --version
 
 Close the window: the laptop is unchanged outside the session.
 
+Your first clone follows the two senv habits: `cdg` to reach the common
+clone home (`%PROG%\git`), then `gcu` inside the fresh clone to register
+your name and email there — senv sets no global Git identity, precisely so
+a professional email can never end up in the wrong repository (see
+[git configuration](../reference/git-configuration.md)):
+
+```cmd
+cdg
+git clone https://server.example.corp/team/myrepo
+cd myrepo
+gcu
+```
+
 ## 3. Update when the team publishes a new version
 
 Later, from inside any session, one alias refreshes your environment from

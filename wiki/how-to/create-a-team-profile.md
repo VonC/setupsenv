@@ -36,6 +36,21 @@ All files below live in the private `custom\` repository — see
 4. Add the team aliases in `custom\senv.custom.xyz.doskey` (loaded after the
    global and team-wide doskey layers).
 
+   Optional: list the team git-hosting services in
+   `custom\senv.custom.xyz.gcua.list` (one pattern per line, `#` comments):
+
+   ```text
+   git.example.corp
+   ```
+
+   Every setup or update run then registers the team git identity in each
+   repository under `%PROG%\git` whose remotes all match those services —
+   repositories with a remote elsewhere, or an already-set identity, are
+   left alone (see [git configuration](../reference/git-configuration.md)).
+   When every team uses the same services, a single
+   `custom\senv.custom.all_teams.gcua.list` covers all profiles at once; the
+   per-profile file remains the override for the teams that differ.
+
 5. Activate the profile on a machine: write the single line `xyz` into
    `custom\profile`, or run `setup.bat _xyz` once (the leading underscore
    selects the profile).

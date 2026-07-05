@@ -115,10 +115,17 @@ Try a few of the loaded aliases:
 cds     &:: cd to %PRGS%, the programs folder
 cdh     &:: cd to %HOME%, the senv home
 cdi     &:: cd to %PRGS%\senv, this repository
+cdg     &:: cd to %PROG%\git, the home of your clones
 gs      &:: git status, short form
 alias   &:: list every doskey alias
-alias cd  &:: list only the cd* navigation aliases
+alias cd  &:: filter: every alias with "cd" in its name or definition
 ```
+
+Two habits worth taking from day one: clone your repositories under `cdg`
+(one common place for all of them), and run `gcu` once inside each clone —
+senv sets no global Git identity, so commits are refused until the
+repository has its own name and email (see
+[git configuration](../reference/git-configuration.md)).
 
 And when you want to make senv yours, the customization trio:
 
