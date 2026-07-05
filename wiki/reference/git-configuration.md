@@ -127,6 +127,7 @@ at setup time. With neither file, there is no automatic stamping.
 | `autocrlf` | `false` | no end-of-line conversion: files keep the endings recorded in the repository (batch files must stay CRLF, and `.gitattributes` rules the exceptions) |
 | `safecrlf` | `false` | no warning or refusal on mixed endings, consistent with `autocrlf=false` |
 | `commitGraph` | `true` | read the commit-graph file for faster `git log`/`git branch` operations |
+| `fscache` | `true` | cache file-system metadata in memory: much faster `git status` on Windows |
 | `filemode`, `symlinks`, `ignorecase`, ... | Windows defaults | standard repository flags carried by the template so every clone behaves the same on Windows |
 
 ## `[rebase]`, `[pull]`, `[push]`
@@ -137,13 +138,15 @@ at setup time. With neither file, there is no automatic stamping.
 | `pull.rebase` | `true` | `git pull` rebases instead of creating merge commits |
 | `push.default` | `upstream` | `git push` targets the configured upstream branch only |
 
-## `[protocol]`, `[gc]`, `[init]`
+## `[protocol]`, `[gc]`, `[init]`, `[rerere]`, `[http]`
 
 | Option | Value | Effect |
 | --- | --- | --- |
 | `protocol.version` | `2` | faster fetch negotiation |
 | `gc.writeCommitGraph` | `true` | maintenance keeps the commit-graph up to date |
 | `init.defaultBranch` | `main` | new repositories start on `main` |
+| `rerere.enabled` | `true` | record and replay conflict resolutions across rebases and merges |
+| `http.sslBackend` | `schannel` | use the Windows TLS stack and its certificate store, instead of a bundled OpenSSL |
 
 ## `[credential]`
 
@@ -152,9 +155,14 @@ at setup time. With neither file, there is no automatic stamping.
 | `credential.helper` | `manager-core` | Git Credential Manager stores and serves HTTPS credentials |
 | `credential.helperselector.selected` | `manager-core` | pre-selects that helper, no popup on first use |
 
-Corporate additions (CA bundle, per-host settings, an alternative helper
-for older Git versions) come from the private `custom\gits.post.bat` hook,
-not from this template.
+The `gits` install hook re-applies the baseline options (`core.fscache`,
+`rerere.enabled`, `http.sslBackend`) with `git config --global` on every
+install or update, so existing HOMEs converge without waiting for a fresh
+`.gitconfig`.
+
+Corporate additions (CA bundle, per-host settings, a proxy credential
+provider, an alternative helper for older Git versions) come from the
+private `custom\gits.post.bat` hook, not from this template.
 
 Related: [environment variables](environment-variables.md),
 [doskey aliases](doskey-aliases.md),
