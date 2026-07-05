@@ -138,6 +138,12 @@ if errorlevel 1 (
     %_ok% "git.exe is on the PATH"
 )
 
+rem baseline global options, idempotent, kept in sync with the .gitconfig
+rem template at the senv root (see wiki\reference\git-configuration.md)
+git config --global core.fscache true
+git config --global rerere.enabled true
+git config --global http.sslBackend schannel
+
 git config --system credential.helper 1>NUL 2>NUL
 if errorlevel 1 (
     git config --system credential.helper %mgrname%

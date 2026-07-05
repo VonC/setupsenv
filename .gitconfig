@@ -10,6 +10,7 @@
 	autocrlf = false
 	safecrlf = false
 	commitGraph = true
+	fscache = true
 [rebase]
 	autostash = true
 [pull]
@@ -26,6 +27,10 @@
 	helper = manager-core
 [init]
 	defaultBranch = main
+[rerere]
+	enabled = true
+[http]
+	sslBackend = schannel
 [core]
 	repositoryformatversion = 0
 	filemode = false
