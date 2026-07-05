@@ -84,6 +84,13 @@ Hooks extend the public ones in `senv\installs\`; they are the right place
 for corporate steps such as pushing a CA bundle into the Git configuration,
 copying a Maven `settings.xml`, or injecting proxy settings into an IDE.
 
+One rule for every file above: reference tools and folders through the
+senv variables — `%PRGS%`, `%PROG%`, `%HOME%` in scripts and aliases,
+`${env.PRGS}` or `${env.PROG}` in XML settings that support them — never
+through an absolute path. `PRGS` is `C:\Public\SOFTWARE` on one machine
+and `%USERPROFILE%\SOFTWARE` on the next: a hardcoded path is a profile
+that breaks on the next laptop.
+
 ## What senv provides (do not duplicate it here)
 
 The generic machinery is maintained in the public senv repository, so keep
