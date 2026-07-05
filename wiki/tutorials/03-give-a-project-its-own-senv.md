@@ -66,6 +66,15 @@ Open another `CMD` in a different folder and type `senv`: you get the plain
 global session, without the project pins. Two sessions, two tool sets, same
 laptop, nothing global changed.
 
+## 5. One tab per project, global senv included
+
+`senv all` runs the global activation first, then the project `senv.bat`
+of the current folder on top. This is the form to use for a Windows
+Terminal tab that opens directly on a project — even a project `senv.bat`
+that only contains `switch` lines gets the full global session first. The
+per-tab setup is in
+[Open project tabs in Windows Terminal](../how-to/open-project-tabs-in-windows-terminal.md).
+
 ## Next steps
 
 - Commit `senv.bat` with the project, so every teammate with senv gets the
