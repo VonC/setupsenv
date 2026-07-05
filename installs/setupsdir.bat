@@ -11,7 +11,8 @@ cd ..
 for /F "delims=" %%f in ('cd') do ( set senv_dir=%%f)
 cd /d "%script_dir%"
 call %senv_dir%\batcolors\echos_macros.bat
-set "custom_dir=%script_dir%"
+rem drive_detection.bat writes driverLetter.bat into %senv_dir%\custom
+set "custom_dir=%senv_dir%\custom"
 
 %_info% "called as: setupsdir.bat '%~1' '%~2' '%~3'"
 
@@ -83,8 +84,10 @@ call "%senv_dir%\installs\drive_detection.bat" "%driveUNCPath%"
 set "dl=%custom_dir%\driverLetter.bat"
 %_info% "=== first call to drive_detection: type '%dl%'"
 rem type "%dl%"
-call "%dl%"
-del "%dl%"
+if exist "%dl%" (
+    call "%dl%"
+    del "%dl%"
+)
 rem %_info% "RES driveLetter='%driveLetter%'"
 if "%driveLetter%"=="" (
     %_warning% "[%profile%] Must map '%driveUNCPath%' to a drive letter:"
@@ -94,10 +97,12 @@ if "%driveLetter%"=="" (
         goto:networkPathOnly
     )
     call "%senv_dir%\installs\drive_detection.bat" "%driveUNCPath%"
-    %_info% "=== second callgi to drive_detection: type '%custom_dir%\driverLetter.bat'"
-    type "%custom_dir%\driverLetter.bat"
-    call "%custom_dir%\driverLetter.bat"
-    del "%custom_dir%\driverLetter.bat"
+    %_info% "=== second call to drive_detection: type '%custom_dir%\driverLetter.bat'"
+    if exist "%custom_dir%\driverLetter.bat" (
+        type "%custom_dir%\driverLetter.bat"
+        call "%custom_dir%\driverLetter.bat"
+        del "%custom_dir%\driverLetter.bat"
+    )
     set drive
     if "%driveLetter%"=="" (
         set "errorMessage=Unable to find drive letter for '%driveUNCPath%'"
