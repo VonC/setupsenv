@@ -2,14 +2,14 @@
 
 Goal: a Windows Terminal layout where each tab opens on one project, with
 the **global** senv applied first and the **project** `senv.bat` applied on
-top — instead of the default behavior where a project `senv.bat` replaces
+top, instead of the default behavior where a project `senv.bat` replaces
 the global activation.
 
 The launcher `%USERPROFILE%\senv.bat` takes two optional arguments:
 
-- `senv global` — always run the global activation, even if the current
+- `senv global`: always run the global activation, even if the current
   folder has its own `senv.bat`,
-- `senv all` — run the global activation, **then** the project `senv.bat`
+- `senv all`: run the global activation, **then** the project `senv.bat`
   of the current folder if there is one.
 
 A project `senv.bat` that already calls the global activator itself (the
@@ -19,7 +19,7 @@ harmless.
 
 ## Steps
 
-1. Regenerate the launcher once, so it knows the two arguments — from the
+1. Regenerate the launcher once, so it knows the two arguments, from the
    senv repository folder:
 
    ```cmd

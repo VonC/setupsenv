@@ -1,4 +1,4 @@
-# custom — the private configuration repository of senv
+# custom: the private configuration repository of senv
 
 `custom_example\` is the seed of your `custom\` folder: the place where
 everything specific to your company, your teams and your machines lives.
@@ -27,11 +27,11 @@ Manually, the first run of `setup.bat` copies `custom_example\*` into
 1. Confirm the locations proposed by `custom\setup.ini.bat` (the template
   detects them, and you can edit the file to force your own values):
 
-   - `PRGS` — local folder where portable programs are uncompressed
+   - `PRGS`: local folder where portable programs are uncompressed
      (default `C:\Public\SOFTWARE`; a `nosoft` marker file at a drive root
      excludes that drive),
-   - `HOME` — the dedicated senv home (default `%USERPROFILE%\home_senv`),
-   - `PROG` — local folder where your Git repositories and work data live
+   - `HOME`: the dedicated senv home (default `%USERPROFILE%\home_senv`),
+   - `PROG`: local folder where your Git repositories and work data live
      (a `nodata` marker file excludes a drive).
 
 2. Let `setup.bat` finish its run.
@@ -85,8 +85,8 @@ for corporate steps such as pushing a CA bundle into the Git configuration,
 copying a Maven `settings.xml`, or injecting proxy settings into an IDE.
 
 One rule for every file above: reference tools and folders through the
-senv variables — `%PRGS%`, `%PROG%`, `%HOME%` in scripts and aliases,
-`${env.PRGS}` or `${env.PROG}` in XML settings that support them — never
+senv variables, `%PRGS%`, `%PROG%`, `%HOME%` in scripts and aliases,
+`${env.PRGS}` or `${env.PROG}` in XML settings that support them, never
 through an absolute path. `PRGS` is `C:\Public\SOFTWARE` on one machine
 and `%USERPROFILE%\SOFTWARE` on the next: a hardcoded path is a profile
 that breaks on the next laptop.
@@ -112,8 +112,8 @@ in `custom\` only data and corporate steps:
 
 ## Profiles
 
-A **profile** is a named bundle — applications, variables, aliases, network
-share — shared by one team. The profile token must be strictly identical
+A **profile** is a named bundle: applications, variables, aliases, network
+share, shared by one team. The profile token must be strictly identical
 across every file that carries it: `profile`, `install_<profile>.list`,
 `setupsdir_<profile>.bat`, `senv.custom.<profile>.bat`,
 `senv.custom.<profile>.doskey` and the built artifact
@@ -161,14 +161,14 @@ and the senv self-extracting archive are published.
 
 From a maintainer machine (senv in "local" mode, `adm\` on the PATH):
 
-- `adm\build.bat <profile>` — records the combined senv+custom version, packs
+- `adm\build.bat <profile>`: records the combined senv+custom version, packs
   the whole senv tree (custom included) into a self-extracting
   `builds\senv_<profile>-zip.exe`, and publishes it to the share resolved by
   `setupsdir_<profile>.bat`, together with a generated bootstrap `s.bat`.
-- `adm\build_all.bat` — same, for every `setupsdir_*.bat` found.
-- `adm\publish.bat <archive> [profile|all]` — publishes one downloaded tool
+- `adm\build_all.bat`: same, for every `setupsdir_*.bat` found.
+- `adm\publish.bat <archive> [profile|all]`: publishes one downloaded tool
   archive to every profile share whose list contains that tool.
-- `adm\publish_profile.bat [profile|all]` — publishes the whole tool set of a
+- `adm\publish_profile.bat [profile|all]`: publishes the whole tool set of a
   profile to its share.
 
 Team members then:

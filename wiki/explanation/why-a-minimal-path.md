@@ -7,8 +7,8 @@ thing `bin\senv.bat` does after loading its color macros is:
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 ```
 
-Four entries — the bare minimum for `cmd.exe`, the standard Windows tools and
-PowerShell — and nothing else. Everything the session needs is then added
+Four entries, the bare minimum for `cmd.exe`, the standard Windows tools and
+PowerShell, and nothing else. Everything the session needs is then added
 deliberately, entry by entry: `%HOME%\bin` (the senv scripts), the portable
 Git (which also brings `grep`, `awk`, `sed`, `curl` and `bash`), and whatever
 each `switchxxx` call decides to add later. This page explains why senv is
@@ -20,7 +20,7 @@ approach.
 On a corporate laptop, the system and user `PATH` values are a shared,
 unmanaged resource. Installers append to them, IT policies rewrite them,
 agents and antivirus tools inject their folders, and none of it is under the
-developer's control — especially without admin rights. Starting a dev shell
+developer's control, especially without admin rights. Starting a dev shell
 on top of that inheritance means:
 
 - **unpredictability**: the same command may resolve to different binaries on
@@ -44,7 +44,7 @@ PATH, so the only reliable move is to stop depending on it.
   session is the unit of configuration, not the machine.
 - **Debuggability.** When a command misbehaves, the PATH is short enough to
   read. The `ppath` command prints it entry by entry and flags folders that
-  do not exist — practical only because the list stays small and intentional.
+  do not exist: practical only because the list stays small and intentional.
 - **Deliberate versions.** Since no tool is on the PATH by accident, adding
   one is an explicit act: `switchjdk 21` for this session, a project
   `senv.bat` for that repository. See
@@ -56,7 +56,7 @@ PATH, so the only reliable move is to stop depending on it.
 The reset has a cost, accepted on purpose:
 
 - tools installed outside senv are invisible until referenced through the
-  `%PRGS%` convention (a junction makes them visible again — see
+  `%PRGS%` convention (a junction makes them visible again, see
   [../how-to/reference-an-already-installed-tool.md](../how-to/reference-an-already-installed-tool.md)),
 - each new tool needs a small amount of wiring (an entry in `prgs.list`, a
   `switchxxx` call or a doskey alias) instead of "just working" because some

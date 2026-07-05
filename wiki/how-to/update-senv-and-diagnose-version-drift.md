@@ -7,13 +7,13 @@ Goal: refresh your environment from the team share, and understand what
 
 From inside a session:
 
-- `up` — quick update: refreshes the drive mapping, goes to the profile
-  setups folder (the `cdis` alias) and runs `s.bat gits` there — Git, HOME
+- `up`: quick update. Refreshes the drive mapping, goes to the profile
+  setups folder (the `cdis` alias) and runs `s.bat gits` there: Git, HOME
   and the `%HOME%\bin` utilities,
-- `upg` — same as `up` with no arguments (explicit "gits" form),
-- `upa` — full update: `s.bat` with no filter, every tool of the profile
+- `upg`: same as `up` with no arguments (explicit "gits" form),
+- `upa`: full update, `s.bat` with no filter, every tool of the profile
   list is checked and (re)installed,
-- `up <tool>` — targeted: passes the arguments through to `s.bat`.
+- `up <tool>`: targeted, passes the arguments through to `s.bat`.
 
 All three are `update_profile.bat`, which reads the setups folder and drive
 letter from the `cdis` alias, calls `drive_refresh.bat`, then runs `s.bat`
@@ -34,10 +34,10 @@ It prints the active profile, then compares versions:
 
 Two directions, possibly combined:
 
-- "new remote commit in remote senv/custom" — the team published a newer
+- "new remote commit in remote senv/custom": the team published a newer
   build: run `up` or `upa` to update,
-- "new local commit in senv/custom" — your checkout is ahead of the share
-  (maintainer case): publish with `adm\build.bat <profile>` — see
+- "new local commit in senv/custom": your checkout is ahead of the share
+  (maintainer case), publish with `adm\build.bat <profile>`, see
   [Build and publish a profile archive](build-and-publish-a-profile-archive.md).
 
 A dirty working tree in either repository is flagged too: commit or stash

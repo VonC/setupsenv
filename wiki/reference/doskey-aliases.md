@@ -3,14 +3,14 @@
 Aliases are loaded by `senv.bat` from four macro files, later files
 overriding earlier ones:
 
-1. `%HOME%\bin\senv.doskey` — global (this page),
-2. `%HOME%\bin\senv.custom.doskey` — team,
-3. `%HOME%\bin\senv.local.doskey` — personal (holds `cdi`, `cdis`),
-4. `%HOME%\bin\senv.custom.<profile>.doskey` — profile.
+1. `%HOME%\bin\senv.doskey`: global (this page),
+2. `%HOME%\bin\senv.custom.doskey`: team,
+3. `%HOME%\bin\senv.local.doskey`: personal (holds `cdi`, `cdis`),
+4. `%HOME%\bin\senv.custom.<profile>.doskey`: profile.
 
 `aliasr` reloads the first three; `alias [pattern]` lists what is loaded.
 `senve` and `aliase` open the two personal files (`senv.local.bat`,
-`senv.local.doskey`) in VSCode — they are the usual entry point for any
+`senv.local.doskey`) in VSCode: they are the usual entry point for any
 customization. After `aliase`, `aliasr` is enough to reload the aliases;
 after `senve`, run `senv` to re-apply the variables in the session.
 

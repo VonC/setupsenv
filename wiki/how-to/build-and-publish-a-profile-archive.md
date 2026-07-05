@@ -4,8 +4,8 @@ Goal: produce the self-extracting `senv_<profile>-zip.exe` and push it, with
 its bootstrap, to the team share so members can install or update from it.
 
 Prerequisite: a maintainer machine running senv in "local" mode (the
-repository checkout, with `adm\` on the PATH), and a profile already defined
-— see [Create a team profile](create-a-team-profile.md).
+repository checkout, with `adm\` on the PATH), and a profile already defined:
+see [Create a team profile](create-a-team-profile.md).
 
 ## Steps
 
@@ -41,9 +41,9 @@ repository checkout, with `adm\` on the PATH), and a profile already defined
 
 4. Publish tool archives, independently of the senv build:
 
-   - `adm\publish.bat <archive-pattern> [profile|local|all]` — pushes one
+   - `adm\publish.bat <archive-pattern> [profile|local|all]`: pushes one
      downloaded archive to every profile share whose list contains that tool,
-   - `adm\publish_profile.bat [profile|all]` — pushes the whole tool set of a
+   - `adm\publish_profile.bat [profile|all]`: pushes the whole tool set of a
      profile (newest matching archive of each entry) to its share.
 
 ## Check
@@ -51,7 +51,7 @@ repository checkout, with `adm\` on the PATH), and a profile already defined
 On the share: `senv_xyz-zip.exe`, `version` and `s.bat` are present and
 dated now. On a member machine, running that `s.bat` self-extracts the
 archive into `%PRGS%` and chains into `setup.bat`; later updates go through
-`up` / `upa` — see
+`up` / `upa`: see
 [Update senv and diagnose version drift](update-senv-and-diagnose-version-drift.md).
 
 The exe contains the full custom tree: publish it only to internal shares.

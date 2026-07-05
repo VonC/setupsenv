@@ -1,10 +1,10 @@
 # The distribution model
 
-senv maintainers work with Git. Team members, most of the time, do not —
+senv maintainers work with Git. Team members, most of the time, do not:
 they receive the environment as a single self-extracting archive,
 `senv_<profile>-zip.exe`, published on a file share, next to a small
 bootstrap `s.bat`. This page explains why distribution works that way and
-how the two sides — publishing and consuming — stay in step.
+how the two sides, publishing and consuming, stay in step.
 
 ## Why a file share and an archive, not a git clone
 
@@ -15,12 +15,12 @@ The constraints of the target environment drive the choice:
   request either quickly. A read-only file share is usually the one thing
   that already works. Running one `s.bat` from the share must be enough.
 - **No admin, no installer.** A 7-Zip self-extractor is just a file that
-  unpacks itself where the user says — no elevation, no registry, exactly
+  unpacks itself where the user says: no elevation, no registry, exactly
   the senv philosophy applied to senv itself.
 - **Everything in one piece.** The archive contains the full senv tree,
   custom repository included, so engine, team configuration and profile
-  definitions cannot drift apart between users. (The flip side — the
-  archive is as sensitive as the custom repository — is discussed in
+  definitions cannot drift apart between users. (The flip side, the
+  archive is as sensitive as the custom repository, is discussed in
   [public-engine-private-data.md](public-engine-private-data.md).)
 - **Awkward networks.** VDI setups, proxies and offline pockets make "clone
   from the internet" unreliable, while an internal share is reachable from
@@ -44,7 +44,7 @@ The mechanism is one small file:
   maintainer, whether a local commit still needs publishing),
 - the remote bootstrap `s.bat` calls `remote_setup.bat`, which performs the
   same comparison and only downloads and re-extracts the archive when the
-  versions differ — updates cost one file copy, checks cost almost nothing.
+  versions differ: updates cost one file copy, checks cost almost nothing.
 
 The version string is deliberately a description of two repositories at
 once: it pins the engine and the team data as a pair, which a plain version
@@ -66,7 +66,7 @@ number on either side alone could not do.
   [configuration-layers.md](configuration-layers.md)).
 
 Nothing pushes to users automatically. A user updates when they choose to,
-from a session they control — consistent with the general principle that
+from a session they control, consistent with the general principle that
 senv touches nothing outside the session.
 
 ## Where to look next

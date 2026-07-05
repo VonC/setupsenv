@@ -1,10 +1,10 @@
-# senv — a portable, no-admin development environment for Windows
+# senv: a portable, no-admin development environment for Windows
 
 `senv` ("session environment") turns a plain `CMD` session into a fully equipped
 development shell on a locked-down Windows laptop:
 
 - no admin rights needed,
-- no installer run on the machine (tools are only downloaded and uncompressed —
+- no installer run on the machine (tools are only downloaded and uncompressed,
   the single exception is VSCode, installed per-user),
 - nothing outside the session is modified: close the terminal and the laptop is
   exactly as before.
@@ -53,7 +53,7 @@ previous:
 
 1. **senv** (this public repository): the engine and the global aliases.
 2. **custom** (a private, nested repository in `custom\`, gitignored here):
-  team-shared and possibly corporate-sensitive settings — proxy, network
+  team-shared and possibly corporate-sensitive settings: proxy, network
   shares, certificates. See [custom_example/README.md](custom_example/README.md).
 3. **profile** (`senv.custom.<profile>.*` in the custom repository): the
   application list, variables and aliases shared by one team.
@@ -69,7 +69,7 @@ previous:
   the junction. `div <tool> [version]` does both in one step.
 - `switchjdk`, `switchmvn`, `switchnode`, `switchpy`, `switchwf` (all built on
   the generic `switchver`) add one specific tool version to the `PATH` of the
-  current session only — the global `PATH` is never modified permanently.
+  current session only. The global `PATH` is never modified permanently.
 
 ### Per-project senv
 
@@ -78,7 +78,7 @@ therefore ship its own `senv.bat` that calls the global one and then, for
 example, runs `switchjdk 17` and `switchnode 20`: opening a session in that
 project gives the exact tool versions the project needs, found at their
 conventional `%PRGS%` locations. `senv all` runs the global activation
-first and the project one on top — handy for a Windows Terminal tab per
+first and the project one on top, handy for a Windows Terminal tab per
 project
 ([how-to](wiki/how-to/open-project-tabs-in-windows-terminal.md)).
 
@@ -96,8 +96,8 @@ project
    - creates your private `custom\` nested repository from `custom_example\`
      and makes it a local Git repository,
    - registers a first profile, named `perso` by default,
-   - downloads a minimal tool set — 7-Zip (peazip), Git, gum, Notepad++,
-     Sysinternals, VSCode — with the `curl` shipped in Windows,
+   - downloads a minimal tool set, 7-Zip (peazip), Git, gum, Notepad++,
+     Sysinternals, VSCode, with the `curl` shipped in Windows,
    - runs `setup.bat`: tools uncompressed under `%PRGS%`, dedicated senv
     `HOME` created, `%USERPROFILE%\senv.bat` generated.
 
@@ -110,15 +110,15 @@ install is the [first tutorial](wiki/tutorials/01-your-first-senv.md).
 
 ### After the first run
 
-- **Customize your session** — type `senve` to edit your personal
+- **Customize your session**: type `senve` to edit your personal
   variables (`senv.local.bat`, reload with `senv`), or `aliase` to edit
   your personal aliases (`senv.local.doskey`, reload with `aliasr`); both
   files survive every senv update
   ([how-to](wiki/how-to/add-personal-alias-or-env-var.md)).
-- **Add tools on demand** — `div node`, or `dwl jdk 21` then `inst jdk`,
+- **Add tools on demand**: `div node`, or `dwl jdk 21` then `inst jdk`,
   then `switchjdk`/`switchnode` inside a session
   ([tutorial](wiki/tutorials/02-install-and-use-a-tool-on-demand.md)).
-- **More profiles when you need them** — one per computer for yourself, or
+- **More profiles when you need them**: one per computer for yourself, or
   one per team you equip: each profile is an `install_<profile>.list` plus
   `senv.custom.<profile>.*` files in `custom\`, and can be distributed from
   a team share ([how-to](wiki/how-to/create-a-team-profile.md),
@@ -148,7 +148,7 @@ will be) in the wiki reference pages:
 
 senv sets no global Git email: with `user.useConfigOnly=true`, a commit is
 refused until the repository has its own identity. Clone under `cdg`
-(`%PROG%\git`), run `gcu` once in the clone, done — a professional email
+(`%PROG%\git`), run `gcu` once in the clone, done: a professional email
 can no longer slip into a public repository by accident. Details in the
 [git configuration reference](wiki/reference/git-configuration.md) and the
 [reasoning](wiki/explanation/public-engine-private-data.md#one-git-identity-per-repository).
@@ -189,13 +189,13 @@ folder, organized on the [Diátaxis](https://diataxis.fr/) model, which
 separates four kinds of pages so that none of them gets mixed with the
 others:
 
-- **[Tutorials](wiki/tutorials/)** — learning by doing: first installation,
+- **[Tutorials](wiki/tutorials/)**: learning by doing: first installation,
   first session, first project-specific senv.
-- **[How-to guides](wiki/how-to/)** — recipes for a precise goal: add a
+- **[How-to guides](wiki/how-to/)**: recipes for a precise goal, add a
   program to `prgs.list`, create a team profile, publish an update.
-- **[Reference](wiki/reference/)** — exact descriptions: commands and their
+- **[Reference](wiki/reference/)**: exact descriptions, commands and their
   arguments, file naming conventions, environment variables, alias list.
-- **[Explanation](wiki/explanation/)** — background and reasoning: why a
+- **[Explanation](wiki/explanation/)**: background and reasoning, why a
   minimal PATH, why a dedicated HOME, how the configuration layers fit
   together.
 

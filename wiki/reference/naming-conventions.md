@@ -85,7 +85,7 @@ Created once by `setup.bat`, never overwritten by an update:
 
 ## Generated and transient files
 
-Files senv writes at run time — none is tracked by git (all gitignored or
+Files senv writes at run time. None is tracked by git (all gitignored or
 outside the repositories):
 
 | File | Written by | Lifetime |

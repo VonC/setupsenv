@@ -9,7 +9,7 @@ folder where you can write, for example `C:\Public\SOFTWARE`.
 
 ## 1. Clone the repository
 
-Pick your programs folder — senv calls it `PRGS`. Here we use
+Pick your programs folder, senv calls it `PRGS`. Here we use
 `C:\Public\SOFTWARE`:
 
 ```cmd
@@ -22,7 +22,7 @@ The `--recurse-submodules` flag matters: it brings `batcolors`, the colored
 output used by every script.
 
 If Git is not available yet on the machine, download the repository as a zip
-from GitHub and uncompress it to `C:\Public\SOFTWARE\senv` instead — setup
+from GitHub and uncompress it to `C:\Public\SOFTWARE\senv` instead: setup
 installs its own portable Git anyway (also uncompress the
 [batcolors](https://github.com/VonC/batcolors) zip into `senv\batcolors`).
 
@@ -48,7 +48,7 @@ set "PRGS=D:\SOFTWARE"      &:: force the programs root, before calling
 set "HTTPS_PROXY=..."       &:: if the downloads go through a proxy
 ```
 
-To understand what just happened — or to do it step by step — continue
+To understand what just happened, or to do it step by step, continue
 reading.
 
 ## 3. The guided path: setup.bat
@@ -68,9 +68,9 @@ Do you confirm HOME ('C:\Users\you\home_senv'), REMOTE_HOME (...),
 PRGS ('C:\Public\SOFTWARE') and PROG ('C:\Users\you') (Y/[N])?
 ```
 
-- `PRGS` — where portable programs are uncompressed,
-- `HOME` — the dedicated senv home (config files, utilities),
-- `PROG` — where your Git repositories and work data live.
+- `PRGS`: where portable programs are uncompressed,
+- `HOME`: the dedicated senv home (config files, utilities),
+- `PROG`: where your Git repositories and work data live.
 
 Answer `Y` to accept. To force other locations, answer `N`, edit the `set`
 lines in `custom\setup.ini.bat`, and run `setup.bat` again.
@@ -105,7 +105,7 @@ senv activated: senv_dir='...'
 ```
 
 That single line means: PATH rebuilt from scratch, portable Git and all senv
-utilities available, variables set, aliases loaded — in this window only.
+utilities available, variables set, aliases loaded, in this window only.
 
 ## 6. Look around
 
@@ -122,7 +122,7 @@ alias cd  &:: filter: every alias with "cd" in its name or definition
 ```
 
 Two habits worth taking from day one: clone your repositories under `cdg`
-(one common place for all of them), and run `gcu` once inside each clone —
+(one common place for all of them), and run `gcu` once inside each clone:
 senv sets no global Git identity, so commits are refused until the
 repository has its own name and email (see
 [git configuration](../reference/git-configuration.md)).
@@ -139,7 +139,7 @@ aliasr  &:: reload only the aliases, enough after an aliase edit
 Both files survive every senv update.
 
 Then close the window. Open a plain `CMD` again without typing `senv`: none
-of this exists there. That is the whole point — senv lives inside the
+of this exists there. That is the whole point: senv lives inside the
 session, and only there.
 
 ## Next steps

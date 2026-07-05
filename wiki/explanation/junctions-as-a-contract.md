@@ -8,7 +8,7 @@ Every tool senv knows about is reachable through one single path shape:
 ```
 
 `%PRGS%\javas\jdk21`, `%PRGS%\nodes\node22`, `%PRGS%\gits\current`,
-`%PRGS%\vscodes\current` — the family folder is the tool name plus a trailing
+`%PRGS%\vscodes\current`: the family folder is the tool name plus a trailing
 `s`, versions sit next to each other, and a junction names the one in use.
 This page explains why that convention, small as it looks, carries most of
 the system.
@@ -39,10 +39,10 @@ freedom.
 
 The two naming styles serve two different needs:
 
-- `current` answers "give me the tool, I do not care which version" — the
+- `current` answers "give me the tool, I do not care which version": the
   right choice for editors, terminals, one-version utilities.
 - versioned junctions and folders (`jdk21`, `node22`, `mvn3.9.9`) answer
-  "give me exactly this version" — the raw material for the `switchxxx`
+  "give me exactly this version": the raw material for the `switchxxx`
   commands, which list what is present, pick one, and put only that one on
   the session PATH. Several versions coexist without conflict because
   nothing global ever points at any of them.
@@ -54,12 +54,12 @@ junctioned it from a corporate install.
 
 ## Why not the registry, or the PATH?
 
-Windows already has ways to find installed software — the registry, `App
+Windows already has ways to find installed software: the registry, `App
 Paths`, the global PATH filled by installers. senv avoids depending on them
 for the same reason it rebuilds the PATH (see
 [why-a-minimal-path.md](why-a-minimal-path.md)): on a locked-down laptop
 those sources are unmanaged, machine-specific and often stale. The registry
-is still consulted once, at junction-creation time, for `system` tools — but
+is still consulted once, at junction-creation time, for `system` tools, but
 after that single lookup the knowledge is frozen into a junction, and every
 later consumer uses the plain filesystem contract instead of re-doing
 registry queries.
@@ -68,8 +68,8 @@ registry queries.
 
 Junctions do not work on network drives. When `%PRGS%` lives on one, the
 scripts fall back to renaming the extracted folder to the junction name and
-recording the original name in a `_<folder>` marker file. The contract —
-"the path shape is stable" — survives; only the mechanism changes. That
+recording the original name in a `_<folder>` marker file. The contract,
+"the path shape is stable", survives; only the mechanism changes. That
 fallback is also a reminder that the contract is the point, not the NTFS
 feature: anything that keeps `%PRGS%\<tool>s\<name>` valid is acceptable.
 

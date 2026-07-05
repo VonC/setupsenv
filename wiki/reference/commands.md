@@ -218,8 +218,8 @@ hook. Full option list and rationale:
 Applies the `gcu` identity to every first-level repository under
 `<folder>` (default `%PROG%\git`), reporting each repository with the
 name/email set, kept, or the skip reason. Skips repositories that already
-have a local `user.email` (`--force` overrides). With a hosts list — by
-default `%HOME%\bin\senv.custom.<profile>.gcua.list` — a repository is
+have a local `user.email` (`--force` overrides). With a hosts list, by
+default `%HOME%\bin\senv.custom.<profile>.gcua.list`, a repository is
 stamped only when all URLs of all its remotes match a listed service; `-`
 disables the filter; `senv.custom.all_teams.gcua.list` is the fallback shared by every
 profile. Without a list and without `-`, does nothing. `--dry-run` prints
@@ -233,7 +233,7 @@ Details: [git configuration](git-configuration.md).
 
 No argument: lists all doskey macros. With a pattern: filters them through
 `findstr /i`, so the pattern matches anywhere in the name **or the
-definition** — `alias cd` lists the `cd*` navigation aliases, `alias git`
+definition**: `alias cd` lists the `cd*` navigation aliases, `alias git`
 everything that runs git.
 
 ### `ppath [/i] [<term> ...]`

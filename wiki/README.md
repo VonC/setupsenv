@@ -2,7 +2,7 @@
 
 Documentation for [senv](../README.md), organized on the
 [Diátaxis](https://diataxis.fr/) model. The discipline is simple: each page
-belongs to exactly one of the four categories below, and never mixes goals —
+belongs to exactly one of the four categories below, and never mixes goals:
 a tutorial teaches, a how-to guide solves, a reference describes, an
 explanation clarifies.
 

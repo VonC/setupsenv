@@ -37,7 +37,7 @@ In order, first match wins:
 
 1. `%PRGS%\setup` (local cache, filled by `dwl`),
 2. `%USERPROFILE%\Downloads`,
-3. `%setupsdir%` — the team share resolved by
+3. `%setupsdir%`: the team share resolved by
   `custom\setupsdir_<profile>.bat`,
 4. `%USERPROFILE%\senv_setups\setups`.
 

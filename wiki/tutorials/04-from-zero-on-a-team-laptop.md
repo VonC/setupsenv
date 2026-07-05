@@ -50,7 +50,7 @@ Close the window: the laptop is unchanged outside the session.
 
 Your first clone follows the two senv habits: `cdg` to reach the common
 clone home (`%PROG%\git`), then `gcu` inside the fresh clone to register
-your name and email there — senv sets no global Git identity, precisely so
+your name and email there: senv sets no global Git identity, precisely so
 a professional email can never end up in the wrong repository (see
 [git configuration](../reference/git-configuration.md)):
 
@@ -70,9 +70,9 @@ the share:
 up
 ```
 
-- `up` — re-runs setup for your profile,
-- `upg` — quick variant, refreshes Git and configuration only,
-- `upa` — full variant, refreshes everything.
+- `up`: re-runs setup for your profile,
+- `upg`: quick variant, refreshes Git and configuration only,
+- `upa`: full variant, refreshes everything.
 
 Your personal files (`senv.local.*` in `%HOME%\bin`: your aliases, your
 variables) are never overwritten by an update.

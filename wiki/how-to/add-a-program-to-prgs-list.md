@@ -39,7 +39,7 @@ with `inst_prg <tool>`.
    when the file already sits in `%PRGS%\setup`.
 
 3. If the default 7-Zip extraction plus `current` junction is not sufficient,
-   add hooks in `installs\` — see
+   add hooks in `installs\`: see
    [How to write an install hook](write-an-install-hook.md).
 
 4. Test the pair:

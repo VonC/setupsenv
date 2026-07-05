@@ -18,7 +18,7 @@ aliases find it like any portable tool.
 2. Run `s` (or `setup.bat`). For a `system` entry, senv skips download and
    extraction and calls `installs\check_symlink.bat`, which:
 
-   - locates the external install with `bin\getInstallPath.bat` — a registry
+   - locates the external install with `bin\getInstallPath.bat`, a registry
      lookup of `InstallLocation` under the `Uninstall` keys of `HKCU` and
      `HKLM`, filtered by the tool pattern (a few tools have hardcoded paths:
      GitHub CLI, Notepad++, Sysinternals),

@@ -3,16 +3,16 @@
 A senv session is assembled from four layers, each owned by a different
 actor and each able to override the one before it:
 
-1. **senv** — the public engine: `bin\senv.bat`, the global aliases in
+1. **senv**, the public engine: `bin\senv.bat`, the global aliases in
   `senv.doskey`, the curated tool list. Owned by the senv maintainers.
-2. **custom** — the private team repository nested in `custom\`: shared
+2. **custom**, the private team repository nested in `custom\`: shared
   settings that may be corporate-sensitive (proxy variables, certificate
   paths). Owned by the team administrator. See
   [public-engine-private-data.md](public-engine-private-data.md).
-3. **profile** — the per-team slice of custom: `senv.custom.<profile>.bat`
+3. **profile**, the per-team slice of custom: `senv.custom.<profile>.bat`
   and `senv.custom.<profile>.doskey`, selected by the one-line
   `custom\profile` file. Owned by one team.
-4. **local** — the personal files in `%HOME%\bin`: `senv.local.pre.bat`,
+4. **local**, the personal files in `%HOME%\bin`: `senv.local.pre.bat`,
   `senv.local.bat`, `senv.local.doskey`, `gsenv.local.bat`. Owned by the
   individual user.
 
@@ -38,12 +38,12 @@ can adjust the generic team values without fighting their own profile.
 The layer system only works across updates because `setup.bat` splits the
 files in `%HOME%\bin` into two categories:
 
-- **regenerated** — on every run, `setup.bat` copies `bin\*` from the senv
+- **regenerated**: on every run, `setup.bat` copies `bin\*` from the senv
   repository and `*.custom.*` from the custom repository into `%HOME%\bin`,
   overwriting what was there. Engine scripts and team configuration are
   therefore always fresh, and files belonging to other profiles are pruned so
   one custom repository can serve many teams.
-- **preserved** — the four `*.local.*` files are written only `if not exist`.
+- **preserved**: the four `*.local.*` files are written only `if not exist`.
   The first setup seeds them (for example `senv.local.pre.bat` receives the
   authoritative `PRGS`, `HOME`, `PROG` and `REMOTE_HOME` values), and every
   later setup leaves them alone.
@@ -68,7 +68,7 @@ are surgical: `setup.bat` re-inserts the `cdi` and `cdis` aliases into
 
 One boundary worth knowing: `senv.local.pre.bat` is special. It loads first
 of all (before the PATH is even rebuilt) because it defines where everything
-is — `PRGS`, `HOME`, `PROG`. It is personal in ownership but foundational in
+is: `PRGS`, `HOME`, `PROG`. It is personal in ownership but foundational in
 role, which is why setup seeds it rather than leaving it empty.
 
 ## Where to look next

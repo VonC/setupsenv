@@ -1,7 +1,7 @@
 # Install and use a tool on demand
 
 In this tutorial you download a portable JDK and Node.js, uncompress them
-under `%PRGS%`, and put a chosen version on the PATH of one session — while
+under `%PRGS%`, and put a chosen version on the PATH of one session, while
 other sessions stay untouched.
 
 You need a working senv (see [Your first senv](01-your-first-senv.md)) and an
@@ -70,7 +70,7 @@ choose. The switch commands only touch the current session: they remove any
 previous `%PRGS%\javas` (or `nodes`) entry from the local PATH, then prepend
 the chosen one.
 
-## 4. See what changed — and what did not
+## 4. See what changed, and what did not
 
 Inspect the session PATH, entry by entry:
 

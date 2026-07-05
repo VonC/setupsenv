@@ -15,7 +15,7 @@ Sessions then point at that local port.
    px-* pxs
    ```
 
-2. Configure the upstream in `custom\px.ini` (placeholders — use your real
+2. Configure the upstream in `custom\px.ini` (placeholders, use your real
    corporate values in the private repository only):
 
    ```ini
@@ -42,9 +42,9 @@ Sessions then point at that local port.
 
 ## Daily use
 
-- `ti` (testinternet) — checks connectivity with the portable `curl` against
+- `ti` (testinternet): checks connectivity with the portable `curl` against
   a rotating test URL,
-- `ei` (ensure_internet) — runs `ti`; when offline and `HTTPS_PROXY` is set,
+- `ei` (ensure_internet): runs `ti`; when offline and `HTTPS_PROXY` is set,
   it restarts the local proxy (`pxkill.bat` then `px.bat`, both shipped in
   senv `bin\` and copied to `%HOME%\bin` at setup) and re-tests.
 

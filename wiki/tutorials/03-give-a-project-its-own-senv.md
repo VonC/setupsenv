@@ -2,7 +2,7 @@
 
 In this tutorial you add a `senv.bat` to one of your projects, so that
 opening a session in that project automatically selects the tool versions
-the project needs — say JDK 17 and Node 20.
+the project needs, say JDK 17 and Node 20.
 
 You need a working senv and the versions installed under `%PRGS%` (see
 [Install and use a tool on demand](02-install-and-use-a-tool-on-demand.md)):
@@ -14,7 +14,7 @@ div node 20
 
 ## 1. How the entry point picks a project senv
 
-`%USERPROFILE%\senv.bat` — what the `senv` alias calls — first looks for a
+`%USERPROFILE%\senv.bat`, what the `senv` alias calls, first looks for a
 `senv.bat` in the **current directory**. If one exists, it calls that one
 instead of the global activator. That is the whole hook: a project opts in
 by shipping its own `senv.bat`.
@@ -36,7 +36,7 @@ call switchnode 20
 - the `switch` lines then pin the versions this project needs.
 
 Each `switch` call finds its versions at the conventional location
-`%PRGS%\<tool>s\<prefix><version>` — here `%PRGS%\javas\jdk17` and
+`%PRGS%\<tool>s\<prefix><version>`: here `%PRGS%\javas\jdk17` and
 `%PRGS%\nodes\node20`. A tool installed elsewhere on the machine can be
 reached through the same path via a junction, so the project never needs to
 know real install locations.
@@ -70,7 +70,7 @@ laptop, nothing global changed.
 
 `senv all` runs the global activation first, then the project `senv.bat`
 of the current folder on top. This is the form to use for a Windows
-Terminal tab that opens directly on a project — even a project `senv.bat`
+Terminal tab that opens directly on a project: even a project `senv.bat`
 that only contains `switch` lines gets the full global session first. The
 per-tab setup is in
 [Open project tabs in Windows Terminal](../how-to/open-project-tabs-in-windows-terminal.md).
@@ -80,6 +80,6 @@ per-tab setup is in
 - Commit `senv.bat` with the project, so every teammate with senv gets the
   same versions.
 - If a version is missing on a teammate's machine, they install it with one
-  `div` command — or the project `senv.bat` can set `SWITCHVER_DWL_INST=1`
+  `div` command, or the project `senv.bat` can set `SWITCHVER_DWL_INST=1`
   before the switches so missing versions are fetched on demand (see
   [Commands](../reference/commands.md)).

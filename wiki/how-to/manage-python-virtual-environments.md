@@ -15,10 +15,10 @@ environment, global or per-project.
 
    The second argument answers the venv question up front:
 
-   - `no` — no venv, just `%PRGS%\pythons\python<version>` on the PATH,
-   - `global` — venv under `%PYTHON_ROOT%\venvs` (shared location,
+   - `no`: no venv, just `%PRGS%\pythons\python<version>` on the PATH,
+   - `global`: venv under `%PYTHON_ROOT%\venvs` (shared location,
      `PYTHON_ROOT` being `%PRGS%\pythons`),
-   - `local` — venv under `%CD%\venvs`, named
+   - `local`: venv under `%CD%\venvs`, named
      `python_<version>_<project-folder>`.
 
    `switchpy` creates the venv with `python -m venv` when missing, fixes the
@@ -42,7 +42,7 @@ environment, global or per-project.
 
 A project `senv.bat` can chain the global activation with
 `switchpy 3.13 local`, so opening a session in the project lands directly in
-the right interpreter and venv — see
+the right interpreter and venv: see
 [per-project senv](../explanation/anatomy-of-a-session.md).
 
 ## Check

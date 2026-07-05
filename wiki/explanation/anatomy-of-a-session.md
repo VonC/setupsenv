@@ -7,8 +7,8 @@ exact commands and options belong to the reference and how-to pages.
 
 ## setup.bat: building the environment
 
-**Profile detection comes first** because everything downstream — which
-tools to install, which share to read, which aliases to keep — depends on
+**Profile detection comes first** because everything downstream, which
+tools to install, which share to read, which aliases to keep, depends on
 it. The profile is read from `custom\profile`, or forced with a leading
 `_<profile>` argument for machines serving several teams.
 
@@ -24,7 +24,7 @@ from `custom_example\` so there is always a place to answer them.
 the current directory has its own `senv.bat`, that one runs instead of the
 global one. Two arguments bend that rule when the default replacement is
 not what a caller wants: `global` ignores the current folder, and `all`
-runs the global activation first, then the project one on top — the mode a
+runs the global activation first, then the project one on top: the mode a
 Windows Terminal project tab uses. Keeping the launcher generated means a
 HOME migration only has to patch one file.
 
@@ -43,13 +43,13 @@ caller can `call` from any context. The drive detection
 ([why it exists](why-drive-detection.md)) does exactly that: it writes the
 found letter into `custom\driverLetter.bat`, which the share resolver
 calls and deletes seconds later. Such files are transient by
-design and gitignored — the
+design and gitignored. The
 [generated-files reference](../reference/naming-conventions.md#generated-and-transient-files)
 inventories them, so a stray appearance is recognized instead of
 committed.
 
 **Local files are created once, never overwritten.** The four `*.local.*`
-files are seeded only if absent — the structural guarantee that updates
+files are seeded only if absent: the structural guarantee that updates
 never destroy personal settings (see
 [configuration-layers.md](configuration-layers.md)).
 
@@ -57,7 +57,7 @@ never destroy personal settings (see
 everything else is an archive; then Git, since its `usr\bin` provides the
 Unix tools the other scripts use; then the base comfort tools), followed by
 the profile's `install_<profile>.list`. Each tool goes through the same
-stations — find the newest matching archive, copy, uncompress, junction —
+stations (find the newest matching archive, copy, uncompress, junction)
 with optional `pre`/`install`/`post` hooks looked up in `installs\`, then
 `custom\`, so corporate steps slot in without touching public code.
 
@@ -70,12 +70,12 @@ concerns, but a fresh setup should leave the user in a working session.
 repository clone (the `adm\` folder is present), the maintainer paths and
 aliases are added. A deployed user never sees this branch.
 
-**The PATH reset** follows — four bare Windows entries, nothing inherited.
+**The PATH reset** follows: four bare Windows entries, nothing inherited.
 The reasons are covered in [why-a-minimal-path.md](why-a-minimal-path.md).
 
 **`senv.local.pre.bat` loads before anything else** because it answers the
 question every later line depends on: where are `PRGS`, `HOME` and `PROG`
-on this machine? Activation fails loudly if the file is missing — a session
+on this machine? Activation fails loudly if the file is missing: a session
 with guessed locations would misbehave in quieter, worse ways.
 
 **Git goes on the PATH first among tools.** The portable Git also supplies
@@ -83,8 +83,8 @@ with guessed locations would misbehave in quieter, worse ways.
 on; putting `%HOME%\bin` ahead of it keeps senv's own commands first in
 resolution order.
 
-**Environment variables** come next — locale, editor, downloads folder,
-7-Zip, language homes — always derived from the `%PRGS%` convention rather
+**Environment variables** come next: locale, editor, downloads folder,
+7-Zip, language homes, always derived from the `%PRGS%` convention rather
 than from machine state, so two laptops with the same profile produce the
 same session.
 

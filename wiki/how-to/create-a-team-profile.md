@@ -7,7 +7,7 @@ repository.
 Goal: define a named bundle of applications, variables and aliases (`xyz` in
 the examples) that a whole team installs and updates from a shared location.
 
-All files below live in the private `custom\` repository — see
+All files below live in the private `custom\` repository: see
 [custom_example/README.md](../../custom_example/README.md).
 
 ## Steps
@@ -29,7 +29,7 @@ All files below live in the private `custom\` repository — see
    ```
 
    The resolver maps the share to a drive letter and wakes a
-   disconnected, red-crossed drive on its own — the reasoning is in
+   disconnected, red-crossed drive on its own. The reasoning is in
    [why senv detects and wakes network drives](../explanation/why-drive-detection.md).
 
 3. Add the team environment variables in `custom\senv.custom.xyz.bat`
@@ -48,8 +48,8 @@ All files below live in the private `custom\` repository — see
    ```
 
    Every setup or update run then registers the team git identity in each
-   repository under `%PROG%\git` whose remotes all match those services —
-   repositories with a remote elsewhere, or an already-set identity, are
+   repository under `%PROG%\git` whose remotes all match those services.
+   Repositories with a remote elsewhere, or an already-set identity, are
    left alone (see [git configuration](../reference/git-configuration.md)).
    When every team uses the same services, a single
    `custom\senv.custom.all_teams.gcua.list` covers all profiles at once; the
@@ -60,7 +60,7 @@ All files below live in the private `custom\` repository — see
    selects the profile).
 
 6. Run `s`. Setup copies the `xyz` files into `%HOME%\bin` and removes the
-   files of every other profile from there — one custom repository can serve
+   files of every other profile from there: one custom repository can serve
    many teams, but a machine runs exactly one profile.
 
 ## The identical-token rule
