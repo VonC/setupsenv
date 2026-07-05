@@ -14,7 +14,9 @@ if not "%ERRORLEVEL%"=="0" (
 )
 
 set "LOCAL_HOME=%USERPROFILE%\home_senv"
-if "%HOME%"=="%LOCAL_HOME%" (
+rem /I: Windows paths are case-insensitive; a casing difference between the
+rem registered HOME and USERPROFILE must not trigger a migration
+if /I "%HOME%"=="%LOCAL_HOME%" (
     %_ok% "HOME is already set to local private folder '%HOME%'"
     if "%REMOTE_HOME%"=="" (
         %_fatal% "REMOTE_HOME is not defined" 1
@@ -33,7 +35,7 @@ if "%REMOTE_HOME%"=="" (
     set "REMOTE_HOME=%HOME%"
 )
 rem At this point, REMOTE_HOME mut NOT be equal to LOCAL_HOME
-if "%REMOTE_HOME%"=="%LOCAL_HOME%" (
+if /I "%REMOTE_HOME%"=="%LOCAL_HOME%" (
     %_fatal% "REMOTE_HOME '%REMOTE_HOME%' must not be equal to LOCAL_HOME '%LOCAL_HOME%'" 1
 )
 
@@ -84,7 +86,9 @@ if not exist "%LOCAL_HOME%\.git" (
 
 REM Make sure the REMOTE_HOME bare repository is ready
 set "REMOTE_HOME_REPO=%REMOTE_HOME%\home_senv.git"
-if not exist "%REMOTE_HOME_REPO%" (
+if not exist "%REMOTE_HOME%\" (
+    %_warning% "REMOTE_HOME '%REMOTE_HOME%' is not reachable: skip bare repository check"
+) else if not exist "%REMOTE_HOME_REPO%" (
     %_task% "Create remote home '%REMOTE_HOME_REPO%' bare repository"
     git init --bare "%REMOTE_HOME_REPO%" 2>NUL:
     if not "%ERRORLEVEL%"=="0" ( %_fatal% "Unable to create remote home '%REMOTE_HOME_REPO%' bare Git repository" 1 )
@@ -197,6 +201,11 @@ goto:eof
 :get_state
 REM read %REMOTE_HOME%\state file content, store it in %state% local environment variable
 set "state="
+if not exist "%REMOTE_HOME%\" (
+    %_warning% "REMOTE_HOME '%REMOTE_HOME%' is not reachable: skip every migration step"
+    set "state=_copied__updated__nosenvupdate__cleaned_"
+    goto:eof
+)
 if not exist "%REMOTE_HOME%\state" (
     echo._none_> "%REMOTE_HOME%\state"
 )
@@ -207,6 +216,10 @@ goto:eof
 :set_state
 REM write the current local %state% environment variable to %REMOTE_HOME%\state, after having removed any space in it.
 set "state=%state: =%%1"
+if not exist "%REMOTE_HOME%\" (
+    %_warning% "REMOTE_HOME '%REMOTE_HOME%' is not reachable: state '%state%' not persisted"
+    goto:eof
+)
 echo %state%> "%REMOTE_HOME%\state
 goto:eof
 
