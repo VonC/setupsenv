@@ -194,7 +194,8 @@ echo   Open a NEW terminal and type:  senv
 echo.
 echo   Next steps:
 echo    - add a tool on demand:            div node     or: dwl jdk 21 + inst jdk
-echo    - personal aliases and variables:  edit %%HOME%%\bin\senv.local.doskey and senv.local.bat
+echo    - personal variables:              senve, then senv to reload all
+echo    - personal aliases:                aliase, then aliasr to reload them
 echo    - give custom\ a private remote:   git -C custom remote add origin your-private-url
 echo    - team profiles and distribution:  wiki\how-to\create-a-team-profile.md
 echo    - full documentation:              wiki\README.md
