@@ -31,6 +31,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - [Manage Python virtual environments](how-to/manage-python-virtual-environments.md)
 - [Open project tabs in Windows Terminal](how-to/open-project-tabs-in-windows-terminal.md)
 - [Update senv and diagnose version drift](how-to/update-senv-and-diagnose-version-drift.md)
+- [Sanitize the history before publishing](how-to/sanitize-history-before-publishing.md)
 
 ## Reference
 
