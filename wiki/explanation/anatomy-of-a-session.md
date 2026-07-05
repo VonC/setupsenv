@@ -35,6 +35,19 @@ repository, backed up and restored as a unit) and lets one machine keep the
 repository and the live environment at different revisions. Files of other
 profiles are pruned at this point.
 
+**Some results travel through tiny generated scripts.** A batch script
+running under `setlocal` loses its variables at `endlocal`, so a result
+that must cross that boundary is handed off twice: once through the
+`endlocal & set` idiom, and once through a generated two-line batch the
+caller can `call` from any context. The drive detection
+([why it exists](why-drive-detection.md)) does exactly that: it writes the
+found letter into `custom\driverLetter.bat`, which the share resolver
+calls and deletes seconds later. Such files are transient by
+design and gitignored — the
+[generated-files reference](../reference/naming-conventions.md#generated-and-transient-files)
+inventories them, so a stray appearance is recognized instead of
+committed.
+
 **Local files are created once, never overwritten.** The four `*.local.*`
 files are seeded only if absent — the structural guarantee that updates
 never destroy personal settings (see

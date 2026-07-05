@@ -83,6 +83,21 @@ Created once by `setup.bat`, never overwritten by an update:
 | `senv.local.doskey` | personal aliases (holds `cdi`, `cdis`) |
 | `gsenv.local.bat` | personal additions to the graphical session |
 
+## Generated and transient files
+
+Files senv writes at run time — none is tracked by git (all gitignored or
+outside the repositories):
+
+| File | Written by | Lifetime |
+| --- | --- | --- |
+| `%USERPROFILE%\senv.bat` | `setup.bat`, rendered from `senv.user_profile.tpl.bat` | regenerated on every setup run |
+| `%HOME%\bin\gcu.bat` | the `gits` install hook, from the registered identity | regenerated when the identity changes |
+| `custom\profile`, `custom\version` | setup (profile) and `adm\build.bat` (version) | per machine / per build |
+| `custom\driverLetter.bat` | `installs\drive_detection.bat`, holds the detected drive letter (`set "driveLetter=L:"`) | consumed and deleted by `installs\setupsdir.bat` seconds later; both the `driveLetter` and the historical `driverLetter` spellings are gitignored |
+| `setup_cleanup*.tmp`, `tmp` | `setup.bat`, profile cleanup and doskey rebuild | deleted at the end of the run |
+| `%REMOTE_HOME%\state` | `check_migrate_home.bat`, HOME-migration progress tokens | persists on the remote home |
+| `%USERPROFILE%\usernamel` | `senv.bat`, cached lowercase user name | persists, one line |
+
 ## Load order
 
 Environment: `senv.local.pre.bat` → built-in senv settings →

@@ -28,6 +28,10 @@ All files below live in the private `custom\` repository — see
    call "%~dp0..\installs\setupsdir.bat" "xyz" "\\server\share$\path" "sub\folder"
    ```
 
+   The resolver maps the share to a drive letter and wakes a
+   disconnected, red-crossed drive on its own — the reasoning is in
+   [why senv detects and wakes network drives](../explanation/why-drive-detection.md).
+
 3. Add the team environment variables in `custom\senv.custom.xyz.bat`
    (sourced by every session running that profile), for example `M2_HOME` or
    `MAVEN_OPTS`. To replace the team-wide `senv.custom.bat` entirely instead

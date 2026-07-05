@@ -55,3 +55,4 @@ Background and reasoning: why senv is built the way it is.
 - [Public engine, private data](explanation/public-engine-private-data.md)
 - [Anatomy of a session](explanation/anatomy-of-a-session.md)
 - [Distribution model](explanation/distribution-model.md)
+- [Why senv detects and wakes network drives](explanation/why-drive-detection.md)
