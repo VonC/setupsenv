@@ -308,6 +308,21 @@ for /f "tokens=1,2 delims= " %%a in ('type "%locald%\install.list"') do (
 
 
 :alldone
+set "gcua_hosts_name="
+if exist "%HOME%\bin\senv.custom.all_teams.gcua.list" ( set "gcua_hosts_name=senv.custom.all_teams.gcua.list" )
+if not "%profile%"=="" if exist "%HOME%\bin\senv.custom.%profile%.gcua.list" ( set "gcua_hosts_name=senv.custom.%profile%.gcua.list" )
+if defined gcua_hosts_name (
+    if exist "%PRGS%\gits\current\cmd\git.exe" (
+        %_task% "Must apply the team git identity, per %gcua_hosts_name%"
+        call "%HOME%\bin\gcua.bat"
+        if errorlevel 1 (
+            %_warning% "team git identity pass failed: run 'gcua' manually to diagnose"
+        ) else (
+            %_ok% "team git identity pass done, per %gcua_hosts_name%"
+        )
+    )
+)
+set "gcua_hosts_name="
 %_ok% "All done"
 ENDLOCAL
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
