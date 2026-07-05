@@ -351,6 +351,10 @@ if exist "%PRGS%\gits\current\usr\bin\sed.exe" (
 if defined _sed (
     "%_sed%" -i "s/^\s\+[\r\n]*$//g" "%script_dir%\tmp"
 )
+rem sed writes LF endings: restore CRLF, or git flags senv.local.doskey
+rem as modified against the eol=crlf attribute of the HOME repository
+where unix2dos >NUL 2>NUL
+if not errorlevel 1 ( unix2dos -q "%script_dir%\tmp" )
 del "%HOME%\bin\senv.local.doskey"
 move "%script_dir%\tmp" "%HOME%\bin\senv.local.doskey" >NUL
 cd /d "%script_dir%"
