@@ -2,7 +2,8 @@
 /*custom*/
 !/custom_example/
 /setups/
-/setups_example/
+/setups_example/*
+!/setups_example/README.md
 *.local.*
 !/adm/custom/setup.senv.local.pre.bat
 /setups.ori
