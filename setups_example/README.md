@@ -1,3 +1,3 @@
-# Setups
+# 🧰 Setups
 
-Put any archive/zip file you want uncompress.
+Put here any archive/zip file you want senv to uncompress.

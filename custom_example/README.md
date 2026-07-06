@@ -13,7 +13,7 @@ All of that goes into `custom\`, which is:
   never leak into the public history,
 - typically hosted on a **private, local-only or corporate remote**.
 
-## Bootstrap
+## 🌱 Bootstrap
 
 You do not create `custom\` by hand. The fastest path is `getstarted.bat`
 at the senv root: unattended, it seeds `custom\` from `custom_example\`
@@ -48,7 +48,7 @@ Manually, the first run of `setup.bat` copies `custom_example\*` into
 `setup.ini.bat` only deals with folder locations. Proxy, shares and
 certificates belong to the other files described below.
 
-## What goes into custom
+## 🔒 What goes into custom
 
 Files shared by all profiles:
 
@@ -91,7 +91,7 @@ through an absolute path. `PRGS` is `C:\Public\SOFTWARE` on one machine
 and `%USERPROFILE%\SOFTWARE` on the next: a hardcoded path is a profile
 that breaks on the next laptop.
 
-## What senv provides (do not duplicate it here)
+## 📦 What senv provides (do not duplicate it here)
 
 The generic machinery is maintained in the public senv repository, so keep
 in `custom\` only data and corporate steps:
@@ -110,7 +110,7 @@ in `custom\` only data and corporate steps:
   `pxkill.bat` local-proxy wrappers; only the proxy data (`px.ini`) is
   yours.
 
-## Profiles
+## 👥 Profiles
 
 A **profile** is a named bundle: applications, variables, aliases, network
 share, shared by one team. The profile token must be strictly identical
@@ -157,7 +157,7 @@ call "%~dp0..\installs\setupsdir.bat" "xyz" "\\server\share$\path" "sub\folder"
 It resolves (and maps, if needed) the network share where the team archives
 and the senv self-extracting archive are published.
 
-## Building and publishing a profile
+## 📤 Building and publishing a profile
 
 From a maintainer machine (senv in "local" mode, `adm\` on the PATH):
 
@@ -178,7 +178,7 @@ Team members then:
 - update later from inside a session with `up` (current profile), `upg`
   (quick, Git only) or `upa` (everything).
 
-## What must never leave this repository
+## ⚠️ What must never leave this repository
 
 The built `senv_<profile>-zip.exe` contains the full custom tree, so treat
 the archives with the same care as the repository itself. Typical content
@@ -194,7 +194,7 @@ that stays private:
 Keep the remote of this repository private (corporate Git server, or none at
 all), and publish the built archives only to internal shares.
 
-## See also
+## 👉 See also
 
 - [Create a team profile](../wiki/how-to/create-a-team-profile.md)
 - [Build and publish a profile archive](../wiki/how-to/build-and-publish-a-profile-archive.md)

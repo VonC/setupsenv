@@ -1,5 +1,9 @@
 # senv: a portable, no-admin development environment for Windows
 
+<p align="center">
+  <img src="wiki/assets/logo-senv-transparent.png" alt="senv logo: a terminal window containing the four senv themes" width="220">
+</p>
+
 `senv` ("session environment") turns a plain `CMD` session into a fully equipped
 development shell on a locked-down Windows laptop:
 
@@ -16,21 +20,21 @@ Outside the session, nothing is affected.
 The initial focus is contractors working in a locked corporate environment,
 but it fits anyone who wants a reproducible, self-contained Windows setup.
 
-## How it works
+## 📦 How it works
 
 A senv session is built from scratch each time, instead of relying on the
 laptop system and user environments:
 
-- a **minimal `PATH`**: reset to the bare Windows folders, then extended only
+- 🖥️ a **minimal `PATH`**: reset to the bare Windows folders, then extended only
   with what senv provides (`%HOME%\bin` first, then a portable Git, which also
   brings `grep`, `awk`, `sed`, `curl` and `bash`),
-- a set of **portable applications** installed under `%PRGS%`,
-- a set of **environment variables** (locale, editor, proxy, tool homes),
-- a set of **aliases** (`doskey` macros) for navigation, Git, tools and updates,
-- a dedicated **senv user `HOME`** (by default `%USERPROFILE%\home_senv`),
+- 🧰 a set of **portable applications** installed under `%PRGS%`,
+- 🏷️ a set of **environment variables** (locale, editor, proxy, tool homes),
+- ⚡ a set of **aliases** (`doskey` macros) for navigation, Git, tools and updates,
+- 🏠 a dedicated **senv user `HOME`** (by default `%USERPROFILE%\home_senv`),
   which is its own Git repository and can be backed up to a remote location.
 
-### Program layout: `%PRGS%\<tool>s\<version|current>`
+### 🧰 Program layout: `%PRGS%\<tool>s\<version|current>`
 
 Every tool family lives in one folder named after the tool plus a trailing
 `s`, one subfolder per version, and a junction pointing at the active one:
@@ -46,7 +50,7 @@ A tool already installed elsewhere (for example by a corporate installer) is
 still referenced through the same convention, using a junction folder to the
 external location. Every script can therefore rely on one single path shape.
 
-### Configuration layers
+### 🏷️ Configuration layers
 
 Settings and aliases are loaded in four layers, each one able to override the
 previous:
@@ -61,7 +65,7 @@ previous:
   files are created once and never overwritten, so a senv update does not
   touch your customizations.
 
-### On-demand tools and versions
+### 🧰 On-demand tools and versions
 
 - `dwl <tool> [version]` downloads a portable archive from a curated list
   ([bin/prgs.list](bin/prgs.list), about 50 applications and languages).
@@ -71,7 +75,7 @@ previous:
   the generic `switchver`) add one specific tool version to the `PATH` of the
   current session only. The global `PATH` is never modified permanently.
 
-### Per-project senv
+### 🖥️ Per-project senv
 
 `senv` first looks for a `senv.bat` in the current directory. A project can
 therefore ship its own `senv.bat` that calls the global one and then, for
@@ -82,7 +86,7 @@ first and the project one on top, handy for a Windows Terminal tab per
 project
 ([how-to](wiki/how-to/open-project-tabs-in-windows-terminal.md)).
 
-## Quick start
+## 🚀 Quick start
 
 1. Clone this repository (with its `batcolors` submodule) into `<PRGS>\senv`,
    for example `C:\Public\SOFTWARE\senv`:
@@ -108,23 +112,23 @@ can set `PRGS`, `HOME`, `PROG` (or `HTTPS_PROXY` for the downloads)
 beforehand to force locations. The guided, step-by-step version of the same
 install is the [first tutorial](wiki/tutorials/01-your-first-senv.md).
 
-### After the first run
+### ✨ After the first run
 
-- **Customize your session**: type `senve` to edit your personal
+- ⚡ **Customize your session**: type `senve` to edit your personal
   variables (`senv.local.bat`, reload with `senv`), or `aliase` to edit
   your personal aliases (`senv.local.doskey`, reload with `aliasr`); both
   files survive every senv update
   ([how-to](wiki/how-to/add-personal-alias-or-env-var.md)).
-- **Add tools on demand**: `div node`, or `dwl jdk 21` then `inst jdk`,
+- 🧰 **Add tools on demand**: `div node`, or `dwl jdk 21` then `inst jdk`,
   then `switchjdk`/`switchnode` inside a session
   ([tutorial](wiki/tutorials/02-install-and-use-a-tool-on-demand.md)).
-- **More profiles when you need them**: one per computer for yourself, or
+- 📦 **More profiles when you need them**: one per computer for yourself, or
   one per team you equip: each profile is an `install_<profile>.list` plus
   `senv.custom.<profile>.*` files in `custom\`, and can be distributed from
   a team share ([how-to](wiki/how-to/create-a-team-profile.md),
   [explanation](wiki/explanation/distribution-model.md)).
 
-## Everyday commands
+## 🖥️ Everyday commands
 
 A few of the commands available inside a session; the complete list is (or
 will be) in the wiki reference pages:
@@ -144,7 +148,7 @@ will be) in the wiki reference pages:
 | `ppath` | print and check the PATH, entry by entry |
 | `ti`, `ei` | test / restore internet access (proxy restart) |
 
-### Git identity, per repository
+### 🪪 Git identity, per repository
 
 senv sets no global Git email: with `user.useConfigOnly=true`, a commit is
 refused until the repository has its own identity. Clone under `cdg`
@@ -153,7 +157,7 @@ can no longer slip into a public repository by accident. Details in the
 [git configuration reference](wiki/reference/git-configuration.md) and the
 [reasoning](wiki/explanation/public-engine-private-data.md#one-git-identity-per-repository).
 
-## Repository layout
+## 🗂️ Repository layout
 
 ```text
 getstarted.bat       unattended onboarding for a new user
@@ -172,7 +176,7 @@ batcolors\           submodule: colored output for batch scripts
 custom\              your private repository (gitignored, created at setup)
 ```
 
-## Teams and distribution
+## 🤝 Teams and distribution
 
 A team administrator defines a **profile** in the private custom repository
 (application list, variables, aliases, network share), then builds a
@@ -181,7 +185,7 @@ team share. Team members bootstrap or update their whole environment from that
 share, still without admin rights. Details in
 [custom_example/README.md](custom_example/README.md).
 
-## Documentation
+## 📚 Documentation
 
 This README is only the front door: it says what senv is and where to go
 next. The rest of the documentation lives in the [wiki/](wiki/README.md)
@@ -189,13 +193,13 @@ folder, organized on the [Diátaxis](https://diataxis.fr/) model, which
 separates four kinds of pages so that none of them gets mixed with the
 others:
 
-- **[Tutorials](wiki/tutorials/)**: learning by doing: first installation,
+- 🎓 **[Tutorials](wiki/tutorials/)**: learning by doing: first installation,
   first session, first project-specific senv.
-- **[How-to guides](wiki/how-to/)**: recipes for a precise goal, add a
+- 🧭 **[How-to guides](wiki/how-to/)**: recipes for a precise goal, add a
   program to `prgs.list`, create a team profile, publish an update.
-- **[Reference](wiki/reference/)**: exact descriptions, commands and their
+- 📖 **[Reference](wiki/reference/)**: exact descriptions, commands and their
   arguments, file naming conventions, environment variables, alias list.
-- **[Explanation](wiki/explanation/)**: background and reasoning, why a
+- 💡 **[Explanation](wiki/explanation/)**: background and reasoning, why a
   minimal PATH, why a dedicated HOME, how the configuration layers fit
   together.
 
