@@ -63,5 +63,23 @@ switches (`switchjdk`, `switchnode`, ...). In any tab, `ppath java` shows
 the version pinned by that tab's project, and a plain `cmd` window outside
 Terminal still shows no senv at all.
 
+## If tabs opened together fail
+
+Tabs launched at the same time run their `switch*` commands concurrently.
+Deployments older than the introduction of `SENV_UID` shared one set of
+transient files between terminals, and one tab could delete a version list
+another tab was still reading. The failing tab then shows, in sequence:
+
+```txt
+Impossible de trouver ...\switchver_list.tmp
+ WARN  : [switchver.bat] Your ... version argument '...' was NOT found ...
+ FATAL 3 : [switchver.bat] No ... version selected ...
+```
+
+even though the version is installed. If this appears,
+[update senv](update-senv-and-diagnose-version-drift.md) so each terminal
+gets its own files, then reopen the tabs. To recover a single failed tab
+without reopening it, run `%USERPROFILE%\senv.bat all` in that tab.
+
 Related: [give a project its own senv](../tutorials/03-give-a-project-its-own-senv.md),
 [commands](../reference/commands.md).

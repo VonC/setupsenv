@@ -95,6 +95,7 @@ outside the repositories):
 | `custom\profile`, `custom\version` | setup (profile) and `adm\build.bat` (version) | per machine / per build |
 | `custom\driverLetter.bat` | `installs\drive_detection.bat`, holds the detected drive letter (`set "driveLetter=L:"`) | consumed and deleted by `installs\setupsdir.bat` seconds later; both the `driveLetter` and the historical `driverLetter` spellings are gitignored |
 | `setup_cleanup*.tmp`, `tmp` | `setup.bat`, profile cleanup and doskey rebuild | deleted at the end of the run |
+| `%TEMP%\switchver_<SENV_UID>_*.tmp`, `%TEMP%\switchjdk_path_<SENV_UID>.tmp`, `%TEMP%\switchpy_<SENV_UID>.tmp`, `%TEMP%\ppath_<SENV_UID>.tmp` | `switch*` and `ppath`, version lists and `PATH` filtering | deleted before the command returns; the `SENV_UID` suffix ([environment variables](environment-variables.md)) keeps concurrent terminals apart |
 | `%REMOTE_HOME%\state` | `check_migrate_home.bat`, HOME-migration progress tokens | persists on the remote home |
 | `%USERPROFILE%\usernamel` | `senv.bat`, cached lowercase user name | persists, one line |
 

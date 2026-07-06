@@ -18,6 +18,7 @@ in which they are applied.
 | Variable | Value | Meaning |
 | --- | --- | --- |
 | `PATH` | rebuilt | minimal Windows folders, then `%HOME%\bin`, then the portable Git folders, then per-tool additions |
+| `SENV_UID` | PID of the terminal's `cmd.exe` (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them |
 | `GH` | `%PRGS%\gits\current` | portable Git root |
 | `LANG`, `LC_ALL` | `en_US.UTF-8`, `C.UTF-8` | locale |
 | `TERM` | `msys` | terminal type for the Git tools |

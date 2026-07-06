@@ -146,7 +146,10 @@ Exits 111 when the download fails, 112 when the install fails.
 
 ## Version switching
 
-All `switch*` commands act on the current session `PATH` only.
+All `switch*` commands act on the current session `PATH` only. They are
+safe to run in several terminals at once: their transient files are
+suffixed with the per-session `SENV_UID`
+([environment variables](environment-variables.md)).
 
 ### `switchver <prgs_name> <prefix> <pattern> <exe> [<version>]`
 

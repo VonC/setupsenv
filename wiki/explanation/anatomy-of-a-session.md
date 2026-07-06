@@ -73,6 +73,16 @@ aliases are added. A deployed user never sees this branch.
 **The PATH reset** follows: four bare Windows entries, nothing inherited.
 The reasons are covered in [why-a-minimal-path.md](why-a-minimal-path.md).
 
+**A session id, `SENV_UID`, is computed once**: the PID of the terminal's
+own `cmd.exe`. Its only job is isolation. The `switch*` commands work
+through small transient files (piping console programs directly can leave
+them suspended, so lists are written to disk and read back), and a fixed
+file name would be shared by every terminal: a second tab opened at the
+same moment could delete a list the first tab was still reading, and the
+first tab would conclude the requested version does not exist. A PID is
+used rather than `%RANDOM%` because tabs launched by one command start
+within the same second and can draw identical random values.
+
 **`senv.local.pre.bat` loads before anything else** because it answers the
 question every later line depends on: where are `PRGS`, `HOME` and `PROG`
 on this machine? Activation fails loudly if the file is missing: a session
