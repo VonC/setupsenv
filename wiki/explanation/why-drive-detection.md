@@ -48,14 +48,17 @@ gives users a one-word jump to the setups folder: a letter is what they
 know. The resolver therefore prefers the drive letter and only falls back
 to the raw UNC path when no letter can be obtained.
 
-## Known limitation
+## A note on `wmic`
 
-The spawn-and-kill bookkeeping identifies the new Explorer window with
-`wmic`, which Microsoft removed from Windows 11 24H2 and later. On those
-machines the refresh branch fails instead of clicking; until the script
-moves to `tasklist` or a PowerShell CIM query, the manual gesture, open
-the Explorer, click the drive, remains the workaround when a run stops
-on `Unable to access drive letter`.
+The spawn-and-kill bookkeeping used to identify the new Explorer window
+with `wmic`, which Microsoft removed from Windows 11 24H2 and later. On
+those machines the refresh branch printed `'wmic' n'est pas reconnu` and
+left its minimized Explorer window open instead of cleaning it up. The
+scripts now enumerate PIDs with `tasklist`, which exists on Windows 10
+and Windows 11 alike, so a single code path serves both and no version
+detection is needed. The same removal is why `wildfly.bat` reads process
+command lines through a PowerShell `Get-CimInstance` query rather than
+`wmic`.
 
 Related: [distribution model](distribution-model.md) for what the shares
 carry, [naming conventions](../reference/naming-conventions.md#generated-and-transient-files)
