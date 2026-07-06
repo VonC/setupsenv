@@ -352,7 +352,8 @@ for /f "tokens=2" %%p in ('tasklist ^| grep -ai java') do (
     set "pid=%%p"
     %_info% "Checking Java process with PID: !pid!"
     
-    for /f "tokens=*" %%c in ('wmic process where ProcessId^=!pid! get CommandLine /value ^| grep standalone.bat') do (
+    rem Get-CimInstance instead of wmic: wmic is removed from Windows 11 24H2+
+    for /f "tokens=*" %%c in ('powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter 'ProcessId=!pid!').CommandLine" ^| grep standalone.bat') do (
         %_warning% "Found WildFly process: !pid!"
         %_info% "Command line: %%c"
         %_task% "Terminating process !pid!"
