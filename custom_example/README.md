@@ -1,5 +1,9 @@
 # custom: the private configuration repository of senv
 
+<!-- markdownlint-disable MD013 -->
+
+<img src="logo-senv-custom-transparent.png" alt="senv custom logo: the senv terminal window closed by a padlock" width="200">
+
 `custom_example\` is the seed of your `custom\` folder: the place where
 everything specific to your company, your teams and your machines lives.
 
