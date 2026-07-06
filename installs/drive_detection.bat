@@ -127,7 +127,8 @@ rem echo ~~~~~~~~~~~~~~~azerty
 rem First save current pids with the wanted process name
 set "RETPIDS="
 set "OLDPIDS=p"
-for /f "TOKENS=1" %%a in ('wmic PROCESS where "Name='%PROCESSNAME%'" get ProcessID ^| findstr [0-9]') do (set "OLDPIDS=!OLDPIDS!%%ap")
+rem tasklist instead of wmic: wmic is removed from Windows 11 24H2+
+for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESSNAME%" /NH ^| findstr /I "%PROCESSNAME%"') do (set "OLDPIDS=!OLDPIDS!%%ap")
 
 rem Spawn new process(es)
 %PREFIX% %PROCESSNAME% %SUFFIX%
@@ -137,7 +138,7 @@ REM choice /c x /d x /t 1 > nul
 C:\Windows\System32\timeout.exe /t 5 > NUL
 
 rem Check and find processes missing in the old pid list
-for /f "TOKENS=1" %%a in ('wmic PROCESS where "Name='%PROCESSNAME%'" get ProcessID ^| findstr [0-9]') do (
+for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESSNAME%" /NH ^| findstr /I "%PROCESSNAME%"') do (
 if "!OLDPIDS:p%%ap=zz!"=="%OLDPIDS%" (set "RETPIDS=/PID %%a !RETPIDS!")
 )
 

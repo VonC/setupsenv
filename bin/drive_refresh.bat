@@ -73,7 +73,8 @@ set SUFFIX=%1
 rem First save current pids with the wanted process name
 set "RET_PIDS="
 set "OLD_PIDS=p"
-for /f "TOKENS=1" %%a in ('wmic PROCESS where "Name='%PROCESS_NAME%'" get ProcessID ^| findstr [0-9]') do (set "OLD_PIDS=!OLD_PIDS!%%ap")
+rem tasklist instead of wmic: wmic is removed from Windows 11 24H2+
+for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESS_NAME%" /NH ^| findstr /I "%PROCESS_NAME%"') do (set "OLD_PIDS=!OLD_PIDS!%%ap")
 
 rem Spawn new process(es)
 %PREFIX% %PROCESS_NAME% %SUFFIX%
@@ -82,7 +83,7 @@ rem Wait for processes to start
 C:\Windows\System32\timeout.exe /t 5 > NUL
 
 rem Check and find processes missing in the old pid list
-for /f "TOKENS=1" %%a in ('wmic PROCESS where "Name='%PROCESS_NAME%'" get ProcessID ^| findstr [0-9]') do (
+for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESS_NAME%" /NH ^| findstr /I "%PROCESS_NAME%"') do (
 if "!OLD_PIDS:p%%ap=zz!"=="%OLD_PIDS%" (set "RET_PIDS=/PID %%a !RET_PIDS!")
 )
 
