@@ -19,6 +19,14 @@ rem    echo Batcolors not available in '%bc%' && exit /b 1
 rem )
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
+rem SENV_UID: id unique per terminal (PID of the hosting cmd.exe), so that concurrent
+rem tabs never share the same switch* temp files. %RANDOM% alone is not enough: tabs
+rem opened by one command start the same second and can draw identical values.
+if not defined SENV_UID (
+   for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId"`) do set "SENV_UID=%%p"
+)
+if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
+
 set "admPath="
 if defined local_senv (
    set "admPath=%PRGS%\senv\adm;%PRGS%\senv\bin;%PRGS%\senv\installs;;%PRGS%\senv\custom\bin;"

@@ -38,6 +38,10 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
 )
 set "ccd=%CD%"
 for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
+rem Temp file unique per terminal (SENV_UID set by senv.bat) and outside the project
+rem directory: a fixed name in %ccd% collides across concurrent tabs on the same project.
+if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
+set "switchpy_tmp=%TEMP%\switchpy_%SENV_UID%.tmp"
 %_info% "PYTHON_MAIN_VERSION='%PYTHON_MAIN_VERSION%'"
 if defined VIRTUAL_ENV (
     if not exist "%VIRTUAL_ENV%" (
@@ -112,16 +116,16 @@ if "%choice%"=="no" ( set "choice=No venv")
 if "%choice%"=="global" ( set "choice=venv on %PYTHON_ROOT%\venvs")
 if "%choice%"=="local" ( set "choice=venv on %ccd%\venvs")
 if not defined choice (
-    "%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %ccd%\venvs"> "%ccd%\switchpy.tmp"
+    "%PRGS%\gums\current\gum.exe" choose "No venv" "venv on %PYTHON_ROOT%\venvs" "venv on %ccd%\venvs"> "%switchpy_tmp%"
     ping -n 1 -w 300 127.0.0.1 > nul
-    for /f "tokens=*" %%a in ('type "%ccd%\switchpy.tmp"') do set "choice=%%a"
+    for /f "tokens=*" %%a in ('type "%switchpy_tmp%"') do set "choice=%%a"
 )
 rem echo choice='%choice%'
 set "venv_name=python_%PYTHON_VERSION%"
 rem if venv, then do not set PATH: activate will do it.
 if "%choice%" == "No venv" (
     %_ok% "No virtual environment will be used."
-    del "%ccd%\switchpy.tmp" 2>nul
+    del "%switchpy_tmp%" 2>nul
     set "PATH=%PYTHON_ROOT%\python%PYTHON_VERSION%;%PYTHON_ROOT%\python%PYTHON_VERSION%\Scripts;%PATH%"
     call :unset
     goto:eof
@@ -132,12 +136,12 @@ if "%choice%" == "No venv" (
     set "venv_name=python_%PYTHON_VERSION%_%project_name%"
 ) else (
     %_error% "Invalid choice."
-    del "%ccd%\switchpy.tmp" 2>nul
+    del "%switchpy_tmp%" 2>nul
     call :unset
     exit /b 1
 )
 ping -n 1 -w 300 127.0.0.1 > nul
-del "%ccd%\switchpy.tmp" 2>nul
+del "%switchpy_tmp%" 2>nul
 
 rem use existing code to create or activate venv in the chosen location
 set "PYTHON_VENVS=%VENV_LOCATION%"
@@ -194,6 +198,7 @@ rem set "VIRTUAL_ENV="
 set "OLD_PYTHON_VERSION="
 set "PYTHON_VENVS="
 set "VENV_LOCATION="
+set "switchpy_tmp="
 set "choice="
 set "_OLD_VIRTUAL_PATH="
 set "newPath="

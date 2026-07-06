@@ -8,6 +8,11 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 set "echos_standalone=%~dp0standalone_%~nx0.flag"
 
+rem Temp files must be unique per terminal (SENV_UID set by senv.bat): a shared name
+rem lets one tab delete the list while another tab is still reading it.
+if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
+set "svtmp=%TEMP%\switchver_%SENV_UID%"
+
 set "usage="
 set "prgs_name=%~1"
 if "%prgs_name%"=="" (
@@ -79,11 +84,11 @@ set PRG_VERSIONS=
 :: https://superuser.com/questions/1469567/executable-gets-suspended-when-called-from-batch-script
 :: https://www.dostips.com/forum/viewtopic.php?t=8940
 :: Write the %prg_prefix%* list to a file
-dir /b "%prg_prefix%*" > "%script_dir%\switchver_list.tmp"
+dir /b "%prg_prefix%*" > "%svtmp%_list.tmp"
 : Filter the entries using findstr and write to another file
-findstr /r "%prg_pattern%" "%script_dir%\switchver_list.tmp" > "%script_dir%\switchver_filtered_list.tmp"
+findstr /r "%prg_pattern%" "%svtmp%_list.tmp" > "%svtmp%_filtered_list.tmp"
 :: Read the filtered entries from the file and process them
-for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_list.tmp"') do (
+for /f "delims=" %%i in ('type "%svtmp%_filtered_list.tmp"') do (
     set "PRG_VERSIONS=!PRG_VERSIONS! %%i"
     set /a count+=1
     if "%%i" == "%prg_prefix%%prg_version%" (
@@ -92,11 +97,11 @@ for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_list.tmp"') do (
 )
 popd
 rem %_info% "switchver_list.tmp:"
-rem type "%script_dir%\switchver_list.tmp"
+rem type "%svtmp%_list.tmp"
 rem %_info% "switchver_filtered_list.tmp:"
-rem type "%script_dir%\switchver_filtered_list.tmp"
+rem type "%svtmp%_filtered_list.tmp"
 rem %_ok% "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%', count=%count%."
-del "%script_dir%\switchver_list.tmp" "%script_dir%\switchver_filtered_list.tmp"
+del "%svtmp%_list.tmp" "%svtmp%_filtered_list.tmp"
 rem %_fatal% "stop" 1
 rem echo "PRG_VERSIONS='%PRG_VERSIONS%', SELECTED_VERSION='%SELECTED_VERSION%'"
 
@@ -165,17 +170,17 @@ if not "%newPath%" == "" (
 %_task% "Must clean PATH from any '%PRGS%\%prgs_name%' occurrence"
 set "current_path="
 :: Write the PATH variable to a file, splitting at semicolons
-(for %%a in ("%PATH:;=" "%") do echo %%~a) > "%script_dir%\switchver_path_list.tmp"
+(for %%a in ("%PATH:;=" "%") do echo %%~a) > "%svtmp%_path_list.tmp"
 :: Filter out entries containing %PRGS%\%prgs_name%
 if not defined switchver_todelete (
     set "switchver_todelete=%PRGS%\%prgs_name%"
 )
-rem echo findstr /V /C:"\%prg_name%" "%script_dir%\switchver_path_list.tmp"
-findstr /I /V /C:"%switchver_todelete%" "%script_dir%\switchver_path_list.tmp" > "%script_dir%\switchver_filtered_path_list.tmp"
+rem echo findstr /V /C:"\%prg_name%" "%svtmp%_path_list.tmp"
+findstr /I /V /C:"%switchver_todelete%" "%svtmp%_path_list.tmp" > "%svtmp%_filtered_path_list.tmp"
 set "switchver_todelete="
 ping -n 1 -w 300 127.0.0.1 > nul
 :: Read the filtered entries from the file and reconstruct newPath
-for /f "delims=" %%i in ('type "%script_dir%\switchver_filtered_path_list.tmp"') do (
+for /f "delims=" %%i in ('type "%svtmp%_filtered_path_list.tmp"') do (
     if "!newPath!" == "" (
         set "newPath=%%i"
     ) else (
@@ -186,10 +191,10 @@ if defined SWITCHVER_DEBUG (
     %_info% "Cleaned newPath='%newPath%'
 )
 rem %_info% "switchver_path_list.tmp:"
-rem type "%script_dir%\switchver_path_list.tmp"
+rem type "%svtmp%_path_list.tmp"
 rem %_info% "switchver_filtered_path_list.tmp:"
-rem type "%script_dir%\switchver_filtered_path_list.tmp"
-del "%script_dir%\switchver_path_list.tmp" "%script_dir%\switchver_filtered_path_list.tmp"
+rem type "%svtmp%_filtered_path_list.tmp"
+del "%svtmp%_path_list.tmp" "%svtmp%_filtered_path_list.tmp"
 rem %_fatal% "stop" 1
 
 set "current_path="

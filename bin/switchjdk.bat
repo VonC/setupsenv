@@ -32,14 +32,18 @@ set "jdk_bin_path=%PRGS%\javas\%SELECTED_VERSION%\bin"
 set "path_prefix=%PRGS%\javas"
 
 set "path_check_awk_file=%script_dir%\path_check.awk"
-echo %PATH%> "path_temp.txt"
+rem Temp file unique per terminal (SENV_UID set by senv.bat) and outside the current
+rem directory: a fixed name in the project dir collides across concurrent tabs.
+if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
+set "path_temp=%TEMP%\switchjdk_path_%SENV_UID%.tmp"
+echo %PATH%> "%path_temp%"
 set "awk_path_prefix=%path_prefix:\=\\\\%"
 set "awk_jdk_bin_path=%jdk_bin_path:\=\\\\%"
-rem echo awk -v prefix="%awk_path_prefix%" -v jdk_bin_path="%awk_jdk_bin_path%" -f "%path_check_awk_file%" path_temp.txt
-for /f "delims=" %%a in ('awk -v prefix^="%awk_path_prefix%" -v jdk_bin_path^="%awk_jdk_bin_path%" -f "%path_check_awk_file%" path_temp.txt') do (
+rem echo awk -v prefix="%awk_path_prefix%" -v jdk_bin_path="%awk_jdk_bin_path%" -f "%path_check_awk_file%" "%path_temp%"
+for /f "delims=" %%a in ('awk -v prefix^="%awk_path_prefix%" -v jdk_bin_path^="%awk_jdk_bin_path%" -f "%path_check_awk_file%" "%path_temp%"') do (
     set "complete_output=%%a"
 )
-del path_temp.txt
+del "%path_temp%"
 rem %_info% "complete_output='%complete_output%'" 
 
 REM Split the output at the special separator

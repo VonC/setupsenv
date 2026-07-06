@@ -5,6 +5,11 @@ for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
+rem Temp file unique per terminal (SENV_UID set by senv.bat): a shared name in the
+rem senv bin directory collides across concurrent tabs.
+if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
+set "ppath_tmp=%TEMP%\ppath_%SENV_UID%.tmp"
+
 if "%~1"=="/i" (
   set "case_insensitive=/I "
   shift
@@ -110,11 +115,11 @@ if "%~1"=="/i" (
 :check_next_param
 if "%~1"=="" (
     if defined SENV_PPATH_DEBUG ( %_ok% "[contains_all_params] empty param for line '%line%' [SENV_PPATH_DEBUG]" )
-    del /Q /F "%script_dir%\ppath.tmp" 2>NUL
+    del /Q /F "%ppath_tmp%" 2>NUL
     exit /b 0
 )
-echo !line!> "%script_dir%\ppath.tmp"
-findstr %case_insensitive%/c:"%~1" "%script_dir%\ppath.tmp" >nul
+echo !line!> "%ppath_tmp%"
+findstr %case_insensitive%/c:"%~1" "%ppath_tmp%" >nul
 if errorlevel 1 (
     @echo off
     if defined SENV_PPATH_DEBUG ( %_warning% "[contains_all_params] does not find param '%~1' into line '!line!' [SENV_PPATH_DEBUG]" )
