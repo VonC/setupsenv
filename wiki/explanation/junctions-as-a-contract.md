@@ -1,5 +1,7 @@
 # Junctions as a path contract
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 Every tool senv knows about is reachable through one single path shape:
 
 ```text
@@ -73,7 +75,7 @@ recording the original name in a `_<folder>` marker file. The contract,
 fallback is also a reminder that the contract is the point, not the NTFS
 feature: anything that keeps `%PRGS%\<tool>s\<name>` valid is acceptable.
 
-## Where to look next
+## 👉 Where to look next
 
 - [../how-to/reference-an-already-installed-tool.md](../how-to/reference-an-already-installed-tool.md)
   to junction a tool that a corporate installer already put on the machine.

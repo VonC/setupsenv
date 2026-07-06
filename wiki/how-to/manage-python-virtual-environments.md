@@ -1,9 +1,11 @@
 # How to manage Python virtual environments
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 Goal: pick a Python version for the current session and work in a virtual
 environment, global or per-project.
 
-## Steps
+## 📋 Steps
 
 1. Select the Python version (and optionally the venv choice) in one call:
 
@@ -45,7 +47,7 @@ A project `senv.bat` can chain the global activation with
 the right interpreter and venv: see
 [per-project senv](../explanation/anatomy-of-a-session.md).
 
-## Check
+## ✅ Check
 
 `python --version` matches the selected version, and the prompt (or
 `echo %VIRTUAL_ENV%`) shows the active venv path.

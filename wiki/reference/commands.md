@@ -1,5 +1,7 @@
 # Command reference
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 Exact synopsis and behavior of the user-facing senv commands. All of them run
 inside a senv session (`%HOME%\bin` on the PATH), except `getstarted.bat`,
 `setup.bat` and `s.bat` which run from the senv repository folder.
@@ -8,7 +10,7 @@ Related pages: [doskey aliases](doskey-aliases.md),
 [environment variables](environment-variables.md),
 [exit codes](exit-codes.md).
 
-## Session
+## 🖥️ Session
 
 ### `senv [global|all]`
 
@@ -100,7 +102,7 @@ No argument. Prints the active profile, compares the local senv and custom
 versions (`git describe`, `custom\version`) with the remote ones, flags
 uncommitted changes, and says whether to update (`upg`, `upa`) or publish.
 
-## Download and install
+## 🧰 Download and install
 
 ### `dwl <program> [<version>]` (alias `dl`, `download`)
 
@@ -144,7 +146,7 @@ Archives are searched in order: `%PRGS%\setup`, `%USERPROFILE%\Downloads`,
 `dwl` then `inst_prg` in one step. `<version>` defaults to `latest`.
 Exits 111 when the download fails, 112 when the install fails.
 
-## Version switching
+## 🔀 Version switching
 
 All `switch*` commands act on the current session `PATH` only. They are
 safe to run in several terminals at once: their transient files are
@@ -191,7 +193,7 @@ Activates the single Python venv found under `.\venvs` in the current
 directory (created by `switchpy ... local`). Errors when zero or more than
 one venv is present.
 
-## Update
+## 🔄 Update
 
 ### `up`, `upg`, `upa` (`update_profile.bat`)
 
@@ -230,7 +232,7 @@ the report without writing. `setup.bat` runs it automatically at the end
 of each install or update when either list applies to the active profile.
 Details: [git configuration](git-configuration.md).
 
-## Diagnostics
+## 🩺 Diagnostics
 
 ### `alias [-l] [<pattern>]`
 

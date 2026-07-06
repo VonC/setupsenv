@@ -1,5 +1,7 @@
 # From zero on a team laptop
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 In this tutorial you set up senv on a locked-down corporate laptop, as a
 contractor joining a team that already publishes a senv profile on a network
 share. No admin rights, no clone from the internet: everything comes from
@@ -86,7 +88,7 @@ profile
 It compares your local senv and custom versions with the published ones and
 tells you which command to run.
 
-## Next steps
+## 👉 Next steps
 
 - [Install and use a tool on demand](02-install-and-use-a-tool-on-demand.md)
   when you need a tool or a version outside the team list.

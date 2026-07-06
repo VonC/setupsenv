@@ -1,10 +1,12 @@
 # Environment variables
 
+<img src="../assets/logo-senv-envvars-transparent.png" alt="" height="90" align="right">
+
 Variables set or read by a senv session, with their origin. See
 [Anatomy of a session](../explanation/anatomy-of-a-session.md) for the order
 in which they are applied.
 
-## Core locations
+## 📍 Core locations
 
 | Variable | Origin | Meaning |
 | --- | --- | --- |
@@ -13,7 +15,7 @@ in which they are applied.
 | `PROG` | same | work/data folder (Git repositories, `senv_setups`) |
 | `REMOTE_HOME` | same | remote location for HOME backup/migration |
 
-## Session basics (set by `bin\senv.bat`)
+## 🖥️ Session basics (set by `bin\senv.bat`)
 
 | Variable | Value | Meaning |
 | --- | --- | --- |
@@ -27,14 +29,14 @@ in which they are applied.
 | `DL`, `DWL` | `%USERPROFILE%\Downloads` | download folder shortcuts |
 | `GOROOT`, `GOBIN`, `GOPROXY` | from `%PRGS%\gos\current` when present | Go toolchain |
 
-## Proxy (from the custom layer)
+## 🌐 Proxy (from the custom layer)
 
 | Variable | Origin | Meaning |
 | --- | --- | --- |
 | `HTTP_PROXY`, `HTTPS_PROXY` | `senv.custom.bat` | local or corporate proxy; `setup.bat` aborts when missing |
 | `NO_PROXY` | `senv.custom.bat` | domains reached directly |
 
-## Per-tool (set by the `switch*` commands)
+## 🧰 Per-tool (set by the `switch*` commands)
 
 | Variables | Set by |
 | --- | --- |
@@ -44,7 +46,7 @@ in which they are applied.
 | `PYTHON_HOME`, `PYTHON_VERSION`, `PYTHON_ROOT`, `VIRTUAL_ENV` | `switchpy` |
 | `WF_HOME`, `WILDFLY_HOME`, `WF_VERSION`, `WF_JDK` | `switchwf` |
 
-## Behavior switches
+## 🎛️ Behavior switches
 
 | Variable | Read by | Effect when set |
 | --- | --- | --- |

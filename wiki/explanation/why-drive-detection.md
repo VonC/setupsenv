@@ -1,5 +1,7 @@
 # Why senv detects and wakes network drives
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 On a corporate laptop, the team shares live on mapped network drives:
 `L:`, `W:`, `U:`. Those mappings have a failure mode every Windows user
 knows by sight: the **red cross** on the drive icon. After a login, a

@@ -1,5 +1,7 @@
 # prgs.list file format
 
+<img src="../assets/logo-senv-applications-alt-transparent.png" alt="" height="90" align="right">
+
 `bin\prgs.list` is the catalog of programs that `dwl`, `inst_prg` and `div`
 know about. One line per program, five `~`-separated fields; the first line
 of the file is the schema itself:

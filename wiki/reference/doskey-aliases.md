@@ -1,5 +1,7 @@
 # Doskey alias reference
 
+<img src="../assets/logo-senv-aliases-transparent.png" alt="" height="90" align="right">
+
 Aliases are loaded by `senv.bat` from four macro files, later files
 overriding earlier ones:
 
@@ -14,7 +16,7 @@ overriding earlier ones:
 customization. After `aliase`, `aliasr` is enough to reload the aliases;
 after `senve`, run `senv` to re-apply the variables in the session.
 
-## Navigation
+## 🧭 Navigation
 
 | Alias | Target |
 | --- | --- |
@@ -47,7 +49,7 @@ project, ideally under `cdg`:
 cdp=cd /d %PROG%\git\myproject
 ```
 
-## Session and editors
+## 🖥️ Session and editors
 
 | Alias | Expansion |
 | --- | --- |
@@ -82,7 +84,7 @@ cdp=cd /d %PROG%\git\myproject
 | `gtn`, `gtm` | tag messages |
 | `gcliff` | portable `git-cliff` |
 
-## 7-Zip
+## 🗜️ 7-Zip
 
 | Alias | Expansion |
 | --- | --- |
@@ -90,7 +92,7 @@ cdp=cd /d %PROG%\git\myproject
 | `pzx` | `7z x` extract to a named folder |
 | `pzc` | `7z a` create a zip |
 
-## Download, install, update
+## 🧰 Download, install, update
 
 | Alias | Expansion |
 | --- | --- |
@@ -102,7 +104,7 @@ cdp=cd /d %PROG%\git\myproject
 | `up`, `upg`, `upa` | update profile / Git only / all |
 | `ti`, `ei` | test internet / restore internet |
 
-## Sysinternals
+## 🔧 Sysinternals
 
 | Alias | Expansion |
 | --- | --- |

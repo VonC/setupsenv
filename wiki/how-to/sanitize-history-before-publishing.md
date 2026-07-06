@@ -1,5 +1,7 @@
 # How to sanitize the history before publishing
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Goal: verify that no confidential word (person, company, internal host,
 internal domain) survives anywhere in the repository history, then rewrite
 that history with `git-filter-repo.bat` before making the repository public.
@@ -160,7 +162,7 @@ If commits landed between the audit and the rewrite, re-scan at least that
 delta first: broad rules like `regex:(?i)jdoe` substitute inside longer
 words too, and must stay verified against real content.
 
-## Check
+## ✅ Check
 
 On the rewritten clone, phase 1 reports zero hits for every watched word,
 `git log --all` shows the neutral messages and the neutral emails, and

@@ -1,5 +1,7 @@
 # How to open project tabs in Windows Terminal
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 Goal: a Windows Terminal layout where each tab opens on one project, with
 the **global** senv applied first and the **project** `senv.bat` applied on
 top, instead of the default behavior where a project `senv.bat` replaces
@@ -17,7 +19,7 @@ pattern of [the project tutorial](../tutorials/03-give-a-project-its-own-senv.md
 also works with `all`: the global part simply runs twice, which is
 harmless.
 
-## Steps
+## 📋 Steps
 
 1. Regenerate the launcher once, so it knows the two arguments, from the
    senv repository folder:
@@ -56,7 +58,7 @@ harmless.
      wt -p myproject ; new-tab -p otherproject
      ```
 
-## Check
+## ✅ Check
 
 Each tab prints `senv activated` (the global pass) followed by the project
 switches (`switchjdk`, `switchnode`, ...). In any tab, `ppath java` shows

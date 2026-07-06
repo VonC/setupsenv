@@ -1,10 +1,12 @@
 # How to reference an already-installed tool
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 Goal: give a tool that was installed outside senv (corporate installer,
 Program Files) the standard `%PRGS%\<tool>s\current` path, so scripts and
 aliases find it like any portable tool.
 
-## Steps
+## 📋 Steps
 
 1. In the profile application list (`custom\install_<profile>.list`), declare
    the tool with the `system` keyword instead of an archive pattern:
@@ -40,7 +42,7 @@ Junctions do not work on network drives. On a non-`C:`/`D:` location,
 `check_prg_symlink.bat` falls back to renaming the version folder to the
 junction name and records the original name in a `_<folder>` marker file.
 
-## Check
+## ✅ Check
 
 ```cmd
 dir %PRGS%\<tool>s

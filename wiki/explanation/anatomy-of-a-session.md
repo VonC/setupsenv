@@ -1,5 +1,7 @@
 # Anatomy of a session
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 Two scripts define senv: `setup.bat`, run occasionally to build or refresh
 the environment, and `bin\senv.bat`, run at every terminal to activate it.
 This page walks through both flows to explain *why* each stage exists; the
@@ -107,7 +109,7 @@ The end state prints one line, `senv activated`, and that is the whole
 visible footprint: no registry writes, no machine PATH edits, nothing that
 outlives the terminal window.
 
-## Where to look next
+## 👉 Where to look next
 
 - [../reference/commands.md](../reference/commands.md) for every command
   available once the session is active.

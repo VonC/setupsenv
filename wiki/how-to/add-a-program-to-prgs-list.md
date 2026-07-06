@@ -1,9 +1,11 @@
 # How to add a program to prgs.list
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 Goal: make a new portable tool downloadable with `dwl <tool>` and installable
 with `inst_prg <tool>`.
 
-## Steps
+## 📋 Steps
 
 1. Add one line to [bin/prgs.list](../../bin/prgs.list), fields separated by `~`:
 
@@ -60,7 +62,7 @@ with `inst_prg <tool>`.
    where inst_prg
    ```
 
-## Check
+## ✅ Check
 
 `dwl mytool` downloads into `%PRGS%\setup`, `inst_prg mytool` uncompresses to
 `%PRGS%\mytools\...` and creates the `current` junction. `prgs.list` and

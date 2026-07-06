@@ -1,5 +1,7 @@
 # How to create a team profile
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Profiles are not only for teams: the same recipe gives one person a profile
 per computer (say `perso` and `laptop`), sharing the same private custom
 repository.
@@ -10,7 +12,7 @@ the examples) that a whole team installs and updates from a shared location.
 All files below live in the private `custom\` repository: see
 [custom_example/README.md](../../custom_example/README.md).
 
-## Steps
+## 📋 Steps
 
 1. Declare the application list `custom\install_xyz.list`, one tool per line:
 
@@ -70,7 +72,7 @@ The `xyz` token must be strictly identical across `profile`,
 `senv.custom.xyz.doskey` and the built `senv_xyz-zip.exe`: the build and
 publish scripts discover profiles by globbing those exact names.
 
-## Check
+## ✅ Check
 
 In a new session, `profile.bat` reports `xyz` as the active profile, `alias`
 lists the team aliases, and the variables from `senv.custom.xyz.bat` are set.

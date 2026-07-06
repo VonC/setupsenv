@@ -1,5 +1,7 @@
 # The distribution model
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 senv maintainers work with Git. Team members, most of the time, do not:
 they receive the environment as a single self-extracting archive,
 `senv_<profile>-zip.exe`, published on a file share, next to a small
@@ -69,7 +71,7 @@ Nothing pushes to users automatically. A user updates when they choose to,
 from a session they control, consistent with the general principle that
 senv touches nothing outside the session.
 
-## Where to look next
+## 👉 Where to look next
 
 - [../how-to/update-senv-and-diagnose-version-drift.md](../how-to/update-senv-and-diagnose-version-drift.md) for the user-side
   update commands.

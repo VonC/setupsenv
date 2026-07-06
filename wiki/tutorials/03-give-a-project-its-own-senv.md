@@ -1,5 +1,7 @@
 # Give a project its own senv
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 In this tutorial you add a `senv.bat` to one of your projects, so that
 opening a session in that project automatically selects the tool versions
 the project needs, say JDK 17 and Node 20.
@@ -75,7 +77,7 @@ that only contains `switch` lines gets the full global session first. The
 per-tab setup is in
 [Open project tabs in Windows Terminal](../how-to/open-project-tabs-in-windows-terminal.md).
 
-## Next steps
+## 👉 Next steps
 
 - Commit `senv.bat` with the project, so every teammate with senv gets the
   same versions.

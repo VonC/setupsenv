@@ -1,5 +1,7 @@
 # Git configuration reference
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 The default Git configuration senv installs, option by option, and the
 `gcu` command that completes it per repository.
 

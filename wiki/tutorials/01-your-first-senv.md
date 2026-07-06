@@ -1,5 +1,7 @@
 # Your first senv
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 In this tutorial you install senv from scratch on a Windows machine, without
 admin rights, and open your first working session. Allow 15 to 30 minutes,
 mostly download time.
@@ -142,7 +144,7 @@ Then close the window. Open a plain `CMD` again without typing `senv`: none
 of this exists there. That is the whole point: senv lives inside the
 session, and only there.
 
-## Next steps
+## 👉 Next steps
 
 - [Install and use a tool on demand](02-install-and-use-a-tool-on-demand.md)
 - The exact activation sequence is described in

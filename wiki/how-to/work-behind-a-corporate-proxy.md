@@ -1,5 +1,7 @@
 # How to work behind a corporate proxy
 
+<img src="../assets/logo-senv-envvars-transparent.png" alt="" height="90" align="right">
+
 Goal: give every senv session (curl, git, package managers) internet access
 through an authenticating corporate proxy, without storing credentials.
 
@@ -7,7 +9,7 @@ senv uses [px](https://github.com/genotrance/px), a local proxy that handles
 the corporate authentication (NTLM/Kerberos) and listens on `127.0.0.1`.
 Sessions then point at that local port.
 
-## Steps
+## 📋 Steps
 
 1. Add `px` to the profile application list (`custom\install_<profile>.list`):
 
@@ -50,7 +52,7 @@ Sessions then point at that local port.
 
 Scripts that need the network (`dwl`, `gsh`) call `ei` themselves.
 
-## Check
+## ✅ Check
 
 `ti` reports success, and `curl -I https://github.com` answers from a senv
 session while the proxy variables are set.

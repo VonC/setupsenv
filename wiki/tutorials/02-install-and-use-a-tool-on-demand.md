@@ -1,5 +1,7 @@
 # Install and use a tool on demand
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 In this tutorial you download a portable JDK and Node.js, uncompress them
 under `%PRGS%`, and put a chosen version on the PATH of one session, while
 other sessions stay untouched.
@@ -90,7 +92,7 @@ The command is not found (or finds another default): the switch you did in
 the first window changed nothing globally, and nothing outside senv sessions
 was modified at any point.
 
-## Next steps
+## 👉 Next steps
 
 - [Give a project its own senv](03-give-a-project-its-own-senv.md) to make a
   project select its versions automatically.

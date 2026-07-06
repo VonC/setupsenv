@@ -1,5 +1,7 @@
 # The four configuration layers
 
+<img src="../assets/logo-senv-envvars-transparent.png" alt="" height="90" align="right">
+
 A senv session is assembled from four layers, each owned by a different
 actor and each able to override the one before it:
 
@@ -71,7 +73,7 @@ of all (before the PATH is even rebuilt) because it defines where everything
 is: `PRGS`, `HOME`, `PROG`. It is personal in ownership but foundational in
 role, which is why setup seeds it rather than leaving it empty.
 
-## Where to look next
+## 👉 Where to look next
 
 - [../how-to/add-personal-alias-or-env-var.md](../how-to/add-personal-alias-or-env-var.md)
   to add your own variables and aliases the update-proof way.

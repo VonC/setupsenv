@@ -1,5 +1,7 @@
 # Why a minimal PATH
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 Every senv session starts by throwing the inherited `PATH` away. The first
 thing `bin\senv.bat` does after loading its color macros is:
 
@@ -66,7 +68,7 @@ That friction is the feature: every entry on the PATH has an owner and a
 reason, which is exactly what a contractor needs when the rest of the machine
 is out of their hands.
 
-## Where to look next
+## 👉 Where to look next
 
 - [anatomy-of-a-session.md](anatomy-of-a-session.md) for the full activation
   sequence around the PATH reset.

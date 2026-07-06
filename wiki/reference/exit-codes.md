@@ -1,5 +1,7 @@
 # Exit codes and fatal conditions
 
+<img src="../assets/logo-senv-terminal-transparent.png" alt="" height="90" align="right">
+
 Confirmed error behavior of the main scripts. All fatal messages go through
 the `batcolors` `%_fatal%` macro, which prints in red and exits with the
 given code.

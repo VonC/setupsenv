@@ -1,5 +1,7 @@
 # How to add a personal alias or environment variable
 
+<img src="../assets/logo-senv-aliases-transparent.png" alt="" height="90" align="right">
+
 Goal: customize your sessions (PATH additions, variables, doskey aliases)
 in a way that no senv update ever overwrites.
 
@@ -25,7 +27,7 @@ Two edit aliases drive the whole loop, each with its own reload:
 - `aliase`: open `senv.local.doskey` (your aliases) in VSCode; an alias
   change only needs `aliasr`, which reloads the doskey layers alone.
 
-## Steps
+## 📋 Steps
 
 1. Add a variable or PATH entry: type `senve` and edit
    `%HOME%\bin\senv.local.bat`:
@@ -52,7 +54,7 @@ Two edit aliases drive the whole loop, each with its own reload:
    - after `aliase`: `aliasr` reloads the three doskey layers, nothing else,
    - after `senve`: `senv` re-runs the whole activation, variables included.
 
-## Check
+## ✅ Check
 
 `alias cdp` shows the new macro; `echo %MY_TOOL_HOME%` shows the variable.
 Run `s`, open a new session: both are still there.

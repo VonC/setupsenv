@@ -1,5 +1,7 @@
 # install_<profile>.list file format
 
+<img src="../assets/logo-senv-applications-alt-transparent.png" alt="" height="90" align="right">
+
 `custom\install_<profile>.list` names the applications installed by
 `setup.bat` for one profile. One line per application, two
 whitespace-separated columns:

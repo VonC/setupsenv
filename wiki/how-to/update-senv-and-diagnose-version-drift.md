@@ -1,5 +1,7 @@
 # How to update senv and diagnose version drift
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Goal: refresh your environment from the team share, and understand what
 `profile.bat` reports when local and remote versions differ.
 
@@ -43,7 +45,7 @@ Two directions, possibly combined:
 A dirty working tree in either repository is flagged too: commit or stash
 before publishing.
 
-## Check
+## ✅ Check
 
 After `up`/`upa`, `profile.bat` reports the local `git describe` as
 unchanged from the remote recorded version.

@@ -1,5 +1,7 @@
 # Public engine, private data
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 senv is split into two repositories with two different lives:
 
 - **senv** (this repository) is public. It contains the engine (session
@@ -112,7 +114,7 @@ sensitive as the custom repository itself. The archives are therefore
 published only to internal shares, never committed (`builds\` is ignored),
 and the same care applies to any copy that leaves the share.
 
-## Where to look next
+## 👉 Where to look next
 
 - [../how-to/create-a-team-profile.md](../how-to/create-a-team-profile.md)
   to populate a custom repository for a team.

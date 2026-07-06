@@ -1,5 +1,7 @@
 # How to write an install hook
 
+<img src="../assets/logo-senv-applications-transparent.png" alt="" height="90" align="right">
+
 Goal: customize how one tool is installed, beyond the default
 "uncompress with 7-Zip, then junction `current`".
 
@@ -21,7 +23,7 @@ looked up, in that order, for each kind:
 - `<tool>s.alias.bat`: after the junction; adds doskey aliases,
 - `<tool>s.test.bat`: manual diagnostics, outside the install path.
 
-## Steps
+## 📋 Steps
 
 1. Pick the smallest hook that does the job (usually `.post.bat`).
 2. Create `installs\<tool>s.<kind>.bat`. Real examples to copy from:
@@ -45,7 +47,7 @@ looked up, in that order, for each kind:
    inst_prg <tool>
    ```
 
-## Check
+## ✅ Check
 
 Watch the `inst_prg` output: each hook announces itself. The final tree must
 match [naming conventions](../reference/naming-conventions.md), with the

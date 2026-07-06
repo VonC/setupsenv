@@ -1,5 +1,7 @@
 # How to build and publish a profile archive
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Goal: produce the self-extracting `senv_<profile>-zip.exe` and push it, with
 its bootstrap, to the team share so members can install or update from it.
 
@@ -7,7 +9,7 @@ Prerequisite: a maintainer machine running senv in "local" mode (the
 repository checkout, with `adm\` on the PATH), and a profile already defined:
 see [Create a team profile](create-a-team-profile.md).
 
-## Steps
+## 📋 Steps
 
 1. Commit your work: `adm\build.bat` refuses to run with a dirty `git status`
    in `senv` or in `custom`. Two knobs relax this during tests:
@@ -46,7 +48,7 @@ see [Create a team profile](create-a-team-profile.md).
    - `adm\publish_profile.bat [profile|all]`: pushes the whole tool set of a
      profile (newest matching archive of each entry) to its share.
 
-## Check
+## ✅ Check
 
 On the share: `senv_xyz-zip.exe`, `version` and `s.bat` are present and
 dated now. On a member machine, running that `s.bat` self-extracts the

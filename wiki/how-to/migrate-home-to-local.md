@@ -1,5 +1,7 @@
 # How to migrate HOME from a network drive to local
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Goal: move a slow remote/roaming senv `HOME` to the fast local
 `%USERPROFILE%\home_senv`, keeping the remote as a Git backup.
 
@@ -28,14 +30,14 @@ Each phase runs once: progress is recorded in a `%REMOTE_HOME%\state` file
 with the tokens `_copied_`, `_updated_`, `_nosenvupdate_`, `_cleaned_`. A
 re-run resumes where it left off.
 
-## Steps
+## 📋 Steps
 
 1. Confirm `REMOTE_HOME` is set (it is written by `setup.ini.bat` into
    `senv.local.pre.bat`).
 2. Run `s`.
 3. Open a new `CMD` and type `senv`.
 
-## Check
+## ✅ Check
 
 - `echo %HOME%` prints `%USERPROFILE%\home_senv`,
 - `git -C %HOME% remote -v` shows the bare remote `home_senv.git`,

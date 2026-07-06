@@ -1,5 +1,7 @@
 # Naming conventions
 
+<img src="../assets/logo-senv-transparent.png" alt="" height="90" align="right">
+
 Every rule of thumb senv relies on, in one page. The rationale is in
 [Junctions as a location contract](../explanation/junctions-as-a-contract.md).
 
