@@ -1,8 +1,8 @@
 # senv wiki
 
-<p align="center">
-  <img src="assets/logo-senv-transparent.png" alt="senv logo: a terminal window containing the four senv themes" width="200">
-</p>
+<!-- markdownlint-disable MD013 -->
+
+<img src="assets/logo-senv-transparent.png" alt="senv logo: a terminal window containing the four senv themes" width="200">
 
 Each page carries the logo of its main theme: 🖥️ the terminal session,
 🏷️ environment variables, ⚡ doskey aliases, 🧰 applications, or 📦 senv

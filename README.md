@@ -1,8 +1,8 @@
 # senv: a portable, no-admin development environment for Windows
 
-<p align="center">
-  <img src="wiki/assets/logo-senv-transparent.png" alt="senv logo: a terminal window containing the four senv themes" width="220">
-</p>
+<!-- markdownlint-disable MD013 -->
+
+<img src="wiki/assets/logo-senv-transparent.png" alt="senv logo: a terminal window containing the four senv themes" width="220">
 
 `senv` ("session environment") turns a plain `CMD` session into a fully equipped
 development shell on a locked-down Windows laptop:
