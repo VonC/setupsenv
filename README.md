@@ -49,6 +49,11 @@ Every tool family lives in one folder named after the tool plus a trailing
 A tool already installed elsewhere (for example by a corporate installer) is
 still referenced through the same convention, using a junction folder to the
 external location. Every script can therefore rely on one single path shape.
+This contract is re-checked and repaired on every setup run: a junction is
+re-targeted when the active version changes, and a real folder found in a
+junction's place (a previous manual installation) is kept aside as
+`current.old`
+([explanation](wiki/explanation/junctions-as-a-contract.md)).
 
 ### 🏷️ Configuration layers
 

@@ -20,6 +20,12 @@ On drives where junctions are not possible (network), the extracted folder
 is renamed to the junction name and a `_<original-name>` marker file records
 it.
 
+When a junction name is found to be a real directory (previous manual
+installation, or a network-fallback rename brought back to a local drive),
+the junction scripts keep the directory aside as `<junction-name>.old`
+before creating the junction; delete that backup once the new installation
+is validated.
+
 ## Install hooks
 
 For a family folder `<tool>s`, hook scripts are looked up by name in
@@ -98,6 +104,7 @@ outside the repositories):
 | `custom\driverLetter.bat` | `installs\drive_detection.bat`, holds the detected drive letter (`set "driveLetter=L:"`) | consumed and deleted by `installs\setupsdir.bat` seconds later; both the `driveLetter` and the historical `driverLetter` spellings are gitignored |
 | `setup_cleanup*.tmp`, `tmp` | `setup.bat`, profile cleanup and doskey rebuild | deleted at the end of the run |
 | `%TEMP%\switchver_<SENV_UID>_*.tmp`, `%TEMP%\switchjdk_path_<SENV_UID>.tmp`, `%TEMP%\switchpy_<SENV_UID>.tmp`, `%TEMP%\ppath_<SENV_UID>.tmp` | `switch*` and `ppath`, version lists and `PATH` filtering | deleted before the command returns; the `SENV_UID` suffix ([environment variables](environment-variables.md)) keeps concurrent terminals apart |
+| `%PRGS%\<tool>s\<junction-name>.old` | `installs\check_symlink.bat` and `bin\check_prg_symlink.bat`, real directory found in place of a junction and kept aside | persists until deleted manually; replaced by the next repair |
 | `%REMOTE_HOME%\state` | `check_migrate_home.bat`, HOME-migration progress tokens | persists on the remote home |
 | `%USERPROFILE%\usernamel` | `senv.bat`, cached lowercase user name | persists, one line |
 

@@ -131,7 +131,7 @@ After a single file is selected:
 6. Otherwise, `pzxx.bat` extracts the archive with 7-Zip.
 7. `.tar.xz` archives get a second extraction pass for the inner `.tar`.
 8. A post-install hook may run.
-9. `check_prg_symlink.bat` creates or updates the symlink, usually `%PRGS%\%prgs_folder%\current`.
+9. `check_prg_symlink.bat` creates or updates the symlink, usually `%PRGS%\%prgs_folder%\current`. If that name is a real directory instead of a junction (previous manual installation), it is kept aside as `current.old` first.
 10. An alias hook may run.
 
 For Codex, a downloaded file like:

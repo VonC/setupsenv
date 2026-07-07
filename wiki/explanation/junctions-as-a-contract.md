@@ -66,6 +66,24 @@ after that single lookup the knowledge is frozen into a junction, and every
 later consumer uses the plain filesystem contract instead of re-doing
 registry queries.
 
+## Enforced and repaired, not assumed
+
+Two scripts own the contract. `installs\check_symlink.bat` runs from
+`setup.bat` for every entry of the install list; `bin\check_prg_symlink.bat`
+does the same job for on-demand installs (`inst`, `div`). Both are
+idempotent and cheap, so they re-run on every setup: verify that the
+junction exists *and* still targets the expected version, re-create it when
+the target changed, and follow the "single nested subfolder" case down to
+the real content.
+
+They also repair states they did not create. When the junction name turns
+out to be a real directory (a tool copied by hand, or a network-fallback
+installation brought back to a local drive), no junction swap is possible:
+the scripts keep that directory aside as `current.old`, create the junction,
+and leave the backup for the user to delete once the new installation is
+validated. Installing over an existing, even non-senv, installation
+therefore converges to the contract instead of failing on it.
+
 ## Edge case: drives without junction support
 
 Junctions do not work on network drives. When `%PRGS%` lives on one, the

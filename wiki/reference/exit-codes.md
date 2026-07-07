@@ -26,6 +26,7 @@ given code.
 | 24 | unable to write `%USERPROFILE%\senv.bat` from the template |
 | 231 | unable to copy `bin\*` or `custom\*.custom.*` to `%HOME%\bin` |
 | 112 | no setup archive found for a program of the install list |
+| 79 | no junction name returned by `installs\check_symlink.bat` (junction creation or repair failed; the warning printed just before gives the cause) |
 | 94-98 | Git PATH activation failed (`PRGS`/`HOME` unset, `git.exe` or `awk.exe` not found) |
 | 99-102 | proxy activation failed (`senv.custom.bat` missing, or `HTTP_PROXY`/`HTTPS_PROXY` not defined by it) |
 
@@ -63,6 +64,27 @@ given code.
 | 8 | unable to access `%PRGS%\<folder>` |
 | 9 | empty program id after selection |
 | 1 | 7-Zip extraction error |
+
+## Junction scripts
+
+`installs\check_symlink.bat` (called by `setup.bat`) reports a failed
+junction creation as a warning and clears the junction name, which
+`setup.bat` turns into its fatal 79. Its own fatal codes:
+
+| Code | Condition |
+| --- | --- |
+| 1 | `PRGS` not defined, or unable to create `%PRGS%\<folder>` |
+| 32-33 | pre-check `system`: registry lookup failed or returned nothing |
+| 42-43 | post-check `system`: registry lookup failed or returned nothing |
+| 1, 2, 3, 5 | network-drive fallback: delete, rename or marker-file step failed |
+
+`bin\check_prg_symlink.bat` (called by `inst_prg`):
+
+| Code | Condition |
+| --- | --- |
+| 44 | usage error (missing argument) |
+| 1 | unable to create `%PRGS%\<folder>` |
+| 43 | junction name is a real directory and moving it aside to `<name>.old` failed |
 
 ## `switchver.bat`
 

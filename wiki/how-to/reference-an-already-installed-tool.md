@@ -34,7 +34,10 @@ aliases find it like any portable tool.
    ```
 
    The script removes a stale junction first, and follows a single nested
-   subfolder (`tool-ver\tool-ver\...`) down to the real content.
+   subfolder (`tool-ver\tool-ver\...`) down to the real content. If the
+   junction name is a real directory instead (left by a previous manual
+   installation), it is kept aside as `current.old` before the junction is
+   created; delete that backup once the new installation is validated.
 
 ## Network drives
 
