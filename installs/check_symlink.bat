@@ -109,12 +109,14 @@ if not exist "%PRGS%\%f%\%sln%" (
     goto:create
 )
 %_task% "Must check if symlink '%sln%' does reference p '%p%' in '%PRGS%\%f%'"
+set "s="
 for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%f%"^|C:\Windows\System32\findstr /C:%sln%') do (set s=%%a)
 echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr /C:"%p%" 1>NUL: 2>NUL:
 if errorlevel 1 (
     %_info% "Must update '%sln%' to reference '%p%' from '%s%' in '%PRGS%\%f%'"
-    rmdir "%PRGS%\%f%\%sln%"
+    rmdir "%PRGS%\%f%\%sln%" 2>NUL:
+    if exist "%PRGS%\%f%\%sln%\" ( goto:keep_aside )
     goto:create
 )
 %_ok% "symlink '%sln%' already exist, and references p '%p%' in '%PRGS%\%f%'"
@@ -132,6 +134,25 @@ if errorlevel 1 (
     set "sln="
 )
 goto:endlocal_sln
+
+
+:keep_aside
+rem '%sln%' is a real directory (previous installation), not a junction: a
+rem plain rmdir cannot remove it, and mklink would fail on the existing name.
+%_warning% "'%sln%' in '%PRGS%\%f%' is a real directory (previous installation), not a junction"
+if exist "%PRGS%\%f%\%sln%.old\" (
+    %_task% "Must delete previous backup '%sln%.old' in '%PRGS%\%f%'"
+    rmdir /S /Q "%PRGS%\%f%\%sln%.old"
+)
+%_task% "Must keep real directory '%sln%' aside as '%sln%.old' in '%PRGS%\%f%'"
+move "%PRGS%\%f%\%sln%" "%PRGS%\%f%\%sln%.old" 1>NUL:
+if errorlevel 1 (
+    %_error% "Unable to move '%sln%' aside to '%sln%.old' in '%PRGS%\%f%': close any program using it and relaunch the setup"
+    set "sln="
+    goto:endlocal_sln
+)
+%_ok% "'%sln%' kept aside as '%sln%.old' in '%PRGS%\%f%': delete it manually once the new installation is validated"
+goto:create
 
 
 :network

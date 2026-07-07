@@ -30,6 +30,7 @@ if not exist "%PRGS%\%prgs_folder%\%sln%" (
 )
 %_task% "Must check if symlink '%sln%' does reference p '%prg_folder%'"
 rem @echo on
+set "s="
 for /f "tokens=2 delims=[" %%a in ('dir "%PRGS%\%prgs_folder%"^|C:\Windows\System32\findstr %sln%') do (set s=%%a)
 rem echo "s='%s%'"
 echo "%s%" | C:\Windows\System32\findstr "%prg_folder%" 1>NUL: 2>NUL:
@@ -37,22 +38,28 @@ if errorlevel 1 (
     %_info% "Must update '%sln%' to reference '%prg_folder%' from '%s%'"
     %_task% "Must delete '%sln%' before creating '%sln%' for '%prg_folder%'"
     rmdir "%PRGS%\%prgs_folder%\%sln%" 2>nul
-    if exist "%PRGS%\%prgs_folder%\%sln%" (
-        %_error% "Unable to rmdir '%PRGS%\%prgs_folder%\%sln%': probably not a symlink, folder not empty"
-        %_task% "Must rm -Rf '%sln%' before creating '%sln%' for '%prg_folder%'"
-        rm -Rf "%PRGS%\%prgs_folder%\%sln%" 2>nul
-        if errorlevel 1 (
-            %_fatal% "Unable to rm -Rf '%PRGS%\%prgs_folder%\%sln%'" 43
-        ) else (
-            %_ok% "Folder '%PRGS%\%prgs_folder%\%sln%' rm -Rf  successfully"
-        )
-    ) else (
-        %_ok% "Symlink '%PRGS%\%prgs_folder%\%sln%' rmdir successfully"
-    )
+    if exist "%PRGS%\%prgs_folder%\%sln%\" ( goto:keep_aside )
+    %_ok% "Symlink '%PRGS%\%prgs_folder%\%sln%' rmdir successfully"
     goto:create
 )
 %_ok% "symlink '%sln%' already exist, and references p '%prg_folder%'"
 goto:eof
+
+:keep_aside
+rem '%sln%' is a real directory (previous installation), not a junction: a
+rem plain rmdir cannot remove it, and mklink would fail on the existing name.
+%_warning% "'%sln%' in '%PRGS%\%prgs_folder%' is a real directory (previous installation), not a junction"
+if exist "%PRGS%\%prgs_folder%\%sln%.old\" (
+    %_task% "Must delete previous backup '%sln%.old' in '%PRGS%\%prgs_folder%'"
+    rmdir /S /Q "%PRGS%\%prgs_folder%\%sln%.old"
+)
+%_task% "Must keep real directory '%sln%' aside as '%sln%.old' in '%PRGS%\%prgs_folder%'"
+move "%PRGS%\%prgs_folder%\%sln%" "%PRGS%\%prgs_folder%\%sln%.old" 1>NUL:
+if errorlevel 1 (
+    %_fatal% "Unable to move '%sln%' aside to '%sln%.old' in '%PRGS%\%prgs_folder%': close any program using it and relaunch" 43
+)
+%_ok% "'%sln%' kept aside as '%sln%.old' in '%PRGS%\%prgs_folder%': delete it manually once the new installation is validated"
+goto:create
 
 :create
 if not "%instPath%"=="" (
