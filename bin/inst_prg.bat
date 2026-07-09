@@ -174,10 +174,14 @@ if not "%prg_pattern:python-=%"=="%prg_pattern%" (
     if not "%prg_pattern:.zip=%"=="%prg_pattern%" (
         %_error% "No '%prg_pattern%' pattern found in Downloads or local or remote setup dirs"
         %_info% "try pythons.install %~2"
-        pythons.install.bat %~2
-        if not errorlevel 1 (
-             %_ok% "Python %~2 installed"
-            goto:_skip_checks
+        set "pythons_install=%PRGS%\senv\installs\pythons.install.bat"
+        if exist "%install_dir%\pythons.install.bat" ( set "pythons_install=%install_dir%\pythons.install.bat" )
+        set "NO_DRY_RUN=1"
+        call "!pythons_install!" "%~2"
+        set "NO_DRY_RUN="
+        if "!install_ok!"=="true" (
+            %_ok% "Python %~2 installed"
+            goto:_end_no_pushd
         )
     )
 )
@@ -241,9 +245,6 @@ set pz=%PRGS%\peazips\current
 set sz=%pz%\res\7z\7z.exe
 pushd "%PRGS%\%prgs_folder%"
 if errorlevel 1 %_fatal% "Unable to access '%PRGS%\%prgs_folder%'" 8
-if not exist "%fname%" (
-    call:rbc "%PRGS%\%prgs_folder%"
-)
 
 if exist "%install_dir%\%prgs_folder%.install.bat" (
     %_task% "Must use custom '%install_dir%' for '%prgs_folder%' arg sln '%sln%'"
@@ -256,11 +257,17 @@ if exist "%install_dir%\%prgs_folder%.install.bat" (
 )
 
 if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
-    %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%'"
-    call "%PRGS%\senv\installs\%prgs_folder%.install.bat"
+    %_task% "Must use PRGS senv custom '%PRGS%\senv\installs' for '%prgs_folder%' arg sln '%sln%'"
+    set "NO_DRY_RUN=1"
+    call "%PRGS%\senv\installs\%prgs_folder%.install.bat" "%sln%"
+    set "NO_DRY_RUN="
     goto:_check_symlink
 ) else (
     %_ok% "No custom install '%prgs_folder%.install.bat' in '%PRGS%\senv\installs' for '%prgs_folder%'"
+)
+
+if not exist "%fname%" (
+    call:rbc "%PRGS%\%prgs_folder%"
 )
 
 %_task% "Must uncompress with 7z '%PRGS%\setup\%fname%' to '%PRGS%\%prgs_folder%'"
@@ -320,6 +327,7 @@ if exist "%install_dir%\%prgs_folder%.alias.bat" (
 :_skip_checks
 
 popd
+:_end_no_pushd
 endlocal
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 goto:eof

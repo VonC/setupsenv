@@ -7,8 +7,8 @@ call "%script_dir%\batcolors\echos_macros.bat"
 rem cSpell:disable-next-line
 set | grep -i tailw
 
-if not exist "%PRGS%\%prgs_folder%\%fname%" (
-    %_fatal% "File '%fname%' does not exist in '%PRGS%\%prgs_folder%'" 70
+if not exist "%PRGS%\setup\%fname%" (
+    %_fatal% "File '%fname%' does not exist in '%PRGS%\setup'" 70
 )
 
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%" (
@@ -54,10 +54,10 @@ goto:eof
 set "fname_target=%~1"
 if not defined fname_target ( set "fname_target=%fname%" )
 if not exist "%PRGS%\%prgs_folder%\%prg_folder%\%fname_target%" (
-    %_task% "Must copy '%fname%' from '%PRGS%\%prgs_folder%' to '%prgs_folder%' subfolder as '%fname_target%'"
-    copy "%PRGS%\%prgs_folder%\%fname%" "%PRGS%\%prgs_folder%\%prg_folder%\%fname_target%"
+    %_task% "Must copy '%fname%' from '%PRGS%\setup' to '%prgs_folder%\%prg_folder%' subfolder as '%fname_target%'"
+    copy "%PRGS%\setup\%fname%" "%PRGS%\%prgs_folder%\%prg_folder%\%fname_target%"
     if errorlevel 1 (
-        %_fatal% "Unable to copy '%fname%' from '%PRGS%\%prgs_folder%' to '%PRGS%\%prgs_folder%\%prg_folder%' as '%fname_target%'" 72
+        %_fatal% "Unable to copy '%fname%' from '%PRGS%\setup' to '%PRGS%\%prgs_folder%\%prg_folder%' as '%fname_target%'" 72
     )
     %_ok% "File '%fname%' copied successfully to '%PRGS%\%prgs_folder%\%prg_folder%' as '%fname_target%'"
 ) else (
