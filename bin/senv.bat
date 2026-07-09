@@ -116,6 +116,9 @@ if exist "%script_dir_bin%\profile" (
    )
 )
 
+if not defined local_senv (
+   if exist "%PRGS%\senv\installs" ( set "admPath=%PRGS%\senv\installs;" )
+)
 set "PATH=%admPath%%PATH%"
 set "admPath="
 
