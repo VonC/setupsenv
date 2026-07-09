@@ -143,7 +143,9 @@ copy "%custom_dir%\custom_git_config.fixed" "%custom_dir%\.git\config"
 copy "%custom_dir%\profile" "%builds_dir%\profile.bkp"
 echo %profile%>"%custom_dir%\profile"
 rem https://stackoverflow.com/questions/38297172/7-zip-command-line-incorrect-wildcard-type-marker
-%sz% a -sfx7z.sfx "%builds_dir%\senv_%profile%-zip.exe" "%PRGS%\senv" -x^^!*.fixed -x^^!\*.bkp -xr^^!venvs -xr^^!builds\ -xr^^!_old*\ -x^^!\*.zip.exe -xr^^!wild*.txt -xr^^!wild*.log
+rem builds\ ships its tracked files (.gitignore, .keep, senv_git_config.fixed)
+rem so extracted checkouts are born clean; only build artifacts are excluded
+%sz% a -sfx7z.sfx "%builds_dir%\senv_%profile%-zip.exe" "%PRGS%\senv" -x^^!*.fixed -x^^!\*.bkp -xr^^!venvs -x^^!senv\builds\*.exe -x^^!senv\builds\*.log -x^^!senv\builds\*.bkp -x^^!senv\builds\*.txt -x^^!senv\builds\*.tmp -xr^^!_old*\ -x^^!\*.zip.exe -xr^^!wild*.txt -xr^^!wild*.log
 rem C:\Users\vonc\prgs\senv\builds>%sz% e senv_home-zip.exe senv\.git\config -so
 if not "%ERRORLEVEL%"=="0" (
     copy "%builds_dir%\profile.bkp" "%custom_dir%\profile"
