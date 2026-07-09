@@ -14,6 +14,14 @@ if not exist "%senv_dir%\..\setup" (
         %_fatal% "Unable to create setup folder at '%senv_dir%/../setup'" 3
     )
 )
+if not exist "%senv_dir%\..\dl" (
+    %_task% "Must create dl junction '%senv_dir%\..\dl' to '%USERPROFILE%\Downloads'"
+    mklink /J "%senv_dir%\..\dl" "%USERPROFILE%\Downloads"
+    if errorlevel 1 (
+        %_fatal% "Unable to create dl junction at '%senv_dir%/../dl' to '%USERPROFILE%\Downloads'" 5
+    )
+    %_ok% "dl junction '%senv_dir%\..\dl' created, linked to '%USERPROFILE%\Downloads'"
+)
 cd "%senv_dir%\..\setup"
 if errorlevel 1 ( %_fatal% "Unable to access setup folder at '%senv_dir%/../setup'" 3 )
 for /F "delims=" %%f in ('cd') do ( set setup_dir=%%f)
