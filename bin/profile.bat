@@ -42,10 +42,14 @@ if exist "%remote_senv%\version" (
 rem https://stackoverflow.com/questions/2657935/checking-for-a-dirty-index-or-untracked-files-with-git
 rem https://stackoverflow.com/a/2659808/6309
 set "dirty_message="
+rem refresh the index stat cache first: a shipped .git\index carries the build
+rem machine stats, and diff-index alone would flag every file as dirty
+git -C "%PRGS%\senv" update-index -q --refresh >nul 2>nul
 git -C "%PRGS%\senv" diff-index --quiet HEAD --
 if errorlevel 1 (
     set "dirty_message=local senv dirty"
 )
+git -C "%PRGS%\senv\custom" update-index -q --refresh >nul 2>nul
 git -C "%PRGS%\senv\custom" diff-index --quiet HEAD --
 if errorlevel 1 (
     if defined dirty_message (
