@@ -19,15 +19,22 @@ if not defined NO_DRY_RUN (
 if defined fs goto:proceed_python_install
 
 set "python_version=%~1"
+if not defined python_version (
+    %_fatal% "pythons.install.bat requires a python version argument (e.g. 3.13.9 or python3.13.9)" 21
+)
 set "python_version=%python_version:python=%"
 set "fs=python-%python_version%-amd64.exe"
 %_info% "Manual installation of exe python version '%python_version%' as '%fs%'"
+if exist "%PRGS%\setup\python-%python_version%-amd64.zip" (
+    %_ok% "Zip 'python-%python_version%-amd64.zip' already in '%PRGS%\setup': installer exe not required"
+    goto:proceed_python_install
+)
 if not exist "%PRGS%\setup\%fs%" (
     if not exist "%DWL%\%fs%" (
         %_fatal% "'%fs%' not seen in '%PRGS%\setup' or '%DWL%'" 22
     )
     if defined NO_DRY_RUN (
-        rbc "%DWL%" "%PRGS%\setup" "%fs%"
+        call "%senv_dir%\bin\rbc.bat" "%DWL%" "%PRGS%\setup" "%fs%"
     ) else (
         %_info% "DRY-RUN: Would copy '%fs%' from '%DWL%' to '%PRGS%\setup'"
     )
