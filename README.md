@@ -146,12 +146,17 @@ will be) in the wiki reference pages:
 | `switchjdk`, `switchnode`, ... | put one tool version on the session PATH |
 | `up`, `upg`, `upa` | update the environment from the team share |
 | `alias [pattern]` | list the doskey aliases, filtered by name or content (`alias cd`) |
+| `tc <today\|yesterday\|yyyy-MM-dd>` | copy locally cached Teams chats for a day to the clipboard (`tct`/`tcy` are today/yesterday shortcuts) |
 | `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
 | `gcu` | register your name/email in the current repository (see below) |
 | `senve` | edit your personal variables in VSCode; reload with `senv` |
 | `aliase` | edit your personal aliases in VSCode; reload with `aliasr` |
 | `ppath` | print and check the PATH, entry by entry |
 | `ti`, `ei` | test / restore internet access (proxy restart) |
+
+The Teams cache reader executable is generated from `tools\team-chat` on the
+first extraction, rebuilt when its Go sources change, and deployed to
+`%HOME%\bin`; generated executables are not versioned.
 
 ### 🪪 Git identity, per repository
 
