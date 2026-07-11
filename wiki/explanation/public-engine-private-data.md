@@ -70,6 +70,24 @@ A useful test when adding a file: "could this line appear on a public
 GitHub page without anyone at the company minding?" If not, it belongs in
 custom.
 
+## 💬 The Teams cache reader as an example
+
+The Teams chat feature follows this boundary from end to end. The public
+repository contains the reusable pieces: the LevelDB decoder under
+`tools\team-chat`, the clipboard launcher, the date parser, and the `tc`,
+`tct`, and `tcy` aliases. It knows the standard shape of a New Teams cache but
+does not name a company, tenant, person, or internal path.
+
+The private repository supplies `TEAM_CHAT_DB_PATH` when a managed desktop uses
+a particular WebView profile. That value is copied into `%HOME%\bin` with the
+other custom settings and read at session activation. The executable itself is
+generated from public source and deployed to `%HOME%\bin`; it is ignored by
+both Git repositories.
+
+This split lets the same reader run on an ordinary Windows installation while
+a corporate session can select its actual cache location without publishing
+private configuration.
+
 ## One Git identity per repository
 
 The same boundary runs through every commit a contractor makes. The usual

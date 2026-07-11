@@ -100,6 +100,7 @@ outside the repositories):
 | --- | --- | --- |
 | `%USERPROFILE%\senv.bat` | `setup.bat`, rendered from `senv.user_profile.tpl.bat` | regenerated on every setup run |
 | `%HOME%\bin\gcu.bat` | the `gits` install hook, from the registered identity | regenerated when the identity changes |
+| `%HOME%\bin\teams-reader.exe` | `team-chat.ps1`, built from `tools\team-chat` | created on first extraction and rebuilt when a Go or module source is newer |
 | `custom\profile`, `custom\version` | setup (profile) and `adm\build.bat` (version) | per machine / per build |
 | `custom\driverLetter.bat` | `installs\drive_detection.bat`, holds the detected drive letter (`set "driveLetter=L:"`) | consumed and deleted by `installs\setupsdir.bat` seconds later; both the `driveLetter` and the historical `driverLetter` spellings are gitignored |
 | `setup_cleanup*.tmp`, `tmp` | `setup.bat`, profile cleanup and doskey rebuild | deleted at the end of the run |

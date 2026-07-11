@@ -36,6 +36,14 @@ in which they are applied.
 | `HTTP_PROXY`, `HTTPS_PROXY` | `senv.custom.bat` | local or corporate proxy; `setup.bat` aborts when missing |
 | `NO_PROXY` | `senv.custom.bat` | domains reached directly |
 
+## 💬 Teams cache reader
+
+| Variable | Origin | Meaning |
+| --- | --- | --- |
+| `TEAM_CHAT_DB_PATH` | normally `senv.custom.bat` | optional exact path to the Teams IndexedDB LevelDB directory; when absent, the reader checks the standard New Teams WebView profiles |
+| `TEAM_CHAT_SOURCE` | optional custom or local override | reader source directory; default `%PRGS%\senv\tools\team-chat` |
+| `TEAM_CHAT_READER` | optional custom or local override | exact reader executable; when set, automatic build and deployment are skipped |
+
 ## 🧰 Per-tool (set by the `switch*` commands)
 
 | Variables | Set by |

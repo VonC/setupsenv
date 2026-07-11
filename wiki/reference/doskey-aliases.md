@@ -104,6 +104,19 @@ cdp=cd /d %PROG%\git\myproject
 | `up`, `upg`, `upa` | update profile / Git only / all |
 | `ti`, `ei` | test internet / restore internet |
 
+## 💬 Teams chat
+
+| Alias | Expansion |
+| --- | --- |
+| `tc` | `tc.bat $*` |
+| `tct` | `tc.bat today` |
+| `tcy` | `tc.bat yesterday` |
+
+`tc` accepts `today`, `yesterday`, or an exact `yyyy-MM-dd` date and copies
+the matching cached transcript to the clipboard. With no argument it prints
+usage. See the [command reference](commands.md)
+and the [daily-use how-to](../how-to/copy-cached-teams-chats.md).
+
 ## 🔧 Sysinternals
 
 | Alias | Expansion |

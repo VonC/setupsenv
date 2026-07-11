@@ -102,6 +102,41 @@ No argument. Prints the active profile, compares the local senv and custom
 versions (`git describe`, `custom\version`) with the remote ones, flags
 uncommitted changes, and says whether to update (`upg`, `upa`) or publish.
 
+## 💬 Teams cache
+
+### `tc <day> [-MinPerConversation N]`
+
+Copies a transcript from the local Microsoft Teams cache directly to the
+Windows clipboard. It does not create an output file.
+
+| Argument | Meaning |
+| --- | --- |
+| none | print usage and accepted day forms |
+| `today` | messages dated today in local time |
+| `yesterday` | messages dated yesterday in local time |
+| `yyyy-MM-dd` | messages from the exact local calendar day |
+| `-MinPerConversation N` | omit conversations with fewer than `N` matching messages; default `1` |
+
+`tct` expands to `tc.bat today`; `tcy` expands to
+`tc.bat yesterday`.
+
+Before extraction, the launcher checks `%HOME%\bin\teams-reader.exe` against
+the `.go`, `go.mod`, and `go.sum` files under `tools\team-chat`. A missing or
+older executable is rebuilt with Go and deployed to `%HOME%\bin`. Setting
+`TEAM_CHAT_READER` selects an externally managed executable and disables this
+build check.
+
+The reader copies the active LevelDB store to a temporary directory, decodes
+recent journal entries and Snappy-compressed tables, removes duplicate
+messages, groups the result by conversation, and writes UTF-8 text to standard
+output. The launcher copies that text to the clipboard with CRLF line endings.
+HTML line breaks are retained and non-breaking spaces are converted to regular
+spaces.
+
+Only messages fetched by the local Teams client are available. Open and scroll
+a conversation in Teams before retrying a missing older day. See the
+[daily-use how-to](../how-to/copy-cached-teams-chats.md).
+
 ## 🧰 Download and install
 
 ### `dwl <program> [<version>]` (alias `dl`, `download`)
