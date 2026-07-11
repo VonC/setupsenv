@@ -15,6 +15,7 @@ a.*
 tmp*
 *.tmp
 *.sha1
+*.exe
 old/
 man_*.txt
 path_temp.txt
