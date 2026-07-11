@@ -1,4 +1,4 @@
-# install_<profile>.list file format
+# install_&lt;profile&gt;.list file format
 
 <img src="../assets/logo-senv-applications-alt-transparent.png" alt="" height="90" align="right">
 
