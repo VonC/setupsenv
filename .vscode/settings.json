@@ -1,17 +1,32 @@
 {
   "cSpell.words": [
     "acmecorp",
+    "bestd",
     "binmode",
+    "clientarrivaltime",
+    "clientmessageid",
+    "composetime",
+    "eventtime",
     "gcua",
     "getstarted",
+    "goleveldb",
     "graphvizs",
+    "imdisplayname",
     "jdoe",
     "neato",
     "nodata",
     "nosoft",
+    "originalarrivaltime",
+    "printables",
     "projectx",
     "pscustomobject",
     "secretproject",
-    "toolalias"
+    "skype",
+    "syndtr",
+    "tacv",
+    "teamsdb",
+    "toolalias",
+    "uvarint",
+    "varint"
   ]
 }
