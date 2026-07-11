@@ -91,3 +91,7 @@ upa=update_profile.bat all
 
 gcliff="%PRGS%\git-cliffs\current\git-cliff.exe" $*
 mem=memory.bat
+
+tc=tc.bat $*
+tct=tc.bat today
+tcy=tc.bat yesterday
