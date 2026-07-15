@@ -8,6 +8,7 @@
 		}
 	],
 	"settings": {
+		"workspaceHalo.rootSynonyms": ["senv"],
 		"workbench.colorCustomizations": {
 			"activityBar.activeBackground": "#0ed941",
 			"activityBar.activeBorder": "#8c69f5",
