@@ -96,3 +96,5 @@ mem=memory.bat
 tc=tc.bat $*
 tct=tc.bat today
 tcy=tc.bat yesterday
+ctc=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%HOME%\bin\copy-team-chat.ps1" $*
+ctcr=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%HOME%\bin\copy-team-chat-reset.ps1" $*
