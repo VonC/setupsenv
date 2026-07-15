@@ -147,6 +147,8 @@ will be) in the wiki reference pages:
 | `up`, `upg`, `upa` | update the environment from the team share |
 | `alias [pattern]` | list the doskey aliases, filtered by name or content (`alias cd`) |
 | `tc <today\|yesterday\|yyyy-MM-dd>` | copy locally cached Teams chats for a day to the clipboard (`tct`/`tcy` are today/yesterday shortcuts) |
+| `ctc` | collect Teams Ctrl+A/Ctrl+C selections into `%HOME%\a.tc.copy`; paste the cleaned transcript and stop with Ctrl+V |
+| `ctcr` | reset `%HOME%\a.tc.copy`, then immediately start a new collection |
 | `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
 | `gcu` | register your name/email in the current repository (see below) |
 | `senve` | edit your personal variables in VSCode; reload with `senv` |
@@ -157,6 +159,12 @@ will be) in the wiki reference pages:
 The Teams cache reader executable is generated from `tools\team-chat` on the
 first extraction, rebuilt when its Go sources change, and deployed to
 `%HOME%\bin`; generated executables are not versioned.
+
+`ctc` uses the newest Python 3.13.x under `%PRGS%\pythons` and needs no extra
+packages. It keeps appending when `%HOME%\a.tc.copy` was modified today, starts
+it empty on a new day, removes Teams' timestamped preview duplicates, and
+replaces the clipboard with the complete accumulated transcript after every
+copy. The first Ctrl+V pastes that transcript and stops the collector.
 
 ### 🪪 Git identity, per repository
 
