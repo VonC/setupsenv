@@ -219,7 +219,10 @@ caller.
 
 `switchpy` also proposes a Python virtual environment: none, global
 (`%PYTHON_ROOT%\venvs`) or local (`%CD%\venvs`), and defines a `deactivate`
-alias. `switchwf` only sets variables; the server is driven by
+alias. It repairs incomplete venv scaffolding before activation. A local venv
+installs every `requirements*.txt` through pip when those files exist;
+otherwise a project with `pyproject.toml` is synchronized through uv, using a
+frozen lock when `uv.lock` exists. `switchwf` only sets variables; the server is driven by
 `wildfly.bat` (alias `wf`).
 
 ### `activate`

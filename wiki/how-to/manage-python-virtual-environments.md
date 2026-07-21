@@ -23,9 +23,20 @@ environment, global or per-project.
    - `local`: venv under `%CD%\venvs`, named
      `python_<version>_<project-folder>`.
 
-   `switchpy` creates the venv with `python -m venv` when missing, fixes the
+   `switchpy` creates the venv with `python -m venv` when missing, repairs a
+   partial venv without replacing an existing interpreter, fixes the
    `VIRTUAL_ENV` path inside its `activate.bat`, sets
    `PYTHON_HOME`/`PYTHON_VERSION`, and defines a `deactivate` doskey.
+
+   For a local venv, it also prepares the project dependencies:
+
+   - when one or more `requirements*.txt` files exist, each file is installed
+     with `python -m pip install -r`;
+   - otherwise, when `pyproject.toml` exists, uv is installed when missing and
+     `uv sync --all-groups` is run (`--frozen` is added when `uv.lock` exists);
+   - when neither form exists, dependency installation is skipped.
+
+   Missing pip is restored with `ensurepip` before either dependency path.
 
 2. Later, from a project that already has a `venvs\` folder, activate it
    without re-running `switchpy`:
