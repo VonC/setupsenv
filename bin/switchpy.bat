@@ -77,6 +77,11 @@ if defined VIRTUAL_ENV (
     ) else (
         del "%ccd%\switchpy_virtual_env.tmp" 2>NUL
         %_ok% "Py env for 'Python %PYTHON_VERSION%' already activated"
+        call :repair_venv_scaffold "%VIRTUAL_ENV%"
+        if errorlevel 1 (
+            call :unset
+            exit /b 1
+        )
         where python.exe >NUL 2>NUL
         if errorlevel 1 (
             %_warning% "VIRTUAL_ENV set, but not added to the PATH: re-activating."
@@ -93,6 +98,11 @@ if defined VIRTUAL_ENV (
             )
         ) else (
             %_ok% "PATH for 'Python %PYTHON_VERSION%' already set"
+        )
+        call :sync_project_dependencies "%VIRTUAL_ENV%"
+        if errorlevel 1 (
+            call :unset
+            exit /b 1
         )
         call :unset
         goto:eof
@@ -161,6 +171,12 @@ if not exist "%venv_name%" (
 ) else (
     %_ok% "Py env for '%PYTHON_VERSION%' already created"
 )
+call :repair_venv_scaffold "%PYTHON_VENVS%\%venv_name%"
+if errorlevel 1 (
+    popd
+    call :unset
+    exit /b 1
+)
 %_info% "Active venv '%venv_name%'"
 popd
 %_info% "PATH BEFORE activation: '%PATH%'"
@@ -178,22 +194,111 @@ if errorlevel 1 (
 ) else (
     %_ok% "Py env '%venv_name%' for 'Python %PYTHON_VERSION%' activated"
 )
+if "%VENV_LOCATION%"=="%ccd%\venvs" (
+    call :sync_project_dependencies "%PYTHON_VENVS%\%venv_name%"
+    if errorlevel 1 (
+        call :unset
+        exit /b 1
+    )
+)
 rem set doskey alias %VIRTUAL_ENV%\Scripts\deactivate.bat is a venv is chosen
 doskey deactivate=call "%VIRTUAL_ENV%\Scripts\deactivate.bat" $*
-set "PYTHON_ROOT="
 call :unset
 
 goto:eof
 
+:repair_venv_scaffold
+set "repair_venv_dir=%~1"
+set "repair_reason="
+if not exist "%repair_venv_dir%\pyvenv.cfg" set "repair_reason=pyvenv.cfg"
+if not defined repair_reason if not exist "%repair_venv_dir%\Scripts\python.exe" set "repair_reason=python.exe"
+if not defined repair_reason if not exist "%repair_venv_dir%\Scripts\activate.bat" set "repair_reason=activate.bat"
+if not defined repair_reason exit /b 0
+
+%_warning% "Py env '%repair_venv_dir%' is incomplete: missing '%repair_reason%'"
+%_task% "Must repair the virtual environment scaffold"
+"%PYTHON_ROOT%\python%PYTHON_VERSION%\python.exe" "%senv_dir%\bin\repair_venv_scaffold.py" "%repair_venv_dir%"
+if errorlevel 1 (
+    %_error% "Unable to repair Py env '%repair_venv_dir%'"
+    set "repair_venv_dir="
+    set "repair_reason="
+    exit /b 1
+)
+set "repair_venv_dir="
+set "repair_reason="
+%_ok% "Virtual environment scaffold repaired"
+exit /b 0
+
+:sync_project_dependencies
+set "dependency_venv_dir=%~1"
+set "requirements_found="
+set "UV_PROJECT_ENVIRONMENT=%dependency_venv_dir%"
+
+"%dependency_venv_dir%\Scripts\python.exe" -m pip --version >NUL 2>NUL
+if errorlevel 1 (
+    %_task% "Must bootstrap pip in Py env '%dependency_venv_dir%'"
+    "%dependency_venv_dir%\Scripts\python.exe" -m ensurepip --upgrade
+    if errorlevel 1 goto:dependency_sync_failed
+    "%dependency_venv_dir%\Scripts\python.exe" -m pip install --upgrade pip
+    if errorlevel 1 goto:dependency_sync_failed
+)
+"%dependency_venv_dir%\Scripts\python.exe" -m pip --version
+if errorlevel 1 goto:dependency_sync_failed
+
+for %%r in ("%ccd%\requirements*.txt") do if exist "%%~fr" set "requirements_found=true"
+if defined requirements_found (
+    %_task% "Must install project requirements into the active Py env"
+    for %%r in ("%ccd%\requirements*.txt") do if exist "%%~fr" (
+        "%dependency_venv_dir%\Scripts\python.exe" -m pip install -r "%%~fr"
+        if errorlevel 1 goto:dependency_sync_failed
+    )
+    goto:dependency_sync_done
+)
+
+if not exist "%ccd%\pyproject.toml" (
+    %_info% "No requirements*.txt or pyproject.toml found: dependency sync skipped"
+    goto:dependency_sync_done
+)
+
+"%dependency_venv_dir%\Scripts\uv.exe" --version >NUL 2>NUL
+if errorlevel 1 (
+    %_task% "Must install uv in Py env '%dependency_venv_dir%'"
+    "%dependency_venv_dir%\Scripts\python.exe" -m pip install --upgrade --force-reinstall uv
+    if errorlevel 1 goto:dependency_sync_failed
+)
+"%dependency_venv_dir%\Scripts\uv.exe" --version
+if errorlevel 1 goto:dependency_sync_failed
+
+%_task% "Must sync project dependencies into the active Py env"
+pushd "%ccd%"
+if exist "uv.lock" (
+    "%dependency_venv_dir%\Scripts\uv.exe" sync --frozen --all-groups
+) else (
+    "%dependency_venv_dir%\Scripts\uv.exe" sync --all-groups
+)
+set "dependency_sync_status=%ERRORLEVEL%"
+popd
+if not "%dependency_sync_status%"=="0" goto:dependency_sync_failed
+
+:dependency_sync_done
+set "dependency_venv_dir="
+set "requirements_found="
+set "dependency_sync_status="
+%_ok% "Project dependencies ready in the active Py env"
+exit /b 0
+
+:dependency_sync_failed
+set "dependency_sync_status=%ERRORLEVEL%"
+%_error% "Unable to prepare project dependencies in Py env '%dependency_venv_dir%'"
+set "dependency_venv_dir="
+set "requirements_found="
+exit /b %dependency_sync_status%
+
 :unset
 call "%senv_dir%\batcolors\echos_macros.bat" unset
-rem cleanup any variable PY...
+rem cleanup private variables while keeping the documented public Python state.
 set "senv_dir="
 set "script_dir="
-set "PYTHON_HOME="
-set "PYTHON_VERSION="
-set "PYTHON_ROOT="
-set "PYTHON_MAIN_VERSION="
 rem set "VIRTUAL_ENV="
 set "OLD_PYTHON_VERSION="
 set "PYTHON_VENVS="
