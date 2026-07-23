@@ -63,7 +63,7 @@ if not "%version%"=="" (
   )
   if "%prgname%"=="python" (
     set "python_cycle=%version%"
-    for /f "delims=" %%p in ('printf %version% ^| "s/[0-9]//g" ^| wc -m') do ( set "dot_number=%%p" )
+    for /f "delims=" %%p in ('printf %version% ^| sed "s/[0-9]//g" ^| wc -m') do ( set "dot_number=%%p" )
     if "!dot_number!"=="1" (
       set "version=latest"
     )
@@ -227,6 +227,43 @@ set "NewWord=%~3"
 call set OriginalText=%%OriginalText:!OldWord!=!NewWord!%%
 SET %4=!OriginalText!
 GOTO:EOF
+
+:find_setups_zip
+rem Look for an already built archive in the remote profile setups folder (resolved by
+rem custom\setupsdir_<profile>.bat, same mechanism as inst_prg.bat) and in the user setups
+rem folder, then copy it to the local setup_dir so the caller finds it in a single place.
+set "zip_name=%~1"
+set "setupsdir="
+set "profile_filename="
+if exist "%HOME%\bin\profile" ( set "profile_filename=%HOME%\bin\profile" )
+if not defined profile_filename (
+  if exist "%senv_dir%\custom\profile" ( set "profile_filename=%senv_dir%\custom\profile" )
+)
+if not defined profile_filename ( goto:_find_setups_zip_user )
+set "profile_name="
+for /f "usebackq" %%a in ("%profile_filename%") do ( set "profile_name=%%a" )
+if not defined profile_name ( goto:_find_setups_zip_user )
+if not exist "%senv_dir%\custom\setupsdir_%profile_name%.bat" ( goto:_find_setups_zip_user )
+call "%senv_dir%\custom\setupsdir_%profile_name%.bat"
+if not defined setupsdir ( goto:_find_setups_zip_user )
+if not exist "%setupsdir%\%zip_name%" ( goto:_find_setups_zip_user )
+%_task% "Copy '%zip_name%' from remote setups '%setupsdir%' to '%setup_dir%'"
+copy /Y "%setupsdir%\%zip_name%" "%setup_dir%" >nul
+if exist "%setup_dir%\%zip_name%" (
+  %_ok% "'%zip_name%' copied from remote setups '%setupsdir%' to '%setup_dir%'"
+  goto:eof
+)
+%_error% "Unable to copy '%zip_name%' from '%setupsdir%' to '%setup_dir%'"
+:_find_setups_zip_user
+if not exist "%USERPROFILE%\senv_setups\setups\%zip_name%" ( goto:eof )
+%_task% "Copy '%zip_name%' from user setups '%USERPROFILE%\senv_setups\setups' to '%setup_dir%'"
+copy /Y "%USERPROFILE%\senv_setups\setups\%zip_name%" "%setup_dir%" >nul
+if exist "%setup_dir%\%zip_name%" (
+  %_ok% "'%zip_name%' copied from user setups to '%setup_dir%'"
+) else (
+  %_error% "Unable to copy '%zip_name%' from '%USERPROFILE%\senv_setups\setups' to '%setup_dir%'"
+)
+goto:eof
 
 :dwl_gum
 set "repo=charmbracelet/gum"
@@ -433,6 +470,15 @@ set "version=%version:*latest=%"
 set "version=%version:"=%"
 set "version=%version::=%"
 %_ok% "Latest Python version '%version%' for cycle '%python_cycle%'"
+rem python.org ships no full portable zip: python-<version>-amd64.zip is built by installs\pythons.install.bat
+rem and may already be present in a setups folder. If so, pick it up instead of downloading the installer.
+set "python_zip=python-%version%-amd64.zip"
+if exist "%setup_dir%\%python_zip%" (
+  %_ok% "'%python_zip%' already in setup_dir '%setup_dir%': no installer download needed"
+  goto:eof
+)
+call :find_setups_zip "%python_zip%"
+if exist "%setup_dir%\%python_zip%" ( goto:eof )
 rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
 set "file=python-%version%-amd64.exe"
 set "url=https://www.python.org/ftp/python/%version%/%file%"
