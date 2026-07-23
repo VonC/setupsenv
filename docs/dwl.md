@@ -211,6 +211,12 @@ if errorlevel 1 (
 
 Use this only when the upstream asset is not already in a shape that `inst_prg.bat` can install cleanly.
 
+### Archive Is Built Locally And Cannot Be Downloaded
+
+`python`: python.org only ships an `.exe` installer. The portable archive `python-<version>-amd64.zip` matching the `prgs.list` pattern is built by `installs\pythons.install.bat` and may already be published in a setups folder. After resolving the version, `:dwl_python` looks for that zip in the local `%PRGS%\setup`, then in the remote profile setups folder and in `%USERPROFILE%\senv_setups\setups` (through `:find_setups_zip`, which copies the archive locally when found). The installer `.exe` is downloaded only when no zip exists anywhere.
+
+Use `:find_setups_zip` in a `:dwl_<prg_id>` label when a senv-built archive can make the upstream download unnecessary.
+
 ## Keep `prgs.list` And `dwl.bat` In Sync
 
 A program must exist in both places:
