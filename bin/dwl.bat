@@ -232,21 +232,41 @@ GOTO:EOF
 rem Look for an already built archive in the remote profile setups folder (resolved by
 rem custom\setupsdir_<profile>.bat, same mechanism as inst_prg.bat) and in the user setups
 rem folder, then copy it to the local setup_dir so the caller finds it in a single place.
+rem The custom repo lives in %PRGS%\senv\custom, never next to this script:
+rem dwl.bat usually runs from the deployed copy in %HOME%\bin, whose parent
+rem holds no custom folder, so a script-relative senv_dir path would skip
+rem the remote setups on every machine. Each skip prints its reason: a
+rem silent fall-through here reads as "no zip exists" and hides the cause.
 set "zip_name=%~1"
 set "setupsdir="
 set "profile_filename="
 if exist "%HOME%\bin\profile" ( set "profile_filename=%HOME%\bin\profile" )
 if not defined profile_filename (
-  if exist "%senv_dir%\custom\profile" ( set "profile_filename=%senv_dir%\custom\profile" )
+  if exist "%PRGS%\senv\custom\profile" ( set "profile_filename=%PRGS%\senv\custom\profile" )
 )
-if not defined profile_filename ( goto:_find_setups_zip_user )
+if not defined profile_filename (
+  %_info% "No profile file: skipping the remote setups lookup for '%zip_name%'"
+  goto:_find_setups_zip_user
+)
 set "profile_name="
 for /f "usebackq" %%a in ("%profile_filename%") do ( set "profile_name=%%a" )
-if not defined profile_name ( goto:_find_setups_zip_user )
-if not exist "%senv_dir%\custom\setupsdir_%profile_name%.bat" ( goto:_find_setups_zip_user )
-call "%senv_dir%\custom\setupsdir_%profile_name%.bat"
-if not defined setupsdir ( goto:_find_setups_zip_user )
-if not exist "%setupsdir%\%zip_name%" ( goto:_find_setups_zip_user )
+if not defined profile_name (
+  %_info% "Empty profile '%profile_filename%': skipping the remote setups lookup for '%zip_name%'"
+  goto:_find_setups_zip_user
+)
+if not exist "%PRGS%\senv\custom\setupsdir_%profile_name%.bat" (
+  %_info% "No 'setupsdir_%profile_name%.bat' in '%PRGS%\senv\custom': skipping the remote setups lookup for '%zip_name%'"
+  goto:_find_setups_zip_user
+)
+call "%PRGS%\senv\custom\setupsdir_%profile_name%.bat"
+if not defined setupsdir (
+  %_info% "'setupsdir_%profile_name%.bat' left setupsdir empty: skipping the remote setups lookup for '%zip_name%'"
+  goto:_find_setups_zip_user
+)
+if not exist "%setupsdir%\%zip_name%" (
+  %_info% "No '%zip_name%' in remote setups '%setupsdir%'"
+  goto:_find_setups_zip_user
+)
 %_task% "Copy '%zip_name%' from remote setups '%setupsdir%' to '%setup_dir%'"
 copy /Y "%setupsdir%\%zip_name%" "%setup_dir%" >nul
 if exist "%setup_dir%\%zip_name%" (
