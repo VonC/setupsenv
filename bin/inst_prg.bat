@@ -251,7 +251,7 @@ if exist "%install_dir%\%prgs_folder%.install.bat" (
     set "NO_DRY_RUN=1"
     call "%install_dir%\%prgs_folder%.install.bat" "%sln%"
     set "NO_DRY_RUN="
-    goto:_check_symlink
+    goto:_check_post_install
 ) else (
     %_ok% "No custom install '%prgs_folder%.install.bat' in '%install_dir%' for '%prgs_folder%'"
 )
@@ -261,7 +261,7 @@ if exist "%PRGS%\senv\installs\%prgs_folder%.install.bat" (
     set "NO_DRY_RUN=1"
     call "%PRGS%\senv\installs\%prgs_folder%.install.bat" "%sln%"
     set "NO_DRY_RUN="
-    goto:_check_symlink
+    goto:_check_post_install
 ) else (
     %_ok% "No custom install '%prgs_folder%.install.bat' in '%PRGS%\senv\installs' for '%prgs_folder%'"
 )
@@ -310,11 +310,37 @@ if exist "%PRGS%\%prgs_folder%\%tar_folder%" (
 :_skip_tar_extraction
 
 :_check_post_install
-if exist "%install_dir%\%prgs_folder%.post.bat" (
-    %_task% "Must use post-install in '%install_dir%' for '%prgs_folder%'"
-    call "%install_dir%\%prgs_folder%.post.bat"
-    goto:_check_symlink
+rem Post hooks live in three places, resolved the same way as setup.bat's
+rem :check_post so a hook fires whether a program arrives through the
+rem profile install list or through a manual 'inst <prg>': the senv
+rem installs folder, the corporate custom repo, then the user installs
+rem folder. install_dir is script-relative (usually %HOME%\installs); when
+rem this script runs from %PRGS%\senv\bin the first and third locations
+rem coincide, so the third call is skipped to avoid firing a hook twice.
+rem Hooks self-locate through %~dp0 and receive the symlink name like the
+rem setup.bat calls do.
+if exist "%PRGS%\senv\installs\%prgs_folder%.post.bat" (
+    %_task% "Must use post-install in '%PRGS%\senv\installs' for '%prgs_folder%'"
+    call "%PRGS%\senv\installs\%prgs_folder%.post.bat" "%sln%"
 )
+if exist "%PRGS%\senv\custom\%prgs_folder%.post.bat" (
+    %_task% "Must use post-install in '%PRGS%\senv\custom' for '%prgs_folder%'"
+    call "%PRGS%\senv\custom\%prgs_folder%.post.bat" "%sln%"
+)
+rem %%~sf canonicalizes both folders (same file, same result, whatever mix
+rem of short 8.3 and long spellings each variable holds) before comparing.
+set "install_dir_sf="
+for %%i in ("%install_dir%") do set "install_dir_sf=%%~sfi"
+set "senv_installs_sf="
+for %%i in ("%PRGS%\senv\installs") do set "senv_installs_sf=%%~sfi"
+if /i not "%install_dir_sf%"=="%senv_installs_sf%" (
+    if exist "%install_dir%\%prgs_folder%.post.bat" (
+        %_task% "Must use post-install in '%install_dir%' for '%prgs_folder%'"
+        call "%install_dir%\%prgs_folder%.post.bat" "%sln%"
+    )
+)
+set "install_dir_sf="
+set "senv_installs_sf="
 
 :_check_symlink
 %_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
