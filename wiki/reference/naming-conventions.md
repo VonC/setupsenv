@@ -51,7 +51,7 @@ The `<profile>` token must be identical across all of them:
 | `setupsdir_<profile>.bat` | resolves the team archive share |
 | `senv.custom.<profile>.bat` | per-profile environment variables |
 | `senv.custom.<profile>.doskey` | per-profile aliases |
-| `senv.custom.full.<profile>.bat` | optional, fully replaces `senv.custom.bat` |
+| `senv.custom.full.<profile>.bat` | optional, sourced by sessions instead of `senv.custom.bat` (the shared file stays untouched) |
 | `senv.custom.<profile>.gcua.list` | optional, team git-hosting services: setup then applies the git identity to matching repositories ([git configuration](git-configuration.md)) |
 | `senv_<profile>-zip.exe` | built self-extracting archive (in `builds\`) |
 

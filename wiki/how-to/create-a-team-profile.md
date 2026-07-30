@@ -37,7 +37,9 @@ All files below live in the private `custom\` repository: see
 3. Add the team environment variables in `custom\senv.custom.xyz.bat`
    (sourced by every session running that profile), for example `M2_HOME` or
    `MAVEN_OPTS`. To replace the team-wide `senv.custom.bat` entirely instead
-   of adding to it, provide `custom\senv.custom.full.xyz.bat`.
+   of adding to it, provide `custom\senv.custom.full.xyz.bat`: sessions of
+   that profile source it instead of `senv.custom.bat`, and the shared file
+   itself is left untouched on every machine.
 
 4. Add the team aliases in `custom\senv.custom.xyz.doskey` (loaded after the
    global and team-wide doskey layers).

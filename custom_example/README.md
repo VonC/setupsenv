@@ -73,7 +73,7 @@ Files keyed by a profile name (see next section), for a profile `xyz`:
 | `setupsdir_xyz.bat` | resolves the team network share holding the archives |
 | `senv.custom.xyz.bat` | environment variables for that team |
 | `senv.custom.xyz.doskey` | aliases for that team |
-| `senv.custom.full.xyz.bat` | optional: fully replaces `senv.custom.bat` for that team |
+| `senv.custom.full.xyz.bat` | optional: sourced instead of `senv.custom.bat` by that team's sessions |
 | `senv.custom.xyz.gcua.list` | optional: the team git-hosting services (one per line), with priority over `senv.custom.all_teams.gcua.list` for that team |
 
 Optional install hooks, named after the program folder (`<tool>s`):
