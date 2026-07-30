@@ -136,7 +136,7 @@ dir /B "%HOME%\bin\*.custom.*.doskey" >> "%script_dir%\setup_cleanup.tmp"
 if errorlevel 1 (
   %_fatal% "Unable to list custom doskey files in %HOME%\bin" 52
 )
-findstr /R /V /C:".*custom\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
+findstr /R /V /C:".*custom\.%profile%\..*" /C:".*custom\.full\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
 if errorlevel 1 (
   %_info% "No other profile than '%profile%' in '%script_dir%\setup_cleanup.tmp'"
 )
@@ -255,8 +255,7 @@ if "%prgtoinstall%"=="" (
 
 
 if exist "%script_dir%\custom\senv.custom.full.%profile%.bat" (
-    %_info% "REPLACE '%HOME%\bin\senv.custom.bat' content with '%script_dir%\custom\senv.custom.full.%profile%.bat'"
-    type "%script_dir%\custom\senv.custom.full.%profile%.bat" > "%HOME%\bin\senv.custom.bat"
+    %_info% "senv.custom.full.%profile%.bat present: sessions source it instead of senv.custom.bat"
 )
 cd /d "%script_dir%"
 call:install "px-*" "pxs" || exit /b 1

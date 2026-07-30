@@ -302,7 +302,7 @@ dir /B "%HOME%\bin\*.custom.*.doskey" >> "%script_dir%\setup_cleanup.tmp"
 if errorlevel 1 (
   %_fatal% "Unable to list custom doskey files in %HOME%\bin" 52
 )
-findstr /R /V /C:".*custom\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
+findstr /R /V /C:".*custom\.%profile%\..*" /C:".*custom\.full\.%profile%\..*" "%script_dir%\setup_cleanup.tmp" > "%script_dir%\setup_cleanup_filtered.tmp"
 if errorlevel 1 (
   %_info% "No other profile than '%profile%' in '%script_dir%\setup_cleanup.tmp'"
 )

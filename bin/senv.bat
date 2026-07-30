@@ -107,7 +107,21 @@ endlocal & set "usernamel=%_STRING%"
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set "usernamel=%%x"
 
-call %HOME%\bin\senv.custom.bat
+rem A profile that ships a senv.custom.full.<profile>.bat sources it INSTEAD
+rem of the team-shared senv.custom.bat: the shared file keeps the same
+rem content on every machine of the HOME repository, while a machine
+rem profile like 'home' gets its own full environment.
+set "senv_custom=%HOME%\bin\senv.custom.bat"
+set "senv_profile_pre="
+if exist "%script_dir_bin%\profile" (
+   for /f "delims=" %%x in (%script_dir_bin%\profile) do set "senv_profile_pre=%%x"
+)
+if defined senv_profile_pre if exist "%HOME%\bin\senv.custom.full.%senv_profile_pre%.bat" (
+   set "senv_custom=%HOME%\bin\senv.custom.full.%senv_profile_pre%.bat"
+)
+call "%senv_custom%"
+set "senv_custom="
+set "senv_profile_pre="
 call %HOME%\bin\senv.local.bat
 
 if exist "%script_dir_bin%\profile" (
