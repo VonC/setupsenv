@@ -9,6 +9,8 @@ then set it as the default profile.
 .NOTES
 - PowerShell script (.ps1), not a .bat script.
 - Installs font for current user only (no admin rights required).
+- The font comes from a setups folder when one holds it, and is downloaded only
+  as a last resort: the nerd-fonts repository is often unreachable.
 - Upserts profile by GUID first, then by name (to avoid duplicates).
 #>
 
@@ -23,6 +25,9 @@ $FontRegName  = "Hack Nerd Font Regular"  # registry display name
 $FontFaceName = "Hack Nerd Font"          # Windows Terminal font face
 $FontFileName = "HackNerdFont-Regular.ttf"
 $FontUrl      = "https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Regular/HackNerdFont-Regular.ttf"
+
+# Subfolder a setups folder may use to keep fonts apart from the program archives.
+$FontSetupsSubFolder = "fonts"
 
 # Command launched by the terminal profile
 $SenvBatPath  = Join-Path $env:USERPROFILE "senv.bat"
@@ -127,6 +132,49 @@ function Initialize-WindowsTerminalSettingsIfMissing {
     return $fallbackPath
 }
 
+function Get-SetupsFolders {
+    # Same lookup order as inst_prg.bat: local setup folder, Downloads, remote
+    # profile setups folder, user setups folder. setup.bat and inst_prg.bat both
+    # define setupsdir before calling this hook, and terminals.post.bat resolves
+    # it from the active profile when this script runs on its own.
+    $folders = @()
+
+    if ($env:PRGS)        { $folders += (Join-Path $env:PRGS "setup") }
+    if ($env:USERPROFILE) { $folders += (Join-Path $env:USERPROFILE "Downloads") }
+    if ($env:setupsdir)   { $folders += $env:setupsdir }
+    if ($env:USERPROFILE) { $folders += (Join-Path $env:USERPROFILE "senv_setups\setups") }
+
+    return $folders
+}
+
+function Find-FontInSetupsFolders {
+    param([Parameter(Mandatory)] [string]$FontFile)
+
+    foreach ($folder in Get-SetupsFolders) {
+        if ([string]::IsNullOrWhiteSpace($folder)) { continue }
+
+        $candidates = @(
+            (Join-Path $folder $FontFile),
+            (Join-Path (Join-Path $folder $FontSetupsSubFolder) $FontFile)
+        )
+
+        foreach ($candidate in $candidates) {
+            try {
+                if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+                    Write-Ok "Font '$FontFile' found in a setups folder: $candidate"
+                    return $candidate
+                }
+            } catch {
+                # An unreachable setups folder must not stop the lookup.
+                Write-WarnMsg "Unable to read '$candidate': $($_.Exception.Message)"
+            }
+        }
+    }
+
+    Write-Info "Font '$FontFile' found in no setups folder"
+    return $null
+}
+
 function Install-UserFontIfMissing {
     param(
         [Parameter(Mandatory)] [string]$FontRegDisplayName,
@@ -154,30 +202,62 @@ function Install-UserFontIfMissing {
     }
 
     if (-not $targetPresent) {
-        Write-Info "Downloading font '$FontRegDisplayName'..."
-        Invoke-WebRequest -Uri $DownloadUrl -OutFile $tempPath
-        Copy-Item -Path $tempPath -Destination $targetPath -Force
-        $targetPresent = $true
-        Write-Ok "Font file installed successfully: $targetPath"
+        # A setups folder copy comes first: the nerd-fonts repository is the least
+        # reliable source, and a team share usually already holds that file.
+        $sourcePath = Find-FontInSetupsFolders -FontFile $FontFile
+        if ($sourcePath) {
+            Write-Info "Copying font '$FontRegDisplayName' from '$sourcePath'..."
+            try {
+                Copy-Item -LiteralPath $sourcePath -Destination $targetPath -Force
+                $targetPresent = Test-Path -LiteralPath $targetPath
+                Write-Ok "Font file installed from a setups folder: $targetPath"
+            } catch {
+                Write-WarnMsg "Unable to copy '$sourcePath' to '$targetPath': $($_.Exception.Message)"
+            }
+        }
     }
 
-    if ($registeredPath -eq $targetPath -and $targetPresent) {
-        Write-Ok "Font already installed: $regValueName"
-    } else {
-        Write-Info "Registering font '$FontRegDisplayName' (user-level)..."
-        New-ItemProperty `
-            -Path $fontRegistryPath `
-            -Name $regValueName `
-            -Value $targetPath `
-            -PropertyType String `
-            -Force | Out-Null
-
-        Write-Ok "Font registered successfully: $targetPath"
+    if (-not $targetPresent) {
+        if ($env:SENV_INTERNET_OK -eq "0") {
+            Write-WarnMsg "No Internet access: skipping the font download from '$DownloadUrl'"
+        } else {
+            Write-Info "Downloading font '$FontRegDisplayName' from '$DownloadUrl'..."
+            try {
+                Invoke-WebRequest -Uri $DownloadUrl -OutFile $tempPath
+                Copy-Item -LiteralPath $tempPath -Destination $targetPath -Force
+                $targetPresent = Test-Path -LiteralPath $targetPath
+                Write-Ok "Font file installed successfully: $targetPath"
+            } catch {
+                Write-WarnMsg "Unable to download the font from '$DownloadUrl': $($_.Exception.Message)"
+            }
+        }
     }
 
     if (Test-Path -LiteralPath $tempPath) {
         Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue
     }
+
+    if (-not $targetPresent) {
+        # A font is not worth failing the whole Windows Terminal post install on:
+        # the 'senv' profile still opens, with the default font face.
+        Write-WarnMsg "Font '$FontRegDisplayName' not installed: put '$FontFile' in a setups folder (or in its '$FontSetupsSubFolder' subfolder) to install it without any download."
+        return
+    }
+
+    if ($registeredPath -eq $targetPath) {
+        Write-Ok "Font already installed: $regValueName"
+        return
+    }
+
+    Write-Info "Registering font '$FontRegDisplayName' (user-level)..."
+    New-ItemProperty `
+        -Path $fontRegistryPath `
+        -Name $regValueName `
+        -Value $targetPath `
+        -PropertyType String `
+        -Force | Out-Null
+
+    Write-Ok "Font registered successfully: $targetPath"
 }
 
 function New-FileBackup {
