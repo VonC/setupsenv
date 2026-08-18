@@ -209,6 +209,32 @@ Codex is a post-install case because the zip extraction is normal, but the execu
 codex.exe
 ```
 
+### Windows Terminal Font
+
+`terminals.post.ps1` installs `HackNerdFont-Regular.ttf` for the current user before it writes the `senv` Windows Terminal profile.
+
+The font file is searched in the same folders as an archive, in the same order:
+
+1. `%PRGS%\setup`
+2. `%USERPROFILE%\Downloads`
+3. `%setupsdir%`, when configured by the active profile
+4. `%USERPROFILE%\senv_setups\setups`
+
+Each folder is checked directly and in its `fonts` subfolder, so a setups folder can keep fonts apart from the program archives. The nerd-fonts download runs only when no folder holds the file, that repository being the least reliable source.
+
+To seed the shares, copy the installed font to `%PRGS%\setup` and publish it:
+
+```bat
+copy "%LOCALAPPDATA%\Microsoft\Windows\Fonts\HackNerdFont-Regular.ttf" "%PRGS%\setup\"
+adm\publish.bat HackNerdFont-Regular.ttf all
+```
+
+`publish.bat` sees no program of `prgs.list` behind that name and publishes the file as is, into the `fonts` subfolder of every profile share.
+
+`terminals.post.bat` resolves `setupsdir` from the active profile when the hook runs on its own (`setup.bat` and `inst_prg.bat` already define it), and reports connectivity through `SENV_INTERNET_OK`.
+
+A font that cannot be installed is a warning, not an error: the `senv` profile is still created and used, with the default font face.
+
 ## Symlink Hooks
 
 Create `installs\<prgs_folder>.sln.bat` when the default symlink target or symlink name needs adjustment.

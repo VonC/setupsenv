@@ -44,7 +44,12 @@ see [Create a team profile](create-a-team-profile.md).
 4. Publish tool archives, independently of the senv build:
 
    - `adm\publish.bat <archive-pattern> [profile|local|all]`: pushes one
-     downloaded archive to every profile share whose list contains that tool,
+     downloaded archive to every profile share whose list contains that tool.
+     A file of `%PRGS%\setup` or `%USERPROFILE%\Downloads` matching no program
+     of `prgs.list` (a font, a certificate) is published as is, to every
+     targeted share, since no install list can mention it. A `.ttf` or `.otf`
+     goes to the `fonts` subfolder of each share, where
+     `installs\terminals.post.ps1` looks for it,
    - `adm\publish_profile.bat [profile|all]`: pushes the whole tool set of a
      profile (newest matching archive of each entry) to its share.
 
