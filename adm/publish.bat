@@ -22,7 +22,7 @@ if errorlevel 1 %_fatal% "Unable to access custom folder" 1
 %_info% "Custom folder full path: '%custom_dir%', setup_dir='%setup_dir%', dl_dir='%dl_dir%'"
 
 if "%1"=="" (
-    %_fatal%  "Usage: publish xxx [profile/local/all] [force] (pattern to search for in Downloads or setup). No profile means publish to local only." 4
+    %_fatal%  "Usage: publish xxx [profile/local/all] [force] (pattern to search for in Downloads or setup). No profile means publish to local only. A file matching no program of prgs.list (a font, a certificate, ...) is published as is." 4
 )
 
 set "sfound=setup"
@@ -88,12 +88,29 @@ for /L %%n in (1 1 !output_cnt!) DO (
 
 rem @echo on
 set "name="
-call %senv_dir%\bin\select_prg.bat "%fname%" "inst_prg"
-if errorlevel 1 (
-    %_fatal% "Unable to select program for '%fname%'" 101
+set "plain_file="
+set "file_subfolder="
+set "prg_id="
+set "prg_is_global="
+rem A file published on its own (a font, a certificate, ...) matches no program of
+rem prgs.list, and select_prg.bat is fatal in that case, which would kill this script.
+rem The pattern matcher of prgs.list decides first, since it reports a miss without
+rem exiting, and select_prg.bat is only called for a file it recognizes.
+call:match_prgs_list
+if defined prg_line (
+    call "%senv_dir%\bin\select_prg.bat" "%fname%" "inst_prg"
+    if errorlevel 1 (
+        popd
+        %_fatal% "Unable to select program for '%fname%'" 101
+    )
+    set "name=!prg_id!"
+) else (
+    %_warning% "'%fname%' matches no program of prgs.list: published as a plain file"
+    set "plain_file=true"
+    set "name=%fname%"
+    call:set_file_subfolder
 )
-set "name=prg_id"
-if "%name%"=="" ( podp && %_fatal% "Unknown name for fname for publish: '%fname%'" 228 )
+if "%name%"=="" ( popd && %_fatal% "Unknown name for fname for publish: '%fname%'" 228 )
 
 if not defined SENV_FORCE_PB (
     %_warning% "SENV_FORCE_PB not defined: force publish not activated unless its value includes '-%name%-'"
@@ -122,79 +139,123 @@ if "%output_cnt%"=="0" (
     popd
     %_fatal% "No s*_* detected in custom" 1
 )
+rem One profile per iteration, each handled by a subroutine: a 'goto' inside a for
+rem block ends the whole loop, which used to stop the publication at the first share
+rem already holding the file.
 for /L %%n in (1 1 !output_cnt!) DO (
     set "sc=!output[%%n]!"
-    rem set "sc=setupsdir_calx_tesys.bat"
-    rem dir %cpwd%\!sc!
-    rem echo call "%cpwd%\!sc!"
     set "profile=!profiles[%%n]!"
-    rem set "profile=calx_tesys"
-    set "skip="
-    if not "%team%"=="all" (
-        if not "%team%"=="!profile!" (
-            %_warning% "Team '%team%' does not match profile '!profile!': skipping."
-            set "skip=1"
-        ) else (
-            %_ok% "Team matches profile"
-        )
-    )
-    if "!skip!"=="" (
-        call "%custom_dir%\!sc!"
-        set "spath=!setupsdir!"
-        %_info% "sc='!sc!', profile='!profile!', team='%team%', name='%name%', spath='!spath!'"
-        if "!spath!"=="" (
-            %_error% "spath is empty: skipped"
-            set "skip=1"
-        )
-        dir "!spath!" > NUL
-        if errorlevel 1 (
-            %_error% "Target path '!spath!' not accessible: skipped"
-            set "skip=1"
-        )
-    )
-    if "!skip!"=="" (
-        %_task% "Check name '%name%' (fname='%fname%')"
-        call:check_name
-        rem %_info% "name_ok2='!name_ok!'"
-        if "!name_ok!"=="false" (
-            %_warning% "Name '%name%' not part of install_!profile!.list: skip copy"
-            if exist "!spath!\%fname%" (
-                %_warning% "Must delete '%fname%' in '!spath!'"
-                del "!spath!\%fname%"
-                if errorlevel 1 (
-                    popd
-                    %_fatal% "Unable to delete '!spath!\%fname%'" 23
-                )
-            )
-        ) else (
-            rem Check if file exists
-            if exist "!spath!\%fname%" (
-                %_ok% "File '%fname%' already exists in '!spath!'"
-                rem Check if remote file size is the same as the local one
-                :: Get the file sizes
-                for %%A in ("..\..\setup\%fname%") do set "size1=%%~zA"
-                for %%A in ("!spath!\%fname%") do set "size2=%%~zA"
-                :: Compare size
-                if !size1! EQU !size2! (
-                    %_ok% "The files are the same size."
-                    goto:continue
-                )
-                %_warning% "The files are different sizes."
-                %_warning% "Must delete '%fname%' in '!spath!'"
-                del "!spath!\%fname%"
-                if errorlevel 1 (
-                    popd
-                    %_fatal% "Unable to delete '!spath!\%fname%'" 23
-                )
-            )
-            %_task% "Must copy '%name%' to '!spath!'"
-            call:rbc "!spath!"
-        )
-    )
-    :continue
-    rem goto:eof
+    call:publish_to_profile
 )
 popd
+goto:eof
+
+:publish_to_profile
+if not "%team%"=="all" (
+    if not "%team%"=="%profile%" (
+        %_warning% "Team '%team%' does not match profile '%profile%': skipping."
+        goto:eof
+    )
+    %_ok% "Team matches profile"
+)
+set "setupsdir="
+call "%custom_dir%\%sc%"
+set "spath=%setupsdir%"
+%_info% "sc='%sc%', profile='%profile%', team='%team%', name='%name%', spath='%spath%'"
+if "%spath%"=="" (
+    %_error% "spath is empty: skipped"
+    goto:eof
+)
+dir "%spath%" > NUL
+if errorlevel 1 (
+    %_error% "Target path '%spath%' not accessible: skipped"
+    goto:eof
+)
+if defined plain_file (
+    rem No install list mentions a plain file: publish it to every target share.
+    set "dstdir=%spath%"
+    if defined file_subfolder ( set "dstdir=%spath%\%file_subfolder%" )
+    call:publish_file "!dstdir!"
+    goto:eof
+)
+%_task% "Check name '%name%' (fname='%fname%')"
+call:check_name
+if "%name_ok%"=="false" (
+    %_warning% "Name '%name%' not part of install_%profile%.list: skip copy"
+    if exist "%spath%\%fname%" (
+        %_warning% "Must delete '%fname%' in '%spath%'"
+        del "%spath%\%fname%"
+        if errorlevel 1 (
+            popd
+            %_fatal% "Unable to delete '%spath%\%fname%'" 23
+        )
+    )
+    goto:eof
+)
+call:publish_file "%spath%"
+goto:eof
+
+:publish_file
+set "dstdir=%~1"
+if exist "%dstdir%\%fname%" (
+    %_ok% "File '%fname%' already exists in '%dstdir%'"
+    rem Check if remote file size is the same as the local one
+    for %%A in ("%setup_dir%\%fname%") do set "size1=%%~zA"
+    for %%A in ("%dstdir%\%fname%") do set "size2=%%~zA"
+    if !size1! EQU !size2! (
+        %_ok% "The files are the same size."
+        goto:eof
+    )
+    %_warning% "The files are different sizes."
+    %_warning% "Must delete '%fname%' in '%dstdir%'"
+    del "%dstdir%\%fname%"
+    if errorlevel 1 (
+        popd
+        %_fatal% "Unable to delete '%dstdir%\%fname%'" 23
+    )
+)
+%_task% "Must copy '%name%' to '%dstdir%'"
+call:rbc "%dstdir%"
+goto:eof
+
+:match_prgs_list
+rem Same two lists as select_prg.bat, in the same order.
+set "prg_line="
+call:match_one_prgs_list "%senv_dir%\bin\prgs.list"
+if defined prg_line ( goto:eof )
+if exist "%USERPROFILE%\senv_home\prgs.list" (
+    call:match_one_prgs_list "%USERPROFILE%\senv_home\prgs.list"
+)
+goto:eof
+
+:match_one_prgs_list
+rem One file per call: the same name twice in a row can still be held by the previous
+rem redirection, and a failed capture would read as 'no match'.
+set "match_err=%TEMP%\senv_publish_prgs_match_%RANDOM%.err"
+for /f "tokens=* delims=" %%p in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%senv_dir%\bin\parse_prgs_list_for_pattern.ps1" -prg_list_file "%~1" -string_to_test "%fname%" 2^>"%match_err%"') do ( set "prg_line=%%p" )
+findstr /C:"Multiple matching lines" "%match_err%" >NUL 2>&1
+if not errorlevel 1 (
+    del "%match_err%" 2>NUL
+    popd
+    %_fatal% "'%fname%' matches several lines of '%~1': fix that list first" 102
+)
+del "%match_err%" 2>NUL
+if defined prg_line (
+    %_ok% "'%fname%' matches the program line '%prg_line%' of '%~1'"
+)
+goto:eof
+
+:set_file_subfolder
+rem A font goes to the 'fonts' subfolder of the setups folder, where
+rem installs\terminals.post.ps1 looks for it, to keep the setups folder itself for
+rem the program archives.
+set "fext="
+for %%e in ("%fname%") do ( set "fext=%%~xe" )
+if /i "%fext%"==".ttf" ( set "file_subfolder=fonts" )
+if /i "%fext%"==".otf" ( set "file_subfolder=fonts" )
+if defined file_subfolder (
+    %_info% "'%fext%' file: published to the '%file_subfolder%' subfolder of each setups folder"
+)
 goto:eof
 
 :check_name
