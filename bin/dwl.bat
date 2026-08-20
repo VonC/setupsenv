@@ -546,7 +546,11 @@ if errorlevel 1 (
   del "%script_dir%\dwl_sqldeveloper.tmp"
   %_fatal% "Cannot get latest version from oracle/database/sqldeveloper for SQL Developer with cmd '%cmd%'" 1
 )
-for /f "usebackq tokens=1,2 delims=|" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$text = Get-Content -Raw -Path '%script_dir%\dwl_sqldeveloper.tmp'; $prefix = if ('%version%' -eq 'latest') { '' } else { [regex]::Escape('%version%') }; $filePattern = if ($prefix) { 'sqldeveloper-' + $prefix + '[0-9A-Za-z\.\-]*-x64\.zip' } else { 'sqldeveloper-[0-9][0-9A-Za-z\.\-]*-x64\.zip' }; $urlPattern = 'https://download\.oracle\.com/[^\s' + [char]34 + '<>]*' + $filePattern; $m = [regex]::Match($text, $urlPattern); if ($m.Success) { $u = $m.Value; $f = [IO.Path]::GetFileName($u); Write-Output ($u + '|' + $f); exit }; $m = [regex]::Match($text, $filePattern); if ($m.Success) { $f = $m.Value; Write-Output ('https://download.oracle.com/otn_software/java/sqldeveloper/' + $f + '|' + $f) }"`) do (
+rem The build-number class holds no dash on purpose. Oracle appends a platform
+rem segment to the sibling archives, no-jre.zip and macos-aarch64.app.zip, so a
+rem dash inside the class would let a future linux-x64.zip win the match ahead
+rem of the Windows one.
+for /f "usebackq tokens=1,2 delims=|" %%a in (`powershell -NoProfile -ExecutionPolicy Bypass -Command "$text = Get-Content -Raw -Path '%script_dir%\dwl_sqldeveloper.tmp'; $prefix = if ('%version%' -eq 'latest') { '' } else { [regex]::Escape('%version%') }; $filePattern = if ($prefix) { 'sqldeveloper-' + $prefix + '[0-9A-Za-z\.]*-x64\.zip' } else { 'sqldeveloper-[0-9][0-9A-Za-z\.]*-x64\.zip' }; $urlPattern = 'https://download\.oracle\.com/[^\s' + [char]34 + '<>]*' + $filePattern; $m = [regex]::Match($text, $urlPattern); if ($m.Success) { $u = $m.Value; $f = [IO.Path]::GetFileName($u); Write-Output ($u + '|' + $f); exit }; $m = [regex]::Match($text, $filePattern); if ($m.Success) { $f = $m.Value; Write-Output ('https://download.oracle.com/otn_software/java/sqldeveloper/' + $f + '|' + $f) }"`) do (
   set "url=%%a"
   set "file=%%b"
 )
