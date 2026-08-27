@@ -174,7 +174,7 @@ Examples in this repo:
 
 - `tailwindcsss.install.bat`: copies the downloaded executable into a versioned directory under several executable names and adds a local alias.
 - `riffs.install.bat` and `moars.install.bat`: handle standalone executables.
-- `pythons.install.bat`: handles Python-specific installation.
+- `pythons.install.bat`: handles Python-specific installation. Its installer and uninstaller logs are written to `%PRGS%\pythons\pythons_logs` and `%PRGS%\setup\pythons_logs`, and logs left in those parent folders by earlier runs are moved there on the next install.
 - `vscodes.install.bat`: handles VS Code-specific install/update behavior.
 
 If no custom install hook exists, `inst_prg.bat` extracts with `pzxx.bat`.

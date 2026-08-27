@@ -53,6 +53,13 @@ set "target=%PRGS%\pythons\python-%py_version%-amd64"
 set "fz=%fs:.exe=.zip%"
 set "target_zip=%PRGS%\setup\%fz%"
 set "target_symlink=%PRGS%\pythons\python%py_version%"
+rem The installer and the uninstaller both derive their sibling _NNN_ logs from
+rem the path given to /log. Point that path at a pythons_logs subfolder, so that
+rem neither '%PRGS%\pythons' nor '%PRGS%\setup' collects twenty log files a run.
+set "pythons_logs=%PRGS%\pythons\pythons_logs"
+set "setup_logs=%PRGS%\setup\pythons_logs"
+call :_move_stray_python_logs "%PRGS%\pythons" "%pythons_logs%"
+call :_move_stray_python_logs "%PRGS%\setup" "%setup_logs%"
 
 %_task% "Must install Python %py_version% from '%fs%'"
 
@@ -142,7 +149,8 @@ goto:eof
 %_task% "Installing Python %py_version% from exe to '%target%'"
 if defined NO_DRY_RUN (
     if exist "%target%" rd /s /q "%target%"
-    "%PRGS%\setup\%fs%" /passive /quiet /log "%target%.log" InstallAllUsers=0 TargetDir="%target%" DefaultJustForMeTargetDir="%target%" Shortcuts=0 Include_launcher=1 CompileAll=1 Include_debug=1 Include_symbols=1
+    if not exist "%pythons_logs%" mkdir "%pythons_logs%"
+    "%PRGS%\setup\%fs%" /passive /quiet /log "%pythons_logs%\python-%py_version%-amd64.log" InstallAllUsers=0 TargetDir="%target%" DefaultJustForMeTargetDir="%target%" Shortcuts=0 Include_launcher=1 CompileAll=1 Include_debug=1 Include_symbols=1
     if errorlevel 1 ( %_fatal% "Issue when installing Python from exe" 1 )
 ) else (
     %_info% "DRY-RUN: Would delete folder '%target%'"
@@ -159,7 +167,8 @@ if not exist "%uninstall_exe%" (
     %_fatal% "Cannot find installer '%uninstall_exe%' to uninstall version '%version_to_uninstall%'" 24
 )
 if defined NO_DRY_RUN (
-    "%uninstall_exe%" /uninstall /quiet /log "%PRGS%\setup\python-%version_to_uninstall%-uninstall.log"
+    if not exist "%setup_logs%" mkdir "%setup_logs%"
+    "%uninstall_exe%" /uninstall /quiet /log "%setup_logs%\python-%version_to_uninstall%-uninstall.log"
     if errorlevel 1 ( %_fatal% "Issue when uninstalling Python '%version_to_uninstall%'" 4 )
     set "registered_version="
 ) else (
@@ -194,6 +203,35 @@ if defined NO_DRY_RUN (
     %_info% "DRY-RUN: Would unzip '%target_zip%' to '%PRGS%\pythons'"
 )
 %_ok% "Unzipped to target."
+goto:eof
+
+:_move_stray_python_logs
+rem Move the Python logs left directly in '%~1' by earlier runs into '%~2'. Only
+rem leftovers are seen here: since the /log paths moved, the installer writes its
+rem logs straight into that subfolder.
+set "logs_from=%~1"
+set "logs_to=%~2"
+set "logs_count=0"
+for %%l in ("%logs_from%\python-*.log") do ( set /a "logs_count+=1" )
+if "%logs_count%"=="0" ( goto:eof )
+%_task% "Must move %logs_count% stray Python log(s) from '%logs_from%' to '%logs_to%'"
+if not defined NO_DRY_RUN (
+    %_info% "DRY-RUN: Would move '%logs_from%\python-*.log' to '%logs_to%'"
+    goto:eof
+)
+if not exist "%logs_to%" (
+    mkdir "%logs_to%"
+    if errorlevel 1 (
+        %_warning% "Unable to create Python log folder '%logs_to%'"
+        goto:eof
+    )
+)
+move /y "%logs_from%\python-*.log" "%logs_to%" >nul
+if errorlevel 1 (
+    %_warning% "Unable to move Python logs from '%logs_from%' to '%logs_to%'"
+    goto:eof
+)
+%_ok% "%logs_count% Python log(s) moved to '%logs_to%'"
 goto:eof
 
 :_create_python_symlink
