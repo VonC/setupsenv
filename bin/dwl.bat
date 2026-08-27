@@ -500,9 +500,52 @@ if exist "%setup_dir%\%python_zip%" (
 call :find_setups_zip "%python_zip%"
 if exist "%setup_dir%\%python_zip%" ( goto:eof )
 rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
+rem python.org ships a Windows installer only while a cycle stays in its bugfix phase.
+rem Once the cycle turns security-only, https://www.python.org/ftp/python/<version>/
+rem holds source archives alone and the installer URL answers 404. Probe it first, so
+rem the run names that cause instead of stopping on a bare curl error.
+call :python_check_installer "%version%"
 set "file=python-%version%-amd64.exe"
 set "url=https://www.python.org/ftp/python/%version%/%file%"
 call :curl
+goto:eof
+
+:python_check_installer
+rem Check that python.org carries 'python-<version>-amd64.exe' for the version passed as
+rem %1. A HEAD answering 200 means the download can proceed. Anything else means that
+rem release is source-only: walk the same cycle down, patch by patch, to name the last
+rem release still carrying an installer, then stop with that advice.
+set "py_version=%~1"
+if exist "%setup_dir%\python-%py_version%-amd64.exe" ( goto:eof )
+curl -fskIL --url "https://www.python.org/ftp/python/%py_version%/python-%py_version%-amd64.exe" >nul 2>&1
+if not errorlevel 1 ( goto:eof )
+for /f "tokens=1,2,3 delims=." %%a in ("%py_version%") do (
+  set "py_cycle=%%a.%%b"
+  set "py_patch=%%c"
+)
+if not defined py_patch ( set "py_patch=0" )
+%_warning% "python.org has no Windows installer 'python-%py_version%-amd64.exe' for version '%py_version%'"
+%_info% "That usually means the cycle turned security-only: such releases ship source archives alone, no .exe and no .msi"
+set "py_last="
+set /a "py_probe=0"
+set /a "py_try=%py_patch%"
+:_python_probe_previous
+set /a "py_try-=1"
+set /a "py_probe+=1"
+if %py_try% lss 0 ( goto:_python_probe_done )
+if %py_probe% gtr 15 ( goto:_python_probe_done )
+%_task% "Must check the Windows installer of '%py_cycle%.%py_try%'"
+curl -fskIL --url "https://www.python.org/ftp/python/%py_cycle%.%py_try%/python-%py_cycle%.%py_try%-amd64.exe" >nul 2>&1
+if errorlevel 1 ( goto:_python_probe_previous )
+set "py_last=%py_cycle%.%py_try%"
+:_python_probe_done
+if defined py_last (
+  %_info% "Last '%py_cycle%' release with a Windows installer: '%py_last%'. Use: dwl python %py_last%"
+) else (
+  %_info% "No earlier '%py_cycle%' release carries a Windows installer. Use a cycle still in its bugfix phase, like 3.13"
+)
+%_info% "Or publish 'python-%py_version%-amd64.zip' in '%setup_dir%' or in a setups folder: installs\pythons.install.bat builds it"
+%_fatal% "python.org publishes no Windows installer for Python '%py_version%'" 13
 goto:eof
 
 :dwl_sysinternalsSuite

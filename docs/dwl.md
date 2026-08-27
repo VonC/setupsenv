@@ -217,6 +217,24 @@ Use this only when the upstream asset is not already in a shape that `inst_prg.b
 
 Use `:find_setups_zip` in a `:dwl_<prg_id>` label when a senv-built archive can make the upstream download unnecessary.
 
+### Upstream Stops Publishing The Windows Asset
+
+`python`: python.org builds a Windows installer only while a cycle stays in its bugfix phase. Once the cycle turns security-only, `https://www.python.org/ftp/python/<version>/` holds source archives alone and `python-<version>-amd64.exe` answers 404. Python 3.12 left its bugfix phase on 2025-04-02, so 3.12.10 is its last release with an installer, while `endoflife.date` keeps reporting newer 3.12 releases.
+
+Before downloading, `:dwl_python` calls `:python_check_installer`, which sends a HEAD request to the installer URL. On 200 the download proceeds. On anything else, the routine walks the same cycle down, patch by patch, up to 15 releases, then stops with exit code 13 and names the last release that still carries an installer:
+
+```text
+ WARN  : [dwl.bat] python.org has no Windows installer 'python-3.12.13-amd64.exe' for version '3.12.13'
+ INFO  : [dwl.bat] That usually means the cycle turned security-only: such releases ship source archives alone, no .exe and no .msi
+ INFO  : [dwl.bat] Last '3.12' release with a Windows installer: '3.12.10'. Use: dwl python 3.12.10
+ INFO  : [dwl.bat] Or publish 'python-3.12.13-amd64.zip' in '%PRGS%\setup' or in a setups folder: installs\pythons.install.bat builds it
+ FATAL 13 : [dwl.bat] python.org publishes no Windows installer for Python '3.12.13'
+```
+
+The probe is skipped when that installer is already in `%PRGS%\setup`, and it never runs when `:find_setups_zip` found a matching zip first.
+
+Use this pattern in a `:dwl_<prg_id>` label when upstream keeps releasing versions but stops publishing the Windows asset.
+
 ## Keep `prgs.list` And `dwl.bat` In Sync
 
 A program must exist in both places:
