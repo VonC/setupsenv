@@ -78,16 +78,19 @@ live `cmd.exe` and skips the slots that answer. Close one tab by hand and
 the next `wtp` brings it back, in the window its block names. `wtp force`
 reopens everything regardless.
 
-Two optional pieces, absent until you add them:
+Two pieces sit outside `wtp.bat` itself:
 
-- `WTP_PROFILE` names the Windows Terminal profile the tabs open with;
-  without it they use the profile of the current window. `senv.bat` declares
-  it empty, so set it in `senv.custom.bat` when every machine of a team ships
-  that profile, or in `senv.local.bat` for one machine. Both are read after
-  `senv.bat` and win over it.
+- `WTP_PROFILE` names the Windows Terminal profile the tabs open with.
+  `senv.bat` sets it to `senv`, the profile the senv install creates and makes
+  the default, so the whole layout shares one font and one set of colours out
+  of the box. Only the look is taken: `wtp` passes its own command line and
+  its own folder. Override it in `senv.custom.bat` for a team or in
+  `senv.local.bat` for one machine, both read after `senv.bat`, and empty it
+  to fall back to the Windows Terminal default profile.
 - a `startup.bat` next to `wtp.bat` gets a tab of its own in the current
-  window, for whatever has to run once per session. `wtp nostartup` skips
-  that tab, `wtp notabs` opens only it.
+  window, for whatever has to run once per session. It ships with no such
+  file, so that tab appears only once you add one. `wtp nostartup` skips it,
+  `wtp notabs` opens only it.
 
 Without a `wtp.list`, `wtp` says what the file is for, points at the
 example, and exits 0.
