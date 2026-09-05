@@ -74,6 +74,15 @@ rem %_fatal% "prgs_name='%prgs_name%' vs. prg_name=%prg_name%'" 1
 pushd %PRGS_ROOT%
 if errorlevel 1 %_fatal% "unable to cd to PRGS_ROOT '%PRGS_ROOT%'" 1
 %_info% "Switch Ver from PRGS_ROOT '%PRGS_ROOT%'"
+rem A pinned version needs no listing: when its folder is there, take it. That
+rem keeps the choice deterministic and never reaches the gum prompt, whatever
+rem the shared temp files below are doing in a tab that starts at the same time.
+if "%prg_version%"=="" goto:no_pinned_version
+if not exist "%PRGS_ROOT%\%prg_prefix%%prg_version%\" goto:no_pinned_version
+set "SELECTED_VERSION=%prg_prefix%%prg_version%"
+popd
+goto:selected
+:no_pinned_version
 rem set ECHO_STATE=ON
 rem @echo on
 rem Initialize counter
