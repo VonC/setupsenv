@@ -19,12 +19,17 @@ rem    echo Batcolors not available in '%bc%' && exit /b 1
 rem )
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
-rem SENV_UID: id unique per terminal (PID of the hosting cmd.exe), so that concurrent
-rem tabs never share the same switch* temp files. %RANDOM% alone is not enough: tabs
+rem SENV_UID: id unique per console, so that concurrent tabs never share the same
+rem switch* temp files. It is recomputed on every run and never taken from the
+rem environment: a console inherits SENV_UID from the console that opened it, so a
+rem batch of tabs opened at once all carried one id, and one tab deleted the temp
+rem file another one was still reading. %RANDOM% is no better on its own: tabs
 rem opened by one command start the same second and can draw identical values.
-if not defined SENV_UID (
-   for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId"`) do set "SENV_UID=%%p"
-)
+rem The lookup climbs two levels: for /f runs its command through a throwaway
+rem cmd.exe of its own, so the parent of the powershell process is that helper and
+rem the grandparent is this console.
+set "SENV_UID="
+for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "$h=(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId; (Get-CimInstance Win32_Process -Filter ('ProcessId=' + $h)).ParentProcessId"`) do set "SENV_UID=%%p"
 if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 
 set "admPath="
