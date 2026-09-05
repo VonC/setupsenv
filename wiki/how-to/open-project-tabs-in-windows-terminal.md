@@ -81,7 +81,10 @@ reopens everything regardless.
 Two optional pieces, absent until you add them:
 
 - `WTP_PROFILE` names the Windows Terminal profile the tabs open with;
-  without it they use the profile of the current window.
+  without it they use the profile of the current window. `senv.bat` declares
+  it empty, so set it in `senv.custom.bat` when every machine of a team ships
+  that profile, or in `senv.local.bat` for one machine. Both are read after
+  `senv.bat` and win over it.
 - a `startup.bat` next to `wtp.bat` gets a tab of its own in the current
   window, for whatever has to run once per session. `wtp nostartup` skips
   that tab, `wtp notabs` opens only it.

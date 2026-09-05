@@ -65,4 +65,4 @@ in which they are applied.
 | `no_local_senv`, `local_senv` | `senv.bat` | force or skip the "local" (repository) activation mode |
 | `internalsenvcall` | `senv.bat` | quiet activation, used by wrapper scripts |
 | `senv_force_build` | `adm\build.bat` | rebuild even when the remote version matches |
-| `WTP_PROFILE` | `wtp` | Windows Terminal profile the tabs open with; without it they use the profile of the current window |
+| `WTP_PROFILE` | `wtp` | Windows Terminal profile the tabs open with. `bin\senv.bat` declares it empty, and `wtp` then passes no profile, so the tabs use the one of the window it was called from. Override it in `senv.custom.bat` for a team, or `senv.local.bat` for one machine: both are read after `senv.bat` |
