@@ -1,0 +1,34 @@
+# wtp.list.example - the pattern for wtp.list.
+#
+# Copy this file to 'wtp.list', in the same folder, and edit it. wtp.bat opens
+# one Windows Terminal tab per line below, each sitting in the folder its line
+# names, with the global senv.bat and then the senv.bat of that folder already
+# run. Without a wtp.list, wtp.bat opens nothing and points back here.
+#
+# Format:  <folder path>
+#      or  <folder path>|<tab title>
+#      or  --- <window name>
+#
+# A line with no title leaves the tab title to whatever runs in the tab, so a
+# tool that names its own tab keeps control of it. A line starting with '---'
+# closes the window gathered so far and opens a new one; the text after the
+# dashes names that window in the wtp.bat log lines, and holds the block
+# together when a later run reopens a tab closed by hand. Blank lines and lines
+# starting with '#' are ignored, leading and trailing spaces are dropped, and a
+# tab character is not a separator: use spaces.
+#
+# The same folder can be listed several times, once per tab wanted on it.
+#
+# The two blocks below open one window with three tabs on one project and one
+# window with two tabs on another. Replace the paths with your own.
+
+--- main
+
+C:\Users\me\git\myproject
+C:\Users\me\git\myproject
+C:\Users\me\git\myproject|myproject
+
+--- side
+
+C:\Users\me\git\otherproject
+C:\Users\me\git\otherproject|otherproject
