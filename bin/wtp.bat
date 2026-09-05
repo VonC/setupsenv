@@ -20,10 +20,11 @@ rem dashes names that window. Lines starting with '#' and blank lines are
 rem ignored. wtp.list is yours to write: wtp.list.example, shipped next to this
 rem script, is the pattern to copy and edit.
 rem
-rem Two optional pieces, both absent by default:
+rem Two pieces sitting outside this script:
 rem
-rem - WTP_PROFILE names the Windows Terminal profile the tabs open with. Without
-rem   it the tabs open with the profile of the current window.
+rem - WTP_PROFILE names the Windows Terminal profile the tabs open with.
+rem   senv.bat sets it to 'senv', the profile the senv install creates. Empty
+rem   it and the tabs take the Windows Terminal default profile instead.
 rem - a startup.bat next to this script gets a tab of its own, added to the
 rem   window wtp was called from, for whatever has to run once per session.
 rem
@@ -56,8 +57,10 @@ set "wtp_force="
 set "wtp_notabs="
 set "wtp_nostartup="
 
-rem A profile is named only when WTP_PROFILE asks for one, so wtp works on a
-rem Windows Terminal with nothing configured in it.
+rem A profile is named only when WTP_PROFILE holds one, and senv.bat holds the
+rem default. Empty, wtp passes no -p at all and the tabs take the Windows
+rem Terminal default profile, which keeps wtp working where the senv profile
+rem was renamed or never created.
 set "wtp_p="
 if defined WTP_PROFILE set "wtp_p=-p "%WTP_PROFILE%""
 

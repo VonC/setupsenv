@@ -93,15 +93,17 @@ if exist "%PRGS%\gos\current" (
 set GOPROXY=https://proxy.golang.org
 
 rem WTP_PROFILE: the Windows Terminal profile wtp gives the tabs it opens.
-rem Empty here on purpose. wtp then passes no profile at all, and every tab it
-rem opens inherits the profile of the window wtp was called from, so a Terminal
-rem nobody configured still works: naming a profile that does not exist is what
-rem makes wt.exe refuse the tab. Name one to give a whole layout the same font,
-rem colours and starting size. This file is read before senv.custom.bat and
+rem 'senv' is the profile installs\terminals.post.ps1 creates and sets as the
+rem default one, so every machine senv installed has it, and naming it gives a
+rem whole layout the same font and colours. Only the look is taken: wtp passes
+rem its own command line and its own folder over the ones the profile carries.
+rem An empty value passes no profile at all and the tabs fall back to whatever
+rem Windows Terminal has as its default, which is what a machine whose profile
+rem was renamed or removed needs. This file is read before senv.custom.bat and
 rem senv.local.bat, so either of them overrides the value, the way
-rem senv.custom.bat overrides the GOPROXY above: senv.custom.bat when every
-rem machine of a team ships that profile, senv.local.bat for a single machine.
-set "WTP_PROFILE="
+rem senv.custom.bat overrides the GOPROXY above: senv.custom.bat for a team
+rem that shares its profiles, senv.local.bat for a single machine.
+set "WTP_PROFILE=senv"
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 set "senv_dir=%script_dir_bin%"
