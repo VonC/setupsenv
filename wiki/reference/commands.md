@@ -102,6 +102,43 @@ No argument. Prints the active profile, compares the local senv and custom
 versions (`git describe`, `custom\version`) with the remote ones, flags
 uncommitted changes, and says whether to update (`upg`, `upa`) or publish.
 
+### `wtp [dry|force|notabs|nostartup]`
+
+```text
+wtp
+wtp dry
+wtp force
+wtp notabs
+wtp nostartup
+```
+
+Opens the Windows Terminal windows and tabs described by
+`%HOME%\bin\wtp.list`, each tab sitting in the folder its line names, with
+the global activation and then that folder's own `senv.bat` already run
+(`senv all`). See the
+[how-to](../how-to/open-project-tabs-in-windows-terminal.md) for the file
+format and `bin\wtp.list.example` for the pattern to copy.
+
+| Argument | Behavior |
+| --- | --- |
+| none | the project tabs still missing, plus the startup tab |
+| `dry` | print the `wt.exe` command lines, open nothing |
+| `force` | open every tab again, the ones already open included |
+| `notabs` | only the startup tab |
+| `nostartup` | only the project windows |
+
+A second run opens nothing: each tab is started as
+`cmd.exe /k wtp.tab.bat <slot>`, so `wtp` reads the command line of every
+live `cmd.exe` and skips the slots that answer. A tab closed by hand comes
+back on the next run, in the window its block names. Nothing is written to
+disk.
+
+Without a `wtp.list`, `wtp` prints what the file is for and where the
+example lives, and exits 0. With a `startup.bat` next to `wtp.bat`, one
+extra tab running it is added to the current window; without one, that step
+is skipped. `WTP_PROFILE` names the Windows Terminal profile the tabs open
+with ([environment variables](environment-variables.md)).
+
 ## 💬 Teams cache
 
 ### `tc <day> [-MinPerConversation N]`
@@ -200,12 +237,13 @@ Generic engine used by the wrappers below.
 | `<exe>` | `bin\java.exe` | file used to detect "already on PATH" |
 | `<version>` | `21` | wanted version (optional) |
 
-Behavior: lists `%PRGS%\<prgs_name>\<prefix>*` folders matching the pattern;
-picks the exact match, or the only one available, or (if
-`SWITCHVER_DWL_INST` is defined) downloads and installs the missing version
-via `div`, or asks with `gum choose`. Removes previous `%PRGS%\<prgs_name>`
-entries from `PATH` and returns `SELECTED_VERSION` and `newPath` to the
-caller.
+Behavior: a `<version>` whose `%PRGS%\<prgs_name>\<prefix><version>` folder
+exists is taken straight away, with no listing and no prompt. Otherwise it
+lists `%PRGS%\<prgs_name>\<prefix>*` folders matching the pattern and picks
+the only one available, or (if `SWITCHVER_DWL_INST` is defined) downloads and
+installs the missing version via `div`, or asks with `gum choose`. Removes
+previous `%PRGS%\<prgs_name>` entries from `PATH` and returns
+`SELECTED_VERSION` and `newPath` to the caller.
 
 ### Wrappers
 

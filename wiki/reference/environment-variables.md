@@ -20,7 +20,7 @@ in which they are applied.
 | Variable | Value | Meaning |
 | --- | --- | --- |
 | `PATH` | rebuilt | minimal Windows folders, then `%HOME%\bin`, then the portable Git folders, then per-tool additions |
-| `SENV_UID` | PID of the terminal's `cmd.exe` (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them |
+| `SENV_UID` | PID of the terminal's `cmd.exe`, recomputed at every activation (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; never taken from the environment, or every tab opened from an activated terminal would carry that terminal's id |
 | `GH` | `%PRGS%\gits\current` | portable Git root |
 | `LANG`, `LC_ALL` | `en_US.UTF-8`, `C.UTF-8` | locale |
 | `TERM` | `msys` | terminal type for the Git tools |
@@ -65,3 +65,4 @@ in which they are applied.
 | `no_local_senv`, `local_senv` | `senv.bat` | force or skip the "local" (repository) activation mode |
 | `internalsenvcall` | `senv.bat` | quiet activation, used by wrapper scripts |
 | `senv_force_build` | `adm\build.bat` | rebuild even when the remote version matches |
+| `WTP_PROFILE` | `wtp` | Windows Terminal profile the tabs open with; without it they use the profile of the current window |

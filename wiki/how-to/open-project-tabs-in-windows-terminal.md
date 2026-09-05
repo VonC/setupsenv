@@ -19,7 +19,11 @@ pattern of [the project tutorial](../tutorials/03-give-a-project-its-own-senv.md
 also works with `all`: the global part simply runs twice, which is
 harmless.
 
-## 📋 Steps
+`wtp` opens that layout in one command. The Terminal profiles further down
+are the manual equivalent, still useful when Terminal itself has to start
+the tabs at login.
+
+## 📋 Steps with `wtp`
 
 1. Regenerate the launcher once, so it knows the two arguments, from the
    senv repository folder:
@@ -28,7 +32,66 @@ harmless.
    s
    ```
 
-2. In Windows Terminal, open Settings, then "Open JSON file", and add one
+2. Write the list of tabs. `wtp.list.example`, installed next to `wtp.bat`,
+   is the pattern to copy:
+
+   ```cmd
+   copy %HOME%\bin\wtp.list.example %HOME%\bin\wtp.list
+   ```
+
+   Then edit `%HOME%\bin\wtp.list`: one project folder per line, in tab
+   order.
+
+   ```text
+   --- main
+
+   C:\Users\me\git\myproject
+   C:\Users\me\git\myproject
+   C:\Users\me\git\myproject|myproject
+
+   --- side
+
+   C:\Users\me\git\otherproject|otherproject
+   ```
+
+   | Line | Meaning |
+   | --- | --- |
+   | `<folder>` | one tab on that folder, title left to whatever runs in it |
+   | `<folder>\|<title>` | the same tab, with its title pinned |
+   | `--- <name>` | close the window gathered so far, open a new one called `<name>` |
+   | `# ...` or blank | ignored |
+
+   The same folder can be listed several times, once per tab wanted on it.
+   A line with no title lets a tool that names its own tab keep control of
+   it.
+
+3. Check what would open, then open it:
+
+   ```cmd
+   wtp dry
+   wtp
+   ```
+
+Running `wtp` a second time opens nothing. Each tab is started as
+`cmd.exe /k wtp.tab.bat <slot>`, so `wtp` reads the command line of every
+live `cmd.exe` and skips the slots that answer. Close one tab by hand and
+the next `wtp` brings it back, in the window its block names. `wtp force`
+reopens everything regardless.
+
+Two optional pieces, absent until you add them:
+
+- `WTP_PROFILE` names the Windows Terminal profile the tabs open with;
+  without it they use the profile of the current window.
+- a `startup.bat` next to `wtp.bat` gets a tab of its own in the current
+  window, for whatever has to run once per session. `wtp nostartup` skips
+  that tab, `wtp notabs` opens only it.
+
+Without a `wtp.list`, `wtp` says what the file is for, points at the
+example, and exits 0.
+
+## 📋 Steps with Terminal profiles only
+
+1. In Windows Terminal, open Settings, then "Open JSON file", and add one
    profile per project:
 
    ```json
@@ -44,7 +107,7 @@ harmless.
    }
    ```
 
-3. Open the tabs together, either way:
+2. Open the tabs together, either way:
 
    - in the same JSON, make Terminal start with both tabs:
 
@@ -68,20 +131,33 @@ Terminal still shows no senv at all.
 ## If tabs opened together fail
 
 Tabs launched at the same time run their `switch*` commands concurrently.
-Deployments older than the introduction of `SENV_UID` shared one set of
-transient files between terminals, and one tab could delete a version list
-another tab was still reading. The failing tab then shows, in sequence:
+Those commands work through transient files kept apart by `SENV_UID`, the
+PID of the terminal holding the tab. Where that id ends up shared between
+tabs, one tab deletes a version list another tab is still reading, and the
+tab that lost the race shows, in sequence:
 
 ```txt
-Impossible de trouver ...\switchver_list.tmp
+FINDSTR: Cannot open ...\switchver_<id>_list.tmp
  WARN  : [switchver.bat] Your ... version argument '...' was NOT found ...
  FATAL 3 : [switchver.bat] No ... version selected ...
 ```
 
-even though the version is installed. If this appears,
-[update senv](update-senv-and-diagnose-version-drift.md) so each terminal
-gets its own files, then reopen the tabs. To recover a single failed tab
-without reopening it, run `%USERPROFILE%\senv.bat all` in that tab.
+even though the version is installed. Two things put tabs on the same id,
+and both are fixed in `bin\senv.bat`. The id was kept whenever the variable
+was already set, and an environment variable is inherited, so every tab
+opened from an activated terminal carried the id of that terminal: a batch
+of tabs opened by one command all shared it. The lookup that computed the
+id was wrong too, returning the PID of the throwaway `cmd.exe` that
+`for /f` spawns to run its command rather than the PID of the terminal.
+
+If this appears, [update senv](update-senv-and-diagnose-version-drift.md)
+so every terminal computes its own id, then reopen the tabs. To recover a
+single failed tab without reopening it, run `%USERPROFILE%\senv.bat all` in
+that tab.
+
+A version named on the command line, such as the one a project pins for
+itself, no longer depends on that list at all: `switchver` takes it as soon
+as its folder is there, without listing anything.
 
 Related: [give a project its own senv](../tutorials/03-give-a-project-its-own-senv.md),
 [commands](../reference/commands.md).

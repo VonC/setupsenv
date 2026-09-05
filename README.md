@@ -88,7 +88,8 @@ example, runs `switchjdk 17` and `switchnode 20`: opening a session in that
 project gives the exact tool versions the project needs, found at their
 conventional `%PRGS%` locations. `senv all` runs the global activation
 first and the project one on top, handy for a Windows Terminal tab per
-project
+project. `wtp` opens that whole layout in one command, from a list of
+project folders
 ([how-to](wiki/how-to/open-project-tabs-in-windows-terminal.md)).
 
 ## 🚀 Quick start

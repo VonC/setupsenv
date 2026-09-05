@@ -96,3 +96,26 @@ junction creation as a warning and clears the junction name, which
 `switchjdk` exits 2 on a non-numeric version argument, 4-5 on a PATH
 filtering failure; `switchmvn` exits 2 when the argument is not `x.y.z`;
 `switchwf` exits 2 when version or JDK argument is missing.
+
+Code 3 is only reachable for a call that names no version, or names one
+that is not installed: a version whose folder exists is taken before the
+listing runs.
+
+## `wtp.bat`
+
+| Code | Condition |
+| --- | --- |
+| 51 | unknown argument |
+| 52 | `notabs` and `nostartup` together, which leaves nothing to open |
+| 53 | no `wt.exe` found |
+| 54 | `%USERPROFILE%\senv.bat` missing (run `s` once) |
+| 55-56 | the path of `wtp.tab.bat` or `wtp.startup.bat` holds a space |
+| 57 | `startup.bat` is there but `wtp.startup.bat` is not |
+| 58 | Windows Terminal refused the startup tab |
+| 60 | `wtp.list` exists but names no usable folder |
+| 61 | Windows Terminal refused a project window |
+| 62-63 | the open tabs could not be read; `wtp force` opens them blind |
+| 64 | `wtp.tab.bat` missing next to `wtp.bat` |
+
+A missing `wtp.list` is not an error: `wtp` says what the file is for,
+points at `wtp.list.example`, and exits 0.
