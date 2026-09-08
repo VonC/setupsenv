@@ -10,10 +10,9 @@ call %senv_dir%\batcolors\echos_macros.bat
 set "SWITCHPY_CHOICE=No venv"
 call %script_dir%\switchpy.bat 3.12.7
 
+rem switchpy.bat clears script_dir and senv_dir in the environment of its caller:
+rem restore script_dir, used below. The batcolors macros survive the call.
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
-for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
-call %senv_dir%\batcolors\echos_macros.bat
 
 if exist "%script_dir%\git-filter-repo.py" (
   if not defined GIT_FILTER_REPO_CHECK_UPDATE (
