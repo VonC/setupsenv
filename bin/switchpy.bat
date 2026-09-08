@@ -21,9 +21,14 @@ popd
 
 endlocal & set "PYTHON_HOME=%PYTHON_HOME%" & set "PYTHON_VERSION=%PYTHON_VERSION%" & set "PATH=%newPath%"
 
-rem experiment with calling batcolors export and unset
+rem The macros set before the endlocal above are gone: re-export them for the rest
+rem of the script, which runs in the caller environment. Only the script which
+rem exports them may unset them: if the caller already had them, the final unset
+rem would wipe its macros (and DEBUG_ECHOS, ECHOS_STACK, ECHOS_PRE_FILE, ...).
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
+set "switchpy_owns_macros="
+if not defined _ok set "switchpy_owns_macros=1"
 call %senv_dir%\batcolors\echos_macros.bat export
 
 rem echo PYTHON_HOME='%PYTHON_HOME%'
@@ -295,7 +300,8 @@ set "requirements_found="
 exit /b %dependency_sync_status%
 
 :unset
-call "%senv_dir%\batcolors\echos_macros.bat" unset
+if defined switchpy_owns_macros call "%senv_dir%\batcolors\echos_macros.bat" unset
+set "switchpy_owns_macros="
 rem cleanup private variables while keeping the documented public Python state.
 set "senv_dir="
 set "script_dir="
