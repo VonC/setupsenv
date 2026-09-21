@@ -119,3 +119,31 @@ listing runs.
 
 A missing `wtp.list` is not an error: `wtp` says what the file is for,
 points at `wtp.list.example`, and exits 0.
+
+## `aiup.bat`
+
+| Code | Condition |
+| --- | --- |
+| 41 | unknown argument |
+| 42 | `ensure_internet.bat` missing next to `aiup.bat` |
+| 43 | no Internet access |
+| 44 | the Codex installer could not be downloaded |
+| 45 | the Codex installer failed |
+| 46 | the Claude installer could not be downloaded |
+| 47 | the Claude installer failed |
+
+A failed Codex update does not stop the Claude one: `aiup` exits with the
+code of the last failure.
+
+## `ghclear.bat`
+
+| Code | Condition |
+| --- | --- |
+| 41 | unknown argument |
+| 42 | no `gh.exe` found |
+| 43 | `gh` is not logged in |
+| 44 | the notification inbox could not be read |
+| 45 | the inbox could not be marked read |
+| 46 | some threads could not be marked done, or new unread ones arrived |
+
+Nothing to clear, a `dry` run and a cancelled question all exit 0.

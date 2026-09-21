@@ -218,6 +218,35 @@ Archives are searched in order: `%PRGS%\setup`, `%USERPROFILE%\Downloads`,
 `dwl` then `inst_prg` in one step. `<version>` defaults to `latest`.
 Exits 111 when the download fails, 112 when the install fails.
 
+### `aiup [codex] [claude] [force] [dry]`
+
+```text
+aiup
+aiup codex
+aiup claude force
+aiup dry
+```
+
+Checks Internet access with `ensure_internet.bat`, then updates the Codex
+and Claude CLIs with their official PowerShell installers
+(`https://chatgpt.com/codex/install.ps1`, `https://claude.ai/install.ps1`).
+The Codex installer runs with `CODEX_NON_INTERACTIVE=1`, so it asks nothing
+and does not start Codex once done.
+
+| Argument | Behavior |
+| --- | --- |
+| none | update both CLIs |
+| `codex`, `claude` | update only that CLI |
+| `force` | update a CLI even when one of its processes is running |
+| `dry` | print the download and installer commands, change nothing |
+
+A CLI with a running process is skipped unless `force` is given, which
+means a plain `aiup claude` run from inside a Claude session skips Claude.
+When `HTTPS_PROXY` is set, both installers run with it as the PowerShell
+default web proxy: `Invoke-WebRequest` ignores `HTTPS_PROXY`, and without
+it the Codex installer cannot reach `releases.openai.com` and falls back to
+the GitHub API, which allows 60 unauthenticated calls per hour per address.
+
 ## 🔀 Version switching
 
 All `switch*` commands act on the current session `PATH` only. They are
@@ -307,6 +336,26 @@ profile. Without a list and without `-`, does nothing. `--dry-run` prints
 the report without writing. `setup.bat` runs it automatically at the end
 of each install or update when either list applies to the active profile.
 Details: [git configuration](git-configuration.md).
+
+### `ghclear [all] [yes] [read] [dry]`
+
+Clears the GitHub notification inbox through `gh api`, using
+`%PRGS%\ghs\gh-cli\bin\gh.exe` first and a `gh.exe` on `PATH` otherwise. The
+`gh` login needs the `notifications` or the `repo` scope.
+
+| Argument | Behavior |
+| --- | --- |
+| none | list the unread threads, ask, then mark them done |
+| `all` | the same over every thread the API lists, read ones included |
+| `yes` | skip the question |
+| `read` | only mark the whole inbox read; the threads stay in the inbox |
+| `dry` | report what would be done, change nothing |
+
+GitHub has no bulk "done" endpoint: each thread takes one `DELETE`, paced
+under the API rate budget, while `read` is a single `PUT`. Done cannot be
+undone; a thread comes back only with new activity, so `ghclear dry` shows
+what would go first. The run ends by checking each `DELETE` succeeded and
+that nothing unread is left.
 
 ## 🩺 Diagnostics
 
