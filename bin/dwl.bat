@@ -749,6 +749,20 @@ del "%script_dir%\dwl_yed.tmp"
 goto:eof
 
 :dwl_eclipse
+rem 'dwl eclipse 2026-03' pins a quarterly release (IDE plugins such as
+rem IBM WebSphere Developer Tools are certified against a given release),
+rem 'dwl eclipse' takes the latest one from the packages page.
+if "%version%"=="latest" ( goto:dwl_eclipse_latest )
+set "version=%version:-R=%"
+set "version=%version: R=%"
+echo.%version%| findstr /R /C:"^20[0-9][0-9]-[0-9][0-9]$" >nul
+if errorlevel 1 (
+  %_fatal% "Eclipse version must be a quarterly release 'YYYY-MM' (ex: 2026-03), not '%version%'" 1
+)
+set "version=%version% R"
+%_ok% "Eclipse IDE for Enterprise Java and Web Developers version '%version%'"
+goto:dwl_eclipse_file
+:dwl_eclipse_latest
 set "cmd=curl -skL https://www.eclipse.org/downloads/packages/"
 %cmd% > "%script_dir%\dwl_eclipse.tmp"
 if errorlevel 1 (
@@ -756,9 +770,11 @@ if errorlevel 1 (
   %_fatal% "Cannot get latest version from www.eclipse.org/downloads/packages for Eclipse IDE for Enterprise Java and Web Developers with cmd '%cmd%'" 1
 )
 for /f "tokens=3 delims=><" %%a in ('findstr /R /C:"Eclipse IDE .* Packages"  "%script_dir%\dwl_eclipse.tmp"') do ( set "version=%%a" )
+del "%script_dir%\dwl_eclipse.tmp"
 set "version=%version:*Eclipse IDE =%"
 set "version=%version: Packages=%"
 %_ok% "Latest Eclipse IDE for Enterprise Java and Web Developers version '%version%'"
+:dwl_eclipse_file
 set "file=eclipse-jee-%version: =-%-win32-x86_64.zip"
 rem https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip&mirror_id=1321
 rem https://eclipse.mirror.wearetriple.com//technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip
@@ -766,7 +782,6 @@ set "url=https://eclipse.mirror.wearetriple.com/technology/epp/downloads/release
 rem          https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip
 rem set "url=https://www.eclipse.org/downloads/download.php?file=/technology/epp/downloads/release/2024-09/R/eclipse-jee-2024-09-R-win32-x86_64.zip"
 call :curl
-del "%script_dir%\dwl_eclipse.tmp"
 goto:eof
 
 :dwl_terminal
