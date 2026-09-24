@@ -183,7 +183,7 @@ Downloads the portable archive of a program into `%PRGS%\setup`.
 | Argument | Meaning |
 | --- | --- |
 | `<program>` | a name or alias from [prgs.list](prgs-list-format.md); with no argument, an interactive `gum` picker opens |
-| `<version>` | exact version, major/cycle (`21`, `3.13`), `lts` or `latest` (default `latest`) |
+| `<version>` | exact version, major/cycle (`21`, `3.13`), Eclipse quarterly release (`2026-03`), `lts` or `latest` (default `latest`) |
 
 The download is skipped when the target file already exists in
 `%PRGS%\setup`. Requires internet access (checked by

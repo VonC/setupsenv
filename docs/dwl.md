@@ -185,6 +185,7 @@ Examples:
 - `dwl python 3.13` resolves the latest Python `3.13.x`.
 - `dwl wildfly 35` resolves the latest matching WildFly release.
 - `dwl jdk 21` resolves the latest JDK 21 build.
+- `dwl eclipse 2026-03` pins that Eclipse quarterly release (`YYYY-MM`) instead of the latest one, for plugins certified against a given release, such as IBM WebSphere Developer Tools.
 
 Implement this before setting `file` and `url`.
 
