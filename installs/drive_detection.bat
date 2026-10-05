@@ -133,9 +133,9 @@ for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESSNAME%" /NH ^| find
 rem Spawn new process(es)
 %PREFIX% %PROCESSNAME% %SUFFIX%
 
-rem Wait for a second (may be optional)
-REM choice /c x /d x /t 1 > nul
-C:\Windows\System32\timeout.exe /t 5 > NUL
+rem Wait five seconds with ping: timeout.exe needs a console and aborts with
+rem "Input redirection is not supported" in a non-interactive shell
+ping -n 6 127.0.0.1 > NUL
 
 rem Check and find processes missing in the old pid list
 for /f "TOKENS=2" %%a in ('tasklist /FI "IMAGENAME eq %PROCESSNAME%" /NH ^| findstr /I "%PROCESSNAME%"') do (
