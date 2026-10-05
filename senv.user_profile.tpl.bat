@@ -6,7 +6,7 @@ if /I "%~1"=="global" (
 )
 if /I "%~1"=="all" (
   call _HOME_\bin\senv.bat
-  if /I not "%CD%"=="_HOME_" if exist "%CD%\senv.bat" if /I not "%~f0"=="%CD%\senv.bat" (
+  if /I not "%CD%"=="_HOME_" if /I not "%CD%"=="%HOMEDRIVE%\" if exist "%CD%\senv.bat" if /I not "%~f0"=="%CD%\senv.bat" (
     call "%CD%\senv.bat"
   )
   goto :eof
@@ -16,6 +16,10 @@ if not exist "%CD%\senv.bat" (
   goto :eof
 )
 if /I "%CD%"=="_HOME_" (
+  call _HOME_\bin\senv.bat
+  goto :eof
+)
+if /I "%CD%"=="%HOMEDRIVE%\" (
   call _HOME_\bin\senv.bat
   goto :eof
 )
