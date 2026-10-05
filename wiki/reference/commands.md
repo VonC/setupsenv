@@ -22,7 +22,10 @@ senv all
 
 Doskey alias for `call "%USERPROFILE%\senv.bat" $*`. That generated
 launcher calls a `senv.bat` present in the current directory if there is
-one (project-specific senv), otherwise `%HOME%\bin\senv.bat`.
+one (project-specific senv), otherwise `%HOME%\bin\senv.bat`. The
+`senv.bat` files that `setup.bat` writes in `%HOME%` and at the root of
+`%HOMEDRIVE%` only call the launcher back, so the launcher ignores them
+and runs the global activation from these two folders.
 
 | Argument | Behavior |
 | --- | --- |
