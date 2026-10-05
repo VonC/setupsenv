@@ -62,6 +62,16 @@ detection is needed. The same removal is why `wildfly.bat` reads process
 command lines through a PowerShell `Get-CimInstance` query rather than
 `wmic`.
 
+## A note on the five-second wait
+
+The wait between spawning the Explorer and killing it used `timeout.exe`,
+which needs a console. Launched from a non-interactive shell, such as an
+agent or a scheduled `adm\build_all.bat`, it stopped at once with
+`la redirection de l'entrée n'est pas prise en charge`; the final `dir`
+then ran before the drive woke up, and the `FATAL 118` aborted the whole
+build. The wait is now `ping -n 6 127.0.0.1`, which takes the same five
+seconds with or without a console.
+
 Related: [distribution model](distribution-model.md) for what the shares
 carry, [naming conventions](../reference/naming-conventions.md#generated-and-transient-files)
 for the transient `driverLetter.bat`.
