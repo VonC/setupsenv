@@ -1,0 +1,5 @@
+{
+  "privateKey": "%HOME%\\.ssh\\github_signing_this_station",
+  "gitBin": "%PRGS%\\gits\\current\\usr\\bin",
+  "lifetimeSeconds": 3600
+}
