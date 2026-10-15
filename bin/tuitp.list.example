@@ -1,0 +1,27 @@
+# Window names become tuitp-<name>. Default before the first --- is dev.
+# Ordinary wtp-compatible folder rows open CMD with global + local senv.
+--- dev
+%USERPROFILE%\git\project-a|Ordinary project tab
+
+# A TUIOS tab attaches to the FIRST session; use TUIOS's session switcher
+# for the other sessions. Project sessions have Claude/Codex/CMD workspaces.
+=== Projects
++ %USERPROFILE%\git\project-a|project-a
++ %USERPROFILE%\git\project-b|project-b
+
+=== Test
++ %USERPROFILE%\git\test|test|single
+
+# One pane: local senv.bat if present, otherwise global; then the chosen tool.
+# + %USERPROFILE%\git\test|test-claude|claude
+# + %USERPROFILE%\git\test|test-codex|codex
+# + %USERPROFILE%\git\test|test-shell|senv
+# 'single' is the backward-compatible spelling of 'senv'.
+
+--- experiments
+=== OSC-7501-Demo
++ %USERPROFILE%\git\tests\so\osc7501-demo|osc7501-demo|single
+
+# Move an === block under another --- line to move its tab, retaining
+# the TUIOS sessions. Removing a session entirely terminates its processes.
+# Only previously managed sessions are removed; unrelated sessions survive.

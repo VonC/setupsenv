@@ -24,3 +24,6 @@ wildfly*.log
 
 mods_i*
 bin/wtp.list
+bin/tuitp.list
+bin/tuitp.legacy.json
+__pycache__/
