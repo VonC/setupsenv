@@ -94,6 +94,20 @@ starts VSCode if it is not already running.
 Re-activates the session from `%PRGS%\senv\bin\senv.bat` (the repository
 copy, "local" developer mode) instead of `%HOME%\bin`.
 
+### `tuitp [dry] [--list <path>]`
+
+Reconciles `tuitp.list` beside the launcher with named Windows Terminal
+windows, ordinary CMD tabs, and persistent TUIOS session groups. Keeps
+existing sessions running, adds missing entries, and closes/deletes removed
+managed entries. Moving a TUIOS tab between windows preserves its sessions.
+`dry` reports the plan without changes. An alternate list replaces the
+desired layout using the same per-user state. Removing a managed session
+from the list terminates its processes on the next applied run.
+
+Requires Python 3.10+, Windows Terminal, and TUIOS. List syntax, migration,
+startup behavior, and recovery:
+[manage TUIOS terminal layouts](../how-to/manage-tuios-terminal-layouts.md).
+
 ### `fsenv`
 
 Re-activates the session with `no_local_senv=true`: forces the deployed
@@ -315,6 +329,16 @@ Finds the profile setups folder from the `cdis` alias, refreshes the mapped
 drive, and re-runs `s.bat` there.
 
 ## Git
+
+### `sshagent [load|status]`
+
+Starts or reuses a user SSH agent and loads the private key configured in
+`%LOCALAPPDATA%\senv\ssh-agent.local.json`, prompting locally for its
+passphrase if needed. Exports the agent environment into the calling CMD;
+use `call` from another batch script. An already loaded key is reused.
+`status` only checks the agent and key. No service or administrator rights
+are required. Setup, expiry and alternate config paths:
+[use an SSH agent](../how-to/use-ssh-agent.md).
 
 ### `gcu`
 

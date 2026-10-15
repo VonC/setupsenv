@@ -23,6 +23,10 @@ harmless.
 are the manual equivalent, still useful when Terminal itself has to start
 the tabs at login.
 
+For persistent Claude/Codex/CMD sessions, multiple named windows, and a
+list that also removes and moves tabs, use
+[tuitp's declarative TUIOS layouts](manage-tuios-terminal-layouts.md).
+
 ## 📋 Steps with `wtp`
 
 1. Regenerate the launcher once, so it knows the two arguments, from the

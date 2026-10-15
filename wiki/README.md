@@ -38,6 +38,8 @@ Recipes for a precise goal, for readers who already know the basics.
 - 🏷️ [Work behind a corporate proxy](how-to/work-behind-a-corporate-proxy.md)
 - 🧰 [Manage Python virtual environments](how-to/manage-python-virtual-environments.md)
 - 🖥️ [Open project tabs in Windows Terminal](how-to/open-project-tabs-in-windows-terminal.md)
+- 🖥️ [Manage TUIOS sessions and Terminal layouts](how-to/manage-tuios-terminal-layouts.md)
+- 🔑 [Load an SSH signing key without administrator rights](how-to/use-ssh-agent.md)
 - 📦 [Update senv and diagnose version drift](how-to/update-senv-and-diagnose-version-drift.md)
 - 📦 [Sanitize the history before publishing](how-to/sanitize-history-before-publishing.md)
 - ⚡ [Copy cached Teams chats to the clipboard](how-to/copy-cached-teams-chats.md)
