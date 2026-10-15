@@ -282,7 +282,17 @@ if errorlevel 1 (
     %_fatal% "Unable to access HOMEBIN '%HOMEBIN%'" 111
 )
 %_info% "   [copy senv_dir\bin '%bin_dir%\*' in HOMEBIN '%HOMEBIN%']"
-copy /Y "%bin_dir%\*" . > NUL:
+rem Preserve machine-local tuitp declarations and captured legacy ownership.
+for %%F in ("%bin_dir%\*") do (
+    if /I not "%%~nxF"=="tuitp.list" if /I not "%%~nxF"=="tuitp.legacy.json" (
+        copy /Y "%%F" "%HOMEBIN%" > NUL:
+        if errorlevel 1 exit /b 231
+    )
+)
+if not exist "%HOMEBIN%\tuitp.list" if exist "%bin_dir%\tuitp.list" (
+    copy /Y "%bin_dir%\tuitp.list" "%HOMEBIN%\tuitp.list" > NUL:
+    if errorlevel 1 exit /b 231
+)
 %_info% "   [Copy senv.doskey in '%HOMEBIN%']"
 copy /Y "%bin_dir%\senv.doskey" . > NUL: 
 %_info% "   [Delete s.bat in '%HOMEBIN%']"

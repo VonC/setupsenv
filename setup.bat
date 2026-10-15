@@ -113,9 +113,30 @@ if not exist "%HOME%\bin" (
 )
 
 %_task% "Must copy script_dir\bin '%script_dir%\bin\' to HOME\bin '%HOME%\bin'"
-copy "%script_dir%\bin\*" "%HOME%\bin" 1>NUL:
-if errorlevel 1 (
-    %_fatal% "Unable to copy '%script_dir%\bin\*' to '%HOME%\bin'" 231
+rem Capture the old hard-coded tuitp layout before replacing its scripts.
+if exist "%HOME%\bin\tuitp.bat" (
+    findstr /L /C:"call :tab" "%HOME%\bin\tuitp.bat" >nul
+    if not errorlevel 1 (
+        python.exe "%script_dir%\bin\tuitp_install.py" --target "%HOME%\bin"
+        if errorlevel 1 (
+            %_fatal% "Unable to migrate tuitp. Activate Python and retry." 231
+            exit /b 231
+        )
+    )
+)
+rem The declarative layout and legacy ownership belong to this machine.
+for %%F in ("%script_dir%\bin\*") do (
+    if /I not "%%~nxF"=="tuitp.list" if /I not "%%~nxF"=="tuitp.legacy.json" (
+        copy "%%F" "%HOME%\bin" 1>NUL:
+        if errorlevel 1 (
+            %_fatal% "Unable to copy '%%F' to '%HOME%\bin'" 231
+            exit /b 231
+        )
+    )
+)
+if not exist "%HOME%\bin\tuitp.list" if exist "%script_dir%\bin\tuitp.list" (
+    copy "%script_dir%\bin\tuitp.list" "%HOME%\bin\tuitp.list" 1>NUL:
+    if errorlevel 1 exit /b 231
 )
 %_ok% "script_dir\bin '%script_dir%\bin\' COPIED to HOME\bin '%HOME%\bin'"
 %_task% "Must copy script_dir\custom\ custom-files '%script_dir%\custom\' to HOME\bin '%HOME%\bin'"
