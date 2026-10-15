@@ -1,0 +1,516 @@
+"""Behavioral tests: no real WT windows, agents or TUIOS sessions are launched."""
+from __future__ import annotations
+
+import copy
+from dataclasses import asdict
+import json
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
+import tempfile
+import threading
+import unittest
+from unittest.mock import Mock, patch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "bin"))
+import tuitp
+import tuitp_host
+from tuitp_install import FILES, install, legacy_layout
+from tuitp_model import Tab, key, new_state, read_list, reconcile_plan
+from tuitp_windows import Windows, alive, identity, run, write_json
+
+
+class FakeWindows:
+    def __init__(self):
+        self.scripts = Path(r"C:\Tools with spaces\bin")
+        self.cmd = Path(r"C:\Windows\System32\cmd.exe")
+        self.events, self.hosts = [], set()
+        self.live = {}
+        self.fail = None
+        self.lock = threading.Lock()
+
+    def tab_alive(self, record):
+        return record.get("token") in self.hosts
+
+    def open_tab(self, record):
+        self.events.append(("open", record["spec"]["window"], record["spec"]["title"]))
+        self.hosts.add(record["token"])
+
+    def close_tab(self, record):
+        self.events.append(("close", record["spec"]["window"], record["spec"]["title"]))
+        self.hosts.discard(record["token"])
+
+    def release_tab(self, record):
+        self.events.append(("release", record["spec"]["title"]))
+
+    def verify_tabs(self, records):
+        self.events.append(("verify",))
+
+    def ensure_daemon(self):
+        self.events.append(("daemon",))
+
+    def fail_tabs(self, records, message):
+        self.events.append(("error", message))
+
+    def command(self, *args):
+        with self.lock:
+            self.events.append(args)
+            if self.fail and self.fail(args):
+                raise RuntimeError("simulated native command failure")
+            if args[0] == "new":
+                if args[1] in self.live:
+                    raise AssertionError("duplicate session creation")
+                self.live[args[1]] = {"name": args[1], "saved": False}
+            if args[0] == "kill-session":
+                del self.live[args[1]]
+        return ""
+
+
+class ReconciliationTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix="tuitp-test-")
+        self.addCleanup(self.temp.cleanup)
+        self.folder = Path(self.temp.name)
+        self.project = self.folder / "project with spaces"
+        self.project.mkdir()
+        self.path = self.folder / "tuitp.list"
+        self.runtime, self.state = FakeWindows(), new_state()
+        self.saved = None
+
+    def layout(self, text):
+        self.path.write_text(text.replace("FOLDER", str(self.project)), encoding="utf-8")
+        return read_list(self.path)
+
+    def apply(self, text, dry=False):
+        layout = self.layout(text)
+        def save(state):
+            self.saved = copy.deepcopy(state)
+        tuitp.apply_layout(layout, self.state, copy.deepcopy(self.runtime.live), self.runtime, save, dry)
+        return layout
+
+    def events(self, name):
+        return [e for e in self.runtime.events if e[0] == name]
+
+    def test_mixed_list_and_environment_expansion(self):
+        with patch.dict(os.environ, {"TUITP_TEST_PATH": str(self.project)}):
+            layout = self.layout("# comment\n--- work\n%TUITP_TEST_PATH%|Shell\n=== Projects\n+ FOLDER|one\n+ FOLDER|two|single\n--- side\nFOLDER\n")
+        self.assertEqual([t.kind for t in layout.tabs], ["cmd", "tuios", "cmd"])
+        self.assertEqual(layout.tabs[1].sessions, ["one", "two"])
+        self.assertEqual(layout.sessions["two"].kind, "single")
+        self.assertEqual(layout.tabs[2].window, "side")
+
+    def test_invalid_lists_fail_before_mutation(self):
+        cases = ["+ FOLDER|one", "=== Empty", "=== A\n+ FOLDER|same\n=== B\n+ FOLDER|same",
+                 "=== A\n+ FOLDER|bad name", "=== A\n+ FOLDER|one|invalid",
+                 "--- bad window\nFOLDER", "=== A\n+ %TUITP_UNDEFINED%|one",
+                 "=== A\n+ FOLDER|one\n=== A\n+ FOLDER|two", "FOLDER|a|b", "FOLDER&whoami"]
+        for text in cases:
+            with self.subTest(text=text), self.assertRaises(ValueError):
+                self.apply(text)
+        self.assertFalse(self.runtime.events)
+
+    def test_cold_phases_and_three_workspaces(self):
+        self.apply("=== Projects\n+ FOLDER|one\n+ FOLDER|two|single")
+        names = [e[0] for e in self.runtime.events]
+        self.assertLess(names.index("open"), names.index("new"))
+        self.assertLess(max(i for i, n in enumerate(names) if n == "new"), names.index("set-window"))
+        self.assertLess(max(i for i, n in enumerate(names) if n == "new-window"), names.index("send-text"))
+        self.assertEqual(len(self.events("new-window")), 2)
+        self.assertEqual(len(self.events("send-text")), 4)
+        self.assertTrue(all(s["status"] == "ready" for s in self.saved["sessions"].values()))
+        for event in self.events("send-text"):
+            self.assertEqual(len(event), 6)
+            self.assertIn('"', event[-1])
+            self.assertIn("project with spaces", event[-1])
+
+    def test_repeat_has_no_session_or_tab_mutations(self):
+        text = "=== Projects\n+ FOLDER|one"
+        self.apply(text)
+        self.runtime.events.clear()
+        self.apply(text)
+        self.assertFalse(self.events("new") + self.events("open") + self.events("close") + self.events("send-text"))
+
+    def test_one_pane_kinds_initialize_only_the_selected_role_and_remain_idempotent(self):
+        for kind, role in (("claude", "Claude"), ("codex", "Codex"), ("senv", "CMD"), ("single", "CMD")):
+            with self.subTest(kind=kind):
+                self.runtime, self.state = FakeWindows(), new_state()
+                text = f"=== Test\n+ FOLDER|test|{kind}"
+                self.apply(text)
+                self.assertEqual(self.events("set-window"), [("set-window", "-s", "test", "-w", "0", "--name", role)])
+                self.assertFalse(self.events("new-window"))
+                startup = self.events("send-text")
+                self.assertEqual(len(startup), 1)
+                self.assertEqual(startup[0][4], role)
+                self.assertTrue(startup[0][-1].endswith(f" {role.lower()} local-or-global"))
+                self.runtime.events.clear()
+                self.apply(text)
+                self.assertFalse(self.events("new") + self.events("open") + self.events("send-text"))
+
+    def test_single_and_senv_spellings_reuse_the_same_session(self):
+        self.apply("=== Test\n+ FOLDER|test|single")
+        self.runtime.events.clear()
+        self.apply("=== Test\n+ FOLDER|test|senv")
+        self.assertFalse(self.events("new") + self.events("open") + self.events("send-text"))
+
+    def test_existing_single_session_is_not_replaced_by_claude_implicitly(self):
+        self.apply("=== Test\n+ FOLDER|test|single")
+        self.runtime.events.clear()
+        with self.assertRaisesRegex(ValueError, "different folder/layout"):
+            self.apply("=== Test\n+ FOLDER|test|claude")
+        self.assertFalse(self.runtime.events)
+
+    def test_add_session_does_not_recreate_existing_tab(self):
+        self.apply("=== Projects\n+ FOLDER|one")
+        self.runtime.events.clear()
+        self.apply("=== Projects\n+ FOLDER|one\n+ FOLDER|two")
+        self.assertEqual([e[1] for e in self.events("new")], ["two"])
+        self.assertFalse(self.events("open") + self.events("close"))
+
+    def test_move_opens_destination_then_closes_source_and_preserves_sessions(self):
+        self.apply("--- first\n=== Projects\n+ FOLDER|one\n+ FOLDER|two")
+        self.runtime.events.clear()
+        self.apply("--- second\n=== Projects\n+ FOLDER|one\n+ FOLDER|two")
+        self.assertEqual(self.events("open"), [("open", "second", "Projects")])
+        self.assertEqual(self.events("close"), [("close", "first", "Projects")])
+        self.assertLess(self.runtime.events.index(self.events("open")[0]), self.runtime.events.index(self.events("close")[0]))
+        self.assertFalse(self.events("new") + self.events("kill-session") + self.events("send-text"))
+        self.assertEqual(len(self.state["tabs"]), 1)
+
+    def test_move_one_session_between_groups_keeps_unaffected_tab(self):
+        self.apply("--- first\n=== A\n+ FOLDER|one\n+ FOLDER|two\n--- second\n=== B\n+ FOLDER|three")
+        self.runtime.events.clear()
+        self.apply("--- first\n=== A\n+ FOLDER|one\n--- second\n=== B\n+ FOLDER|three\n+ FOLDER|two")
+        self.assertFalse(self.events("new") + self.events("kill-session") + self.events("open") + self.events("close"))
+
+    def test_removed_sessions_deleted_only_after_tab_closed(self):
+        self.runtime.live["unrelated"] = {"name": "unrelated"}
+        self.apply("=== A\n+ FOLDER|one\n=== B\n+ FOLDER|two|single")
+        self.runtime.events.clear()
+        self.apply("=== A\n+ FOLDER|one")
+        self.assertEqual(self.events("kill-session"), [("kill-session", "two")])
+        self.assertIn("unrelated", self.runtime.live)
+        self.assertLess(self.runtime.events.index(self.events("close")[0]), self.runtime.events.index(self.events("kill-session")[0]))
+
+    def test_empty_valid_list_removes_only_owned_entries(self):
+        self.runtime.live["unrelated"] = {"name": "unrelated"}
+        self.apply("=== A\n+ FOLDER|one")
+        self.apply("# deliberately empty\n")
+        self.assertEqual(self.state, new_state())
+        self.assertEqual(list(self.runtime.live), ["unrelated"])
+
+    def test_failed_setup_preserves_obsolete_tabs_and_blocks_replay(self):
+        self.apply("=== Old\n+ FOLDER|old")
+        self.runtime.events.clear()
+        self.runtime.fail = lambda a: a[0] == "send-keys"
+        with self.assertRaises(RuntimeError):
+            self.apply("=== New\n+ FOLDER|new")
+        self.assertFalse(self.events("close") + self.events("kill-session"))
+        self.assertEqual(self.saved["sessions"]["new"]["status"], "initializing")
+        self.runtime.events.clear()
+        with self.assertRaisesRegex(ValueError, "incomplete"):
+            self.apply("=== New\n+ FOLDER|new")
+        self.assertFalse(self.runtime.events)
+
+    def test_adopt_saved_session_without_initializing_or_duplicate_panes(self):
+        self.runtime.live["saved"] = {"name": "saved", "saved": True}
+        self.apply("=== Restored\n+ FOLDER|saved")
+        self.assertFalse(self.events("new") + self.events("new-window") + self.events("send-text"))
+        self.assertEqual(self.state["sessions"]["saved"]["status"], "ready")
+
+    def test_manually_closed_tab_reopens_without_reinitializing_session(self):
+        self.apply("=== A\n+ FOLDER|one")
+        self.runtime.hosts.clear()
+        self.runtime.events.clear()
+        self.apply("=== A\n+ FOLDER|one")
+        self.assertEqual(len(self.events("open")), 1)
+        self.assertFalse(self.events("new") + self.events("send-text"))
+
+    def test_dry_run_changes_nothing(self):
+        self.apply("=== A\n+ FOLDER|one")
+        before = copy.deepcopy(self.state)
+        self.runtime.events.clear()
+        self.apply("--- moved\n=== B\n+ FOLDER|two", dry=True)
+        self.assertEqual(self.state, before)
+        self.assertFalse(self.runtime.events)
+
+    def test_changed_running_session_layout_is_not_silently_reset(self):
+        self.apply("=== A\n+ FOLDER|one")
+        with self.assertRaisesRegex(ValueError, "different folder/layout"):
+            self.apply("=== A\n+ FOLDER|one|single")
+
+    def test_rename_or_first_session_change_rebinds_tab_without_killing_retained(self):
+        self.apply("=== A\n+ FOLDER|one\n+ FOLDER|two")
+        self.runtime.events.clear()
+        self.apply("=== A\n+ FOLDER|two\n+ FOLDER|one")
+        self.assertEqual(len(self.events("close")), 1)
+        self.assertEqual(len(self.events("open")), 1)
+        self.assertFalse(self.events("kill-session") + self.events("new"))
+
+    def test_failed_move_retains_old_attachment_and_retry_closes_it(self):
+        self.apply("--- first\n=== A\n+ FOLDER|one")
+        moved = "--- second\n=== A\n+ FOLDER|one"
+        with patch.object(self.runtime, "verify_tabs", side_effect=RuntimeError("attach failed")):
+            with self.assertRaisesRegex(RuntimeError, "attach failed"):
+                self.apply(moved)
+        self.assertEqual(len(self.state["tabs"]), 2)
+        self.assertFalse(self.events("close") + self.events("kill-session"))
+        self.apply(moved)
+        self.assertEqual(len(self.state["tabs"]), 1)
+        self.assertEqual(self.events("close"), [("close", "first", "A")])
+        self.assertFalse(self.events("kill-session"))
+
+    def test_rebind_failure_keeps_archived_old_tab_until_retry(self):
+        self.apply("=== A\n+ FOLDER|one\n+ FOLDER|two")
+        reordered = "=== A\n+ FOLDER|two\n+ FOLDER|one"
+        with patch.object(self.runtime, "verify_tabs", side_effect=RuntimeError("attach failed")):
+            with self.assertRaises(RuntimeError):
+                self.apply(reordered)
+        self.assertEqual(len(self.state["tabs"]), 2)
+        self.apply(reordered)
+        self.assertEqual(len(self.state["tabs"]), 1)
+        self.assertEqual(len(self.events("close")), 1)
+
+    def test_plain_tabs_are_idempotent_and_removed_without_tuios_deletion(self):
+        self.apply("--- first\nFOLDER|Shell")
+        self.runtime.events.clear()
+        self.apply("--- first\nFOLDER|Shell")
+        self.assertFalse(self.events("open") + self.events("close") + self.events("daemon"))
+        self.apply("--- second\nFOLDER|Shell")
+        self.assertEqual(len(self.events("open")), 1)
+        self.assertEqual(len(self.events("close")), 1)
+        self.assertFalse(self.events("new") + self.events("kill-session"))
+
+
+@unittest.skipUnless(os.name == "nt", "Windows native boundary checks")
+class WindowsTests(unittest.TestCase):
+    def test_wt_first_window_waits_for_registration_not_gui_exit(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-wt-") as temp:
+            runtime = Windows(ROOT / "bin", Path(temp))
+            tab = Tab("side", "Projects", "tuios", sessions=["one"])
+            record = {"spec": asdict(tab), "token": "a" * 32}
+            launcher = Mock()
+            launcher.poll.return_value = None  # First WT process stays alive.
+            with patch("tuitp_windows.subprocess.Popen", return_value=launcher) as popen, \
+                    patch.object(runtime, "wait_host", return_value=True) as handshake:
+                runtime.open_tab(record)
+            launcher.wait.assert_not_called()
+            launcher.communicate.assert_not_called()
+            launcher.kill.assert_not_called()
+            handshake.assert_called_once_with(record)
+            self.assertIn("tuitp-side", popen.call_args.args[0])
+
+    def test_setup_copy_block_migrates_legacy_and_preserves_local_list(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-setup-") as temp:
+            base = Path(temp)
+            source, target = base / "source" / "bin", base / "target" / "bin"
+            source.mkdir(parents=True)
+            target.mkdir(parents=True)
+            for name in FILES:
+                shutil.copy2(ROOT / "bin" / name, source / name)
+            (source / "tuitp.list").write_text("# source must not replace the local list\n")
+            (source / "tuitp.legacy.json").write_text('{"must_not_copy":true}')
+            (source / "ordinary.bat").write_text("@echo ordinary\n")
+            (target / "tuitp.bat").write_text('@echo off\ncall :tab Projects one\nstart "" wt -w tuitp-dev new-tab\n')
+            (target / "tuitp.setup.bat").write_text(f'call :ensure one "{temp}" project\n')
+            (target / "tuitp.list").write_text("# retained local list\n")
+            setup = (ROOT / "setup.bat").read_text()
+            block = setup[setup.index("rem Capture the old hard-coded tuitp layout"):]
+            block = block[:block.index('%_ok% "script_dir')]
+            # Execute the actual install block, with HOME references redirected
+            # to a test-only variable. Never overwrite the user's environment.
+            block = block.replace("%HOME%", "%TUITP_TEST_TARGET%")
+            batch = base / "copy-test.bat"
+            batch.write_text("@echo off\n" + block)
+            env = dict(os.environ, TUITP_TEST_TARGET=str(target.parent), script_dir=str(source.parent),
+                       PATH=str(Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
+            result = subprocess.run(f'cmd.exe /d /c call "{batch}"', env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual((target / "tuitp.list").read_text(), "# retained local list\n")
+            self.assertIn("one", json.loads((target / "tuitp.legacy.json").read_text())["sessions"])
+            self.assertEqual((target / "ordinary.bat").read_text(), "@echo ordinary\n")
+            self.assertIn("tuitp.py", (target / "tuitp.bat").read_text())
+
+            # Git's post-install refresh follows setup and must preserve the
+            # installed list and migration data through its second bin copy.
+            post = (ROOT / "installs" / "gits.post.bat").read_text()
+            block = post[post.index("rem Preserve machine-local tuitp declarations"):]
+            block = block[:block.index('%_info% "   [Copy senv.doskey')]
+            block = block.replace("%HOMEBIN%", "%TUITP_TEST_TARGET_BIN%")
+            batch.write_text("@echo off\n" + block)
+            env.update(TUITP_TEST_TARGET_BIN=str(target), bin_dir=str(source))
+            (target / "ordinary.bat").write_text("@echo outdated\n")
+            result = subprocess.run(f'cmd.exe /d /c call "{batch}"', env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual((target / "tuitp.list").read_text(), "# retained local list\n")
+            self.assertIn("one", json.loads((target / "tuitp.legacy.json").read_text())["sessions"])
+            self.assertEqual((target / "ordinary.bat").read_text(), "@echo ordinary\n")
+            (target / "tuitp.list").unlink()
+            result = subprocess.run(f'cmd.exe /d /c call "{batch}"', env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual((target / "tuitp.list").read_text(), (source / "tuitp.list").read_text())
+
+    def test_pane_cmd_quoting_activation_path_and_error_propagation(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-cmd-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            profile.mkdir()
+            project.mkdir()
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            (profile / "senv.bat").write_text('@echo off\nset "TUITP_GLOBAL=global-%1"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            (project / "senv.bat").write_text('@echo off\nset "TUITP_LOCAL=project"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            (local_bin / "codex.bat").write_text('@echo off\necho CODEX-STARTED\nexit /b 0\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" codex && set TUITP_ && cd && path'
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base)}):
+                result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                self.assertIn("CODEX-STARTED", result.stdout)
+                self.assertIn("TUITP_GLOBAL=global-global", result.stdout)
+                self.assertIn("TUITP_LOCAL=project", result.stdout)
+                self.assertIn(str(project), result.stdout)
+                self.assertIn(str(base / "tuioss" / "current"), result.stdout)
+                self.assertIn(str(profile / ".codex" / "packages" / "standalone" / "current" / "bin"), result.stdout)
+                (profile / "senv.bat").write_text('@echo off\nexit /b 7\n')
+                result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                self.assertEqual(result.returncode, 7)
+                self.assertNotIn("CODEX-STARTED", result.stdout)
+
+    def test_one_pane_startup_prefers_local_senv_and_falls_back_to_global(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-env-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            profile.mkdir()
+            project.mkdir()
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            for role in ("claude", "codex"):
+                (local_bin / f"{role}.bat").write_text(f'@echo off\necho {role.upper()}-STARTED-%TUITP_TEST_ACTIVE%\nexit /b 0\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base)}):
+                for has_local in (False, True):
+                    source = "LOCAL" if has_local else "GLOBAL"
+                    global_script = profile / "senv.bat"
+                    global_script.write_text('@echo off\necho PREP-GLOBAL\nset "TUITP_TEST_ACTIVE=GLOBAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+                    local_script = project / "senv.bat"
+                    if has_local:
+                        local_script.write_text('@echo off\necho PREP-LOCAL\nset "TUITP_TEST_ACTIVE=LOCAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+                    for role in ("claude", "codex", "cmd"):
+                        with self.subTest(local=has_local, role=role):
+                            command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} local-or-global && set TUITP_TEST_ACTIVE'
+                            result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                            self.assertIn(f"TUITP_TEST_ACTIVE={source}", result.stdout)
+                            self.assertIn("PREP-" + source, result.stdout)
+                            self.assertNotIn("PREP-" + ("GLOBAL" if has_local else "LOCAL"), result.stdout)
+                            for agent in ("claude", "codex"):
+                                marker = agent.upper() + "-STARTED-" + source
+                                if role == agent:
+                                    self.assertIn(marker, result.stdout)
+                                    self.assertLess(result.stdout.index("PREP-" + source), result.stdout.index(marker))
+                                else:
+                                    self.assertNotIn(agent.upper() + "-STARTED", result.stdout)
+                    failing_script = local_script if has_local else global_script
+                    failing_script.write_text('@echo off\nexit /b 7\n')
+                    for role in ("claude", "codex", "cmd"):
+                        command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} local-or-global'
+                        result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                        self.assertEqual(result.returncode, 7)
+                        self.assertNotIn("-STARTED", result.stdout)
+
+    def test_legacy_adoption_matches_exact_launcher_and_closes_only_attachment(self):
+        runtime = Windows(Path(r"C:\Tools with spaces"), ROOT / "unused")
+        tab = asdict(Tab("dev", "Projects", "tuios", sessions=["one"], slot=key("dev|tuios|Projects")))
+        helper = runtime.scripts / "tuitp.tab.bat"
+        rows = [
+            {"Name": "cmd.exe", "ProcessId": 11, "ParentProcessId": 1,
+             "CommandLine": f'cmd.exe /k "{helper}" "one"'},
+            {"Name": "tuios.exe", "ProcessId": 12, "ParentProcessId": 11,
+             "CommandLine": '"C:\\Tools\\tuios.exe" attach "one"'},
+            {"Name": "cmd.exe", "ProcessId": 13, "ParentProcessId": 1,
+             "CommandLine": f'cmd.exe /k echo "{helper}" "one"'},
+            {"Name": "tuios.exe", "ProcessId": 14, "ParentProcessId": 11,
+             "CommandLine": '"C:\\Tools\\tuios.exe" daemon'},
+        ]
+        with patch("tuitp_windows.run", return_value=subprocess.CompletedProcess([], 0, json.dumps(rows))), \
+                patch("tuitp_windows.identity", side_effect=lambda pid: {"pid": pid, "created": 123}):
+            records = runtime.legacy_tabs({"tabs": [tab]})
+        self.assertEqual(len(records), 1)
+        record = next(iter(records.values()))
+        with patch("tuitp_windows.terminate_exact") as terminate:
+            runtime.close_tab(record)
+        self.assertEqual([c.args[0]["pid"] for c in terminate.call_args_list], [12, 11])
+
+    def test_host_detaches_client_without_terminating_session_or_daemon(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-host-") as temp:
+            manifest = Path(temp) / "host.json"
+            write_json(manifest, {"tab": {"kind": "tuios", "title": "A", "sessions": ["one"]}, "tuios": "tuios.exe"})
+            manifest.with_suffix(".ready").touch()
+            child = Mock(pid=123)
+            child.poll.return_value = None
+            child.terminate.side_effect = lambda: setattr(child.poll, "return_value", 0)
+            def start(argv):
+                self.assertEqual(argv, ["tuios.exe", "attach", "one"])
+                manifest.with_suffix(".stop").touch()
+                return child
+            with patch("tuitp_host.identity", return_value={"pid": 1, "created": 2}), \
+                    patch("tuitp_host.subprocess.Popen", side_effect=start), patch("tuitp_host.run") as native:
+                self.assertEqual(tuitp_host.host(manifest), 0)
+            child.terminate.assert_called_once()
+            native.assert_not_called()
+
+    def test_failed_host_records_error_and_exits_successfully_to_close_wt_tab(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-host-error-") as temp:
+            manifest = Path(temp) / "host.json"
+            with patch("tuitp_host.host", side_effect=OSError("attach failed")):
+                self.assertEqual(tuitp_host.main(manifest), 0)
+            self.assertEqual(manifest.with_suffix(".error").read_text(), "attach failed")
+
+    def test_native_argument_quoting_preserves_one_send_text_argument(self):
+        payload = 'call "C:\\Tools with spaces\\tuitp.pane.bat" "C:\\Project (one)" claude'
+        args = ["send-text", "-s", "project", "-w", "Claude", payload, "C:\\trailing space\\", ""]
+        result = run([sys.executable, "-c", "import json,sys; print(json.dumps(sys.argv[1:]))", *args])
+        self.assertEqual(json.loads(result.stdout), args)
+
+    def test_identity_rejects_reused_pid_timestamp(self):
+        current = identity(os.getpid())
+        self.assertTrue(alive(current))
+        self.assertFalse(alive({**current, "created": current["created"] - 1}))
+
+    def test_snapshot_accepts_saved_exit_one_but_rejects_malformed_and_failed_live(self):
+        runtime = Windows(ROOT / "bin", ROOT / "unused")
+        for result, accepted in [(subprocess.CompletedProcess([], 1, '[{"name":"one","saved":true}]', ''), True),
+                                 (subprocess.CompletedProcess([], 1, '[{"name":"one","saved":false}]', ''), False),
+                                 (subprocess.CompletedProcess([], 1, 'not JSON', 'failure'), False)]:
+            with patch("tuitp_windows.run", return_value=result):
+                if accepted:
+                    self.assertIn("one", runtime.snapshot())
+                else:
+                    with self.assertRaises(RuntimeError):
+                        runtime.snapshot()
+
+    def test_install_preserves_list_backs_up_scripts_and_captures_legacy_layout(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-install-") as temp:
+            target = Path(temp) / "destination with spaces"
+            target.mkdir()
+            (target / "tuitp.bat").write_text('@echo off\ncall :tab Projects one\ncall :tab Test two\nstart "" wt -w tuitp-dev new-tab\n')
+            (target / "tuitp.setup.bat").write_text(f'call :ensure one "{temp}" project\ncall :ensure two "{temp}" single\n')
+            (target / "tuitp.list").write_text("# retain my list\n")
+            install(ROOT / "bin", target)
+            self.assertEqual((target / "tuitp.list").read_text(), "# retain my list\n")
+            self.assertTrue(all((target / name).exists() for name in FILES))
+            migration = json.loads((target / "tuitp.legacy.json").read_text())
+            self.assertEqual(list(migration["sessions"]), ["one", "two"])
+            self.assertEqual(migration["tabs"][0]["title"], "Projects")
+            self.assertEqual(len(list((target / "tuitp-backups").iterdir())), 1)
+            install(ROOT / "bin", target)
+            self.assertEqual(json.loads((target / "tuitp.legacy.json").read_text()), migration)
+
+
+if __name__ == "__main__":
+    unittest.main()
