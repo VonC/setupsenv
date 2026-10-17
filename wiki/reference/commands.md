@@ -133,7 +133,9 @@ existing sessions running, adds missing entries, and closes/deletes removed
 managed entries. Moving a TUIOS tab between windows preserves its sessions.
 `dry` reports the plan without changes. An alternate list replaces the
 desired layout using the same per-user state. Removing a managed session
-from the list terminates its processes on the next applied run.
+from the list terminates its processes on the next applied run. With
+`TUITP_TIMING` defined, it prints the duration of each native command and
+each wait, then a summary by command.
 
 Requires Python 3.10+, Windows Terminal, and TUIOS. List syntax, migration,
 startup behavior, and recovery:

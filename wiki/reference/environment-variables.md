@@ -65,5 +65,6 @@ in which they are applied.
 | `no_local_senv`, `local_senv` | `senv.bat` | force or skip the "local" (repository) activation mode |
 | `internalsenvcall` | `senv.bat` | quiet activation, used by wrapper scripts |
 | `SENV_TIMING` | `senv.bat` | print the duration of each activation step, flagged `[slow]` from 0.5s and `[REALLY SLOW]` from 2s, and append the same lines to `%TEMP%\senv.timing.log` ([how-to](../how-to/find-why-senv-is-slow-to-start.md)) |
+| `TUITP_TIMING` | `tuitp` | print the duration of each native command (every `tuios` call) and each wait, then a summary by command ([how-to](../how-to/manage-tuios-terminal-layouts.md#find-what-makes-a-run-slow)) |
 | `senv_force_build` | `adm\build.bat` | rebuild even when the remote version matches |
 | `WTP_PROFILE` | `wtp` | Windows Terminal profile the tabs open with. `bin\senv.bat` sets it to `senv`, the profile `installs\terminals.post.ps1` creates on every install. Empty it and `wtp` passes no profile, so the tabs take the Windows Terminal default. Override it in `senv.custom.bat` for a team, or `senv.local.bat` for one machine: both are read after `senv.bat` |

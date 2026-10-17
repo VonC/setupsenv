@@ -171,5 +171,40 @@ then WT's default. The profile must use `closeOnExit: "automatic"`,
 `"never"` deliberately retains ended tabs and prevents automatic removal.
 Run the launcher and its WT windows at the same elevation.
 
+## Find what makes a run slow
+
+Set `TUITP_TIMING` before running the launcher:
+
+```cmd
+set TUITP_TIMING=1
+tuitp
+```
+
+Each native command (every `tuios` call, and the PowerShell process scan of
+a migration) and each wait prints its duration as it ends. The waits cover
+a tab until its host registers, the daemon until it answers, and the tabs
+until `tuios attach` runs in each:
+
+```text
+[tuitp timing]   0.72s tuios ls --json
+[tuitp timing]   0.92s open tab Projects, until its host registers
+[tuitp timing]   2.61s daemon ready, including its 'ls' polls
+[tuitp timing]   2.08s 3 tabs attached ('tuios attach' started in each)
+```
+
+A summary ends the run: the total, then for each command its number of
+calls, total, average and slowest time, then each wait. Session workers run
+up to four commands in parallel, so command times can add up to more than
+the total. `tuitp dry` prints the same lines for its session query. Clear
+the variable with `set TUITP_TIMING=` afterwards.
+
+Every `tuios` call starts a new `tuios.exe`. When most of the time goes to
+`tuios` calls that each take seconds, endpoint protection is the usual
+cause: it can hold an unsigned executable at start while it checks its
+reputation online. On one workstation, the first `tuios` start after a pause
+took 8 to 12s, and the next ones under a second while the daemon kept
+running. A slow first call followed by fast ones points there, not at TUIOS;
+see [find why senv is slow to start](find-why-senv-is-slow-to-start.md#act-on-the-slow-step).
+
 Related: [ordinary project tabs with wtp](open-project-tabs-in-windows-terminal.md),
 [command reference](../reference/commands.md).
