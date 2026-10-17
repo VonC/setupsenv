@@ -1,6 +1,8 @@
 @echo off
 
 if "%script_dir%"=="" ( echo.>>"%~dp0standalone_%~nx0.flag")
+rem Before setlocal, so that the console keeps SENV_UID: see senv_uid.bat.
+if not defined SENV_UID call "%~dp0senv_uid.bat"
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
@@ -8,7 +10,7 @@ for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 set "echos_standalone=%~dp0standalone_%~nx0.flag"
 
-rem Temp files must be unique per terminal (SENV_UID set by senv.bat): a shared name
+rem Temp files must be unique per terminal (SENV_UID set by senv_uid.bat): a shared name
 rem lets one tab delete the list while another tab is still reading it.
 if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 set "svtmp=%TEMP%\switchver_%SENV_UID%"

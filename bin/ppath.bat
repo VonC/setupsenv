@@ -1,11 +1,13 @@
 @echo off
+rem Before setlocal, so that the console keeps SENV_UID: see senv_uid.bat.
+if not defined SENV_UID call "%~dp0senv_uid.bat"
 setlocal enabledelayedexpansion
 
 for %%i in ("%~dp0.") do SET "script_dir=%%~fi"
 for %%i in ("%script_dir%\..") do ( set "senv_dir=%%~fi" )
 call %senv_dir%\batcolors\echos_macros.bat
 
-rem Temp file unique per terminal (SENV_UID set by senv.bat): a shared name in the
+rem Temp file unique per terminal (SENV_UID set by senv_uid.bat): a shared name in the
 rem senv bin directory collides across concurrent tabs.
 if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 set "ppath_tmp=%TEMP%\ppath_%SENV_UID%.tmp"

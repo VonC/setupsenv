@@ -1,5 +1,7 @@
 @echo off
 set "PYTHON_HOME="
+rem Before setlocal, so that the console keeps SENV_UID: see senv_uid.bat.
+if not defined SENV_UID call "%~dp0senv_uid.bat"
 setlocal enabledelayedexpansion
 rem goto:clean_path
 
@@ -43,7 +45,7 @@ for /f "tokens=1,2 delims=." %%a in ("%PYTHON_VERSION%") do (
 )
 set "ccd=%CD%"
 for %%j in ("%cd%") do ( set "project_name=%%~nxj" )
-rem Temp file unique per terminal (SENV_UID set by senv.bat) and outside the project
+rem Temp file unique per terminal (SENV_UID set by senv_uid.bat) and outside the project
 rem directory: a fixed name in %ccd% collides across concurrent tabs on the same project.
 if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 set "switchpy_tmp=%TEMP%\switchpy_%SENV_UID%.tmp"

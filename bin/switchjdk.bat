@@ -1,5 +1,7 @@
 @echo off
 set "JAVA_HOME="
+rem Before setlocal, so that the console keeps SENV_UID: see senv_uid.bat.
+if not defined SENV_UID call "%~dp0senv_uid.bat"
 setlocal enabledelayedexpansion
 rem goto:clean_path
 
@@ -32,7 +34,7 @@ set "jdk_bin_path=%PRGS%\javas\%SELECTED_VERSION%\bin"
 set "path_prefix=%PRGS%\javas"
 
 set "path_check_awk_file=%script_dir%\path_check.awk"
-rem Temp file unique per terminal (SENV_UID set by senv.bat) and outside the current
+rem Temp file unique per terminal (SENV_UID set by senv_uid.bat) and outside the current
 rem directory: a fixed name in the project dir collides across concurrent tabs.
 if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 set "path_temp=%TEMP%\switchjdk_path_%SENV_UID%.tmp"
