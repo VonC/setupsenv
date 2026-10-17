@@ -1,10 +1,19 @@
 @echo off
+rem senv_t_m: one "time=step" mark appended after each step, reported by senv_t_end.
+rem A mark is a single set line on purpose: here every call costs ~20ms and every
+rem append to a file ~30ms (the antivirus inspects each open of the file), so a
+rem mark that called a subroutine or wrote a log line would distort what it times.
+rem The total always shows in the final OK message. SENV_TIMING (set SENV_TIMING=1)
+rem also prints each step, flagging [slow] from 0.5s and [REALLY SLOW] from 2s, and
+rem appends the same lines to %TEMP%\senv.timing.log, where a tab opened among many
+rem others can be read afterwards: each line starts with the #start time of its run.
+set "senv_t_m=%TIME%=start"
 set "local_senv="
 for %%i in ("%~dp0.") do SET "script_dir_bin=%%~fi"
-where publish_profile.bat >NUL 2> NUL
-if not errorlevel 1 (
-   set "local_senv=(preserved local) "
-)
+rem Same lookup as 'where publish_profile.bat' (current folder, then PATH), but
+rem without starting where.exe, which took 0.13s.
+for %%i in (publish_profile.bat) do if exist "%%i" set "local_senv=(preserved local) "
+for %%i in (publish_profile.bat) do if not "%%~$PATH:i"=="" set "local_senv=(preserved local) "
 if exist "%script_dir_bin%\..\adm" (
    set "local_senv=(local) "
 )
@@ -12,25 +21,20 @@ if defined no_local_senv (
    set "no_local_senv=(reset) "
    set "local_senv="
 )
+set "senv_t_m=%senv_t_m%;%TIME%=detect local senv"
 for %%i in ("%script_dir_bin%\..\batcolors") do ( set "bc=%%~fi" )
 call %bc%\echos_macros.bat export
+set "senv_t_m=%senv_t_m%;%TIME%=batcolors macros"
 rem if errorlevel 1 (
 rem    echo Batcolors not available in '%bc%' && exit /b 1
 rem )
 set PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\
 
-rem SENV_UID: id unique per console, so that concurrent tabs never share the same
-rem switch* temp files. It is recomputed on every run and never taken from the
-rem environment: a console inherits SENV_UID from the console that opened it, so a
-rem batch of tabs opened at once all carried one id, and one tab deleted the temp
-rem file another one was still reading. %RANDOM% is no better on its own: tabs
-rem opened by one command start the same second and can draw identical values.
-rem The lookup climbs two levels: for /f runs its command through a throwaway
-rem cmd.exe of its own, so the parent of the powershell process is that helper and
-rem the grandparent is this console.
+rem SENV_UID: id unique per console for the switch* and ppath temp files. A console
+rem inherits it from the console that opened it, so it is cleared here, and
+rem senv_uid.bat looks the real one up the first time a script needs it: the lookup
+rem costs 1.5 to 2.5s, which made it 70% of every senv run. See senv_uid.bat.
 set "SENV_UID="
-for /f "usebackq delims=" %%p in (`powershell -NoProfile -Command "$h=(Get-CimInstance Win32_Process -Filter ('ProcessId=' + $PID)).ParentProcessId; (Get-CimInstance Win32_Process -Filter ('ProcessId=' + $h)).ParentProcessId"`) do set "SENV_UID=%%p"
-if not defined SENV_UID set "SENV_UID=%RANDOM%%RANDOM%"
 
 set "admPath="
 if defined local_senv (
@@ -55,6 +59,7 @@ call "%script_dir_bin%\senv.local.pre.bat"
 if "%PRGS%"=="" ( call:fatal "PRGS (installation folder) must be defined" 102 )
 if "%HOME%"=="" ( call:fatal "HOME must be defined" 103 )
 if "%PROG%"=="" ( call:fatal "PROG (data folder) must be defined" 104 )
+set "senv_t_m=%senv_t_m%;%TIME%=senv.local.pre.bat"
 
 set "GH=%PRGS%\gits\current"
 set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
@@ -68,14 +73,16 @@ set sz=%pz%\res\7z\7z.exe
 
 set "EDITOR=%PRGS%\vscodes\current\bin\code.cmd"
 set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession -noPlugin"
-doskey npp="%PRGS%\npps\current\notepad++.exe" $*
 
 set "DL=%USERPROFILE%\Downloads"
 set "DWL=%USERPROFILE%\Downloads"
 
+rem One doskey call either way: each one starts doskey.exe, ~0.1s.
 if exist "%PRGS%\npps\settings" (
    set "EDITOR="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" -multiInst -notabbar -nosession -noPlugin"
    doskey npp="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" $*
+) else (
+   doskey npp="%PRGS%\npps\current\notepad++.exe" $*
 )
 
 if exist "%PRGS%\gos\current" (
@@ -104,6 +111,7 @@ rem senv.local.bat, so either of them overrides the value, the way
 rem senv.custom.bat overrides the GOPROXY above: senv.custom.bat for a team
 rem that shares its profiles, senv.local.bat for a single machine.
 set "WTP_PROFILE=senv"
+set "senv_t_m=%senv_t_m%;%TIME%=base variables, npp alias, Go"
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 set "senv_dir=%script_dir_bin%"
@@ -124,6 +132,7 @@ endlocal & set "usernamel=%_STRING%"
 
 :setusernamel
 for /f "delims=" %%x in (%USERPROFILE%\usernamel) do set "usernamel=%%x"
+set "senv_t_m=%senv_t_m%;%TIME%=usernamel"
 
 rem A profile that ships a senv.custom.full.<profile>.bat sources it INSTEAD
 rem of the team-shared senv.custom.bat: the shared file keeps the same
@@ -138,15 +147,18 @@ if defined senv_profile_pre if exist "%HOME%\bin\senv.custom.full.%senv_profile_
    set "senv_custom=%HOME%\bin\senv.custom.full.%senv_profile_pre%.bat"
 )
 call "%senv_custom%"
+set "senv_t_m=%senv_t_m%;%TIME%=senv.custom.bat"
 set "senv_custom="
 set "senv_profile_pre="
 call %HOME%\bin\senv.local.bat
+set "senv_t_m=%senv_t_m%;%TIME%=senv.local.bat"
 
 if exist "%script_dir_bin%\profile" (
    if exist "%HOME%\bin\senv.custom.%senv_profile%.bat" (
       call %HOME%\bin\senv.custom.%senv_profile%.bat"
    )
 )
+set "senv_t_m=%senv_t_m%;%TIME%=senv.custom.profile.bat"
 
 if not defined local_senv (
    if exist "%PRGS%\senv\installs" ( set "admPath=%PRGS%\senv\installs;" )
@@ -160,14 +172,17 @@ DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
 if errorlevel 1 (
    %_warning% "Issue setting global (all) aliases from '%HOME%\bin\senv.doskey'"
 )
+set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
 if errorlevel 1 (
    %_warning% "Issue setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
 )
+set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.custom.doskey"
 DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
 if errorlevel 1 (
    %_warning% "Issue setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
 )
+set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.local.doskey"
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
 )
@@ -179,13 +194,17 @@ if exist "%script_dir_bin%\profile" (
       )
    )
 )
+set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.custom.profile.doskey"
 set "script_dir_bin="
+call:senv_t_end
 if "%internalsenvcall%"=="1" (
    set "bc="
    set "senv_dir="
+   set "senv_t_elapsed="
    goto:eof
 )
-%_ok% "%local_senv%%no_local_senv%senv activated: senv_dir='%senv_dir%'"
+%_ok% "%local_senv%%no_local_senv%senv activated in %senv_t_elapsed%: senv_dir='%senv_dir%'"
+set "senv_t_elapsed="
 set "senv_dir="
 set ASCII27=
 set "local_senv="
@@ -200,7 +219,66 @@ set "script_dir_bin="
 set "senv_dir="
 set ASCII27=
 set local_senv=
+call:senv_t_end
+set "senv_t_elapsed="
 %_fatal% "%~1" %~2
+goto:eof
+
+:senv_t_end
+rem Sets senv_t_elapsed to the time since the start mark, prints every step when
+rem SENV_TIMING is defined, and clears the other senv_t_* variables.
+set "senv_t_m=%senv_t_m%;%TIME%=end"
+set "senv_t_id="
+if defined SENV_TIMING (
+   for %%m in ("%senv_t_m:;=" "%") do call:senv_t_step "%%~m"
+) else (
+   for /f "delims==" %%a in ("%senv_t_m%") do call:senv_t_step "%%a=start"
+   call:senv_t_step "%TIME%=end"
+)
+call:senv_t_fmt %senv_t_total% senv_t_elapsed
+set "senv_t_elapsed=%senv_t_elapsed: =%"
+for %%v in (senv_t_m senv_t_id senv_t_start senv_t_last senv_t_now senv_t_step senv_t_total senv_t_label senv_t_step_s senv_t_total_s senv_t_flag senv_t_s senv_t_c senv_t_f) do set "%%v="
+goto:eof
+
+:senv_t_step
+rem %1: one "time=step" mark. The first one starts the clock; each next one is
+rem timed against the previous one and, with SENV_TIMING, printed and logged.
+for /f "tokens=1* delims==" %%a in ("%~1") do (
+   set "senv_t_now=%%a"
+   set "senv_t_label=%%b"
+)
+rem %TIME% reads h:mm:ss,cc or h:mm:ss.cc depending on the locale, with a space
+rem instead of a 0 before 10:00; 1xx-100 keeps 08 and 09 from reading as octal.
+set "senv_t_now=%senv_t_now: =0%"
+if not defined senv_t_id set "senv_t_id=%senv_t_now%"
+set /a "senv_t_now=(((1%senv_t_now:~0,2%-100)*60+(1%senv_t_now:~3,2%-100))*60+(1%senv_t_now:~6,2%-100))*100+(1%senv_t_now:~9,2%-100)"
+if defined senv_t_start goto:senv_t_next
+set "senv_t_start=%senv_t_now%"
+set "senv_t_last=%senv_t_now%"
+set "senv_t_total=0"
+if defined SENV_TIMING >>"%TEMP%\senv.timing.log" echo #%senv_t_id% ==== %DATE% senv.bat in %CD%
+goto:eof
+:senv_t_next
+set /a "senv_t_step=senv_t_now-senv_t_last, senv_t_total=senv_t_now-senv_t_start"
+set "senv_t_last=%senv_t_now%"
+rem A run that crosses midnight.
+if %senv_t_step% lss 0 set /a "senv_t_step+=8640000"
+if %senv_t_total% lss 0 set /a "senv_t_total+=8640000"
+if not defined SENV_TIMING goto:eof
+call:senv_t_fmt %senv_t_step% senv_t_step_s
+call:senv_t_fmt %senv_t_total% senv_t_total_s
+set "senv_t_flag="
+if %senv_t_step% geq 50 set "senv_t_flag=  [slow]"
+if %senv_t_step% geq 200 set "senv_t_flag=  [REALLY SLOW]"
+echo [senv timing] %senv_t_step_s% (total %senv_t_total_s%) %senv_t_label%%senv_t_flag%
+>>"%TEMP%\senv.timing.log" echo #%senv_t_id% %senv_t_step_s% (total %senv_t_total_s%) %senv_t_label%%senv_t_flag%
+goto:eof
+
+:senv_t_fmt
+rem %1 centiseconds, %2 variable receiving them as seconds, right-aligned: "  1.05s"
+set /a "senv_t_s=%~1/100, senv_t_c=%~1%%100+100"
+set "senv_t_f=      %senv_t_s%.%senv_t_c:~1%s"
+set "%~2=%senv_t_f:~-7%"
 goto:eof
 
 :call_echos_stack
