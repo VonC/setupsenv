@@ -27,9 +27,16 @@ The installer targets `%HOME%\bin`, backs up existing files in
 original hard-coded launcher, it captures the old layout before replacing
 scripts, then seeds the list from the repository's local list if present,
 or from the old layout otherwise. Without either, copy and edit
-`tuitp.list.example` first. `setup.bat` also captures the legacy layout before
-overwriting scripts and preserves the installed list. The Git post-install
-refresh also preserves this list and the captured legacy ownership. Run
+`tuitp.list.example` first.
+
+`setup.bat` needs no Python. When it finds the original launcher in
+`%HOME%\bin`, it keeps a copy in `%HOME%\bin\tuitp-legacy` before replacing
+the scripts, and it preserves the installed list. The next `tuitp` run
+captures the old layout from that copy into `tuitp.legacy.json`, and seeds
+`tuitp.list` from it when the list is missing. If that copy cannot be read,
+`tuitp` stops and names the folder; remove the folder to skip the migration.
+The Git post-install refresh also preserves this list and the captured legacy
+ownership. Run
 `s gits` to select the Git module and refresh the helpers in `%HOME%\bin`;
 the module selector is `gits`, not `git`.
 

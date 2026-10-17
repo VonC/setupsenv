@@ -16,6 +16,8 @@ from tuitp_windows import write_json
 FILES = ("tuitp.bat", "tuitp.setup.bat", "tuitp.tab.bat", "tuitp.pane.bat",
          "tuitp.py", "tuitp_model.py", "tuitp_windows.py", "tuitp_host.py",
          "tuitp_install.py", "tuitp.list.example")
+# setup.bat copies the old hard-coded launcher here before replacing it.
+LEGACY_DIR = "tuitp-legacy"
 
 
 def legacy_layout(target: Path):
@@ -47,6 +49,43 @@ def legacy_layout(target: Path):
     return {"tabs": tabs, "sessions": sessions}
 
 
+def legacy_list(migration) -> str:
+    lines = []
+    for tab in migration["tabs"]:
+        lines += ["--- " + tab["window"], "=== " + tab["title"]]
+        names = tab["sessions"]
+        # The old multi-project tab attached to its first project;
+        # the other project sessions lived in that same group.
+        if migration["sessions"][names[0]]["kind"] == "project":
+            names = [name for name, s in migration["sessions"].items() if s["kind"] == "project"]
+        for name in names:
+            session = migration["sessions"][name]
+            lines.append(f"+ {session['folder']}|{name}|{session['kind']}")
+        lines.append("")
+    return "\n".join(lines)
+
+
+def adopt_legacy(target: Path) -> bool:
+    """Capture the old launcher setup.bat kept aside, so setup needs no Python.
+
+    Return True when the layout is captured now; an existing capture is kept.
+    """
+    record = target / "tuitp.legacy.json"
+    if record.exists():
+        return False
+    try:
+        migration = legacy_layout(target / LEGACY_DIR)
+    except ValueError as error:
+        raise ValueError(f"{error}: {target / LEGACY_DIR} (remove that folder to skip the migration)") from error
+    if not migration:
+        return False
+    write_json(record, migration)
+    local_list = target / "tuitp.list"
+    if not local_list.exists():
+        local_list.write_text(legacy_list(migration), encoding="utf-8")
+    return True
+
+
 def install(source: Path, target: Path):
     source, target = source.resolve(), target.resolve()
     if source == target:
@@ -72,19 +111,7 @@ def install(source: Path, target: Path):
         if seed.is_file():
             shutil.copy2(seed, local_list)
         elif migration:
-            lines = []
-            for tab in migration["tabs"]:
-                lines += ["--- " + tab["window"], "=== " + tab["title"]]
-                names = tab["sessions"]
-                # The old multi-project tab attached to its first project;
-                # the other project sessions lived in that same group.
-                if migration["sessions"][names[0]]["kind"] == "project":
-                    names = [name for name, s in migration["sessions"].items() if s["kind"] == "project"]
-                for name in names:
-                    session = migration["sessions"][name]
-                    lines.append(f"+ {session['folder']}|{name}|{session['kind']}")
-                lines.append("")
-            local_list.write_text("\n".join(lines), encoding="utf-8")
+            local_list.write_text(legacy_list(migration), encoding="utf-8")
         else:
             print("Create tuitp.list from tuitp.list.example before launching.")
     print(f"Installed tuitp into {target}")

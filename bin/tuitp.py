@@ -11,6 +11,7 @@ import subprocess
 import time
 import uuid
 
+from tuitp_install import LEGACY_DIR, adopt_legacy
 from tuitp_model import describe, new_state, read_list, reconcile_plan
 from tuitp_windows import Windows, launcher_lock, read_json, write_json
 
@@ -164,6 +165,13 @@ def main(argv=None):
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
     scripts = Path(__file__).resolve().parent
+    try:
+        # Capture first: the old layout can seed a missing tuitp.list.
+        if adopt_legacy(scripts):
+            print(f"Captured the old tuitp layout kept in {scripts / LEGACY_DIR}.")
+    except (OSError, ValueError) as error:
+        print(f"tuitp: {error}", file=sys.stderr)
+        return 1
     list_path = (args.list or scripts / "tuitp.list").resolve()
     if not list_path.is_file():
         print(f"No list at {list_path}. Copy and edit {scripts / 'tuitp.list.example'}. Nothing changed.")

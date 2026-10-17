@@ -113,15 +113,22 @@ if not exist "%HOME%\bin" (
 )
 
 %_task% "Must copy script_dir\bin '%script_dir%\bin\' to HOME\bin '%HOME%\bin'"
-rem Capture the old hard-coded tuitp layout before replacing its scripts.
-if exist "%HOME%\bin\tuitp.bat" (
+rem Keep the old hard-coded tuitp launcher aside before the copy replaces it:
+rem tuitp captures its layout on its next run, so setup needs no Python.
+if exist "%HOME%\bin\tuitp.bat" if not exist "%HOME%\bin\tuitp-legacy\tuitp.bat" (
     findstr /L /C:"call :tab" "%HOME%\bin\tuitp.bat" >nul
     if not errorlevel 1 (
-        python.exe "%script_dir%\bin\tuitp_install.py" --target "%HOME%\bin"
-        if errorlevel 1 (
-            %_fatal% "Unable to migrate tuitp. Activate Python and retry." 231
-            exit /b 231
+        if not exist "%HOME%\bin\tuitp-legacy" mkdir "%HOME%\bin\tuitp-legacy"
+        for %%F in (tuitp.bat tuitp.setup.bat tuitp.tab.bat tuitp.pane.bat) do (
+            if exist "%HOME%\bin\%%F" (
+                copy /Y "%HOME%\bin\%%F" "%HOME%\bin\tuitp-legacy\%%F" 1>NUL:
+                if errorlevel 1 (
+                    %_fatal% "Unable to keep the old '%%F' in '%HOME%\bin\tuitp-legacy'" 231
+                    exit /b 231
+                )
+            )
         )
+        %_info% "Old tuitp launcher kept in '%HOME%\bin\tuitp-legacy': tuitp captures its layout on its next run"
     )
 )
 rem The declarative layout and legacy ownership belong to this machine.

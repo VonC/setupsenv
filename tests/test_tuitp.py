@@ -6,6 +6,7 @@ from dataclasses import asdict
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -18,7 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "bin"))
 import tuitp
 import tuitp_host
-from tuitp_install import FILES, install, legacy_layout
+from tuitp_install import FILES, LEGACY_DIR, adopt_legacy, install, legacy_layout
 from tuitp_model import Tab, key, new_state, read_list, reconcile_plan
 from tuitp_windows import Windows, alive, identity, run, write_json
 
@@ -302,7 +303,7 @@ class WindowsTests(unittest.TestCase):
             handshake.assert_called_once_with(record)
             self.assertIn("tuitp-side", popen.call_args.args[0])
 
-    def test_setup_copy_block_migrates_legacy_and_preserves_local_list(self):
+    def test_setup_copy_block_keeps_legacy_without_python_and_preserves_local_list(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-setup-") as temp:
             base = Path(temp)
             source, target = base / "source" / "bin", base / "target" / "bin"
@@ -317,21 +318,36 @@ class WindowsTests(unittest.TestCase):
             (target / "tuitp.setup.bat").write_text(f'call :ensure one "{temp}" project\n')
             (target / "tuitp.list").write_text("# retained local list\n")
             setup = (ROOT / "setup.bat").read_text()
-            block = setup[setup.index("rem Capture the old hard-coded tuitp layout"):]
+            block = setup[setup.index("rem Keep the old hard-coded tuitp launcher aside"):]
             block = block[:block.index('%_ok% "script_dir')]
+            self.assertNotRegex(block, r"(?im)^(?!\s*rem\b).*python")  # comments may name it
             # Execute the actual install block, with HOME references redirected
             # to a test-only variable. Never overwrite the user's environment.
             block = block.replace("%HOME%", "%TUITP_TEST_TARGET%")
             batch = base / "copy-test.bat"
             batch.write_text("@echo off\n" + block)
+            # Setup must work from a console without Python: only System32.
+            system32 = str(Path(os.environ["SystemRoot"]) / "System32")
             env = dict(os.environ, TUITP_TEST_TARGET=str(target.parent), script_dir=str(source.parent),
-                       PATH=str(Path(sys.executable).parent) + os.pathsep + os.environ["PATH"])
+                       PATH=system32, _info="echo", _fatal="echo")
             result = subprocess.run(f'cmd.exe /d /c call "{batch}"', env=env, capture_output=True, text=True, timeout=30)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual(result.stderr, "")
             self.assertEqual((target / "tuitp.list").read_text(), "# retained local list\n")
-            self.assertIn("one", json.loads((target / "tuitp.legacy.json").read_text())["sessions"])
+            self.assertFalse((target / "tuitp.legacy.json").exists())
+            self.assertIn("call :tab", (target / LEGACY_DIR / "tuitp.bat").read_text())
+            self.assertTrue((target / LEGACY_DIR / "tuitp.setup.bat").is_file())
             self.assertEqual((target / "ordinary.bat").read_text(), "@echo ordinary\n")
             self.assertIn("tuitp.py", (target / "tuitp.bat").read_text())
+            # tuitp captures the kept launcher on its next run, with Python.
+            self.assertTrue(adopt_legacy(target))
+            self.assertIn("one", json.loads((target / "tuitp.legacy.json").read_text())["sessions"])
+            self.assertFalse(adopt_legacy(target))
+            # A second setup finds the new launcher and keeps nothing more.
+            kept = (target / LEGACY_DIR / "tuitp.bat").read_text()
+            result = subprocess.run(f'cmd.exe /d /c call "{batch}"', env=env, capture_output=True, text=True, timeout=30)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertEqual((target / LEGACY_DIR / "tuitp.bat").read_text(), kept)
 
             # Git's post-install refresh follows setup and must preserve the
             # installed list and migration data through its second bin copy.
@@ -510,6 +526,24 @@ class WindowsTests(unittest.TestCase):
             self.assertEqual(len(list((target / "tuitp-backups").iterdir())), 1)
             install(ROOT / "bin", target)
             self.assertEqual(json.loads((target / "tuitp.legacy.json").read_text()), migration)
+
+    def test_adopt_legacy_seeds_missing_list_and_names_an_unreadable_launcher(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-adopt-") as temp:
+            target = Path(temp) / "bin with spaces"
+            legacy = target / LEGACY_DIR
+            legacy.mkdir(parents=True)
+            self.assertFalse(adopt_legacy(target))  # empty folder: nothing kept
+            (legacy / "tuitp.bat").write_text('@echo off\ncall :tab Projects one\ncall :tab Test two\nstart "" wt -w tuitp-dev new-tab\n')
+            (legacy / "tuitp.setup.bat").write_text(f'call :ensure one "{temp}" project\ncall :ensure two "{temp}" single\n')
+            self.assertTrue(adopt_legacy(target))
+            layout = read_list(target / "tuitp.list")
+            self.assertEqual(list(layout.sessions), ["one", "two"])
+            self.assertEqual([tab.title for tab in layout.tabs], ["Projects", "Test"])
+            (target / "tuitp.legacy.json").unlink()
+            (legacy / "tuitp.setup.bat").write_text("rem no sessions\n")
+            with self.assertRaisesRegex(ValueError, re.escape(str(legacy))):
+                adopt_legacy(target)
+            self.assertFalse((target / "tuitp.legacy.json").exists())
 
 
 if __name__ == "__main__":
