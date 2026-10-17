@@ -42,7 +42,38 @@ The activator:
 - sets locale, editor, 7-Zip and Go variables,
 - sources `senv.custom.bat`, `senv.local.bat`, `senv.custom.<profile>.bat`,
 - loads the four doskey macro files (see
-  [doskey aliases](doskey-aliases.md)).
+  [doskey aliases](doskey-aliases.md)),
+- ends with `senv activated in <seconds>s: senv_dir='...'`, the time the
+  activation took.
+
+#### Timing an activation
+
+With `SENV_TIMING` defined, `senv.bat` also prints one
+`[senv timing] <step> (total <total>) <label>` line per step, and appends
+the same lines to `%TEMP%\senv.timing.log` (see
+[the how-to](../how-to/find-why-senv-is-slow-to-start.md)). A step of
+0.5s or more is flagged `[slow]`, one of 2s or more `[REALLY SLOW]`.
+
+| Label | Time spent since the previous label |
+| --- | --- |
+| `detect local senv` | local-mode and `publish_profile.bat` detection |
+| `batcolors macros` | `batcolors\echos_macros.bat` |
+| `senv.local.pre.bat` | `PATH` reset, maintainer aliases (local mode), `senv.local.pre.bat`, `PRGS`/`HOME`/`PROG` checks |
+| `base variables, npp alias, Go` | Git on `PATH`, locale, editor, `npp` alias, Go, `WTP_PROFILE` |
+| `usernamel` | lowercase user name, cached in `%USERPROFILE%\usernamel` |
+| `senv.custom.bat` | team layer, or `senv.custom.full.<profile>.bat` |
+| `senv.local.bat` | personal layer |
+| `senv.custom.profile.bat` | `senv.custom.<profile>.bat` |
+| `doskey senv.doskey` | `installs` on `PATH`, global aliases |
+| `doskey senv.custom.doskey` | team aliases |
+| `doskey senv.local.doskey` | personal aliases |
+| `doskey senv.custom.profile.doskey` | profile aliases |
+| `end` | the last cleanup before the report |
+
+The log lines start with `#<time the run started>`, then the same text. A
+header line `#<id> ==== <date> senv.bat in <folder>` opens each run. The
+clock stops before the report and the final message, which are not
+counted.
 
 ### `getstarted.bat [<profile>] ["Full Name"] [<email>]`
 
@@ -269,7 +300,9 @@ the GitHub API, which allows 60 unauthenticated calls per hour per address.
 All `switch*` commands act on the current session `PATH` only. They are
 safe to run in several terminals at once: their transient files are
 suffixed with the per-session `SENV_UID`
-([environment variables](environment-variables.md)).
+([environment variables](environment-variables.md)). The first `switch*`
+or `ppath` command of a terminal looks that id up through `senv_uid.bat`,
+which takes 1 to 2s once; the next ones reuse it.
 
 ### `switchver <prgs_name> <prefix> <pattern> <exe> [<version>]`
 
@@ -333,8 +366,11 @@ drive, and re-runs `s.bat` there.
 ### `sshagent [load|status]`
 
 Starts or reuses a user SSH agent and loads the private key configured in
-`%LOCALAPPDATA%\senv\ssh-agent.local.json`, prompting locally for its
-passphrase if needed. Exports the agent environment into the calling CMD;
+`%LOCALAPPDATA%\senv\ssh-agent.local.json`. Its passphrase, if any, is
+read from the first line of `<privateKey>.passphrase` when that file
+exists, and prompted for locally otherwise. A passphrase file inside a Git
+working tree must be ignored there, or the command stops. Exports the
+agent environment into the calling CMD;
 use `call` from another batch script. An already loaded key is reused.
 `status` only checks the agent and key. No service or administrator rights
 are required. Setup, expiry and alternate config paths:

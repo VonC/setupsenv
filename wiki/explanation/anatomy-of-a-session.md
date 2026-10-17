@@ -75,8 +75,9 @@ aliases are added. A deployed user never sees this branch.
 **The PATH reset** follows: four bare Windows entries, nothing inherited.
 The reasons are covered in [why-a-minimal-path.md](why-a-minimal-path.md).
 
-**A session id, `SENV_UID`, is computed at every activation**: the PID of
-the terminal's own `cmd.exe`. Its only job is isolation. The `switch*`
+**A session id, `SENV_UID`, is cleared at every activation and looked up
+on first use**: the PID of the terminal's own `cmd.exe`. Its only job is
+isolation. The `switch*`
 commands work through small transient files (piping console programs
 directly can leave them suspended, so lists are written to disk and read
 back), and a fixed file name would be shared by every terminal: a second
@@ -86,15 +87,21 @@ exist. A PID is used rather than `%RANDOM%` because tabs launched by one
 command start within the same second and can draw identical random
 values.
 
-It is computed rather than read back, and that is the point of the word
-"every". An environment variable crosses process boundaries, so a terminal
-opened from an activated one inherits its `SENV_UID`, and a batch of tabs
-opened by a single command all carry the id of the terminal that opened
-them: the very collision the id exists to prevent. Reading it costs one
-`powershell` call per activation. That call climbs two process levels,
-because `for /f` runs its command through a throwaway `cmd.exe` of its
-own: the parent of the `powershell` process is that helper, whose PID is
-freed as soon as it returns, and the grandparent is the terminal.
+It is cleared rather than kept, because an environment variable crosses
+process boundaries: a terminal opened from an activated one inherits its
+`SENV_UID`, and a batch of tabs opened by a single command all carry the
+id of the terminal that opened them, the very collision the id exists to
+prevent.
+
+The lookup itself is left to `senv_uid.bat`, which the first `switch*` or
+`ppath` command of a terminal calls before its `setlocal`, so that the id
+stays in the terminal for the next commands. The lookup starts
+`powershell` and queries WMI twice, 1 to 2s. When the activation made it,
+it was most of every activation, paid in every tab whether or not that tab
+ever switched a version. It climbs two process levels, because `for /f`
+runs its command through a throwaway `cmd.exe` of its own: the parent of
+the `powershell` process is that helper, whose PID is freed as soon as it
+returns, and the grandparent is the terminal.
 
 **`senv.local.pre.bat` loads before anything else** because it answers the
 question every later line depends on: where are `PRGS`, `HOME` and `PROG`
@@ -116,9 +123,37 @@ scripts, and the **four doskey layers** load in the same order. Ordering is
 precedence; the details and the reasons are in
 [configuration-layers.md](configuration-layers.md).
 
-The end state prints one line, `senv activated`, and that is the whole
-visible footprint: no registry writes, no machine PATH edits, nothing that
-outlives the terminal window.
+The end state prints one line, `senv activated in 0.67s`, and that is the
+whole visible footprint: no registry writes, no machine PATH edits, nothing
+that outlives the terminal window.
+
+## What an activation costs
+
+An activation takes well under a second, and most of it goes to starting
+programs. A batch built-in such as `set`, `if` or a `for` over a list costs
+a millisecond or less. Starting a program costs about a tenth of a second
+for a small one such as `doskey.exe` or `where.exe`, and over a second for
+`powershell`. `senv.bat` therefore lets `cmd` do the work itself wherever it
+can: `%%~$PATH:i` searches the `PATH` in place of `where`, and the `npp`
+alias is defined by a single `doskey` call. The four alias layers remain
+four `doskey` starts, nearly half of the total, because
+`doskey /macrofile` reads one file per call.
+
+On a workstation where an antivirus or endpoint protection agent inspects
+every file opening, the cheap operations stop being cheap. On one such
+machine, each executed batch line cost about 2ms, each `call` about 20ms,
+and each append to a file about 30ms. A batch script then slows down in
+proportion to the lines it runs. That is why each timing mark in
+`senv.bat` is a single `set` line that adds `%TIME%` and a label to one
+variable, while the arithmetic, the printing and the log wait for the end:
+a mark that called a subroutine or wrote to a file would cost more than
+many of the steps it measures.
+
+The total is printed at every activation, not only when `SENV_TIMING`
+asks for the details, so that a slow start is noticed on the day it
+appears rather than after it has become normal.
+[find-why-senv-is-slow-to-start.md](../how-to/find-why-senv-is-slow-to-start.md)
+shows how to find the step responsible.
 
 ## 👉 Where to look next
 

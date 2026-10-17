@@ -128,6 +128,10 @@ install is the [first tutorial](wiki/tutorials/01-your-first-senv.md).
 - 🧰 **Add tools on demand**: `div node`, or `dwl jdk 21` then `inst jdk`,
   then `switchjdk`/`switchnode` inside a session
   ([tutorial](wiki/tutorials/02-install-and-use-a-tool-on-demand.md)).
+- ⏱️ **Slow start?** `senv activated in 0.67s` tells how long the
+  activation took; `set SENV_TIMING=1` before `senv` times each step and
+  flags the slow ones
+  ([how-to](wiki/how-to/find-why-senv-is-slow-to-start.md)).
 - 📦 **More profiles when you need them**: one per computer for yourself, or
   one per team you equip: each profile is an `install_<profile>.list` plus
   `senv.custom.<profile>.*` files in `custom\`, and can be distributed from

@@ -153,12 +153,14 @@ FINDSTR: Cannot open ...\switchver_<id>_list.tmp
 ```
 
 even though the version is installed. Two things put tabs on the same id,
-and both are fixed in `bin\senv.bat`. The id was kept whenever the variable
-was already set, and an environment variable is inherited, so every tab
-opened from an activated terminal carried the id of that terminal: a batch
-of tabs opened by one command all shared it. The lookup that computed the
-id was wrong too, returning the PID of the throwaway `cmd.exe` that
-`for /f` spawns to run its command rather than the PID of the terminal.
+and both are fixed. The id was kept whenever the variable was already set,
+and an environment variable is inherited, so every tab opened from an
+activated terminal carried the id of that terminal: a batch of tabs opened
+by one command all shared it. `bin\senv.bat` now clears it at every
+activation. The lookup that computed the id was wrong too, returning the
+PID of the throwaway `cmd.exe` that `for /f` spawns to run its command
+rather than the PID of the terminal. `bin\senv_uid.bat` now climbs to the
+terminal, the first time a `switch*` or `ppath` command needs the id.
 
 If this appears, [update senv](update-senv-and-diagnose-version-drift.md)
 so every terminal computes its own id, then reopen the tabs. To recover a

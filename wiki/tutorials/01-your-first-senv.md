@@ -103,11 +103,12 @@ senv
 You should see:
 
 ```text
-senv activated: senv_dir='...'
+senv activated in 0.67s: senv_dir='...'
 ```
 
 That single line means: PATH rebuilt from scratch, portable Git and all senv
-utilities available, variables set, aliases loaded, in this window only.
+utilities available, variables set, aliases loaded, in this window only. The
+time is how long that took; yours will differ.
 
 ## 6. Look around
 

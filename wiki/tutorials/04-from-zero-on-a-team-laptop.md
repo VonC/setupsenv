@@ -40,7 +40,7 @@ Open a **new** `CMD` window and type:
 senv
 ```
 
-You should see `senv activated: ...`. Everything the team defined is there:
+You should see `senv activated in ...`. Everything the team defined is there:
 
 ```cmd
 alias        &:: team aliases are loaded on top of the global ones

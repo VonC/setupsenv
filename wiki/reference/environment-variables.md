@@ -20,7 +20,7 @@ in which they are applied.
 | Variable | Value | Meaning |
 | --- | --- | --- |
 | `PATH` | rebuilt | minimal Windows folders, then `%HOME%\bin`, then the portable Git folders, then per-tool additions |
-| `SENV_UID` | PID of the terminal's `cmd.exe`, recomputed at every activation (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; never taken from the environment, or every tab opened from an activated terminal would carry that terminal's id |
+| `SENV_UID` | cleared at every activation, then set to the PID of the terminal's `cmd.exe` by `senv_uid.bat` when the first `switch*` or `ppath` command needs it (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; cleared because every tab opened from an activated terminal would otherwise carry that terminal's id, and looked up on first use because the lookup takes 1 to 2s |
 | `GH` | `%PRGS%\gits\current` | portable Git root |
 | `LANG`, `LC_ALL` | `en_US.UTF-8`, `C.UTF-8` | locale |
 | `TERM` | `msys` | terminal type for the Git tools |
@@ -64,5 +64,6 @@ in which they are applied.
 | `SWITCHVER_DEBUG` | `switch*` | print the rebuilt PATH |
 | `no_local_senv`, `local_senv` | `senv.bat` | force or skip the "local" (repository) activation mode |
 | `internalsenvcall` | `senv.bat` | quiet activation, used by wrapper scripts |
+| `SENV_TIMING` | `senv.bat` | print the duration of each activation step, flagged `[slow]` from 0.5s and `[REALLY SLOW]` from 2s, and append the same lines to `%TEMP%\senv.timing.log` ([how-to](../how-to/find-why-senv-is-slow-to-start.md)) |
 | `senv_force_build` | `adm\build.bat` | rebuild even when the remote version matches |
 | `WTP_PROFILE` | `wtp` | Windows Terminal profile the tabs open with. `bin\senv.bat` sets it to `senv`, the profile `installs\terminals.post.ps1` creates on every install. Empty it and `wtp` passes no profile, so the tabs take the Windows Terminal default. Override it in `senv.custom.bat` for a team, or `senv.local.bat` for one machine: both are read after `senv.bat` |
