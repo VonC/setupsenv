@@ -10,10 +10,54 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import threading
 import time
 import uuid
 
 from tuitp_model import Tab
+
+
+# TUITP_TIMING (set TUITP_TIMING=1) prints how long each native command and
+# each wait took, then a summary by command. An antivirus reputation check can
+# hold every tuios.exe start for seconds, which plain output cannot tell apart
+# from TUIOS itself.
+TIMING = bool(os.environ.get("TUITP_TIMING"))
+_timings = []
+_timings_lock = threading.Lock()
+
+
+@contextlib.contextmanager
+def timed(label, kind="wait"):
+    started = time.monotonic()
+    try:
+        yield
+    finally:
+        seconds = time.monotonic() - started
+        with _timings_lock:  # Session workers run commands in parallel.
+            _timings.append((kind, label, seconds))
+        if TIMING:
+            print(f"[tuitp timing] {seconds:6.2f}s {label}", flush=True)
+
+
+def timing_summary(total):
+    if not TIMING:
+        return
+    with _timings_lock:
+        rows = list(_timings)
+    commands = [(label, seconds) for kind, label, seconds in rows if kind == "command"]
+    print(f"[tuitp timing] total {total:.1f}s; {len(commands)} native commands took "
+          f"{sum(s for _, s in commands):.1f}s, up to 4 of them in parallel", flush=True)
+    groups = {}
+    for label, seconds in commands:
+        key = " ".join(label.split()[:2])
+        count, spent, slowest = groups.get(key, (0, 0.0, 0.0))
+        groups[key] = (count + 1, spent + seconds, max(slowest, seconds))
+    for key, (count, spent, slowest) in sorted(groups.items(), key=lambda item: -item[1][1]):
+        print(f"[tuitp timing]   {key}: {count} x, {spent:.1f}s, average {spent / count:.1f}s, "
+              f"slowest {slowest:.1f}s", flush=True)
+    for kind, label, seconds in rows:
+        if kind == "wait":
+            print(f"[tuitp timing]   wait {seconds:.1f}s: {label}", flush=True)
 
 
 def write_json(path: Path, value):
@@ -112,9 +156,11 @@ def launcher_lock():
 
 
 def run(argv, timeout=60, check=True):
-    result = subprocess.run([str(a) for a in argv], capture_output=True, text=True,
-                            encoding="utf-8", errors="replace", timeout=timeout,
-                            creationflags=subprocess.CREATE_NO_WINDOW)
+    label = " ".join([Path(str(argv[0])).stem, *map(str, argv[1:])])
+    with timed(label[:110], "command"):
+        result = subprocess.run([str(a) for a in argv], capture_output=True, text=True,
+                                encoding="utf-8", errors="replace", timeout=timeout,
+                                creationflags=subprocess.CREATE_NO_WINDOW)
     if check and result.returncode:
         raise RuntimeError(f"{subprocess.list2cmdline([str(a) for a in argv])}\n"
                            f"exit {result.returncode}: {result.stderr or result.stdout}")
@@ -164,16 +210,17 @@ class Windows:
         self.root.mkdir(parents=True, exist_ok=True)
         # The foreground 'daemon' command is explicitly detached here. It
         # restores saved layouts before we issue any new/kill commands.
-        with (self.root / "daemon.log").open("ab") as log:
-            subprocess.Popen([str(self.tuios), "daemon"], stdin=subprocess.DEVNULL,
-                             stdout=log, stderr=log,
-                             creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
-        deadline = time.monotonic() + 90
-        while time.monotonic() < deadline:
-            time.sleep(1)
-            self.snapshot()
-            if self.daemon_live:
-                return
+        with timed("daemon ready, including its 'ls' polls"):
+            with (self.root / "daemon.log").open("ab") as log:
+                subprocess.Popen([str(self.tuios), "daemon"], stdin=subprocess.DEVNULL,
+                                 stdout=log, stderr=log,
+                                 creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
+            deadline = time.monotonic() + 90
+            while time.monotonic() < deadline:
+                time.sleep(1)
+                self.snapshot()
+                if self.daemon_live:
+                    return
         raise RuntimeError(f"TUIOS daemon did not become ready; see {self.root / 'daemon.log'}")
 
     def host_path(self, record):
@@ -220,10 +267,12 @@ class Windows:
         # A first WT invocation can own the GUI's lifetime. Waiting on it
         # would time out (and kill it); the host registration is our handshake.
         log_file = manifest.with_suffix(".wt.log")
-        with log_file.open("ab") as log:
-            launcher = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
-                                        creationflags=subprocess.CREATE_NO_WINDOW)
-        if not self.wait_host(record):
+        with timed(f"open tab {tab.title or tab.folder}, until its host registers"):
+            with log_file.open("ab") as log:
+                launcher = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                                            creationflags=subprocess.CREATE_NO_WINDOW)
+            registered = self.wait_host(record)
+        if not registered:
             raise RuntimeError(f"WT did not register tab {tab.title or tab.folder} "
                                f"(launcher exit: {launcher.poll()}); see {log_file}")
 
@@ -235,6 +284,10 @@ class Windows:
         # Registration alone only proves the waiting host started. Require its
         # foreground child to survive startup before closing old attachments.
         pending = [r for r in records if "legacy" not in r]
+        with timed(f"{len(pending)} tabs attached ('tuios attach' started in each)"):
+            self._wait_attached(pending)
+
+    def _wait_attached(self, pending):
         deadline = time.monotonic() + 30
         while pending and time.monotonic() < deadline:
             for record in pending[:]:

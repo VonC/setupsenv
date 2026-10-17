@@ -1,8 +1,10 @@
 """Behavioral tests: no real WT windows, agents or TUIOS sessions are launched."""
 from __future__ import annotations
 
+import contextlib
 import copy
 from dataclasses import asdict
+import io
 import json
 import os
 from pathlib import Path
@@ -19,6 +21,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "bin"))
 import tuitp
 import tuitp_host
+import tuitp_windows
 from tuitp_install import FILES, LEGACY_DIR, adopt_legacy, install, legacy_layout
 from tuitp_model import Tab, key, new_state, read_list, reconcile_plan
 from tuitp_windows import Windows, alive, identity, run, write_json
@@ -492,6 +495,28 @@ class WindowsTests(unittest.TestCase):
         args = ["send-text", "-s", "project", "-w", "Claude", payload, "C:\\trailing space\\", ""]
         result = run([sys.executable, "-c", "import json,sys; print(json.dumps(sys.argv[1:]))", *args])
         self.assertEqual(json.loads(result.stdout), args)
+
+    def timing_output(self, enabled):
+        out = io.StringIO()
+        with patch.object(tuitp_windows, "TIMING", enabled), patch.object(tuitp_windows, "_timings", []), \
+                contextlib.redirect_stdout(out):
+            run([sys.executable, "-c", "pass"])
+            run([sys.executable, "-c", "pass"])
+            with tuitp_windows.timed("tab wait"):
+                pass
+            tuitp_windows.timing_summary(1.5)
+        return out.getvalue()
+
+    def test_timing_prints_each_command_wait_and_a_summary_when_enabled(self):
+        text = self.timing_output(True)
+        stem = Path(sys.executable).stem
+        self.assertEqual(text.count(f"s {stem} -c pass\n"), 2)
+        self.assertIn("total 1.5s; 2 native commands took", text)
+        self.assertIn(f"  {stem} -c: 2 x,", text)
+        self.assertIn("  wait 0.0s: tab wait\n", text)
+
+    def test_timing_prints_nothing_by_default(self):
+        self.assertEqual(self.timing_output(False), "")
 
     def test_identity_rejects_reused_pid_timestamp(self):
         current = identity(os.getpid())

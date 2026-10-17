@@ -13,7 +13,7 @@ import uuid
 
 from tuitp_install import LEGACY_DIR, adopt_legacy
 from tuitp_model import describe, new_state, read_list, reconcile_plan
-from tuitp_windows import Windows, launcher_lock, read_json, write_json
+from tuitp_windows import Windows, launcher_lock, read_json, timing_summary, write_json
 
 
 PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
@@ -164,6 +164,14 @@ def main(argv=None):
     parser.add_argument("mode", nargs="?", choices=["dry"], help="preview without changing tabs or sessions")
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
+    started = time.monotonic()
+    try:
+        return reconcile(args)
+    finally:
+        timing_summary(time.monotonic() - started)
+
+
+def reconcile(args):
     scripts = Path(__file__).resolve().parent
     try:
         # Capture first: the old layout can seed a missing tuitp.list.
