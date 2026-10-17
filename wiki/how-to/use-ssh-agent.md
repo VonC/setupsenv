@@ -2,8 +2,10 @@
 
 Run `sshagent` in CMD to start or reuse Git for Windows' user SSH agent and
 load this station's private key. No Windows service is required. Enter the
-passphrase in the local prompt; the routine never stores it. The matching
-`.pub` file identifies the key, but the **private key** is loaded into the agent.
+passphrase in the local prompt, or keep it in a private file next to the
+key (see [skip the passphrase prompt](#skip-the-passphrase-prompt)). The
+matching `.pub` file identifies the key, but the **private key** is loaded
+into the agent.
 
 ## Configure each station once
 
@@ -35,6 +37,27 @@ Keep this config and the generated `.state.json` file beside it local to
 the computer, outside repositories and synchronized folders. Do not put
 the private key or passphrase in the config. If your keys are inside a Git
 working tree, exclude them locally using `.git/info/exclude`.
+
+## Skip the passphrase prompt
+
+The private key is stored encrypted, so loading it into the agent needs
+its passphrase once per agent lifetime. To load it without a prompt, put
+the passphrase on the first line of a file named after the private key,
+with `.passphrase` appended:
+
+```cmd
+notepad "%HOME%\.ssh\id_signing.passphrase"
+```
+
+`sshagent` then reads that line instead of prompting. A wrong passphrase
+stops the command with an error naming the file, with no retry; correct
+the file or delete it to be prompted again.
+
+Anyone who can read that file can use the key, as if it had no passphrase
+at all. Keep it on this computer only, outside synchronized folders. When
+it sits inside a Git working tree, `sshagent` refuses it until that
+repository ignores it, for example with a `*.passphrase` line in
+`.git/info/exclude`.
 
 ## Use it in each CMD session
 

@@ -38,4 +38,5 @@ echo   load    Start or reuse a user SSH agent and load the configured private k
 echo   status  Check the agent and key without starting an agent or prompting.
 echo Config: %%LOCALAPPDATA%%\senv\ssh-agent.local.json
 echo Override: SENV_SSH_AGENT_CONFIG
+echo Passphrase: read from ^<privateKey^>.passphrase when that private file exists, else prompted.
 exit /b 0

@@ -192,6 +192,47 @@ class AgentIntegrationTests(unittest.TestCase):
         self.askpass.write_text("#!/bin/sh\nexit 1\n", encoding="utf-8")
         self.assert_success(self.run_launcher())
 
+    def encrypted_key_with_passphrase_file(self, content, folder=None):
+        encrypted = (folder or self.folder) / "encrypted key"
+        self.create_key(encrypted, "disposable-test-passphrase")
+        self.write_config(privateKey=str(encrypted))
+        Path(str(encrypted) + ".passphrase").write_bytes(content)
+        return encrypted
+
+    def test_passphrase_file_loads_the_key_without_prompting(self):
+        # Notepad style, with a BOM and CRLF. The fixture prompt refuses, so a
+        # loaded key proves the file answered.
+        self.encrypted_key_with_passphrase_file(b"\xef\xbb\xbfdisposable-test-passphrase\r\n")
+        temp = self.folder / "temp"
+        temp.mkdir()
+        result = self.run_launcher(env=dict(self.env, TEMP=str(temp), TMP=str(temp)))
+        self.assert_success(result)
+        self.assertIn("with the passphrase in", result.stdout)
+        self.assertEqual(len(self.ssh_add("-L").stdout.strip().splitlines()), 1)
+        self.assertEqual(list(temp.iterdir()), [])  # askpass script removed
+
+    def test_wrong_passphrase_file_stops_without_retrying(self):
+        self.encrypted_key_with_passphrase_file(b"wrong passphrase\n")
+        result = self.run_launcher()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("does not unlock the key", result.stderr)
+        self.assertEqual(self.ssh_add("-L").returncode, 1)  # agent empty
+
+    def test_passphrase_file_in_a_work_tree_must_be_ignored(self):
+        git = self.tools.parents[1] / "cmd/git.exe"
+        env = dict(self.env, GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull)
+        repository = self.folder / "keys repository"
+        repository.mkdir()
+        subprocess.run([str(git), "init", "-q", "--template="], cwd=repository, env=env,
+                       check=True, capture_output=True, timeout=15)
+        self.encrypted_key_with_passphrase_file(b"disposable-test-passphrase\n", repository)
+        result = self.run_launcher(env=env)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not ignored", result.stderr)
+        (repository / ".git/info").mkdir()
+        (repository / ".git/info/exclude").write_text("*.passphrase\n", encoding="utf-8")
+        self.assert_success(self.run_launcher(env=env))
+
     def test_concurrent_calls_share_one_agent(self):
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(lambda _: self.run_launcher(), range(2)))

@@ -76,6 +76,58 @@ function Save-AgentState {
     }
 }
 
+function Assert-IgnoredByGit([string]$Path) {
+    # A passphrase file inside a Git working tree must be ignored there, or the
+    # next git add -A would commit it and the next push publish it.
+    $git = Join-Path (Split-Path -Parent (Split-Path -Parent $script:gitBin)) 'cmd\git.exe'
+    if (-not (Test-Path -LiteralPath $git -PathType Leaf)) {
+        $git = (Get-Command git.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -First 1).Source
+        if (-not $git) { return }
+    }
+    $ErrorActionPreference = 'Continue'
+    $folder = Split-Path -Parent $Path
+    $inside = & $git -C $folder rev-parse --is-inside-work-tree 2>$null
+    if ($LASTEXITCODE -ne 0 -or "$inside" -ne 'true') { return }
+    # 0 = ignored; 1 = not ignored, or tracked (a tracked file is never ignored).
+    & $git -C $folder check-ignore -q -- $Path 2>$null
+    if ($LASTEXITCODE -ne 0) {
+        throw "Passphrase file $Path is in a Git working tree and not ignored there: add it to that repository's .git/info/exclude."
+    }
+}
+
+function Add-KeyWithPassphraseFile([string]$Key, [string]$PassphraseFile, [int]$Lifetime) {
+    # ssh-add reads a passphrase only from a terminal or an SSH_ASKPASS program:
+    # a throwaway askpass script answers it. The passphrase itself goes through
+    # this process's environment, never through a file or a command line.
+    $passphrase = Get-Content -LiteralPath $PassphraseFile -TotalCount 1 -Encoding UTF8
+    if ([string]::IsNullOrEmpty($passphrase)) { throw "Passphrase file is empty: $PassphraseFile" }
+    $askpass = Join-Path ([IO.Path]::GetTempPath()) ("senv-askpass-" + [Guid]::NewGuid().ToString('N') + '.sh')
+    $saved = @{}
+    foreach ($name in @('SSH_ASKPASS', 'SSH_ASKPASS_REQUIRE', 'SENV_SSHAGENT_PASSPHRASE')) {
+        $saved[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+    }
+    # Only the first prompt is answered: after a wrong passphrase ssh-add asks
+    # again ("Bad passphrase, try again"), and the same answer would loop.
+    $helper = @'
+#!/bin/sh
+case "$1" in Bad*) exit 1 ;; esac
+printf '%s\n' "$SENV_SSHAGENT_PASSPHRASE"
+'@
+    $code = 1
+    try {
+        [IO.File]::WriteAllText($askpass, $helper.Replace("`r", ''), [Text.UTF8Encoding]::new($false))
+        $env:SSH_ASKPASS = $askpass.Replace('\', '/')
+        $env:SSH_ASKPASS_REQUIRE = 'force'
+        $env:SENV_SSHAGENT_PASSPHRASE = $passphrase
+        & $script:agentAdd -t $Lifetime $Key
+        $code = $LASTEXITCODE
+    } finally {
+        foreach ($name in $saved.Keys) { [Environment]::SetEnvironmentVariable($name, $saved[$name], 'Process') }
+        if (Test-Path -LiteralPath $askpass) { Remove-Item -LiteralPath $askpass }
+    }
+    if ($code -ne 0) { throw "The passphrase in $PassphraseFile does not unlock the key: correct or delete that file." }
+}
+
 function Start-UserAgent {
     # Give the daemon its own handles. Inheriting a calling script's pipes can
     # otherwise keep subprocess.communicate() waiting after this launcher exits.
@@ -184,9 +236,17 @@ try {
     if ($Mode -ne 'status') { Save-AgentState }
     if (-not (Test-ConfiguredKey $agent.Keys)) {
         if ($Mode -eq 'status') { throw "Agent is running; configured key $fingerprint is not loaded. Run sshagent." }
-        Write-Host "sshagent: loading $fingerprint for $lifetime seconds. Enter the passphrase locally if asked."
-        & $script:agentAdd -t $lifetime $keyPath
-        if ($LASTEXITCODE -ne 0) { throw 'Key loading failed or was cancelled. Run sshagent to retry.' }
+        # A private passphrase file named after the key replaces the prompt.
+        $passphrasePath = "$keyPath.passphrase"
+        if (Test-Path -LiteralPath $passphrasePath -PathType Leaf) {
+            Assert-IgnoredByGit $passphrasePath
+            Write-Host "sshagent: loading $fingerprint for $lifetime seconds with the passphrase in $passphrasePath."
+            Add-KeyWithPassphraseFile $keyPath $passphrasePath $lifetime
+        } else {
+            Write-Host "sshagent: loading $fingerprint for $lifetime seconds. Enter the passphrase locally if asked."
+            & $script:agentAdd -t $lifetime $keyPath
+            if ($LASTEXITCODE -ne 0) { throw 'Key loading failed or was cancelled. Run sshagent to retry.' }
+        }
         $agent = Get-AgentKeys
         if (-not $agent.Alive -or -not (Test-ConfiguredKey $agent.Keys)) {
             throw 'The configured public key does not match a key loaded into the agent.'
