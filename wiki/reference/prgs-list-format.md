@@ -89,6 +89,7 @@ matches, the pattern field of every line is tried against the given string
 | tailwind | tailwindcss, tailw | `tailwindcsss` | |
 | ffmpeg | ffm, ffmp | `ffmpegs` | |
 | Codex | cdx | `codexs` | |
+| TUIOS | tuios | `tuioss` | |
 
 Programs marked `global` in the file: Gum, Git, Peazip, Sysinternals Suite,
 VSCode, Notepad++, Git-Cliff, Git_Cred, jq, Codex. An empty "Fixed versions"

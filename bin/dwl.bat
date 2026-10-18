@@ -1130,6 +1130,16 @@ set "url=https://github.com/%repo%/releases/download/%tag%/%file%"
 call :curl
 goto:eof
 
+:dwl_tuios
+set "repo=Gaurav-Gosain/tuios"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/Gaurav-Gosain/tuios/releases/download/v0.10.0/tuios_0.10.0_Windows_x86_64.tar.gz
+set "file=%prgname%_%version%_Windows_x86_64.tar.gz"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
 :dwl_postman
 set "repo=portapps/postman-portable"
 if "%version%"=="latest" ( call :get_latest_version_from_github )

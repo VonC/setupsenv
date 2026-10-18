@@ -48,3 +48,4 @@ msys/msys2~#~msys2s~msys2-base-x86_64-*.tar.xz
 tailwind/tailwindcss/tailw~#~tailwindcsss~tailwindcss-*-windows-x64.exe
 ffmpeg/ffm/ffmp~#~ffmpegs~ffmpeg-*-essentials_build.zip
 Codex/cdx~#~codexs~codex-rust-v*-x86_64-pc-windows-msvc.zip~global
+TUIOS/tuios~#~tuioss~tuios_*_Windows_x86_64.tar.gz
