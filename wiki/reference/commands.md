@@ -125,13 +125,15 @@ starts VSCode if it is not already running.
 Re-activates the session from `%PRGS%\senv\bin\senv.bat` (the repository
 copy, "local" developer mode) instead of `%HOME%\bin`.
 
-### `tuitp [dry] [--list <path>]`
+### `tuitp [dry] [stop] [--list <path>]`
 
 Reconciles `tuitp.list` beside the launcher with named Windows Terminal
 windows, ordinary CMD tabs, and persistent TUIOS session groups. Keeps
 existing sessions running, adds missing entries, and closes/deletes removed
 managed entries. Moving a TUIOS tab between windows preserves its sessions.
-`dry` reports the plan without changes. An alternate list replaces the
+`dry` reports the plan without changes. `stop` closes every managed tab and
+deletes every managed session with its processes, without reading the list;
+`dry stop` previews it. An alternate list replaces the
 desired layout using the same per-user state. Removing a managed session
 from the list terminates its processes on the next applied run. With
 `TUITP_TIMING` defined, it prints the duration of each native command and

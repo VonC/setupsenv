@@ -129,6 +129,24 @@ tabs. `tuitp --list another.list` uses that file as the **replacement desired
 layout**, sharing the same ownership ledger; it is not an independent
 launcher.
 
+## Stop every managed tab and session
+
+Run `tuitp dry stop` to preview, then `tuitp stop`:
+
+```cmd
+tuitp dry stop
+tuitp stop
+```
+
+`tuitp stop` closes every tab and deletes every TUIOS session recorded in the
+ownership ledger, like a valid empty list. It does not read `tuitp.list`, so
+it also stops tabs and sessions created from an earlier version of the list.
+The Claude, Codex, and CMD processes in those sessions end: save or pause the
+work they hold first. Sessions that `tuitp` did not start or adopt are listed
+as `LEAVE` and keep running, as does the TUIOS daemon. Empty WT windows close
+with their final tab. The next `tuitp` creates the declared sessions again
+and starts their panes.
+
 ## Startup and recovery
 
 New tabs appear first, waiting for their sessions. New sessions are created
