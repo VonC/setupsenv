@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
-rem tuitp [dry] [--list path] - reconcile the adjacent tuitp.list.
+rem tuitp [dry] [stop] [--list path] - reconcile the adjacent tuitp.list,
+rem or close every managed tab and delete every managed session (stop).
 where python.exe >nul 2>&1
 if errorlevel 1 call "%USERPROFILE%\senv.bat" global
 where python.exe >nul 2>&1

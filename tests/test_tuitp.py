@@ -36,6 +36,12 @@ class FakeWindows:
         self.fail = None
         self.lock = threading.Lock()
 
+    def validate(self, need_tuios):
+        pass
+
+    def snapshot(self):
+        return copy.deepcopy(self.live)
+
     def tab_alive(self, record):
         return record.get("token") in self.hosts
 
@@ -99,6 +105,22 @@ class ReconciliationTests(unittest.TestCase):
 
     def events(self, name):
         return [e for e in self.runtime.events if e[0] == name]
+
+    def main(self, *argv):
+        """Run the command line against the fake runtime, with the state file under the test folder."""
+        out = io.StringIO()
+        with patch.dict(os.environ, {"LOCALAPPDATA": str(self.folder)}), \
+                patch("tuitp.Windows", return_value=self.runtime), patch("tuitp.adopt_legacy", return_value=False), \
+                patch("tuitp.launcher_lock", contextlib.nullcontext), contextlib.redirect_stdout(out):
+            code = tuitp.main(list(argv))
+        return code, out.getvalue()
+
+    def owned_by_another_list(self):
+        self.apply("=== Projects\n+ FOLDER|one\n+ FOLDER|two\n=== Test\n+ FOLDER|test|single")
+        self.runtime.live["unrelated"] = {"name": "unrelated", "saved": False}
+        self.state_file = self.folder / "tuitp" / "state.json"
+        write_json(self.state_file, self.state)
+        self.runtime.events.clear()
 
     def test_mixed_list_and_environment_expansion(self):
         with patch.dict(os.environ, {"TUITP_TEST_PATH": str(self.project)}):
@@ -206,6 +228,41 @@ class ReconciliationTests(unittest.TestCase):
         self.apply("# deliberately empty\n")
         self.assertEqual(self.state, new_state())
         self.assertEqual(list(self.runtime.live), ["unrelated"])
+
+    def test_stop_ignores_the_list_and_removes_every_owned_tab_and_session(self):
+        self.owned_by_another_list()
+        # The current list has another structure: stop must neither read nor apply it.
+        self.path.write_text(f"=== One\n+ {self.project}|one\n=== New\n+ {self.project}|three\n", encoding="utf-8")
+        code, out = self.main("stop", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertEqual(sorted(e[2] for e in self.events("close")), ["Projects", "Test"])
+        self.assertEqual(sorted(e[1] for e in self.events("kill-session")), ["one", "test", "two"])
+        self.assertFalse(self.events("open") + self.events("new") + self.events("send-text"))
+        self.assertLess(max(self.runtime.events.index(e) for e in self.events("close")),
+                        self.runtime.events.index(self.events("kill-session")[0]))
+        self.assertEqual(list(self.runtime.live), ["unrelated"])
+        self.assertEqual(json.loads(self.state_file.read_text()), new_state())
+        self.assertIn("LEAVE session unrelated: tuitp did not start it", out)
+        self.assertNotIn("New pane startup commands submitted", out)
+
+    def test_dry_stop_previews_without_a_list_and_changes_nothing(self):
+        self.owned_by_another_list()
+        before = self.state_file.read_text()
+        code, out = self.main("stop", "dry", "--list", str(self.folder / "missing.list"))
+        self.assertEqual(code, 0)
+        for line in ("CLOSE tab Projects", "CLOSE tab Test", "DELETE session one and its running processes",
+                     "DELETE session two", "DELETE session test", "LEAVE session unrelated"):
+            self.assertIn("[dry] " + line, out)
+        self.assertNotIn("No list at", out)
+        self.assertFalse(self.runtime.events)
+        self.assertEqual(self.state_file.read_text(), before)
+
+    def test_unknown_mode_is_rejected_before_any_change(self):
+        with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(SystemExit) as exit:
+            self.main("halt")
+        self.assertEqual(exit.exception.code, 2)
+        self.assertIn("unknown mode halt", err.getvalue())
+        self.assertFalse(self.runtime.events)
 
     def test_failed_setup_preserves_obsolete_tabs_and_blocks_replay(self):
         self.apply("=== Old\n+ FOLDER|old")

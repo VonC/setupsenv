@@ -25,3 +25,5 @@
 # Move an === block under another --- line to move its tab, retaining
 # the TUIOS sessions. Removing a session entirely terminates its processes.
 # Only previously managed sessions are removed; unrelated sessions survive.
+# 'tuitp stop' closes every managed tab and deletes every managed session,
+# whatever this list declares; the next 'tuitp' recreates them from it.

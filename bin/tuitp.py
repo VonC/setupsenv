@@ -1,4 +1,4 @@
-"""Reconcile tuitp.list with this launcher's Windows Terminal tabs and TUIOS sessions."""
+"""Reconcile tuitp.list with this launcher's Windows Terminal tabs and TUIOS sessions, or stop them all."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ import time
 import uuid
 
 from tuitp_install import LEGACY_DIR, adopt_legacy
-from tuitp_model import describe, new_state, read_list, reconcile_plan
+from tuitp_model import Layout, describe, new_state, read_list, reconcile_plan
 from tuitp_windows import Windows, launcher_lock, read_json, timing_summary, write_json
 
 
@@ -139,7 +139,8 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         for tab in layout.tabs:
             state["tabs"][tab.slot]["spec"] = asdict(tab)
         save(state)
-        print(f"Reconciled in {time.monotonic() - started:.1f}s. New pane startup commands submitted.")
+        print(f"Reconciled in {time.monotonic() - started:.1f}s."
+              + (" New pane startup commands submitted." if plan["create"] or plan["restore"] else ""))
     except Exception as error:
         runtime.fail_tabs(opened, str(error))
         # Never continue deletions after creation, layout or startup failures.
@@ -164,9 +165,14 @@ def load_state(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", nargs="?", choices=["dry"], help="preview without changing tabs or sessions")
+    parser.add_argument("mode", nargs="*", metavar="dry|stop",
+                        help="dry: preview without changing tabs or sessions; stop: close every "
+                             "managed tab and delete every managed session, whatever the list says")
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
+    unknown = sorted(set(args.mode) - {"dry", "stop"})
+    if unknown:
+        parser.error(f"unknown mode {', '.join(unknown)}: expected dry, stop or both")
     started = time.monotonic()
     try:
         return reconcile(args)
@@ -183,12 +189,15 @@ def reconcile(args):
     except (OSError, ValueError) as error:
         print(f"tuitp: {error}", file=sys.stderr)
         return 1
+    stop, dry = "stop" in args.mode, "dry" in args.mode
     list_path = (args.list or scripts / "tuitp.list").resolve()
-    if not list_path.is_file():
+    if not stop and not list_path.is_file():
         print(f"No list at {list_path}. Copy and edit {scripts / 'tuitp.list.example'}. Nothing changed.")
         return 0
     try:
-        layout = read_list(list_path)  # Validate the whole list before any changes.
+        # Stop never reads the list: the ledger names what this launcher owns,
+        # whichever list created it. Otherwise validate it before any changes.
+        layout = Layout() if stop else read_list(list_path)
         # TUIOS has one session namespace per user. An alternative list is a
         # replacement layout, never a second independent ownership ledger.
         root = Path(os.environ["LOCALAPPDATA"]) / "tuitp"
@@ -206,8 +215,12 @@ def reconcile(args):
                 state["tabs"] = runtime.legacy_tabs(migration)
                 state["sessions"] = {name: {**spec, "status": "ready"}
                                      for name, spec in migration.get("sessions", {}).items() if name in live}
-            apply_layout(layout, state, live, runtime, lambda value: write_json(state_file, value),
-                         dry=args.mode == "dry")
+            if stop:
+                for name in live:
+                    if name not in state["sessions"]:
+                        print(("[dry] " if dry else "") + f"LEAVE session {name}: tuitp did not start it",
+                              flush=True)
+            apply_layout(layout, state, live, runtime, lambda value: write_json(state_file, value), dry=dry)
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"tuitp: {error}", file=sys.stderr)
