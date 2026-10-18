@@ -167,6 +167,29 @@ def run(argv, timeout=60, check=True):
     return result
 
 
+def daemon_environment(environ):
+    """Return the TUIOS daemon's environment, without the launcher's virtual env.
+
+    Every pane shell, restored ones included, inherits the daemon's
+    environment: a venv active where tuitp ran would show in their prompt and
+    lead their PATH before any senv runs.
+    """
+    env = dict(environ)
+    venv = env.pop("VIRTUAL_ENV", None)
+    env.pop("VIRTUAL_ENV_PROMPT", None)
+    env.pop("_OLD_VIRTUAL_PATH", None)
+    old_prompt = env.pop("_OLD_VIRTUAL_PROMPT", None)
+    if venv:
+        scripts = os.path.normcase(os.path.join(venv, "Scripts"))
+        entries = env.get("PATH", "").split(os.pathsep)
+        env["PATH"] = os.pathsep.join(e for e in entries if os.path.normcase(e.rstrip("\\/")) != scripts)
+        if old_prompt is None:
+            env.pop("PROMPT", None)
+        else:
+            env["PROMPT"] = old_prompt
+    return env
+
+
 class Windows:
     def __init__(self, scripts: Path, root: Path):
         self.scripts, self.root = scripts, root
@@ -213,7 +236,7 @@ class Windows:
         with timed("daemon ready, including its 'ls' polls"):
             with (self.root / "daemon.log").open("ab") as log:
                 subprocess.Popen([str(self.tuios), "daemon"], stdin=subprocess.DEVNULL,
-                                 stdout=log, stderr=log,
+                                 stdout=log, stderr=log, env=daemon_environment(os.environ),
                                  creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP)
             deadline = time.monotonic() + 90
             while time.monotonic() < deadline:

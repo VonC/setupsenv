@@ -72,8 +72,6 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         for name, session in layout.sessions.items():
             if name in live and name not in state["sessions"]:
                 state["sessions"][name] = {**asdict(session), "status": "ready"}
-                if live[name].get("saved"):
-                    print(f"[saved] {name}: restoring its layout; agent commands will not be replayed")
         save(state)
 
         print("[1/4] Open missing tabs", flush=True)
@@ -109,13 +107,18 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
             runtime.release_tab(state["tabs"][tab.slot])
         runtime.verify_tabs([state["tabs"][tab.slot] for tab in layout.tabs])
 
-        print("[3/4] Initialize only new sessions", flush=True)
+        print("[3/4] Initialize new and restored sessions", flush=True)
+        # The daemon is ready, so every restored window holds a bare shell:
+        # start its pane command, as for a new session, and only this once.
+        for session in plan["restore"]:
+            state["sessions"][session.name]["status"] = "initializing"
+        save(state)
 
         def init_done(session):
             state["sessions"][session.name]["status"] = "ready"
             save(state)
 
-        parallel_sessions(runtime, plan["create"], session_init, init_done)
+        parallel_sessions(runtime, plan["create"] + plan["restore"], session_init, init_done)
 
         print("[4/4] Close obsolete tabs, then delete removed sessions", flush=True)
         # A move opens the destination before detaching the old client. All

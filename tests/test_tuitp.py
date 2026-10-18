@@ -24,7 +24,7 @@ import tuitp_host
 import tuitp_windows
 from tuitp_install import FILES, LEGACY_DIR, adopt_legacy, install, legacy_layout
 from tuitp_model import Tab, key, new_state, read_list, reconcile_plan
-from tuitp_windows import Windows, alive, identity, run, write_json
+from tuitp_windows import Windows, alive, daemon_environment, identity, run, write_json
 
 
 class FakeWindows:
@@ -55,6 +55,8 @@ class FakeWindows:
 
     def ensure_daemon(self):
         self.events.append(("daemon",))
+        for row in self.live.values():  # Starting the daemon restores saved sessions.
+            row["saved"] = False
 
     def fail_tabs(self, records, message):
         self.events.append(("error", message))
@@ -218,11 +220,48 @@ class ReconciliationTests(unittest.TestCase):
             self.apply("=== New\n+ FOLDER|new")
         self.assertFalse(self.runtime.events)
 
-    def test_adopt_saved_session_without_initializing_or_duplicate_panes(self):
+    def test_restored_sessions_start_their_panes_once_without_duplicate_panes(self):
+        text = "=== Restored\n+ FOLDER|saved\n+ FOLDER|alone|single"
         self.runtime.live["saved"] = {"name": "saved", "saved": True}
-        self.apply("=== Restored\n+ FOLDER|saved")
-        self.assertFalse(self.events("new") + self.events("new-window") + self.events("send-text"))
-        self.assertEqual(self.state["sessions"]["saved"]["status"], "ready")
+        self.runtime.live["alone"] = {"name": "alone", "saved": True}
+        self.apply(text)
+        self.assertFalse(self.events("new") + self.events("new-window"))
+        names = [e[0] for e in self.runtime.events]
+        self.assertLess(names.index("daemon"), names.index("send-text"))
+        commands = [e[-1] for e in self.events("send-text")]
+        self.assertEqual(len(commands), 4)
+        self.assertEqual(sum(c.endswith(" local-or-global") for c in commands), 1)
+        self.assertEqual({s["status"] for s in self.state["sessions"].values()}, {"ready"})
+        self.runtime.events.clear()
+        self.apply(text)  # The daemon now runs: its sessions are reused as they are.
+        self.assertFalse(self.events("send-text"))
+
+    def test_dry_run_names_restored_sessions(self):
+        self.runtime.live["saved"] = {"name": "saved", "saved": True}
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Restored\n+ FOLDER|saved", dry=True)
+        self.assertIn("[dry] RESTORE session saved, then start its panes again", out.getvalue())
+        self.assertNotIn("REUSE session saved", out.getvalue())
+        self.assertFalse(self.runtime.events)
+
+    def test_failed_restore_start_blocks_replay(self):
+        self.runtime.live["saved"] = {"name": "saved", "saved": True}
+        self.runtime.fail = lambda a: a[0] == "send-keys"
+        with self.assertRaises(RuntimeError):
+            self.apply("=== Restored\n+ FOLDER|saved")
+        self.assertEqual(self.saved["sessions"]["saved"]["status"], "initializing")
+
+    def test_daemon_environment_drops_the_launcher_venv(self):
+        venv = os.path.join("root", ".venv")
+        env = {"PATH": os.pathsep.join([os.path.join(venv, "Scripts"), "other"]), "VIRTUAL_ENV": venv,
+               "VIRTUAL_ENV_PROMPT": ".venv", "PROMPT": "(.venv) $P$G", "_OLD_VIRTUAL_PROMPT": "$P$G",
+               "_OLD_VIRTUAL_PATH": "other", "KEEP": "1"}
+        self.assertEqual(daemon_environment(env), {"PATH": "other", "PROMPT": "$P$G", "KEEP": "1"})
+        del env["_OLD_VIRTUAL_PROMPT"]
+        self.assertNotIn("PROMPT", daemon_environment(env))
+        plain = {"PATH": "a", "PROMPT": "$P$G"}
+        self.assertEqual(daemon_environment(plain), plain)
 
     def test_manually_closed_tab_reopens_without_reinitializing_session(self):
         self.apply("=== A\n+ FOLDER|one")
@@ -305,6 +344,21 @@ class WindowsTests(unittest.TestCase):
             launcher.kill.assert_not_called()
             handshake.assert_called_once_with(record)
             self.assertIn("tuitp-side", popen.call_args.args[0])
+
+    def test_daemon_starts_without_the_launcher_venv(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-daemon-") as temp:
+            runtime = Windows(ROOT / "bin", Path(temp))
+
+            def ready():
+                runtime.daemon_live = True
+                return {}
+
+            with patch.dict(os.environ, {"VIRTUAL_ENV": r"C:\work\.venv"}), \
+                    patch("tuitp_windows.subprocess.Popen") as popen, patch("tuitp_windows.time.sleep"), \
+                    patch.object(runtime, "snapshot", side_effect=ready):
+                runtime.ensure_daemon()
+            self.assertEqual(popen.call_args.args[0][1:], ["daemon"])
+            self.assertNotIn("VIRTUAL_ENV", popen.call_args.kwargs["env"])
 
     def test_setup_copy_block_keeps_legacy_without_python_and_preserves_local_list(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-setup-") as temp:

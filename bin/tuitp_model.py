@@ -150,6 +150,9 @@ def reconcile_plan(layout: Layout, state: dict, live: dict, tab_alive) -> dict:
         if slot not in keep and tab_alive(record):
             close_tabs.append((slot, record))
     create = [session for name, session in layout.sessions.items() if name not in live]
+    # A saved session is listed while no daemon runs. Starting the daemon
+    # restores its windows with bare shells: its panes need starting again.
+    restore = [session for name, session in layout.sessions.items() if live.get(name, {}).get("saved")]
     remove = [name for name in state["sessions"] if name not in layout.sessions]
     for name, session in layout.sessions.items():
         old = state["sessions"].get(name)
@@ -162,7 +165,7 @@ def reconcile_plan(layout: Layout, state: dict, live: dict, tab_alive) -> dict:
                 raise ValueError(f"Session {name!r} already exists with a different folder/layout. "
                                  "Use a new session name to replace it, or restore its declaration.")
     return {"keep": keep, "open": open_tabs, "close": close_tabs,
-            "create": create, "remove": remove}
+            "create": create, "restore": restore, "remove": remove}
 
 
 def new_state():
@@ -176,8 +179,9 @@ def describe(plan: dict, layout: Layout) -> list[str]:
               + (f" -> {', '.join(tab.sessions)}" if tab.sessions else "")
               for tab in plan["open"]]
     lines += [f"CREATE session {s.name} ({s.kind}) in {s.folder}" for s in plan["create"]]
-    created = {s.name for s in plan["create"]}
-    lines += [f"REUSE session {name}" for name in layout.sessions if name not in created]
+    lines += [f"RESTORE session {s.name}, then start its panes again" for s in plan["restore"]]
+    started = {s.name for s in plan["create"] + plan["restore"]}
+    lines += [f"REUSE session {name}" for name in layout.sessions if name not in started]
     lines += [f"CLOSE tab {r['spec']['title'] or r['spec']['folder']} in tuitp-{r['spec']['window']}"
               for _, r in plan["close"]]
     lines += [f"DELETE session {name} and its running processes" for name in plan["remove"]]
