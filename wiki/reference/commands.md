@@ -203,11 +203,12 @@ Windows clipboard. It does not create an output file.
 | none | print usage and accepted day forms |
 | `today` | messages dated today in local time |
 | `yesterday` | messages dated yesterday in local time |
-| `yyyy-MM-dd` | messages from the exact local calendar day |
+| `N` (1 to 4 digits) | messages from `N` days ago: `0` is today, `1` is yesterday |
+| `yyyy-MM-dd` or `yyyyMMdd` | messages from the exact local calendar day |
 | `-MinPerConversation N` | omit conversations with fewer than `N` matching messages; default `1` |
 
-`tct` expands to `tc.bat today`; `tcy` expands to
-`tc.bat yesterday`.
+`tct [N]` runs `tct.bat`, which copies today, or `N` days ago when given
+(`tct 2` is the day before yesterday); `tcy` expands to `tc.bat yesterday`.
 
 Before extraction, the launcher checks `%HOME%\bin\teams-reader.exe` against
 the `.go`, `go.mod`, and `go.sum` files under `tools\team-chat`. A missing or

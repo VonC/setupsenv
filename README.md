@@ -151,7 +151,7 @@ will be) in the wiki reference pages:
 | `switchjdk`, `switchnode`, ... | put one tool version on the session PATH |
 | `up`, `upg`, `upa` | update the environment from the team share |
 | `alias [pattern]` | list the doskey aliases, filtered by name or content (`alias cd`) |
-| `tc <today\|yesterday\|yyyy-MM-dd>` | copy locally cached Teams chats for a day to the clipboard (`tct`/`tcy` are today/yesterday shortcuts) |
+| `tc <today\|yesterday\|N\|yyyy-MM-dd\|yyyyMMdd>` | copy locally cached Teams chats for a day to the clipboard, `N` being days ago (`tct [N]`: today, or `N` days ago; `tcy`: yesterday) |
 | `ctc` | collect Teams Ctrl+A/Ctrl+C selections into `%HOME%\a.tc.copy`; paste the cleaned transcript and stop with Ctrl+V |
 | `ctcr` | reset `%HOME%\a.tc.copy`, then immediately start a new collection |
 | `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
@@ -166,10 +166,17 @@ first extraction, rebuilt when its Go sources change, and deployed to
 `%HOME%\bin`; generated executables are not versioned.
 
 `ctc` uses the newest Python 3.13.x under `%PRGS%\pythons` and needs no extra
-packages. It keeps appending when `%HOME%\a.tc.copy` was modified today, starts
-it empty on a new day, removes Teams' timestamped preview duplicates, and
-replaces the clipboard with the complete accumulated transcript after every
-copy. The first Ctrl+V pastes that transcript and stops the collector.
+packages. It keeps collecting when `%HOME%\a.tc.copy` was modified today, starts
+it empty on a new day, drops the Teams navigation and chat header, removes
+Teams' timestamped preview duplicates, and replaces the clipboard with the
+complete accumulated transcript after every copy. The first Ctrl+V pastes that
+transcript and stops the collector.
+
+Each message is kept once, identified by its author, timestamp and text
+(reaction counts aside). A copy that overlaps earlier ones, even scrolled
+above them, only adds its new messages, in conversation order; a message seen
+again with new reactions replaces its older version. Starting `ctc` on a file
+collected today first removes any duplicate it already holds.
 
 ### 🪪 Git identity, per repository
 

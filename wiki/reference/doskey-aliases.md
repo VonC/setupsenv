@@ -109,12 +109,13 @@ cdp=cd /d %PROG%\git\myproject
 | Alias | Expansion |
 | --- | --- |
 | `tc` | `tc.bat $*` |
-| `tct` | `tc.bat today` |
+| `tct` | `tct.bat $*` |
 | `tcy` | `tc.bat yesterday` |
 
-`tc` accepts `today`, `yesterday`, or an exact `yyyy-MM-dd` date and copies
-the matching cached transcript to the clipboard. With no argument it prints
-usage. See the [command reference](commands.md)
+`tc` accepts `today`, `yesterday`, a number of days ago (`0` is today), or an
+exact `yyyy-MM-dd` or `yyyyMMdd` date and copies the matching cached
+transcript to the clipboard. With no argument it prints usage; `tct` with no
+argument copies today, and `tct N` copies `N` days ago. See the [command reference](commands.md)
 and the [daily-use how-to](../how-to/copy-cached-teams-chats.md).
 
 ## 🔧 Sysinternals

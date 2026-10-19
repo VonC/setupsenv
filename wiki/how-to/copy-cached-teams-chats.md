@@ -15,10 +15,11 @@ before extracting a day that is no longer recent.
    loaded:
 
    ```bat
-   alias tc.bat
+   alias tc
    ```
 
-   The result includes `tc`, `tct`, and `tcy`.
+   The result includes `tc`, `tct`, and `tcy`, next to the `ctc` collector
+   aliases.
 
 2. If automatic cache detection does not match the local Teams profile, set the
    private path in `custom\senv.custom.bat`:
@@ -36,14 +37,20 @@ before extracting a day that is no longer recent.
    tc today
    tc yesterday
    tc 2026-07-10
+   tc 20260710
+   tc 3
    ```
 
+   A plain number counts days back: `tc 0` is today, `tc 3` three days ago.
    The daily shortcuts are:
 
    ```bat
    tct
+   tct 2
    tcy
    ```
+
+   `tct` alone copies today; `tct N` copies `N` days ago.
 
    Running `tc` without a day prints these choices. On the first extraction,
    or after its Go sources change, the launcher builds the cache reader and
