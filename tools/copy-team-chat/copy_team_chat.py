@@ -39,9 +39,16 @@ LOCALIZED_DATE_TIME_RE = re.compile(
 PREVIEW_AUTHOR_RE = re.compile(r"^(?P<preview>.+)\s+(?:par|by)\s+(?P<author>.+)$", re.IGNORECASE)
 REACTION_RE = re.compile(r"^\d+\s+(?:réaction|réactions|reaction|reactions)\b", re.IGNORECASE)
 BARE_REACTION_RE = re.compile(r"^[\U0001F000-\U0001FAFF\u2600-\u27BF\ufe0f\u200d]+$")
+MESSAGE_LIST_MARKERS = {"liste des messages", "message list"}
+STATUS_LINE_RE = re.compile(r"^(?:votre message de statut|your status message)\b", re.IGNORECASE)
+CONTEXT_MENU_RE = re.compile(r"(?:menu contextuel|context menu)$", re.IGNORECASE)
+SEARCH_HINT_RE = re.compile(r"^(?:appuyez sur|press) ctrl\+f\b", re.IGNORECASE)
 UI_NOISE = {
+    "comporte un menu contextuel",
     "dispose d’un menu contextuel",
     "dispose d'un menu contextuel",
+    "présente un menu contextuel",
+    "presente un menu contextuel",
     "has context menu",
     "réponse aux participants externes.",
     "reponse aux participants externes.",
@@ -161,29 +168,181 @@ def _remove_reaction_duplicates(lines: list[str]) -> list[str]:
     return result
 
 
-def _collapse_repeated_block(lines: list[str]) -> list[str]:
-    """Remove a later contiguous duplicate block within one clipboard value."""
-    nonblank = [(index, _line_key(line)) for index, line in enumerate(lines) if line]
-    keys = [key for _, key in nonblank]
-    best: tuple[int, int, int] | None = None
-    for left in range(len(keys)):
-        for right in range(left + 1, len(keys)):
-            length = 0
-            while (right + length < len(keys) and left + length < right and
-                   keys[left + length] == keys[right + length]):
-                length += 1
-            if length >= 2 and (best is None or length > best[2]):
-                best = (left, right, length)
-    if best is None:
-        return lines
-    _, right, length = best
-    remove = {nonblank[pos][0] for pos in range(right, right + length)}
-    result = [line for index, line in enumerate(lines) if index not in remove]
-    return _collapse_repeated_block(_trim_blank_lines(result))
+def _is_header(lines: list[str], index: int) -> bool:
+    """Return whether an ``Author, timestamp`` message header starts at index."""
+    return (index + 1 < len(lines) and bool(lines[index]) and
+            not is_timestamp(lines[index]) and is_timestamp(lines[index + 1]) and
+            (index + 2 == len(lines) or not lines[index + 2]))
+
+
+def _is_continuation(lines: list[str], index: int) -> bool:
+    """Return whether a lone timestamp starts a follow-up message.
+
+    Teams omits the author line on consecutive messages from the same author.
+    """
+    return (is_timestamp(lines[index]) and (index == 0 or not lines[index - 1]) and
+            (index + 1 == len(lines) or not lines[index + 1]))
+
+
+def _remove_chrome(lines: list[str]) -> list[str]:
+    """Remove the Teams navigation and chat header preceding each message list.
+
+    A Ctrl+A copy starts with the status message, the chat list and the chat
+    header, then the "Liste des messages" marker. The chrome starts at the
+    status message, or else at the first context-menu label, after the last
+    message header; with no message before the marker, everything goes.
+    """
+    result: list[str] = []
+    for line in lines:
+        if _line_key(line) not in MESSAGE_LIST_MARKERS:
+            result.append(line)
+            continue
+        status = menu = None
+        for index in range(len(result) - 1, -1, -1):
+            if _is_header(result, index):
+                break
+            if STATUS_LINE_RE.match(result[index]):
+                status = index
+            elif CONTEXT_MENU_RE.search(result[index]):
+                menu = index
+        else:
+            status = 0
+        cut = status if status is not None else menu
+        if cut is not None:
+            del result[cut:]
+    return result
+
+
+def _is_noise(line: str) -> bool:
+    return _line_key(line) in UI_NOISE or bool(SEARCH_HINT_RE.match(line))
+
+
+MessageKey = tuple[tuple[str | None, str] | None, tuple[str, ...]]
+
+
+def _split_messages(lines: list[str]) -> list[list[str]]:
+    """Split cleaned lines into blocks, each starting at a message header."""
+    blocks: list[list[str]] = []
+    current: list[str] = []
+    for index, line in enumerate(lines):
+        if current and (_is_header(lines, index) or _is_continuation(lines, index)):
+            blocks.append(current)
+            current = []
+        current.append(line)
+    blocks.append(current)
+    return [block for block in map(_trim_blank_lines, blocks) if block]
+
+
+def _message_keys(blocks: list[list[str]]) -> list[MessageKey]:
+    """Return each block's (author, timestamp) header and identifying body.
+
+    A follow-up message takes the author of the previous block, or None when
+    it opens the copy. Reaction counts are left out of the body because they
+    change between copies.
+    """
+    keys: list[MessageKey] = []
+    author = None
+    for block in blocks:
+        lines = [_line_key(line) for line in block if line]
+        if _is_header(block, 0):
+            author = lines[0]
+            header, body = (author, lines[1]), lines[2:]
+        elif _is_continuation(block, 0):
+            header, body = (author, lines[0]), lines[1:]
+        else:
+            header, body = None, lines
+        keys.append((header, tuple(key for key in body if not REACTION_RE.match(key))))
+    return keys
+
+
+def _same_header(header: tuple[str | None, str], other: tuple[str | None, str]) -> bool:
+    return header[1] == other[1] and (
+        header[0] is None or other[0] is None or header[0] == other[0])
+
+
+def _starts_with(lines: tuple[str, ...], prefix: tuple[str, ...]) -> bool:
+    return lines[:len(prefix)] == prefix
+
+
+def _contains(lines: tuple[str, ...], part: tuple[str, ...]) -> bool:
+    width = len(part)
+    return any(lines[start:start + width] == part for start in range(len(lines) - width + 1))
+
+
+def _find_message(keys: list[MessageKey], key: MessageKey) -> int | None:
+    """Return the index of the collected message matching key, if any.
+
+    Messages with the same author and timestamp match when one body starts
+    with the other, so a message cut at the edge of a copy matches its full
+    version; an unknown author matches any author. A block without header
+    matches any block containing its lines.
+    """
+    header, body = key
+    for index, (other_header, other_body) in enumerate(keys):
+        if header is None:
+            if _contains(other_body, body):
+                return index
+        elif other_header and _same_header(header, other_header) and (
+                _starts_with(body, other_body) or _starts_with(other_body, body)):
+            return index
+    return None
+
+
+def _merge_messages(blocks: list[list[str]],
+                    fragment: list[list[str]]) -> tuple[list[list[str]], int, int]:
+    """Merge fragment blocks into blocks, keeping each message once.
+
+    A new message is inserted after the previous fragment message already
+    collected, so a copy scrolled above or below the transcript lands in
+    conversation order. A known message is replaced by a longer or equally
+    long version, which keeps the latest reactions. Returns the merged blocks
+    with the added and updated message counts.
+    """
+    result = list(blocks)
+    keys = _message_keys(result)
+    fragment_keys = _message_keys(fragment)
+    anchor = len(result) - 1
+    for key in fragment_keys:
+        index = _find_message(keys, key) if key[0] else None
+        if index is not None:
+            anchor = index - 1
+            break
+    added = updated = 0
+    for block, key in zip(fragment, fragment_keys):
+        index = _find_message(keys, key)
+        if index is None:
+            anchor += 1
+            result.insert(anchor, block)
+            keys.insert(anchor, key)
+            added += 1
+        elif key[0]:
+            if block != result[index] and len(key[1]) >= len(keys[index][1]):
+                result[index] = block
+                keys[index] = key
+                updated += 1
+            anchor = index
+    return result, added, updated
+
+
+def _dedupe(blocks: list[list[str]]) -> list[list[str]]:
+    """Merge blocks into themselves until each message appears once.
+
+    Follow-up authors are taken from the merged order, so one pass can reveal
+    a duplicate the previous pass could not see.
+    """
+    while True:
+        merged, _, _ = _merge_messages([], blocks)
+        if len(merged) == len(blocks):
+            return merged
+        blocks = merged
+
+
+def _render(blocks: list[list[str]]) -> str:
+    return "\n\n".join("\n".join(block) for block in blocks)
 
 
 def clean_teams_text(text: str) -> str:
-    """Return a cleaned transcript fragment copied from Teams."""
+    """Return a cleaned transcript copied from Teams, each message once."""
     normalized = normalize_text(text)
     if not normalized:
         return ""
@@ -191,39 +350,22 @@ def clean_teams_text(text: str) -> str:
     lines = _remove_teams_previews(lines)
     lines = _normalize_metadata_order(lines)
     lines = _remove_reaction_duplicates(lines)
-    lines = [line for line in lines if _line_key(line) not in UI_NOISE]
-    lines = _collapse_repeated_block(_trim_blank_lines(lines))
-    return "\n".join(_trim_blank_lines(lines))
+    lines = _remove_chrome(lines)
+    lines = [line for line in lines if not _is_noise(line)]
+    return _render(_dedupe(_split_messages(_trim_blank_lines(lines))))
 
 
-def append_novel(existing: str, fragment: str) -> tuple[str, str]:
-    """Append only lines not already present at the end of the transcript."""
-    existing = normalize_text(existing)
-    fragment = normalize_text(fragment)
-    if not fragment:
-        return existing, ""
-    if not existing:
-        return fragment, fragment
-    old_lines = existing.split("\n")
-    new_lines = fragment.split("\n")
-    old_keys = [_line_key(line) for line in old_lines]
-    new_keys = [_line_key(line) for line in new_lines]
-    width = len(new_keys)
-    for start in range(len(old_keys) - width + 1):
-        if old_keys[start:start + width] == new_keys:
-            return existing, ""
-    overlap = 0
-    for size in range(min(len(old_keys), len(new_keys)), 0, -1):
-        if old_keys[-size:] == new_keys[:size]:
-            overlap = size
-            break
-    novel_lines = new_lines[overlap:]
-    while novel_lines and not novel_lines[0]:
-        novel_lines.pop(0)
-    if not novel_lines:
-        return existing, ""
-    appended = "\n".join(novel_lines)
-    return existing + "\n\n" + appended, appended
+def merge_transcript(existing: str, fragment: str) -> tuple[str, int, int]:
+    """Merge a cleaned copy into the transcript, keeping each message once.
+
+    Returns the merged transcript with the added and updated message counts.
+    """
+    blocks, added, updated = _merge_messages(
+        _split_messages(normalize_text(existing).split("\n")),
+        _split_messages(normalize_text(fragment).split("\n")),
+    )
+    deduped = _dedupe(blocks)
+    return _render(deduped), max(0, added - (len(blocks) - len(deduped))), updated
 
 
 def prepare_daily_file(path: Path, today: date | None = None) -> str:
@@ -236,14 +378,14 @@ def prepare_daily_file(path: Path, today: date | None = None) -> str:
     return ""
 
 
-def append_file(path: Path, current: str, appended: str) -> None:
-    if not appended:
-        return
-    separator = "" if not current else ("" if current.endswith("\n") else "\n\n")
-    with path.open("a", encoding="utf-8", newline="") as stream:
-        stream.write(separator + appended)
+def write_transcript(path: Path, content: str) -> None:
+    """Replace the transcript file, never leaving it half written."""
+    temporary = path.with_name(path.name + ".tmp")
+    with temporary.open("w", encoding="utf-8", newline="") as stream:
+        stream.write(content)
         stream.flush()
         os.fsync(stream.fileno())
+    os.replace(temporary, path)
 
 
 class WindowsClipboard:
@@ -354,7 +496,12 @@ def default_output_path() -> Path:
 
 
 def listen(path: Path, poll_ms: int = 50) -> int:
-    content = normalize_text(prepare_daily_file(path))
+    stored = normalize_text(prepare_daily_file(path))
+    content = clean_teams_text(stored)
+    if content != stored:
+        write_transcript(path, content)
+        print(f"Kept each message once in {path}: "
+              f"{len(stored.splitlines())} -> {len(content.splitlines())} line(s).")
     clipboard = WindowsClipboard()
     keyboard = CtrlVPoller()
     clipboard.write_text(content)
@@ -372,11 +519,12 @@ def listen(path: Path, poll_ms: int = 50) -> int:
                 sequence = current_sequence
                 if copied is not None:
                     cleaned = clean_teams_text(copied)
-                    updated, appended = append_novel(content, cleaned)
-                    if appended:
-                        append_file(path, content, appended)
-                        content = updated
-                        print(f"Collected {len(appended.splitlines())} new line(s).")
+                    merged, added, updated = merge_transcript(content, cleaned)
+                    if merged != content:
+                        write_transcript(path, merged)
+                        content = merged
+                        changes = f", updated {updated}" if updated else ""
+                        print(f"Collected {added} new message(s){changes}.")
                     if copied != content:
                         clipboard.write_text(content)
                         sequence = clipboard.sequence()
