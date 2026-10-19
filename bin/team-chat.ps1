@@ -9,16 +9,21 @@ param(
 $ErrorActionPreference = 'Stop'
 
 function Show-Usage {
-    $exampleDate = (Get-Date).AddDays(-1).ToString('yyyy-MM-dd')
+    $exampleDay = (Get-Date).AddDays(-2)
     Write-Host 'Copy locally cached Teams chats to the clipboard.'
     Write-Host ''
-    Write-Host 'Usage: tc <today|yesterday|yyyy-MM-dd>'
+    Write-Host 'Usage: tc <today|yesterday|N|yyyy-MM-dd|yyyyMMdd>'
+    Write-Host ''
+    Write-Host '  N is a number of days ago, up to 4 digits: 0 is today, 1 is yesterday.'
     Write-Host ''
     Write-Host 'Examples:'
     Write-Host '  tc today'
-    Write-Host "  tc $exampleDate"
+    Write-Host ("  tc {0}" -f $exampleDay.ToString('yyyy-MM-dd'))
+    Write-Host ("  tc {0}       (same day, compact form)" -f $exampleDay.ToString('yyyyMMdd'))
+    Write-Host '  tc 2              (same day, as days ago)'
     Write-Host '  tc yesterday'
     Write-Host '  tct               (today shortcut)'
+    Write-Host '  tct 2             (two days ago; tct 0 is today)'
     Write-Host '  tcy               (yesterday shortcut)'
 }
 
@@ -32,15 +37,17 @@ switch ($Day.ToLowerInvariant()) {
     'yesterday' { $date = (Get-Date).Date.AddDays(-1) }
     default {
         $date = [datetime]::MinValue
-        if (-not [datetime]::TryParseExact(
+        if ($Day -match '^\d{1,4}$') {
+            $date = (Get-Date).Date.AddDays(-[int]$Day)
+        } elseif (-not [datetime]::TryParseExact(
             $Day,
-            'yyyy-MM-dd',
+            [string[]]@('yyyy-MM-dd', 'yyyyMMdd'),
             [Globalization.CultureInfo]::InvariantCulture,
             [Globalization.DateTimeStyles]::None,
             [ref]$date
         )) {
             Show-Usage
-            Write-Error "Invalid day '$Day'. Expected today, yesterday, or yyyy-MM-dd."
+            Write-Error "Invalid day '$Day'. Expected today, yesterday, a number of days ago, yyyy-MM-dd, or yyyyMMdd."
         }
     }
 }

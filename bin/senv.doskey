@@ -94,7 +94,7 @@ gcliff="%PRGS%\git-cliffs\current\git-cliff.exe" $*
 mem=memory.bat
 
 tc=tc.bat $*
-tct=tc.bat today
+tct=tct.bat $*
 tcy=tc.bat yesterday
 ctc=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%HOME%\bin\copy-team-chat.ps1" $*
 ctcr=powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%HOME%\bin\copy-team-chat-reset.ps1" $*
