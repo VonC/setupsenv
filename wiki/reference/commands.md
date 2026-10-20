@@ -261,7 +261,10 @@ Uncompresses a downloaded archive under `%PRGS%` and creates the junction.
 | `<symlink>` | junction name, default `current` (or a versioned name for jdk, node, python, maven, wildfly) |
 
 Archives are searched in order: `%PRGS%\setup`, `%USERPROFILE%\Downloads`,
-`%setupsdir%` (team share), `%USERPROFILE%\senv_setups\setups`. Hooks from
+`%setupsdir%` (team share), `%USERPROFILE%\senv_setups\setups`. With
+`latest`, the archive with the highest version in those folders wins, versions
+compared in natural order (`0.10.1` after `0.9.5`), whatever their download
+order; creation time only separates copies of the same version. Hooks from
 `installs\` and `custom\` run around the extraction (see
 [naming conventions](naming-conventions.md)). `inst_prg -h` (or `--help`,
 `/?`) prints the manual page.

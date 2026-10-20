@@ -79,7 +79,7 @@ If the first argument contains `*`, `inst_prg.bat` enters list mode and searches
 
 When a match is found outside `%PRGS%\setup`, it is copied into `%PRGS%\setup` before installation.
 
-When `latest` is used, the installer asks `bin\dir_by_date.ps1` for the newest matching file by creation time across the searched locations.
+When `latest` is used, the installer asks `bin\dir_by_date.ps1` for the matching file with the highest version across the searched locations. Version numbers compare in natural order (`0.10.1` after `0.10.0` and `0.9.5`), so an older release downloaded after a newer one is not picked. Creation time only decides between copies of the same version.
 
 When no match is found for a Python zip pattern, `inst_prg.bat` falls back to `pythons.install.bat`.
 
