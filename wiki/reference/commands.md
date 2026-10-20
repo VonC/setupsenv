@@ -139,7 +139,9 @@ from the list terminates its processes on the next applied run. With
 `TUITP_TIMING` defined, it prints the duration of each native command and
 each wait, then a summary by command.
 
-Requires Python 3.10+, Windows Terminal, and TUIOS. List syntax, migration,
+Runs from any CMD: it switches itself, without a venv, to the highest
+`%PRGS%\pythons\pythonX.Y.Z` (3.10+ required), and the caller's Python and
+venv stay as they were. Requires Windows Terminal and TUIOS. List syntax, migration,
 startup behavior, and recovery:
 [manage TUIOS terminal layouts](../how-to/manage-tuios-terminal-layouts.md).
 

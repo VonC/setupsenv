@@ -8,8 +8,12 @@ including running Claude and Codex processes.
 
 ## Install or upgrade
 
-Use an activated senv CMD with Python 3.10 or newer, Windows Terminal, and
-TUIOS 0.9.2. The TUIOS executable is expected at
+Use Windows Terminal, TUIOS 0.9.2, and Python 3.10 or newer in
+`%PRGS%\pythons`. `tuitp` runs from any CMD: for its own run, it calls
+`switchpy` on the highest `pythonX.Y.Z` folder there, without a venv, and
+skips that switch when this Python already comes first on the `PATH`. The
+caller's Python and venv stay as they were. The installer below runs with the
+Python of an activated senv CMD. The TUIOS executable is expected at
 `%PRGS%\tuioss\current\tuios.exe`. Its configured preferred shell must be
 `cmd.exe`: the first pane created by `tuios new --detach` uses that shell.
 Claude and Codex must already be installed and authenticated.
