@@ -133,7 +133,7 @@ tabs. `tuitp --list another.list` uses that file as the **replacement desired
 layout**, sharing the same ownership ledger; it is not an independent
 launcher.
 
-## Stop every managed tab and session
+## Stop every tab, session and the daemon
 
 Run `tuitp dry stop` to preview, then `tuitp stop`:
 
@@ -142,14 +142,25 @@ tuitp dry stop
 tuitp stop
 ```
 
-`tuitp stop` closes every tab and deletes every TUIOS session recorded in the
-ownership ledger, like a valid empty list. It does not read `tuitp.list`, so
-it also stops tabs and sessions created from an earlier version of the list.
-The Claude, Codex, and CMD processes in those sessions end: save or pause the
-work they hold first. Sessions that `tuitp` did not start or adopt are listed
-as `LEAVE` and keep running, as does the TUIOS daemon. Empty WT windows close
-with their final tab. The next `tuitp` creates the declared sessions again
-and starts their panes.
+`tuitp stop` closes every tab recorded in the ownership ledger, then deletes
+every TUIOS session, including the ones `tuitp` did not start, and stops the
+TUIOS daemon. It does not read `tuitp.list`, so it also stops tabs and
+sessions created from an earlier version of the list. The Claude, Codex, and
+CMD processes in those sessions end: save or pause the work they hold first.
+Empty WT windows close with their final tab.
+
+Nothing is left for TUIOS to restore. The daemon saves every session it still
+holds when it stops, and a new daemon restores those sessions with bare
+shells, so `stop` deletes the sessions first. When no daemon runs, `stop`
+starts one so that it restores the saved sessions, then deletes them. It
+fails, and names them, if TUIOS still lists sessions afterwards. The next
+`tuitp` starts a new daemon, creates the declared sessions, and starts their
+panes.
+
+Deleting the session of the pane that runs `tuitp stop` would also end
+`tuitp`. From a TUIOS pane, `tuitp stop` therefore starts a copy outside
+TUIOS and returns at once. That copy writes its output to
+`%LOCALAPPDATA%\tuitp\stop.log`.
 
 ## Startup and recovery
 
@@ -171,8 +182,10 @@ and authentication happen interactively; their readiness is not monitored.
 
 If only saved TUIOS sessions exist, the daemon restores their saved layouts.
 Saved layouts cannot preserve processes across a daemon shutdown: restored
-panes contain new shells. The launcher does not replay agent commands into
-those panes. Start the desired agents there manually.
+panes contain new shells. `tuitp` starts the panes of the declared restored
+sessions once, as for new sessions. A session reused from a running daemon
+keeps its panes as they are, even when their agents have exited: run
+`tuitp stop`, then `tuitp`, to start every session again from scratch.
 
 Ownership and launch progress are stored in `%LOCALAPPDATA%\tuitp\state.json`.
 Per-tab host records and errors are in its `hosts` directory; daemon startup

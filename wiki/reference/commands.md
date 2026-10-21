@@ -131,8 +131,11 @@ Reconciles `tuitp.list` beside the launcher with named Windows Terminal
 windows, ordinary CMD tabs, and persistent TUIOS session groups. Keeps
 existing sessions running, adds missing entries, and closes/deletes removed
 managed entries. Moving a TUIOS tab between windows preserves its sessions.
-`dry` reports the plan without changes. `stop` closes every managed tab and
-deletes every managed session with its processes, without reading the list;
+`dry` reports the plan without changes. `stop` closes every managed tab,
+deletes every TUIOS session with its processes, saved ones and the ones
+tuitp did not start included, then stops the TUIOS daemon, so that no
+session comes back. It does not read the list. Run from a TUIOS pane, it
+goes on outside TUIOS, with its output in `%LOCALAPPDATA%\tuitp\stop.log`.
 `dry stop` previews it. An alternate list replaces the
 desired layout using the same per-user state. Removing a managed session
 from the list terminates its processes on the next applied run. With
