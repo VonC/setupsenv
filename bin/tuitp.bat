@@ -1,7 +1,8 @@
 @echo off
 setlocal EnableExtensions DisableDelayedExpansion
 rem tuitp [dry] [stop] [--list path] - reconcile the adjacent tuitp.list,
-rem or close every managed tab and delete every managed session (stop).
+rem or close every managed tab, delete every TUIOS session and stop the
+rem TUIOS daemon (stop).
 rem It runs from any CMD: for itself only, it switches to the highest
 rem %PRGS%\pythons\pythonX.Y.Z, without a venv. senv global puts no Python
 rem on the PATH, and a Python found there could be a venv or too old.

@@ -147,6 +147,51 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         raise
 
 
+def stop_tuios(runtime, owned, dry=False):
+    """Delete every session left, then stop the daemon: none remains to restore."""
+    live = runtime.snapshot()
+    if not live and not runtime.daemon_live:
+        return
+    prefix = "[dry] " if dry else ""
+    for name in live:
+        if name not in owned:
+            print(prefix + f"DELETE session {name} and its running processes, though tuitp did not start it",
+                  flush=True)
+    print(prefix + "STOP the TUIOS daemon", flush=True)
+    if dry:
+        return
+    # A starting daemon restores every saved session with bare shells: let it
+    # restore them now, so that they are deleted like the live ones.
+    runtime.ensure_daemon()
+    for name in runtime.snapshot():
+        runtime.command("kill-session", name)
+    # kill-server saves the sessions the daemon still holds, so it comes last.
+    runtime.command("kill-server")
+    left = runtime.snapshot()
+    if left:
+        raise RuntimeError(f"TUIOS still lists sessions after stop: {', '.join(left)}")
+    print("No TUIOS session or daemon left.", flush=True)
+
+
+def stop_outside_tuios(scripts):
+    """Run stop again outside this TUIOS pane: deleting its session would end this process."""
+    log_file = Path(os.environ["LOCALAPPDATA"]) / "tuitp" / "stop.log"
+    log_file.parent.mkdir(parents=True, exist_ok=True)
+    # Without the pane's TUIOS_* variables, tuios commands no longer act for
+    # this pane, nor refuse once its daemon stops. Out of the pane's job, the
+    # copy outlives the session.
+    env = {name: value for name, value in os.environ.items() if not name.startswith("TUIOS_")}
+    env["PYTHONUNBUFFERED"] = "1"
+    with log_file.open("wb") as log:
+        subprocess.Popen([sys.executable, str(scripts / "tuitp.py"), "stop"], stdin=subprocess.DEVNULL,
+                         stdout=log, stderr=log, env=env,
+                         creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+                         | subprocess.CREATE_BREAKAWAY_FROM_JOB)
+    print(f"tuitp stop deletes this pane's TUIOS session {os.environ.get('TUIOS_SESSION', '')} too: "
+          f"it goes on outside TUIOS, with its output in {log_file}", flush=True)
+    return 0
+
+
 def load_state(path):
     if not path.exists():
         return new_state()
@@ -167,7 +212,8 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("mode", nargs="*", metavar="dry|stop",
                         help="dry: preview without changing tabs or sessions; stop: close every "
-                             "managed tab and delete every managed session, whatever the list says")
+                             "managed tab, delete every TUIOS session and stop the daemon, "
+                             "whatever the list says")
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
     unknown = sorted(set(args.mode) - {"dry", "stop"})
@@ -182,6 +228,14 @@ def main(argv=None):
 
 def reconcile(args):
     scripts = Path(__file__).resolve().parent
+    stop, dry = "stop" in args.mode, "dry" in args.mode
+    if stop and not dry and os.environ.get("TUIOS_ENV") == "1":
+        try:
+            return stop_outside_tuios(scripts)
+        except OSError as error:
+            print(f"tuitp: cannot run stop outside this TUIOS pane: {error}. "
+                  "Run tuitp stop from a CMD outside TUIOS.", file=sys.stderr)
+            return 1
     try:
         # Capture first: the old layout can seed a missing tuitp.list.
         if adopt_legacy(scripts):
@@ -189,7 +243,6 @@ def reconcile(args):
     except (OSError, ValueError) as error:
         print(f"tuitp: {error}", file=sys.stderr)
         return 1
-    stop, dry = "stop" in args.mode, "dry" in args.mode
     list_path = (args.list or scripts / "tuitp.list").resolve()
     if not stop and not list_path.is_file():
         print(f"No list at {list_path}. Copy and edit {scripts / 'tuitp.list.example'}. Nothing changed.")
@@ -208,19 +261,17 @@ def reconcile(args):
             migration_file = scripts / "tuitp.legacy.json"
             migrating = not state_file.exists() and migration_file.exists()
             migration = read_json(migration_file) if migrating else {}
-            need_tuios = bool(layout.sessions or state["sessions"] or migration.get("sessions"))
+            # Stop also deletes the sessions tuitp did not start, saved ones included.
+            need_tuios = bool(stop or layout.sessions or state["sessions"] or migration.get("sessions"))
             runtime.validate(need_tuios)
             live = runtime.snapshot() if need_tuios else {}
             if migrating:
                 state["tabs"] = runtime.legacy_tabs(migration)
                 state["sessions"] = {name: {**spec, "status": "ready"}
                                      for name, spec in migration.get("sessions", {}).items() if name in live}
-            if stop:
-                for name in live:
-                    if name not in state["sessions"]:
-                        print(("[dry] " if dry else "") + f"LEAVE session {name}: tuitp did not start it",
-                              flush=True)
             apply_layout(layout, state, live, runtime, lambda value: write_json(state_file, value), dry=dry)
+            if stop:
+                stop_tuios(runtime, state["sessions"], dry)
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"tuitp: {error}", file=sys.stderr)

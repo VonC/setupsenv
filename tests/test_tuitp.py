@@ -33,6 +33,7 @@ class FakeWindows:
         self.cmd = Path(r"C:\Windows\System32\cmd.exe")
         self.events, self.hosts = [], set()
         self.live = {}
+        self.daemon_live = False
         self.fail = None
         self.lock = threading.Lock()
 
@@ -61,6 +62,7 @@ class FakeWindows:
 
     def ensure_daemon(self):
         self.events.append(("daemon",))
+        self.daemon_live = True
         for row in self.live.values():  # Starting the daemon restores saved sessions.
             row["saved"] = False
 
@@ -78,6 +80,10 @@ class FakeWindows:
                 self.live[args[1]] = {"name": args[1], "saved": False}
             if args[0] == "kill-session":
                 del self.live[args[1]]
+            if args[0] == "kill-server":
+                self.daemon_live = False
+                for row in self.live.values():  # The daemon saves what it still holds.
+                    row["saved"] = True
         return ""
 
 
@@ -112,6 +118,9 @@ class ReconciliationTests(unittest.TestCase):
         with patch.dict(os.environ, {"LOCALAPPDATA": str(self.folder)}), \
                 patch("tuitp.Windows", return_value=self.runtime), patch("tuitp.adopt_legacy", return_value=False), \
                 patch("tuitp.launcher_lock", contextlib.nullcontext), contextlib.redirect_stdout(out):
+            # Run from a TUIOS pane, stop would start a real one outside it.
+            for name in [name for name in os.environ if name.startswith("TUIOS_")]:
+                del os.environ[name]
             code = tuitp.main(list(argv))
         return code, out.getvalue()
 
@@ -229,20 +238,24 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(self.state, new_state())
         self.assertEqual(list(self.runtime.live), ["unrelated"])
 
-    def test_stop_ignores_the_list_and_removes_every_owned_tab_and_session(self):
+    def test_stop_ignores_the_list_and_leaves_no_tab_session_or_daemon(self):
         self.owned_by_another_list()
         # The current list has another structure: stop must neither read nor apply it.
         self.path.write_text(f"=== One\n+ {self.project}|one\n=== New\n+ {self.project}|three\n", encoding="utf-8")
         code, out = self.main("stop", "--list", str(self.path))
         self.assertEqual(code, 0)
         self.assertEqual(sorted(e[2] for e in self.events("close")), ["Projects", "Test"])
-        self.assertEqual(sorted(e[1] for e in self.events("kill-session")), ["one", "test", "two"])
+        self.assertEqual(sorted(e[1] for e in self.events("kill-session")), ["one", "test", "two", "unrelated"])
         self.assertFalse(self.events("open") + self.events("new") + self.events("send-text"))
         self.assertLess(max(self.runtime.events.index(e) for e in self.events("close")),
                         self.runtime.events.index(self.events("kill-session")[0]))
-        self.assertEqual(list(self.runtime.live), ["unrelated"])
+        # kill-server saves what the daemon still holds: every session is gone first.
+        self.assertEqual(self.runtime.events[-1], ("kill-server",))
+        self.assertEqual(self.runtime.live, {})
+        self.assertFalse(self.runtime.daemon_live)
         self.assertEqual(json.loads(self.state_file.read_text()), new_state())
-        self.assertIn("LEAVE session unrelated: tuitp did not start it", out)
+        self.assertIn("DELETE session unrelated and its running processes, though tuitp did not start it", out)
+        self.assertIn("STOP the TUIOS daemon", out)
         self.assertNotIn("New pane startup commands submitted", out)
 
     def test_dry_stop_previews_without_a_list_and_changes_nothing(self):
@@ -250,12 +263,74 @@ class ReconciliationTests(unittest.TestCase):
         before = self.state_file.read_text()
         code, out = self.main("stop", "dry", "--list", str(self.folder / "missing.list"))
         self.assertEqual(code, 0)
-        for line in ("CLOSE tab Projects", "CLOSE tab Test", "DELETE session one and its running processes",
-                     "DELETE session two", "DELETE session test", "LEAVE session unrelated"):
+        for line in ("CLOSE tab Projects", "CLOSE tab Test", "DELETE session one and its running processes\n",
+                     "DELETE session two", "DELETE session test",
+                     "DELETE session unrelated and its running processes, though tuitp did not start it",
+                     "STOP the TUIOS daemon"):
             self.assertIn("[dry] " + line, out)
+        self.assertNotIn("DELETE session one and its running processes, though", out)
         self.assertNotIn("No list at", out)
         self.assertFalse(self.runtime.events)
         self.assertEqual(self.state_file.read_text(), before)
+
+    def test_stop_restores_saved_sessions_to_delete_them(self):
+        # No daemon runs, after a reboot or a kill-server: TUIOS still lists the
+        # sessions it saved, and the next daemon would restore them with bare shells.
+        self.runtime.live = {name: {"name": name, "saved": True} for name in ("old", "older")}
+        code, out = self.main("stop")
+        self.assertEqual(code, 0)
+        steps = [e for e in self.runtime.events if e[0] in ("daemon", "kill-session", "kill-server")]
+        self.assertEqual(steps, [("daemon",), ("kill-session", "old"), ("kill-session", "older"), ("kill-server",)])
+        self.assertEqual(self.runtime.live, {})
+        self.assertIn("DELETE session old and its running processes, though tuitp did not start it", out)
+
+    def test_stop_without_sessions_or_daemon_starts_nothing(self):
+        code, out = self.main("stop")
+        self.assertEqual(code, 0)
+        self.assertFalse(self.events("daemon") + self.events("kill-session") + self.events("kill-server"))
+        self.assertNotIn("STOP the TUIOS daemon", out)
+
+    def test_stop_fails_when_a_session_survives(self):
+        self.owned_by_another_list()
+        command = self.runtime.command
+
+        def kill_fails_silently(*args):
+            if args == ("kill-session", "unrelated"):
+                return ""
+            return command(*args)
+
+        err = io.StringIO()
+        with patch.object(self.runtime, "command", side_effect=kill_fails_silently), contextlib.redirect_stderr(err):
+            code, out = self.main("stop")
+        self.assertEqual(code, 1)
+        self.assertIn("TUIOS still lists sessions after stop: unrelated", err.getvalue())
+        self.assertNotIn("No TUIOS session or daemon left", out)
+
+    def test_stop_in_a_tuios_pane_goes_on_outside_it(self):
+        self.owned_by_another_list()
+        before = self.state_file.read_text()
+        pane = {"LOCALAPPDATA": str(self.folder), "TUIOS_ENV": "1", "TUIOS_SESSION": "one",
+                "TUIOS_SOCKET": r"C:\sock", "TUIOS_PANE_TOKEN": "secret"}
+        out = io.StringIO()
+        with patch.dict(os.environ, pane), patch("tuitp.Windows", return_value=self.runtime), \
+                patch("tuitp.subprocess.Popen") as popen, contextlib.redirect_stdout(out):
+            code = tuitp.main(["stop"])
+        self.assertEqual(code, 0)
+        argv, kwargs = popen.call_args.args[0], popen.call_args.kwargs
+        self.assertEqual(argv, [sys.executable, str(Path(tuitp.__file__).resolve().parent / "tuitp.py"), "stop"])
+        self.assertFalse([name for name in kwargs["env"] if name.startswith("TUIOS_")])
+        self.assertTrue(kwargs["creationflags"] & subprocess.CREATE_BREAKAWAY_FROM_JOB)
+        self.assertTrue(kwargs["creationflags"] & subprocess.DETACHED_PROCESS)
+        self.assertIn(str(self.folder / "tuitp" / "stop.log"), out.getvalue())
+        self.assertFalse(self.runtime.events)
+        self.assertEqual(self.state_file.read_text(), before)
+        # A preview changes nothing, so it runs in the pane as it is.
+        with patch.dict(os.environ, pane), patch("tuitp.Windows", return_value=self.runtime), \
+                patch("tuitp.adopt_legacy", return_value=False), patch("tuitp.launcher_lock", contextlib.nullcontext), \
+                patch("tuitp.subprocess.Popen") as popen, contextlib.redirect_stdout(io.StringIO()) as dry_out:
+            self.assertEqual(tuitp.main(["dry", "stop"]), 0)
+        popen.assert_not_called()
+        self.assertIn("[dry] STOP the TUIOS daemon", dry_out.getvalue())
 
     def test_unknown_mode_is_rejected_before_any_change(self):
         with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(SystemExit) as exit:
