@@ -179,6 +179,12 @@ startup. A local script can itself call global senv if it needs both.
 Successful reconciliation means the layout exists, attachments survived
 initial startup, and new pane commands were submitted. Claude/Codex startup
 and authentication happen interactively; their readiness is not monitored.
+An agent that exits in error less than a minute after it started failed its
+startup: its pane starts it again after 5 seconds, 3 times in all. Codex
+fails this way when its app-server, just started, times out on its first
+network call (`account/read failed during TUI bootstrap: ... workspace
+routing discovery timed out`), and later starts succeed. A normal exit, or
+a failure after a minute, leaves the pane at its CMD prompt.
 
 If only saved TUIOS sessions exist, the daemon restores their saved layouts.
 Saved layouts cannot preserve processes across a daemon shutdown: restored
