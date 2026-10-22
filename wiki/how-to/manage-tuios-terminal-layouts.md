@@ -133,6 +133,24 @@ tabs. `tuitp --list another.list` uses that file as the **replacement desired
 layout**, sharing the same ownership ledger; it is not an independent
 launcher.
 
+## Restart or remove one session
+
+To start one session again from scratch, delete it from a CMD outside that
+session, then run `tuitp`:
+
+```cmd
+"%PRGS%\tuioss\current\tuios.exe" kill-session cplx
+tuitp
+```
+
+`kill-session` ends the Claude, Codex, and CMD processes of that session
+only, and its tab closes when its `tuios attach` client ends. `tuitp` then
+creates the session again, starts its panes, and opens its tab. The other
+sessions and tabs stay as they are.
+
+To remove a session for good, delete its `===` block from `tuitp.list` and
+run `tuitp`: it closes the tab and deletes the session.
+
 ## Stop every tab, session and the daemon
 
 Run `tuitp dry stop` to preview, then `tuitp stop`:
@@ -184,7 +202,9 @@ startup: its pane starts it again after 5 seconds, 3 times in all. Codex
 fails this way when its app-server, just started, times out on its first
 network call (`account/read failed during TUI bootstrap: ... workspace
 routing discovery timed out`), and later starts succeed. A normal exit, or
-a failure after a minute, leaves the pane at its CMD prompt.
+a failure after a minute, leaves the pane at its CMD prompt. To stay at the
+prompt instead of a retry, press Ctrl+C during the 5-second wait and confirm
+the end of the batch job.
 
 If only saved TUIOS sessions exist, the daemon restores their saved layouts.
 Saved layouts cannot preserve processes across a daemon shutdown: restored
@@ -195,7 +215,10 @@ keeps its panes as they are, even when their agents have exited: run
 
 Ownership and launch progress are stored in `%LOCALAPPDATA%\tuitp\state.json`.
 Per-tab host records and errors are in its `hosts` directory; daemon startup
-output is in `daemon.log`. Keep this ledger: deleting it loses the mapping
+output is in `daemon.log`. Panes call a copy of `tuitp.pane.bat` kept in
+its `panes` directory and named after its content: CMD reads a running batch
+file from disk, so an update of `tuitp.pane.bat` never reaches a pane already
+started. Keep this ledger: deleting it loses the mapping
 to existing managed tabs. Process records include creation times to avoid
 mistaking a reused PID for a managed tab. One reconciliation runs at a time.
 
