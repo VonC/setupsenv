@@ -48,7 +48,7 @@ set /a "elapsed=(ended - started + 86400) %% 86400"
 if %elapsed% GEQ 60 exit /b %code%
 if %attempt% GEQ 3 exit /b %code%
 set /a "attempt+=1"
-echo tuitp: %TUITP_ROLE% exited %code% after %elapsed%s while starting. Attempt %attempt% of 3 in 5s.
+echo tuitp: %TUITP_ROLE% exited %code% after %elapsed%s while starting. Attempt %attempt% of 3 in 5s, Ctrl+C to stop.
 ping -n 6 127.0.0.1 >nul
 goto :start_agent
 
