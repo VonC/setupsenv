@@ -38,7 +38,7 @@ def host(manifest: Path):
             argv = [config["tuios"], "attach", tab["sessions"][0]]
             child = subprocess.Popen(argv)  # Inherit this tab's console, no new window.
         else:
-            helper = str(Path(config["scripts"]) / "tuitp.pane.bat")
+            helper = config["pane"]
             # CMD uses different quoting from CommandLineToArgvW. Pass the
             # raw command line with a quoted CALL target, not C-style \".
             command = f'"{config["cmd"]}" /d /v:off /k call "{helper}" "{tab["folder"]}" cmd'

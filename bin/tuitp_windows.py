@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import ctypes
 from ctypes import wintypes
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -225,6 +226,28 @@ class Windows:
         from tuitp_model import safe_path
         safe_path(str(self.scripts), self.scripts)
 
+    def pane_helper(self):
+        """Return a copy of tuitp.pane.bat named after its content, for panes to call.
+
+        CMD reads a running batch file from disk at a byte offset. Replacing
+        tuitp.pane.bat while an agent runs would make its pane resume in the
+        middle of a line of the new file once the agent exits.
+        """
+        source = (self.scripts / "tuitp.pane.bat").read_bytes()
+        folder = self.root / "panes"
+        target = folder / f"tuitp.pane.{hashlib.sha256(source).hexdigest()[:12]}.bat"
+        if not target.is_file():
+            folder.mkdir(parents=True, exist_ok=True)
+            from tuitp_model import safe_path
+            safe_path(str(folder), folder)  # CMD receives this path in a CALL.
+            temporary = target.with_name(target.name + "." + uuid.uuid4().hex + ".tmp")
+            try:
+                temporary.write_bytes(source)
+                shared(lambda: os.replace(temporary, target))
+            finally:
+                temporary.unlink(missing_ok=True)
+        return target
+
     def command(self, *args):
         return run([self.tuios, *args]).stdout
 
@@ -293,8 +316,8 @@ class Windows:
     def open_tab(self, record):
         tab = Tab(**record["spec"])
         manifest = self.host_path(record)
-        write_json(manifest, {"tab": record["spec"], "tuios": str(self.tuios),
-                              "cmd": str(self.cmd), "scripts": str(self.scripts)})
+        write_json(manifest, {"tab": record["spec"], "tuios": str(self.tuios), "cmd": str(self.cmd),
+                              "scripts": str(self.scripts), "pane": str(self.pane_helper())})
         argv = [str(self.wt), "-w", "tuitp-" + tab.window, "new-tab"]
         profile = os.environ.get("TUITP_PROFILE", os.environ.get("WTP_PROFILE", ""))
         if profile:

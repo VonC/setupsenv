@@ -31,10 +31,11 @@ def session_layout(runtime, session):
 
 def session_init(runtime, session):
     roles = PANE_ROLES[session.kind]
+    helper = runtime.pane_helper()
     for role in roles:
         # subprocess passes this entire command as ONE native send-text argv.
         # The inner quotes belong to the receiving CMD, not the outer shell.
-        command = f'call "{runtime.scripts / "tuitp.pane.bat"}" "{session.folder}" {role.lower()}'
+        command = f'call "{helper}" "{session.folder}" {role.lower()}'
         if session.kind != "project":
             command += " local-or-global"
         runtime.command("send-text", "-s", session.name, "-w", role, command)
