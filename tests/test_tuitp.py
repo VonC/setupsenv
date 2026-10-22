@@ -628,6 +628,44 @@ class WindowsTests(unittest.TestCase):
                         self.assertEqual(result.returncode, 7)
                         self.assertNotIn("-STARTED", result.stdout)
 
+    def test_agent_failing_at_startup_starts_again_three_times_in_all(self):
+        # Codex exits at once when its app-server times out on a slow first
+        # network call. Each retry waits 5 seconds, hence the longer timeouts.
+        with tempfile.TemporaryDirectory(prefix="tuitp-retry-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            project.mkdir()
+            (profile / "senv.bat").write_text('@echo off\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            starts, fake = base / "starts.txt", base / "fake_codex.py"
+            # The Nth start exits with the Nth code; later starts reuse the last one.
+            fake.write_text("import pathlib, sys\n"
+                            "starts = pathlib.Path(sys.argv[1])\n"
+                            "with starts.open('a') as log: log.write('start\\n')\n"
+                            "codes = [int(c) for c in sys.argv[2].split(',')]\n"
+                            "code = codes[min(len(starts.read_text().splitlines()), len(codes)) - 1]\n"
+                            "print('CODEX-EXIT', code, flush=True)\n"
+                            "sys.exit(code)\n")
+            (local_bin / "codex.bat").write_text(f'@"{sys.executable}" -I "{fake}" "{starts}" %TUITP_TEST_CODES%\n'
+                                                 '@exit /b %errorlevel%\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            command = (f'"{cmd}" /d /v:off /c call "{helper}" "{project}" codex local-or-global'
+                       ' && (if defined attempt (echo LEAKED) else echo CLEAN)')
+            for codes, exit_code, started in (("3,0", 0, 2), ("3", 3, 3)):
+                with self.subTest(codes=codes):
+                    starts.unlink(missing_ok=True)
+                    env = dict(os.environ, USERPROFILE=str(profile), PRGS=str(base), TUITP_TEST_CODES=codes)
+                    result = subprocess.run(command, capture_output=True, text=True, timeout=60, env=env)
+                    self.assertEqual(result.returncode, exit_code, result.stdout + result.stderr)
+                    self.assertEqual(len(starts.read_text().splitlines()), started)
+                    self.assertIn("codex exited 3 after", result.stdout)
+                    self.assertIn(f"Attempt {started} of 3 in 5s.", result.stdout)
+                    self.assertNotIn(f"Attempt {started + 1} of 3", result.stdout)
+                    if exit_code == 0:
+                        self.assertIn("CLEAN", result.stdout)
+
     def test_legacy_adoption_matches_exact_launcher_and_closes_only_attachment(self):
         runtime = Windows(Path(r"C:\Tools with spaces"), ROOT / "unused")
         tab = asdict(Tab("dev", "Projects", "tuios", sessions=["one"], slot=key("dev|tuios|Projects")))
@@ -668,6 +706,35 @@ class WindowsTests(unittest.TestCase):
                 self.assertEqual(tuitp_host.host(manifest), 0)
             child.terminate.assert_called_once()
             native.assert_not_called()
+
+    def test_live_file_reads_and_rewrites_survive_each_other(self):
+        # The launcher polls each .live file while its tab host rewrites it.
+        # Unretried, Windows refuses hundreds of these opens and replaces.
+        with tempfile.TemporaryDirectory(prefix="tuitp-live-") as temp:
+            live = Path(temp) / "host.live"
+            write_json(live, {"status": "waiting"})
+            errors = []
+            stop = threading.Event()
+
+            def rewrite():
+                while not stop.is_set():
+                    try:
+                        write_json(live, {"status": "attached"})
+                    except OSError as error:
+                        errors.append(error)
+
+            writer = threading.Thread(target=rewrite)
+            writer.start()
+            try:
+                for _ in range(2000):
+                    try:
+                        self.assertIn(tuitp_windows.read_json(live)["status"], ("waiting", "attached"))
+                    except OSError as error:
+                        errors.append(error)
+            finally:
+                stop.set()
+                writer.join()
+            self.assertEqual(errors, [])
 
     def test_failed_host_records_error_and_exits_successfully_to_close_wt_tab(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-host-error-") as temp:
