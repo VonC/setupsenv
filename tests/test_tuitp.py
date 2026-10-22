@@ -40,6 +40,9 @@ class FakeWindows:
     def validate(self, need_tuios):
         pass
 
+    def pane_helper(self):
+        return Path(r"C:\Local App Data\tuitp\panes\tuitp.pane.0123456789ab.bat")
+
     def snapshot(self):
         return copy.deepcopy(self.live)
 
@@ -160,7 +163,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertTrue(all(s["status"] == "ready" for s in self.saved["sessions"].values()))
         for event in self.events("send-text"):
             self.assertEqual(len(event), 6)
-            self.assertIn('"', event[-1])
+            self.assertTrue(event[-1].startswith(f'call "{self.runtime.pane_helper()}" '))
             self.assertIn("project with spaces", event[-1])
 
     def test_repeat_has_no_session_or_tab_mutations(self):
@@ -661,7 +664,7 @@ class WindowsTests(unittest.TestCase):
                     self.assertEqual(result.returncode, exit_code, result.stdout + result.stderr)
                     self.assertEqual(len(starts.read_text().splitlines()), started)
                     self.assertIn("codex exited 3 after", result.stdout)
-                    self.assertIn(f"Attempt {started} of 3 in 5s.", result.stdout)
+                    self.assertIn(f"Attempt {started} of 3 in 5s, Ctrl+C to stop.", result.stdout)
                     self.assertNotIn(f"Attempt {started + 1} of 3", result.stdout)
                     if exit_code == 0:
                         self.assertIn("CLEAN", result.stdout)
@@ -706,6 +709,30 @@ class WindowsTests(unittest.TestCase):
                 self.assertEqual(tuitp_host.host(manifest), 0)
             child.terminate.assert_called_once()
             native.assert_not_called()
+
+    def test_panes_call_a_copy_that_a_pane_script_update_leaves_alone(self):
+        # CMD resumes a running batch file at a byte offset: an in-place update
+        # once made agent panes run line fragments, then the agent again.
+        with tempfile.TemporaryDirectory(prefix="tuitp-pane-copy-") as temp:
+            scripts, root = Path(temp) / "bin", Path(temp) / "state"
+            scripts.mkdir()
+            source = scripts / "tuitp.pane.bat"
+            source.write_bytes(b"@echo off\r\nrem first\r\n")
+            runtime = Windows(scripts, root)
+            first = runtime.pane_helper()
+            self.assertEqual(first.parent, root / "panes")
+            self.assertEqual(first.read_bytes(), source.read_bytes())
+            self.assertEqual(runtime.pane_helper(), first)
+            source.write_bytes(b"@echo off\r\nrem second, longer\r\n")
+            second = runtime.pane_helper()
+            self.assertNotEqual(second, first)
+            self.assertEqual(second.read_bytes(), source.read_bytes())
+            self.assertEqual(first.read_bytes(), b"@echo off\r\nrem first\r\n")
+            # A WT tab host gets the same copy through its manifest.
+            record = {"spec": asdict(Tab("dev", "", "cmd", temp, slot="s")), "token": "b" * 32}
+            with patch("tuitp_windows.subprocess.Popen"), patch.object(runtime, "wait_host", return_value=True):
+                runtime.open_tab(record)
+            self.assertEqual(tuitp_windows.read_json(runtime.host_path(record))["pane"], str(second))
 
     def test_live_file_reads_and_rewrites_survive_each_other(self):
         # The launcher polls each .live file while its tab host rewrites it.
