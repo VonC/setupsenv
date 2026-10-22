@@ -60,18 +60,34 @@ def timing_summary(total):
             print(f"[tuitp timing]   wait {seconds:.1f}s: {label}", flush=True)
 
 
+def shared(action, timeout=2):
+    """Retry the PermissionError Windows raises while another process swaps the file.
+
+    Each tab host rewrites its .live file while the launcher polls it: opening
+    it during os.replace is refused, and so is os.replace while it is open.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            return action()
+        except PermissionError:
+            if time.monotonic() > deadline:
+                raise
+            time.sleep(.01)
+
+
 def write_json(path: Path, value):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
     try:
         temporary.write_text(json.dumps(value, indent=2), encoding="utf-8")
-        os.replace(temporary, path)
+        shared(lambda: os.replace(temporary, path))
     finally:
         temporary.unlink(missing_ok=True)
 
 
 def read_json(path: Path):
-    return json.loads(path.read_text(encoding="utf-8-sig"))
+    return json.loads(shared(lambda: path.read_text(encoding="utf-8-sig")))
 
 
 def kernel():
