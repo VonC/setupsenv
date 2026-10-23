@@ -143,7 +143,11 @@ is in neither the list nor TUIOS, or when the list cannot be reconciled.
 Run from a pane of a session it deletes, it goes on outside TUIOS too.
 Claude panes start with TUIOS's Claude Code hooks, which tuitp writes to
 `%LOCALAPPDATA%\tuitp\claude\settings.json`, so that they show on the TUIOS
-rail; other Claude sessions do not load them.
+rail; other Claude sessions do not load them. A session declared with an id
+names its agent panes `Claude <id>` and `Codex <id>`. A run that leaves TUIOS
+tabs open starts a watcher: a session picked on the TUIOS rail of another tab
+opens in its own tab, and the first tab goes back to its session
+(`TUITP_WATCH=0` turns it off).
 An alternate list replaces the
 desired layout using the same per-user state. Removing a managed session
 from the list terminates its processes on the next applied run. With

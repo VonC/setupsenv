@@ -8,7 +8,7 @@ including running Claude and Codex processes.
 
 ## Install or upgrade
 
-Use Windows Terminal, TUIOS 0.9.2, and Python 3.10 or newer in
+Use Windows Terminal, TUIOS 0.10.1, and Python 3.10 or newer in
 `%PRGS%\pythons`. `tuitp` runs from any CMD: for its own run, it calls
 `switchpy` on the highest `pythonX.Y.Z` folder there, without a venv, and
 skips that switch when this Python already comes first on the `PATH`. The
@@ -228,6 +228,41 @@ the `claude-code` harness. Panes started before the hooks file existed do
 not load it: restart their session with `tuitp stop NAME`. If TUIOS cannot
 write the hooks, `tuitp` prints `Claude panes start without TUIOS agent
 hooks` with the reason, keeps any previous file, and starts the panes.
+
+## Open an agent picked on the rail in its own tab
+
+A click on an agent of another session in the TUIOS rail, or a pick in the
+session switcher, switches the client of the current tab to that session:
+TUIOS has no setting to open it elsewhere. Each `tuitp` run that leaves a
+TUIOS tab open starts a watcher, which shows such a session in its own tab:
+
+1. It selects the Windows Terminal tab whose `===` group holds that session,
+   and raises its window when it is another one.
+2. If that tab shows another session of its group, it switches it to the
+   picked session. The agent you clicked has the focus there.
+3. It switches the first tab back to the session it showed.
+
+A switch between the sessions of one tab, or to a session that no `===`
+group declares, stays as TUIOS made it. When no tab shows the group of the
+picked session, for example after you closed its tab, the session stays
+where you picked it: run `tuitp` to open that tab again. The watcher finds
+tabs by the titles that `tuitp` pins: it does not find a tab renamed by
+hand, and leaves the session where you picked it.
+
+The watcher, `tuitp_watch.py`, follows TUIOS's `client-session-changed`
+events. It selects tabs through Windows UI Automation, from one PowerShell
+process running `tuitp_tabs.ps1` that it keeps loaded, so a tab comes forward
+about half a second after the click. It stops with the TUIOS daemon and with
+`tuitp stop`. A `tuitp` run starts it again when it is not running, or when
+its files changed. It logs each tab it selects and each client it switches
+in `%LOCALAPPDATA%\tuitp\watch.log`. Set `TUITP_WATCH=0` before `tuitp` to
+stop it and keep rail clicks in their tab.
+
+It tells tabs apart by the TUIOS client that each tab's `tuios attach` opened.
+It learns each client when it attaches, and keeps them in `watch.clients.json`
+for a watcher started again on the same daemon. A watcher started while a tab
+showed the session of another tab takes that tab for the other one: close
+that tab, then run `tuitp`, which opens it again.
 
 ## Startup and recovery
 
