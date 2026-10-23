@@ -9,6 +9,12 @@
 + %USERPROFILE%\git\project-a|project-a
 + %USERPROFILE%\git\project-b|project-b
 
+# A fourth field names the agent panes "Claude <id>" and "Codex <id>", so
+# that the TUIOS rail tells their projects apart. An empty name or kind
+# keeps its default.
+=== Long names
++ %USERPROFILE%\git\project-with-a-long-name|project-with-a-long-name||long
+
 === Test
 + %USERPROFILE%\git\test|test|single
 

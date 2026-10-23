@@ -82,6 +82,8 @@ C:\projects\tools|Tools shell
 | `+ folder\|name\|codex` | One Codex pane, with the same senv initialization. |
 | `+ folder\|name\|senv` | One CMD pane running local senv if present, otherwise global senv. |
 | `+ folder\|name\|single` | Backward-compatible alias for `senv`. |
+| `+ folder\|name\|kind\|id` | Names the agent panes `Claude <id>` and `Codex <id>`; CMD panes keep their name. |
+| `+ folder\|name\|\|id` | An empty name or kind keeps its default: here a project session with an id. |
 | `+ folder` | A project session named after the folder's final component. |
 | Blank line or `# comment` | Ignored. |
 
@@ -91,6 +93,16 @@ line ends a TUIOS group; blank lines do not. A group must have a session.
 Window and session names accept letters, digits, underscores, dots, and
 hyphens. A session's folder and kind cannot be changed while it exists;
 use a new session name to replace it.
+
+An id tells agents apart on the TUIOS rail. The rail shows the session name
+before the agents of other sessions only when it fits, which a long session
+name does not: with `+ %USERPROFILE%\git\project-with-a-long-name|project-with-a-long-name||long`,
+its agents show as `Claude long` and `Codex long` in every tab. Ids use letters,
+digits, underscores, dots, and hyphens. Adding, changing, or removing the id
+of a running session renames its panes on the next run, without restarting
+them. `tuitp` finds the panes by these names when it starts them, including
+after TUIOS restores a session: change them through the list, not with
+`tuios set-window`.
 
 For example, `+ %USERPROFILE%\git\test|test|claude` opens Claude alone in
 the test project. If `test` already exists as a managed `single` session,
