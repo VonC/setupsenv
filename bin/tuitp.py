@@ -1,4 +1,4 @@
-"""Reconcile tuitp.list with this launcher's Windows Terminal tabs and TUIOS sessions, or stop them all."""
+"""Reconcile tuitp.list with this launcher's Windows Terminal tabs and TUIOS sessions, or stop them all or some."""
 from __future__ import annotations
 
 import argparse
@@ -148,6 +148,41 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         raise
 
 
+def stop_sessions(layout, state, live, runtime, save, names, dry=False):
+    """Close the tabs that show these sessions and delete them, then reconcile as a new tuitp run."""
+    unknown = [name for name in names if name not in layout.sessions and name not in live]
+    if unknown:
+        raise ValueError(f"No session {', '.join(unknown)} in the list or in TUIOS (the list declares "
+                         f"{', '.join(layout.sessions) or 'none'}). Nothing changed.")
+    # Close the tab first: once its attached session is deleted, its client
+    # would exit while the reconciliation below still counts that tab as open.
+    closing = {slot: record for slot, record in state["tabs"].items()
+               if set(names) & set(record["spec"]["sessions"]) and runtime.tab_alive(record)}
+    deleting = [name for name in names if name in live]
+    prefix = "[dry] " if dry else ""
+    for record in closing.values():
+        print(prefix + f"CLOSE tab {record['spec']['title']} in tuitp-{record['spec']['window']}", flush=True)
+    for name in deleting:
+        print(prefix + f"DELETE session {name} and its running processes", flush=True)
+    for slot in closing:
+        del state["tabs"][slot]
+    for name in names:
+        state["sessions"].pop(name, None)
+    live = {name: row for name, row in live.items() if name not in names}
+    if not dry:
+        # Plan first: a layout that cannot be reconciled closes and deletes nothing.
+        reconcile_plan(layout, state, live, runtime.tab_alive)
+        for record in closing.values():
+            runtime.close_tab(record)
+        if deleting:
+            # As in stop_tuios, a saved session is deleted from a running daemon.
+            runtime.ensure_daemon()
+        for name in deleting:
+            runtime.command("kill-session", name)
+        save(state)
+    apply_layout(layout, state, live, runtime, save, dry)
+
+
 def stop_tuios(runtime, owned, dry=False):
     """Delete every session left, then stop the daemon: none remains to restore."""
     live = runtime.snapshot()
@@ -174,7 +209,7 @@ def stop_tuios(runtime, owned, dry=False):
     print("No TUIOS session or daemon left.", flush=True)
 
 
-def stop_outside_tuios(scripts):
+def stop_outside_tuios(scripts, args):
     """Run stop again outside this TUIOS pane: deleting its session would end this process."""
     log_file = Path(os.environ["LOCALAPPDATA"]) / "tuitp" / "stop.log"
     log_file.parent.mkdir(parents=True, exist_ok=True)
@@ -183,12 +218,14 @@ def stop_outside_tuios(scripts):
     # copy outlives the session.
     env = {name: value for name, value in os.environ.items() if not name.startswith("TUIOS_")}
     env["PYTHONUNBUFFERED"] = "1"
+    argv = ["stop", *args.sessions] + (["--list", str(args.list.resolve())] if args.list else [])
     with log_file.open("wb") as log:
-        subprocess.Popen([sys.executable, str(scripts / "tuitp.py"), "stop"], stdin=subprocess.DEVNULL,
+        subprocess.Popen([sys.executable, str(scripts / "tuitp.py"), *argv], stdin=subprocess.DEVNULL,
                          stdout=log, stderr=log, env=env,
                          creationflags=subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
                          | subprocess.CREATE_BREAKAWAY_FROM_JOB)
-    print(f"tuitp stop deletes this pane's TUIOS session {os.environ.get('TUIOS_SESSION', '')} too: "
+    print(f"tuitp {' '.join(['stop', *args.sessions])} deletes this pane's TUIOS session "
+          f"{os.environ.get('TUIOS_SESSION', '')}{'' if args.sessions else ' too'}: "
           f"it goes on outside TUIOS, with its output in {log_file}", flush=True)
     return 0
 
@@ -211,15 +248,20 @@ def load_state(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", nargs="*", metavar="dry|stop",
+    parser.add_argument("mode", nargs="*", metavar="dry|stop|session",
                         help="dry: preview without changing tabs or sessions; stop: close every "
                              "managed tab, delete every TUIOS session and stop the daemon, "
-                             "whatever the list says")
+                             "whatever the list says; stop followed by session names: close their "
+                             "tabs and delete only these sessions, then reconcile the list")
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
-    unknown = sorted(set(args.mode) - {"dry", "stop"})
-    if unknown:
-        parser.error(f"unknown mode {', '.join(unknown)}: expected dry, stop or both")
+    args.dry = "dry" in args.mode
+    words = [word for word in args.mode if word != "dry"]
+    # Words after stop name the sessions to stop: stop alone stops them all.
+    args.stop, args.sessions = words[:1] == ["stop"], list(dict.fromkeys(words[1:]))
+    if words and not args.stop:
+        parser.error(f"unknown mode {', '.join(sorted(set(words) - {'stop'}))}: "
+                     "expected dry, stop or both, then session names after stop")
     started = time.monotonic()
     try:
         return reconcile(args)
@@ -229,10 +271,12 @@ def main(argv=None):
 
 def reconcile(args):
     scripts = Path(__file__).resolve().parent
-    stop, dry = "stop" in args.mode, "dry" in args.mode
-    if stop and not dry and os.environ.get("TUIOS_ENV") == "1":
+    dry, names = args.dry, args.sessions
+    stop_all = args.stop and not names
+    if (args.stop and not dry and os.environ.get("TUIOS_ENV") == "1"
+            and (stop_all or os.environ.get("TUIOS_SESSION") in (None, *names))):
         try:
-            return stop_outside_tuios(scripts)
+            return stop_outside_tuios(scripts, args)
         except OSError as error:
             print(f"tuitp: cannot run stop outside this TUIOS pane: {error}. "
                   "Run tuitp stop from a CMD outside TUIOS.", file=sys.stderr)
@@ -245,13 +289,13 @@ def reconcile(args):
         print(f"tuitp: {error}", file=sys.stderr)
         return 1
     list_path = (args.list or scripts / "tuitp.list").resolve()
-    if not stop and not list_path.is_file():
+    if not stop_all and not list_path.is_file():
         print(f"No list at {list_path}. Copy and edit {scripts / 'tuitp.list.example'}. Nothing changed.")
         return 0
     try:
-        # Stop never reads the list: the ledger names what this launcher owns,
-        # whichever list created it. Otherwise validate it before any changes.
-        layout = Layout() if stop else read_list(list_path)
+        # Stop alone never reads the list: the ledger names what this launcher
+        # owns, whichever list created it. Otherwise validate it before any changes.
+        layout = Layout() if stop_all else read_list(list_path)
         # TUIOS has one session namespace per user. An alternative list is a
         # replacement layout, never a second independent ownership ledger.
         root = Path(os.environ["LOCALAPPDATA"]) / "tuitp"
@@ -263,15 +307,19 @@ def reconcile(args):
             migrating = not state_file.exists() and migration_file.exists()
             migration = read_json(migration_file) if migrating else {}
             # Stop also deletes the sessions tuitp did not start, saved ones included.
-            need_tuios = bool(stop or layout.sessions or state["sessions"] or migration.get("sessions"))
+            need_tuios = bool(args.stop or layout.sessions or state["sessions"] or migration.get("sessions"))
             runtime.validate(need_tuios)
             live = runtime.snapshot() if need_tuios else {}
             if migrating:
                 state["tabs"] = runtime.legacy_tabs(migration)
                 state["sessions"] = {name: {**spec, "status": "ready"}
                                      for name, spec in migration.get("sessions", {}).items() if name in live}
-            apply_layout(layout, state, live, runtime, lambda value: write_json(state_file, value), dry=dry)
-            if stop:
+            save = lambda value: write_json(state_file, value)
+            if names:
+                stop_sessions(layout, state, live, runtime, save, names, dry)
+            else:
+                apply_layout(layout, state, live, runtime, save, dry=dry)
+            if stop_all:
                 stop_tuios(runtime, state["sessions"], dry)
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
