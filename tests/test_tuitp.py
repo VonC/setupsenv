@@ -43,6 +43,9 @@ class FakeWindows:
     def pane_helper(self):
         return Path(r"C:\Local App Data\tuitp\panes\tuitp.pane.0123456789ab.bat")
 
+    def write_claude_hooks(self):
+        self.events.append(("claude-hooks",))
+
     def snapshot(self):
         return copy.deepcopy(self.live)
 
@@ -165,6 +168,28 @@ class ReconciliationTests(unittest.TestCase):
             self.assertEqual(len(event), 6)
             self.assertTrue(event[-1].startswith(f'call "{self.runtime.pane_helper()}" '))
             self.assertIn("project with spaces", event[-1])
+
+    def test_claude_hooks_are_written_before_any_change_only_for_new_claude_panes(self):
+        self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex")
+        self.assertEqual(self.runtime.events[0], ("claude-hooks",))
+        self.assertEqual(len(self.events("claude-hooks")), 1)
+        self.runtime.events.clear()
+        self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex")
+        self.assertFalse(self.events("claude-hooks"))
+        # Codex and CMD panes never load the hooks.
+        self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex\n+ FOLDER|shell|senv")
+        self.assertFalse(self.events("claude-hooks"))
+        self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex\n+ FOLDER|shell|senv\n+ FOLDER|cl|claude")
+        self.assertEqual(len(self.events("claude-hooks")), 1)
+
+    def test_failed_claude_hooks_still_start_the_panes(self):
+        out = io.StringIO()
+        with patch.object(self.runtime, "write_claude_hooks", side_effect=RuntimeError("no hooks")), \
+                contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one")
+        self.assertIn("tuitp: Claude panes start without TUIOS agent hooks: no hooks", out.getvalue())
+        self.assertEqual([e[4] for e in self.events("send-text")], ["Claude", "Codex", "CMD"])
+        self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
 
     def test_repeat_has_no_session_or_tab_mutations(self):
         text = "=== Projects\n+ FOLDER|one"
@@ -832,6 +857,64 @@ class WindowsTests(unittest.TestCase):
             with patch("tuitp_windows.subprocess.Popen"), patch.object(runtime, "wait_host", return_value=True):
                 runtime.open_tab(record)
             self.assertEqual(tuitp_windows.read_json(runtime.host_path(record))["pane"], str(second))
+
+    def test_claude_hooks_come_from_tuios_into_a_file_of_their_own(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-claude-hooks-") as temp:
+            runtime = Windows(Path(temp) / "bin", Path(temp) / "state")
+            calls, hooks = [], {"Stop": [{"hooks": [{"type": "command", "command": "tuios agent-hook claude-code"}]}]}
+
+            def install(argv, env=None, **_):
+                # As tuios does: merge its hooks into the settings of CLAUDE_CONFIG_DIR.
+                calls.append((argv, env["CLAUDE_CONFIG_DIR"]))
+                settings = Path(env["CLAUDE_CONFIG_DIR"]) / "settings.json"
+                settings.write_text(json.dumps({**json.loads(settings.read_text()), "hooks": hooks}))
+
+            with patch("tuitp_windows.run", side_effect=install):
+                target = runtime.write_claude_hooks()
+                self.assertEqual(target, Path(temp) / "state" / "claude" / "settings.json")
+                self.assertEqual(json.loads(target.read_text()), {"hooks": hooks})
+                argv, config = calls[0]
+                self.assertEqual(argv, [runtime.tuios, "integration", "install", "claude-code", "--no-skill",
+                                        "--command", runtime.tuios])
+                self.assertFalse(Path(config).exists())  # A temporary folder, never the user's settings.
+                # The same hooks leave the file alone; new ones replace it.
+                with patch("tuitp_windows.write_json") as write:
+                    runtime.write_claude_hooks()
+                write.assert_not_called()
+                hooks["Stop"][0]["hooks"][0]["command"] += " --integration 4"
+                runtime.write_claude_hooks()
+                self.assertEqual(json.loads(target.read_text()), {"hooks": hooks})
+                hooks.clear()
+                with self.assertRaisesRegex(RuntimeError, "wrote no hooks"):
+                    runtime.write_claude_hooks()
+
+    def test_only_claude_panes_load_the_hooks_file_when_it_exists(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-pane-hooks-") as temp:
+            base = Path(temp)
+            profile, project, local = base / "user profile", base / "project (with spaces)", base / "local app data"
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            project.mkdir()
+            (profile / "senv.bat").write_text('@echo off\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            for role in ("claude", "codex"):
+                (local_bin / f"{role}.bat").write_text(f'@echo off\necho {role.upper()}-ARGS [%*]\nexit /b 0\n')
+            hooks = local / "tuitp" / "claude" / "settings.json"
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base), "LOCALAPPDATA": str(local)}):
+                for exists in (False, True):
+                    if exists:
+                        hooks.parent.mkdir(parents=True)
+                        hooks.write_text("{}")
+                    for role in ("claude", "codex"):
+                        with self.subTest(exists=exists, role=role):
+                            command = (f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} local-or-global'
+                                       ' && (if defined agent (echo LEAKED) else echo CLEAN)')
+                            result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                            expected = f'--settings "{hooks}"' if exists and role == "claude" else ""
+                            self.assertIn(f"{role.upper()}-ARGS [{expected}]", result.stdout)
+                            self.assertIn("CLEAN", result.stdout)
 
     def test_live_file_reads_and_rewrites_survive_each_other(self):
         # The launcher polls each .live file while its tab host rewrites it.
