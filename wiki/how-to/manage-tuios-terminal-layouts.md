@@ -190,6 +190,33 @@ Deleting the session of the pane that runs `tuitp stop` would also end
 TUIOS and returns at once. That copy writes its output to
 `%LOCALAPPDATA%\tuitp\stop.log`.
 
+## See Claude panes on the TUIOS rail
+
+On Windows, TUIOS cannot read which program runs in a pane, so it detects no
+agent by its process. Codex sends its own state as OSC 7501 program status
+reports, so its panes show on the rail and in the Inbox without setup.
+Claude Code sends none: its panes show only through TUIOS's Claude Code
+hooks.
+
+Each `tuitp` run that starts Claude panes asks TUIOS for these hooks
+(`tuios integration install claude-code`, aimed at a temporary folder) and
+writes them to `%LOCALAPPDATA%\tuitp\claude\settings.json`. Claude panes start
+`claude --settings` with that file, and report idle, working, waiting for you,
+and done. Asking TUIOS on each run keeps the hooks current after a TUIOS
+upgrade; the file changes only when they do.
+
+Other Claude sessions do not load these hooks. Each hook starts `tuios.exe`,
+which took about a second on a workstation with endpoint protection, and
+Claude waits for its hooks before and after every tool call. For the same
+reason, do not run `tuios integration install claude-code` for your own Claude
+settings: the panes would also report each event twice.
+
+To check a pane, run `tuios list-agents --all-sessions`: a Claude pane shows
+the `claude-code` harness. Panes started before the hooks file existed do
+not load it: restart their session with `tuitp stop NAME`. If TUIOS cannot
+write the hooks, `tuitp` prints `Claude panes start without TUIOS agent
+hooks` with the reason, keeps any previous file, and starts the panes.
+
 ## Startup and recovery
 
 New tabs appear first, waiting for their sessions. New sessions are created
