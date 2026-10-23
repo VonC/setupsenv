@@ -335,6 +335,105 @@ class ReconciliationTests(unittest.TestCase):
         popen.assert_not_called()
         self.assertIn("[dry] STOP the TUIOS daemon", dry_out.getvalue())
 
+    def test_stop_named_session_closes_its_tab_deletes_it_then_reconciles(self):
+        self.owned_by_another_list()
+        old_token = json.loads(self.state_file.read_text())["tabs"][key("dev|tuios|Projects")]["token"]
+        code, out = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        events = self.runtime.events
+        # Only the tab that shows two closes, before two is deleted, then both start again.
+        self.assertEqual(self.events("close"), [("close", "dev", "Projects")])
+        self.assertEqual(self.events("kill-session"), [("kill-session", "two")])
+        self.assertEqual(self.events("open"), [("open", "dev", "Projects")])
+        self.assertEqual([e[1] for e in self.events("new")], ["two"])
+        self.assertLess(events.index(("close", "dev", "Projects")), events.index(("kill-session", "two")))
+        self.assertLess(events.index(("kill-session", "two")), events.index(self.events("open")[0]))
+        self.assertLess(events.index(("kill-session", "two")), events.index(self.events("new")[0]))
+        self.assertEqual({e[2] for e in self.events("send-text")}, {"two"})
+        self.assertFalse(self.events("kill-server"))
+        self.assertEqual(sorted(self.runtime.live), ["one", "test", "two", "unrelated"])
+        state = json.loads(self.state_file.read_text())
+        self.assertNotEqual(state["tabs"][key("dev|tuios|Projects")]["token"], old_token)
+        self.assertEqual(state["sessions"]["two"]["status"], "ready")
+        self.assertEqual(sorted(state["sessions"]), ["one", "test", "two"])
+        for line in ("CLOSE tab Projects in tuitp-dev", "DELETE session two and its running processes",
+                     "OPEN tab Projects in tuitp-dev -> one, two", "CREATE session two (project)",
+                     "REUSE session one", "KEEP tab Test in tuitp-dev"):
+            self.assertIn(line, out)
+        self.assertNotIn("STOP the TUIOS daemon", out)
+
+    def test_dry_stop_named_session_previews_and_changes_nothing(self):
+        self.owned_by_another_list()
+        before = self.state_file.read_text()
+        code, out = self.main("dry", "stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        for line in ("CLOSE tab Projects in tuitp-dev", "DELETE session two and its running processes",
+                     "OPEN tab Projects in tuitp-dev -> one, two", "CREATE session two (project)"):
+            self.assertIn("[dry] " + line, out)
+        self.assertFalse(self.runtime.events)
+        self.assertEqual(self.state_file.read_text(), before)
+
+    def test_stop_named_session_deletes_an_undeclared_one_without_creating_it(self):
+        self.owned_by_another_list()
+        code, out = self.main("stop", "unrelated", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertEqual(self.events("kill-session"), [("kill-session", "unrelated")])
+        self.assertFalse(self.events("close") + self.events("open") + self.events("new"))
+        self.assertEqual(sorted(self.runtime.live), ["one", "test", "two"])
+
+    def test_stop_named_saved_session_restores_then_deletes_it(self):
+        self.owned_by_another_list()
+        for row in self.runtime.live.values():  # After a reboot: TUIOS lists saved sessions only.
+            row["saved"] = True
+        self.runtime.hosts.clear()
+        code, _ = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        steps = [e[:2] for e in self.runtime.events if e[0] in ("daemon", "kill-session", "new")]
+        self.assertEqual(steps[0], ("daemon",))
+        self.assertEqual([step for step in steps if step != ("daemon",)], [("kill-session", "two"), ("new", "two")])
+        # The other declared sessions come back with bare shells: their panes start again.
+        self.assertEqual({e[2] for e in self.events("send-text")}, {"one", "test", "two"})
+
+    def test_stop_unknown_or_unreconcilable_session_changes_nothing(self):
+        self.owned_by_another_list()
+        before = self.state_file.read_text()
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            code, _ = self.main("stop", "two", "nope", "--list", str(self.path))
+        self.assertEqual(code, 1)
+        self.assertIn("No session nope in the list or in TUIOS (the list declares one, two, test). Nothing changed.",
+                      err.getvalue())
+        # Another session left incomplete: the reconciliation would fail after two was deleted.
+        state = json.loads(before)
+        state["sessions"]["test"]["status"] = "initializing"
+        write_json(self.state_file, state)
+        with contextlib.redirect_stderr(io.StringIO()) as err:
+            code, _ = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 1)
+        self.assertIn("Session 'test' has incomplete setup", err.getvalue())
+        self.assertFalse(self.runtime.events)
+        self.assertEqual(sorted(self.runtime.live), ["one", "test", "two", "unrelated"])
+
+    def test_stop_named_session_goes_outside_only_the_pane_it_deletes(self):
+        self.owned_by_another_list()
+        before = self.state_file.read_text()
+        pane = {"LOCALAPPDATA": str(self.folder), "TUIOS_ENV": "1", "TUIOS_SESSION": "two"}
+        runs = (patch("tuitp.Windows", return_value=self.runtime), patch("tuitp.adopt_legacy", return_value=False),
+                patch("tuitp.launcher_lock", contextlib.nullcontext))
+        with patch.dict(os.environ, pane), runs[0], runs[1], runs[2], patch("tuitp.subprocess.Popen") as popen, \
+                contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(tuitp.main(["stop", "two", "--list", str(self.path)]), 0)
+        self.assertEqual(popen.call_args.args[0][2:], ["stop", "two", "--list", str(self.path.resolve())])
+        self.assertIn("tuitp stop two deletes this pane's TUIOS session two: it goes on outside TUIOS", out.getvalue())
+        self.assertFalse(self.runtime.events)
+        self.assertEqual(self.state_file.read_text(), before)
+        # From a pane of another session, it runs in place.
+        pane["TUIOS_SESSION"] = "one"
+        with patch.dict(os.environ, pane), runs[0], runs[1], runs[2], patch("tuitp.subprocess.Popen") as popen, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(tuitp.main(["stop", "two", "--list", str(self.path)]), 0)
+        popen.assert_not_called()
+        self.assertEqual(self.events("kill-session"), [("kill-session", "two")])
+
     def test_unknown_mode_is_rejected_before_any_change(self):
         with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(SystemExit) as exit:
             self.main("halt")
