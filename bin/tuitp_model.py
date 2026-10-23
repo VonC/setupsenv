@@ -34,11 +34,21 @@ def safe_path(text: str, base: Path) -> str:
     return str(path)
 
 
+PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
+              "claude": ("Claude",), "codex": ("Codex",)}
+
+
+def pane_name(role: str, pane_id: str) -> str:
+    """Name an agent pane after its project id, so that the TUIOS rail tells agents apart."""
+    return f"{role} {pane_id}" if pane_id and role != "CMD" else role
+
+
 @dataclass
 class Session:
     name: str
     folder: str
     kind: str = "project"
+    id: str = ""
 
 
 @dataclass
@@ -100,11 +110,15 @@ def read_list(path: Path) -> Layout:
                 if group is None:
                     raise ValueError("A '+' session must follow an '=== <tab title>' line")
                 fields = [part.strip() for part in line[1:].split("|")]
-                if len(fields) > 3:
-                    raise ValueError("Expected + folder|session-name|project-claude-codex-senv-or-single")
+                if len(fields) > 4:
+                    raise ValueError("Expected + folder|session-name|project-claude-codex-senv-or-single|id")
                 folder = safe_path(fields[0], path.parent)
-                name = fields[1] if len(fields) > 1 else Path(folder).name
-                kind = fields[2].lower() if len(fields) > 2 else "project"
+                # An empty name or kind keeps its default, so that an id needs neither.
+                name = fields[1] if len(fields) > 1 and fields[1] else Path(folder).name
+                kind = fields[2].lower() if len(fields) > 2 and fields[2] else "project"
+                pane_id = fields[3] if len(fields) > 3 else ""
+                if pane_id and not re.fullmatch(r"[A-Za-z0-9_.-]+", pane_id):
+                    raise ValueError(f"Invalid id {pane_id!r}: use letters, digits, '_', '-' and '.'")
                 if kind == "senv":
                     kind = "single"  # Keep compatibility with persisted single-session records.
                 if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]*", name):
@@ -114,7 +128,7 @@ def read_list(path: Path) -> Layout:
                 if kind not in ("project", "single", "claude", "codex"):
                     raise ValueError("Session kind must be 'project', 'claude', 'codex', 'senv' or 'single'")
                 names.add(name.casefold())
-                layout.sessions[name] = Session(name, folder, kind)
+                layout.sessions[name] = Session(name, folder, kind, pane_id)
                 group.sessions.append(name)
             else:
                 close_group()
@@ -154,6 +168,12 @@ def reconcile_plan(layout: Layout, state: dict, live: dict, tab_alive) -> dict:
     # restores its windows with bare shells: its panes need starting again.
     restore = [session for name, session in layout.sessions.items() if live.get(name, {}).get("saved")]
     remove = [name for name in state["sessions"] if name not in layout.sessions]
+    # A running session keeps its panes: a new id renames them in place. A
+    # session the ledger lacks still has the role names its creator gave.
+    rename = [(session, state["sessions"].get(name, {}).get("id", "")) for name, session in layout.sessions.items()
+              if name in live]
+    rename = [(session, old) for session, old in rename
+              if any(pane_name(role, old) != pane_name(role, session.id) for role in PANE_ROLES[session.kind])]
     for name, session in layout.sessions.items():
         old = state["sessions"].get(name)
         if old and name in live:
@@ -165,7 +185,7 @@ def reconcile_plan(layout: Layout, state: dict, live: dict, tab_alive) -> dict:
                 raise ValueError(f"Session {name!r} already exists with a different folder/layout. "
                                  "Use a new session name to replace it, or restore its declaration.")
     return {"keep": keep, "open": open_tabs, "close": close_tabs,
-            "create": create, "restore": restore, "remove": remove}
+            "create": create, "restore": restore, "remove": remove, "rename": rename}
 
 
 def new_state():
@@ -182,6 +202,10 @@ def describe(plan: dict, layout: Layout) -> list[str]:
     lines += [f"RESTORE session {s.name}, then start its panes again" for s in plan["restore"]]
     started = {s.name for s in plan["create"] + plan["restore"]}
     lines += [f"REUSE session {name}" for name in layout.sessions if name not in started]
+    lines += [f"RENAME panes of session {s.name}: "
+              + ", ".join(f"{pane_name(role, old)} -> {pane_name(role, s.id)}" for role in PANE_ROLES[s.kind]
+                          if pane_name(role, old) != pane_name(role, s.id))
+              for s, old in plan["rename"]]
     lines += [f"CLOSE tab {r['spec']['title'] or r['spec']['folder']} in tuitp-{r['spec']['window']}"
               for _, r in plan["close"]]
     lines += [f"DELETE session {name} and its running processes" for name in plan["remove"]]

@@ -12,21 +12,31 @@ import time
 import uuid
 
 from tuitp_install import LEGACY_DIR, adopt_legacy
-from tuitp_model import Layout, describe, new_state, read_list, reconcile_plan
+from tuitp_model import PANE_ROLES, Layout, describe, new_state, pane_name, read_list, reconcile_plan
 from tuitp_windows import Windows, launcher_lock, read_json, timing_summary, write_json
-
-
-PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
-              "claude": ("Claude",), "codex": ("Codex",)}
 
 
 def session_layout(runtime, session):
     first = PANE_ROLES[session.kind][0]
-    runtime.command("set-window", "-s", session.name, "-w", "0", "--name", first)
+    runtime.command("set-window", "-s", session.name, "-w", "0", "--name", pane_name(first, session.id))
     if session.kind == "project":
-        for workspace, name in ((2, "Codex"), (3, "CMD")):
-            runtime.command("new-window", name, "-s", session.name, "--workspace", str(workspace),
-                            "--cwd", session.folder, "--no-focus", "--", str(runtime.cmd), "/d", "/v:off")
+        for workspace, role in ((2, "Codex"), (3, "CMD")):
+            runtime.command("new-window", pane_name(role, session.id), "-s", session.name, "--workspace",
+                            str(workspace), "--cwd", session.folder, "--no-focus", "--", str(runtime.cmd),
+                            "/d", "/v:off")
+
+
+def rename_panes(runtime, session, old_id):
+    """Give the agent panes of a running session the names of its new id, without restarting them."""
+    names = runtime.pane_names(session.name)
+    for role in PANE_ROLES[session.kind]:
+        old, new = pane_name(role, old_id), pane_name(role, session.id)
+        if old == new or new in names:
+            continue  # Already so named, by hand or by an interrupted run.
+        if old not in names:
+            print(f"tuitp: session {session.name} has no {old} pane to name {new}", flush=True)
+            continue
+        runtime.command("set-window", "-s", session.name, "-w", old, "--name", new)
 
 
 def session_init(runtime, session):
@@ -38,8 +48,9 @@ def session_init(runtime, session):
         command = f'call "{helper}" "{session.folder}" {role.lower()}'
         if session.kind != "project":
             command += " local-or-global"
-        runtime.command("send-text", "-s", session.name, "-w", role, command)
-        runtime.command("send-keys", "Enter", "-s", session.name, "-w", role)
+        window = pane_name(role, session.id)
+        runtime.command("send-text", "-s", session.name, "-w", window, command)
+        runtime.command("send-keys", "Enter", "-s", session.name, "-w", window)
 
 
 def parallel_sessions(runtime, sessions, action, completed):
@@ -78,7 +89,8 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         # original launcher. Only these recorded names can later be deleted.
         for name, session in layout.sessions.items():
             if name in live and name not in state["sessions"]:
-                state["sessions"][name] = {**asdict(session), "status": "ready"}
+                # Its panes keep the role names until the rename below records the id.
+                state["sessions"][name] = {**asdict(session), "id": "", "status": "ready"}
         save(state)
 
         print("[1/4] Open missing tabs", flush=True)
@@ -115,6 +127,12 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         runtime.verify_tabs([state["tabs"][tab.slot] for tab in layout.tabs])
 
         print("[3/4] Initialize new and restored sessions", flush=True)
+        # A restored session comes back with the pane names it had: rename
+        # them first, since its pane commands go to the names of its id.
+        for session, old_id in plan["rename"]:
+            rename_panes(runtime, session, old_id)
+            state["sessions"][session.name]["id"] = session.id
+            save(state)
         # The daemon is ready, so every restored window holds a bare shell:
         # start its pane command, as for a new session, and only this once.
         for session in plan["restore"]:
@@ -145,6 +163,8 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         state["tabs"] = {slot: record for slot, record in state["tabs"].items() if slot in desired_slots}
         for tab in layout.tabs:
             state["tabs"][tab.slot]["spec"] = asdict(tab)
+        for name, session in layout.sessions.items():
+            state["sessions"][name]["id"] = session.id  # Also a CMD-only session, which renames nothing.
         save(state)
         print(f"Reconciled in {time.monotonic() - started:.1f}s."
               + (" New pane startup commands submitted." if plan["create"] or plan["restore"] else ""))

@@ -277,6 +277,11 @@ class Windows:
     def command(self, *args):
         return run([self.tuios, *args]).stdout
 
+    def pane_names(self, session):
+        """Return the names that address the panes of a session, as set-window --name gave them."""
+        windows = json.loads(self.command("list-windows", "-s", session, "--json")).get("windows") or []
+        return {w.get("custom_name") or w.get("display_name") or "" for w in windows}
+
     def snapshot(self):
         result = run([self.tuios, "ls", "--json"], check=False)
         try:
