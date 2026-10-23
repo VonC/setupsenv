@@ -70,6 +70,19 @@ def parallel_sessions(runtime, sessions, action, completed):
         raise RuntimeError("\n".join(failures))
 
 
+def follow_tabs(runtime, wanted):
+    """Run the watcher that shows each session in its own tab while TUIOS tabs exist, and only then."""
+    try:
+        if wanted and runtime.ensure_watcher():
+            print("Started the tab watcher: a session picked in another tab's rail opens in its own tab.",
+                  flush=True)
+        elif not wanted and runtime.stop_watcher():
+            print("Stopped the tab watcher.", flush=True)
+    except (OSError, ValueError) as error:
+        # The tabs and sessions are in place: only the rail clicks stay in their tab.
+        print(f"tuitp: tab watcher: {error}", flush=True)
+
+
 def apply_layout(layout, state, live, runtime, save, dry=False):
     plan = reconcile_plan(layout, state, live, runtime.tab_alive)
     for line in describe(plan, layout):
@@ -166,6 +179,8 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
         for name, session in layout.sessions.items():
             state["sessions"][name]["id"] = session.id  # Also a CMD-only session, which renames nothing.
         save(state)
+        tuios_tabs = any(tab.kind == "tuios" for tab in layout.tabs)
+        follow_tabs(runtime, tuios_tabs and os.environ.get("TUITP_WATCH") != "0")
         print(f"Reconciled in {time.monotonic() - started:.1f}s."
               + (" New pane startup commands submitted." if plan["create"] or plan["restore"] else ""))
     except Exception as error:

@@ -274,6 +274,45 @@ class Windows:
             write_json(target, value)
         return target
 
+    def watcher_digest(self):
+        files = ("tuitp_watch.py", "tuitp_tabs.ps1", "tuitp_windows.py", "tuitp_model.py")
+        return hashlib.sha256(b"".join((self.scripts / name).read_bytes() for name in files)).hexdigest()[:12]
+
+    def ensure_watcher(self):
+        """Start the tab watcher of tuitp_watch.py, or start it again when its files changed."""
+        record_file = self.root / "watch.json"
+        record = read_json(record_file) if record_file.is_file() else {}
+        digest = self.watcher_digest()
+        running = alive(record.get("process"))
+        if running and record.get("digest") == digest:
+            return False
+        if running:
+            terminate_exact(record["process"])
+        # As for stop outside TUIOS: without the TUIOS_* variables of a pane
+        # tuitp may run in, and out of its job, so that it outlives the pane.
+        env = {name: value for name, value in daemon_environment(os.environ).items()
+               if not name.startswith("TUIOS_")}
+        env["PYTHONUNBUFFERED"] = "1"
+        flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
+        with (self.root / "watch.log").open("ab") as log:
+            argv = [sys.executable, str(self.scripts / "tuitp_watch.py"), str(self.tuios)]
+            try:
+                process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
+                                           creationflags=flags | subprocess.CREATE_BREAKAWAY_FROM_JOB)
+            except PermissionError:  # A job that refuses breakaway: the watcher ends with it.
+                process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
+                                           creationflags=flags)
+        write_json(record_file, {"process": identity(process.pid), "digest": digest})
+        return True
+
+    def stop_watcher(self):
+        record_file = self.root / "watch.json"
+        record = read_json(record_file) if record_file.is_file() else {}
+        if not alive(record.get("process")):
+            return False
+        terminate_exact(record["process"])  # Its tab selector reads its pipe and ends with it.
+        return True
+
     def command(self, *args):
         return run([self.tuios, *args]).stdout
 
