@@ -33,6 +33,7 @@ class FakeWindows:
         self.cmd = Path(r"C:\Windows\System32\cmd.exe")
         self.events, self.hosts = [], set()
         self.live = {}
+        self.panes = {}  # Session name -> its pane names, in window order.
         self.daemon_live = False
         self.fail = None
         self.lock = threading.Lock()
@@ -45,6 +46,9 @@ class FakeWindows:
 
     def write_claude_hooks(self):
         self.events.append(("claude-hooks",))
+
+    def pane_names(self, session):
+        return set(self.panes.get(session, []))
 
     def snapshot(self):
         return copy.deepcopy(self.live)
@@ -84,8 +88,20 @@ class FakeWindows:
                 if args[1] in self.live:
                     raise AssertionError("duplicate session creation")
                 self.live[args[1]] = {"name": args[1], "saved": False}
+                self.panes[args[1]] = ["cmd"]
+            if args[0] in ("set-window", "send-text", "send-keys"):
+                # Like TUIOS, address a pane by its index or its name.
+                session, window = args[args.index("-s") + 1], args[args.index("-w") + 1]
+                names = self.panes.get(session, [])
+                if window not in names and not (window.isdigit() and int(window) < len(names)):
+                    raise RuntimeError(f"no window {window!r} in session {session}")
+                if args[0] == "set-window":
+                    names[int(window) if window.isdigit() else names.index(window)] = args[args.index("--name") + 1]
+            if args[0] == "new-window":
+                self.panes[args[args.index("-s") + 1]].append(args[1])
             if args[0] == "kill-session":
                 del self.live[args[1]]
+                self.panes.pop(args[1], None)
             if args[0] == "kill-server":
                 self.daemon_live = False
                 for row in self.live.values():  # The daemon saves what it still holds.
@@ -219,6 +235,71 @@ class ReconciliationTests(unittest.TestCase):
         self.runtime.events.clear()
         self.apply("=== Test\n+ FOLDER|test|senv")
         self.assertFalse(self.events("new") + self.events("open") + self.events("send-text"))
+
+    def test_list_id_names_the_agent_panes_and_keeps_empty_fields_default(self):
+        (self.folder / "web-app").mkdir()
+        layout = self.layout(f"=== P\n+ FOLDER|one||pdf\n+ {self.folder / 'web-app'}|||web\n+ FOLDER|cl|claude|t\n"
+                             "+ FOLDER|sh|senv|x")
+        self.assertEqual([(s.name, s.kind, s.id) for s in layout.sessions.values()],
+                         [("one", "project", "pdf"), ("web-app", "project", "web"), ("cl", "claude", "t"),
+                          ("sh", "single", "x")])
+        for bad in ("+ FOLDER|one|project|p d", "+ FOLDER|one|project|pdf|extra"):
+            with self.subTest(line=bad), self.assertRaises(ValueError):
+                self.layout("=== P\n" + bad)
+        self.apply("=== P\n+ FOLDER|one||pdf\n=== C\n+ FOLDER|cl|claude|t\n+ FOLDER|sh|senv|x")
+        self.assertEqual(self.runtime.panes["one"], ["Claude pdf", "Codex pdf", "CMD"])
+        self.assertEqual(self.runtime.panes["cl"], ["Claude t"])
+        self.assertEqual(self.runtime.panes["sh"], ["CMD"])  # CMD panes keep their name.
+        self.assertEqual(sorted(e[4] for e in self.events("send-text")),
+                         ["CMD", "CMD", "Claude pdf", "Claude t", "Codex pdf"])
+        self.assertEqual({name: s["id"] for name, s in self.state["sessions"].items()},
+                         {"one": "pdf", "cl": "t", "sh": "x"})
+
+    def test_new_id_renames_running_panes_in_place(self):
+        self.apply("=== P\n+ FOLDER|one")
+        out = io.StringIO()
+        for old, new in (("", "pdf"), ("pdf", "pds"), ("pds", "")):
+            with self.subTest(old=old, new=new):
+                self.runtime.events.clear()
+                with contextlib.redirect_stdout(out):
+                    self.apply(f"=== P\n+ FOLDER|one||{new}")
+                rename = (lambda role: f"{role} {new}".strip())
+                self.assertEqual(self.events("set-window"),
+                                 [("set-window", "-s", "one", "-w", f"{role} {old}".strip(), "--name", rename(role))
+                                  for role in ("Claude", "Codex")])
+                self.assertFalse(self.events("new") + self.events("kill-session") + self.events("send-text"))
+                self.assertEqual(self.runtime.panes["one"], [rename("Claude"), rename("Codex"), "CMD"])
+                self.assertEqual(self.state["sessions"]["one"]["id"], new)
+        self.assertIn("RENAME panes of session one: Claude -> Claude pdf, Codex -> Codex pdf", out.getvalue())
+        self.runtime.events.clear()
+        self.apply("=== P\n+ FOLDER|one")
+        self.assertFalse(self.events("set-window"))
+
+    def test_panes_named_by_hand_or_missing_are_left_as_they_are(self):
+        self.apply("=== P\n+ FOLDER|one\n+ FOLDER|two")
+        self.runtime.panes["one"] = ["Claude pdf", "Codex pdf", "CMD"]  # Renamed with tuios set-window.
+        self.runtime.panes["two"] = ["Claude", "CMD"]  # Its Codex pane was closed.
+        self.runtime.events.clear()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== P\n+ FOLDER|one||pdf\n+ FOLDER|two||web")
+        self.assertEqual(self.events("set-window"), [("set-window", "-s", "two", "-w", "Claude", "--name", "Claude web")])
+        self.assertIn("tuitp: session two has no Codex pane to name Codex web", out.getvalue())
+        self.assertEqual({name: s["id"] for name, s in self.state["sessions"].items()}, {"one": "pdf", "two": "web"})
+
+    def test_restored_session_is_renamed_before_its_panes_start(self):
+        self.runtime.live["saved"] = {"name": "saved", "saved": True}
+        self.runtime.panes["saved"] = ["Claude", "Codex", "CMD"]
+        with contextlib.redirect_stdout(io.StringIO()) as out:
+            self.apply("=== Restored\n+ FOLDER|saved||pdf", dry=True)
+        self.assertIn("[dry] RENAME panes of session saved: Claude -> Claude pdf, Codex -> Codex pdf", out.getvalue())
+        self.assertFalse(self.runtime.events)
+        self.apply("=== Restored\n+ FOLDER|saved||pdf")
+        names = [e[0] for e in self.runtime.events]
+        self.assertLess(names.index("daemon"), names.index("set-window"))
+        self.assertLess(max(i for i, n in enumerate(names) if n == "set-window"), names.index("send-text"))
+        self.assertEqual([e[4] for e in self.events("send-text")], ["Claude pdf", "Codex pdf", "CMD"])
+        self.assertEqual(self.state["sessions"]["saved"]["id"], "pdf")
 
     def test_existing_single_session_is_not_replaced_by_claude_implicitly(self):
         self.apply("=== Test\n+ FOLDER|test|single")
@@ -483,6 +564,8 @@ class ReconciliationTests(unittest.TestCase):
         text = "=== Restored\n+ FOLDER|saved\n+ FOLDER|alone|single"
         self.runtime.live["saved"] = {"name": "saved", "saved": True}
         self.runtime.live["alone"] = {"name": "alone", "saved": True}
+        # TUIOS restores the pane names a session was saved with.
+        self.runtime.panes = {"saved": ["Claude", "Codex", "CMD"], "alone": ["CMD"]}
         self.apply(text)
         self.assertFalse(self.events("new") + self.events("new-window"))
         names = [e[0] for e in self.runtime.events]
@@ -506,6 +589,7 @@ class ReconciliationTests(unittest.TestCase):
 
     def test_failed_restore_start_blocks_replay(self):
         self.runtime.live["saved"] = {"name": "saved", "saved": True}
+        self.runtime.panes["saved"] = ["Claude", "Codex", "CMD"]
         self.runtime.fail = lambda a: a[0] == "send-keys"
         with self.assertRaises(RuntimeError):
             self.apply("=== Restored\n+ FOLDER|saved")
@@ -857,6 +941,14 @@ class WindowsTests(unittest.TestCase):
             with patch("tuitp_windows.subprocess.Popen"), patch.object(runtime, "wait_host", return_value=True):
                 runtime.open_tab(record)
             self.assertEqual(tuitp_windows.read_json(runtime.host_path(record))["pane"], str(second))
+
+    def test_pane_names_read_the_names_tuios_lists(self):
+        runtime = Windows(Path(r"C:\bin"), Path(r"C:\state"))
+        listing = {"windows": [{"custom_name": "Claude pdf", "display_name": "Claude pdf"},
+                               {"custom_name": "", "display_name": "CMD"}]}
+        with patch("tuitp_windows.run", return_value=Mock(stdout=json.dumps(listing))) as native:
+            self.assertEqual(runtime.pane_names("one"), {"Claude pdf", "CMD"})
+        self.assertEqual(native.call_args.args[0], [runtime.tuios, "list-windows", "-s", "one", "--json"])
 
     def test_claude_hooks_come_from_tuios_into_a_file_of_their_own(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-claude-hooks-") as temp:
