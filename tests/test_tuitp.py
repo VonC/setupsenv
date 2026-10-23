@@ -35,6 +35,7 @@ class FakeWindows:
         self.live = {}
         self.panes = {}  # Session name -> its pane names, in window order.
         self.daemon_live = False
+        self.watching = False  # Whether the tab watcher runs.
         self.fail = None
         self.lock = threading.Lock()
 
@@ -49,6 +50,14 @@ class FakeWindows:
 
     def pane_names(self, session):
         return set(self.panes.get(session, []))
+
+    def ensure_watcher(self):
+        started, self.watching = not self.watching, True
+        return started
+
+    def stop_watcher(self):
+        stopped, self.watching = self.watching, False
+        return stopped
 
     def snapshot(self):
         return copy.deepcopy(self.live)
@@ -347,6 +356,31 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(self.state, new_state())
         self.assertEqual(list(self.runtime.live), ["unrelated"])
 
+    def test_tab_watcher_runs_while_tuios_tabs_exist(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one", dry=True)
+            self.assertFalse(self.runtime.watching)
+            self.apply("=== Projects\n+ FOLDER|one")
+            self.assertTrue(self.runtime.watching)
+            self.apply("=== Projects\n+ FOLDER|one")
+            self.assertEqual(out.getvalue().count("Started the tab watcher"), 1)
+            self.apply("FOLDER|Shell")  # A plain CMD tab has no rail.
+            self.assertFalse(self.runtime.watching)
+            self.assertIn("Stopped the tab watcher.", out.getvalue())
+            with patch.dict(os.environ, {"TUITP_WATCH": "0"}):
+                self.apply("=== Projects\n+ FOLDER|one")
+            self.assertFalse(self.runtime.watching)
+
+    def test_failed_tab_watcher_leaves_the_reconciliation_done(self):
+        self.runtime.ensure_watcher = Mock(side_effect=OSError("no python"))
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one")
+        self.assertIn("tuitp: tab watcher: no python", out.getvalue())
+        self.assertIn("Reconciled in", out.getvalue())
+        self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
+
     def test_stop_ignores_the_list_and_leaves_no_tab_session_or_daemon(self):
         self.owned_by_another_list()
         # The current list has another structure: stop must neither read nor apply it.
@@ -362,6 +396,7 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(self.runtime.events[-1], ("kill-server",))
         self.assertEqual(self.runtime.live, {})
         self.assertFalse(self.runtime.daemon_live)
+        self.assertFalse(self.runtime.watching)
         self.assertEqual(json.loads(self.state_file.read_text()), new_state())
         self.assertIn("DELETE session unrelated and its running processes, though tuitp did not start it", out)
         self.assertIn("STOP the TUIOS daemon", out)
