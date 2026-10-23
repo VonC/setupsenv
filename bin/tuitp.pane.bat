@@ -38,9 +38,14 @@ rem does when its just started app-server times out on a slow first network
 rem call ("workspace routing discovery timed out"): start it again, 3 times
 rem in all. A later failure or a normal exit leaves the pane at its prompt.
 set "attempt=1"
+rem tuitp writes TUIOS's Claude Code hooks to this file, so that only these
+rem panes report their state: in the user's settings, each hook would start
+rem tuios.exe in every Claude session.
+set "agent=%TUITP_ROLE%"
+if /I "%TUITP_ROLE%"=="claude" if exist "%LOCALAPPDATA%\tuitp\claude\settings.json" set agent=claude --settings "%LOCALAPPDATA%\tuitp\claude\settings.json"
 :start_agent
 call :seconds started
-call %TUITP_ROLE%
+call %agent%
 set "code=%errorlevel%"
 if "%code%"=="0" exit /b 0
 call :seconds ended

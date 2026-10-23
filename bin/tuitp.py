@@ -66,6 +66,12 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
     if dry:
         return
     started = time.monotonic()
+    if any("Claude" in PANE_ROLES[session.kind] for session in plan["create"] + plan["restore"]):
+        try:
+            runtime.write_claude_hooks()
+        except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+            # Before any change: Claude panes still start, without reporting their state.
+            print(f"tuitp: Claude panes start without TUIOS agent hooks: {error}", flush=True)
     opened = []
     try:
         # Adopt declared existing sessions, including sessions created by the

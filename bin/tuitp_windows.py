@@ -11,6 +11,7 @@ from pathlib import Path
 import re
 import subprocess
 import sys
+import tempfile
 import threading
 import time
 import uuid
@@ -172,11 +173,11 @@ def launcher_lock():
         api.CloseHandle(handle)
 
 
-def run(argv, timeout=60, check=True):
+def run(argv, timeout=60, check=True, env=None):
     label = " ".join([Path(str(argv[0])).stem, *map(str, argv[1:])])
     with timed(label[:110], "command"):
         result = subprocess.run([str(a) for a in argv], capture_output=True, text=True,
-                                encoding="utf-8", errors="replace", timeout=timeout,
+                                encoding="utf-8", errors="replace", timeout=timeout, env=env,
                                 creationflags=subprocess.CREATE_NO_WINDOW)
     if check and result.returncode:
         raise RuntimeError(f"{subprocess.list2cmdline([str(a) for a in argv])}\n"
@@ -246,6 +247,31 @@ class Windows:
                 shared(lambda: os.replace(temporary, target))
             finally:
                 temporary.unlink(missing_ok=True)
+        return target
+
+    def write_claude_hooks(self):
+        """Write TUIOS's Claude Code hooks to the settings file that tuitp.pane.bat gives Claude.
+
+        On Windows, TUIOS cannot read a pane's foreground process: only these
+        hooks report a Claude pane's state. In the user's settings, each hook
+        would start tuios.exe in every Claude session, outside TUIOS too.
+        Asking TUIOS on each run keeps the hooks current after an upgrade.
+        """
+        target = self.root / "claude" / "settings.json"
+        with tempfile.TemporaryDirectory(prefix="tuitp-claude-") as config:
+            settings = Path(config) / "settings.json"
+            settings.write_text("{}", encoding="utf-8")
+            # CLAUDE_CONFIG_DIR points the install at this folder, not at the user's settings.
+            run([self.tuios, "integration", "install", "claude-code", "--no-skill", "--command", self.tuios],
+                env=dict(os.environ, CLAUDE_CONFIG_DIR=config))
+            hooks = read_json(settings).get("hooks")
+        if not hooks:
+            raise RuntimeError("tuios integration install claude-code wrote no hooks")
+        value = {"hooks": hooks}
+        # Rewrite only a change: Claude panes started earlier keep a file they may watch.
+        current = shared(lambda: target.read_text(encoding="utf-8")) if target.is_file() else ""
+        if current != json.dumps(value, indent=2):
+            write_json(target, value)
         return target
 
     def command(self, *args):
