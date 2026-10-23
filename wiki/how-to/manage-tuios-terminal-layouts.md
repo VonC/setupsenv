@@ -135,18 +135,28 @@ launcher.
 
 ## Restart or remove one session
 
-To start one session again from scratch, delete it from a CMD outside that
-session, then run `tuitp`:
+To start one session again from scratch, name it after `stop`:
 
 ```cmd
-"%PRGS%\tuioss\current\tuios.exe" kill-session cplx
-tuitp
+tuitp dry stop cplx
+tuitp stop cplx
 ```
 
-`kill-session` ends the Claude, Codex, and CMD processes of that session
-only, and its tab closes when its `tuios attach` client ends. `tuitp` then
-creates the session again, starts its panes, and opens its tab. The other
-sessions and tabs stay as they are.
+`tuitp stop cplx` closes the tab that shows `cplx`, deletes that session
+with its Claude, Codex, and CMD processes, then reconciles the list as a new
+`tuitp` run does: it creates `cplx` again, starts its panes, and opens its
+tab. When that tab also shows other sessions, they keep running, and the
+tab opens again on its first session. The other tabs and sessions stay as
+they are. Name several sessions to restart them together, such as
+`tuitp stop api web`.
+
+A session that `tuitp.list` no longer declares is deleted and not created
+again. A name that is neither in the list nor in TUIOS stops `tuitp` with
+nothing changed, as does a list that the reconciliation would refuse, so
+that a session is never deleted without being created again. Run from a
+pane of the session it deletes, `tuitp stop cplx` goes on outside TUIOS,
+with its output in `%LOCALAPPDATA%\tuitp\stop.log`; from any other pane, it
+runs in place.
 
 To remove a session for good, delete its `===` block from `tuitp.list` and
 run `tuitp`: it closes the tab and deletes the session.
@@ -211,7 +221,8 @@ Saved layouts cannot preserve processes across a daemon shutdown: restored
 panes contain new shells. `tuitp` starts the panes of the declared restored
 sessions once, as for new sessions. A session reused from a running daemon
 keeps its panes as they are, even when their agents have exited: run
-`tuitp stop`, then `tuitp`, to start every session again from scratch.
+`tuitp stop NAME` to start that session again from scratch, or `tuitp stop`,
+then `tuitp`, for every session.
 
 Ownership and launch progress are stored in `%LOCALAPPDATA%\tuitp\state.json`.
 Per-tab host records and errors are in its `hosts` directory; daemon startup
@@ -225,8 +236,8 @@ mistaking a reused PID for a managed tab. One reconciliation runs at a time.
 Failures during setup prevent the removal phase. If session setup was
 interrupted, a retry refuses to replay partially submitted commands into
 existing panes. Inspect and recover work from the named session, then
-remove that incomplete session with `tuios kill-session NAME` and rerun
-`tuitp` to create it afresh. If a deletion or tab close fails, rerun after
+run `tuitp stop NAME` to delete that incomplete session and create it
+afresh. If a deletion or tab close fails, rerun after
 resolving the reported error; completed operations are already recorded.
 
 Set `TUITP_PROFILE` to choose a WT profile; otherwise `WTP_PROFILE` is used,
