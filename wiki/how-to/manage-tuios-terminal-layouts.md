@@ -173,6 +173,28 @@ runs in place.
 To remove a session for good, delete its `===` block from `tuitp.list` and
 run `tuitp`: it closes the tab and deletes the session.
 
+## Restart one agent pane
+
+`tuitp stop NAME` starts every pane of a session again. To restart only one
+agent and leave the other panes running, for example a Claude pane started
+before the TUIOS hooks file existed, use its pane:
+
+1. Quit the agent: type `/exit` in Claude, or `/quit` in Codex. The pane
+   returns to its CMD prompt, in the session folder, with senv still active
+   and the tool directories on `PATH`.
+2. Start the agent again with the command that `tuitp` runs in that pane:
+
+   ```cmd
+   claude --settings "%LOCALAPPDATA%\tuitp\claude\settings.json"
+   codex
+   ```
+
+Add `--continue` to the Claude command to resume the latest conversation of
+that folder, or `--resume` to pick one. `codex resume --last` resumes the
+latest Codex session of that folder, and `codex resume` lists them. Without
+`--settings`, Claude starts without the TUIOS hooks and does not show on the
+rail. An agent started by hand gets no startup retry.
+
 ## Stop every tab, session and the daemon
 
 Run `tuitp dry stop` to preview, then `tuitp stop`:
@@ -225,7 +247,9 @@ settings: the panes would also report each event twice.
 
 To check a pane, run `tuios list-agents --all-sessions`: a Claude pane shows
 the `claude-code` harness. Panes started before the hooks file existed do
-not load it: restart their session with `tuitp stop NAME`. If TUIOS cannot
+not load it: restart their Claude as
+[Restart one agent pane](#restart-one-agent-pane) shows, or their whole
+session with `tuitp stop NAME`. If TUIOS cannot
 write the hooks, `tuitp` prints `Claude panes start without TUIOS agent
 hooks` with the reason, keeps any previous file, and starts the panes.
 
@@ -294,9 +318,10 @@ If only saved TUIOS sessions exist, the daemon restores their saved layouts.
 Saved layouts cannot preserve processes across a daemon shutdown: restored
 panes contain new shells. `tuitp` starts the panes of the declared restored
 sessions once, as for new sessions. A session reused from a running daemon
-keeps its panes as they are, even when their agents have exited: run
-`tuitp stop NAME` to start that session again from scratch, or `tuitp stop`,
-then `tuitp`, for every session.
+keeps its panes as they are, even when their agents have exited: start an
+agent again in its pane as [Restart one agent pane](#restart-one-agent-pane)
+shows, run `tuitp stop NAME` to start that session again from scratch, or
+`tuitp stop`, then `tuitp`, for every session.
 
 Ownership and launch progress are stored in `%LOCALAPPDATA%\tuitp\state.json`.
 Per-tab host records and errors are in its `hosts` directory; daemon startup
