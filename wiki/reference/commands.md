@@ -141,6 +141,9 @@ sessions and deletes them, then reconciles the list, which creates the
 declared ones again and reopens their tabs. It changes nothing when a name
 is in neither the list nor TUIOS, or when the list cannot be reconciled.
 Run from a pane of a session it deletes, it goes on outside TUIOS too.
+Deleting a session with a Codex pane also ends the Codex app-server daemon,
+its updater and what it started, unless Codex runs outside the deleted
+sessions.
 Claude panes start with TUIOS's Claude Code hooks, which tuitp writes to
 `%LOCALAPPDATA%\tuitp\claude\settings.json`, so that they show on the TUIOS
 rail; other Claude sessions do not load them. A session declared with an id

@@ -224,6 +224,29 @@ Deleting the session of the pane that runs `tuitp stop` would also end
 TUIOS and returns at once. That copy writes its output to
 `%LOCALAPPDATA%\tuitp\stop.log`.
 
+## Stop the Codex daemon with its last sessions
+
+Codex panes share one Codex app-server daemon per user. The first Codex
+that starts launches it, with an updater and a code-mode host, and the other
+Codex connect to it. The commands that a Codex agent runs are processes of
+that daemon, not of its pane. Deleting a session ends the processes attached
+to the console of its panes, Claude, Codex and CMD, but not the daemon,
+which has no console there.
+
+When `tuitp` deletes a session that has a Codex pane, with `tuitp stop`,
+`tuitp stop NAME`, or by removing it from the list, and no Codex runs outside
+the deleted sessions, it also ends the updater, the daemon, and what the
+daemon started: the code-mode host and any command still running. The
+preview shows it as `STOP the Codex app-server daemon`. While Codex runs in
+another session or another terminal, the daemon keeps running for it, and
+the preview says `KEEP the Codex app-server daemon for 2 Codex processes`.
+
+`tuitp` finds the daemon and its updater through the pid files that Codex
+writes in `%CODEX_HOME%\app-server-daemon`, `%USERPROFILE%\.codex` by default,
+and ends them as Task Manager would: `codex app-server daemon stop` took 12
+to 20s on a workstation with endpoint protection, only to start. The next
+Codex starts a new daemon.
+
 ## See Claude panes on the TUIOS rail
 
 On Windows, TUIOS cannot read which program runs in a pane, so it detects no
