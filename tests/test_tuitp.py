@@ -36,6 +36,9 @@ class FakeWindows:
         self.panes = {}  # Session name -> its pane names, in window order.
         self.daemon_live = False
         self.watching = False  # Whether the tab watcher runs.
+        self.codex_running = False  # Whether a Codex app-server daemon runs.
+        self.codex_clients = {}  # Session name -> its Codex processes.
+        self.codex_others = 0  # Codex processes outside every session.
         self.fail = None
         self.lock = threading.Lock()
 
@@ -61,6 +64,19 @@ class FakeWindows:
 
     def snapshot(self):
         return copy.deepcopy(self.live)
+
+    def codex_daemon(self, sessions):
+        if not self.codex_running:
+            return None  # A read-only check: recorded only to order it among changes.
+        self.events.append(("codex-check", *sessions))
+        inside = sum(self.codex_clients.get(name, 0) for name in sessions)
+        everywhere = self.codex_others + sum(self.codex_clients.get(name, 0) for name in self.live)
+        return {"updater": [{"pid": 2, "created": 2}], "daemon": [{"pid": 1, "created": 1}],
+                "inside": inside, "outside": everywhere - inside}
+
+    def stop_codex_daemon(self, found):
+        self.events.append(("codex-stop", found["daemon"][0]["pid"]))
+        self.codex_running = False
 
     def tab_alive(self, record):
         return record.get("token") in self.hosts
@@ -704,6 +720,95 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(len(self.events("close")), 1)
         self.assertFalse(self.events("new") + self.events("kill-session"))
 
+    def codex_in(self, **clients):
+        """A Codex app-server daemon runs, used by these Codex processes per session."""
+        self.runtime.codex_running, self.runtime.codex_clients = True, clients
+
+    def test_stop_ends_the_codex_daemon_its_panes_left_without_a_client(self):
+        self.owned_by_another_list()
+        self.codex_in(one=1, two=1)
+        code, out = self.main("stop")
+        self.assertEqual(code, 0)
+        events = self.runtime.events
+        # Checked once, before any deletion, for every session; stopped once all are gone.
+        self.assertEqual(sorted(self.events("codex-check")[0][1:]), ["one", "test", "two", "unrelated"])
+        self.assertEqual(len(self.events("codex-check")), 1)
+        self.assertLess(events.index(self.events("codex-check")[0]), events.index(self.events("close")[0]))
+        self.assertEqual(events[-1], ("codex-stop", 1))
+        self.assertLess(events.index(("kill-server",)), events.index(("codex-stop", 1)))
+        self.assertIn("STOP the Codex app-server daemon and its helpers: no Codex runs outside the deleted sessions",
+                      out)
+
+    def test_stop_keeps_the_codex_daemon_while_codex_runs_elsewhere(self):
+        self.owned_by_another_list()
+        self.codex_in(one=1)
+        self.runtime.codex_others = 2  # Codex in another terminal.
+        code, out = self.main("stop")
+        self.assertEqual(code, 0)
+        self.assertFalse(self.events("codex-stop"))
+        self.assertIn("KEEP the Codex app-server daemon for 2 Codex processes outside the deleted sessions", out)
+        self.assertEqual(self.runtime.live, {})
+
+    def test_dry_stop_previews_the_codex_daemon_stop(self):
+        self.owned_by_another_list()
+        self.codex_in(one=1, two=1)
+        code, out = self.main("dry", "stop")
+        self.assertEqual(code, 0)
+        self.assertIn("[dry] STOP the Codex app-server daemon and its helpers", out)
+        self.assertLess(out.index("[dry] DELETE session one"), out.index("[dry] STOP the Codex"))
+        self.assertEqual([e[0] for e in self.runtime.events], ["codex-check"])
+
+    def test_stop_named_session_keeps_the_codex_daemon_of_other_sessions(self):
+        self.owned_by_another_list()
+        self.codex_in(one=1, two=1)
+        code, out = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertEqual(self.events("codex-check"), [("codex-check", "two")])
+        self.assertFalse(self.events("codex-stop"))
+        self.assertIn("KEEP the Codex app-server daemon for 1 Codex process outside the deleted sessions", out)
+
+    def test_stop_named_session_ends_the_codex_daemon_of_its_last_codex(self):
+        self.owned_by_another_list()
+        self.codex_in(two=1)
+        code, out = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        events = self.runtime.events
+        self.assertLess(events.index(("kill-session", "two")), events.index(("codex-stop", 1)))
+        self.assertLess(events.index(("codex-stop", 1)), events.index(self.events("new")[0]))
+        self.assertIn("STOP the Codex app-server daemon", out)
+
+    def test_an_idle_codex_daemon_stops_with_a_session_declaring_codex_only(self):
+        self.owned_by_another_list()
+        self.codex_in()  # Every Codex has exited: no client at all.
+        code, out = self.main("stop", "test", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertFalse(self.events("codex-stop"))  # A CMD session: not tuitp's to stop.
+        self.assertNotIn("Codex app-server daemon", out)
+        code, out = self.main("stop", "two", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertEqual(self.events("codex-stop"), [("codex-stop", 1)])
+
+    def test_removing_a_session_from_the_list_checks_its_codex_and_a_plain_run_does_not(self):
+        self.owned_by_another_list()
+        self.codex_in(two=1)
+        self.apply("=== Projects\n+ FOLDER|one\n+ FOLDER|two\n=== Test\n+ FOLDER|test|single")
+        self.assertFalse(self.events("codex-check"))
+        self.apply("=== Projects\n+ FOLDER|one\n=== Test\n+ FOLDER|test|single")
+        self.assertEqual(self.events("codex-check"), [("codex-check", "two")])
+        self.assertLess(self.runtime.events.index(("kill-session", "two")),
+                        self.runtime.events.index(("codex-stop", 1)))
+
+    def test_a_failed_codex_check_leaves_the_daemon_and_still_stops_the_sessions(self):
+        self.owned_by_another_list()
+        self.codex_in(one=1)
+        with patch.object(self.runtime, "codex_daemon", side_effect=OSError("access denied")):
+            code, out = self.main("stop")
+        self.assertEqual(code, 0)
+        self.assertIn("tuitp: the Codex app-server daemon keeps running, it could not be checked: access denied",
+                      out)
+        self.assertFalse(self.events("codex-stop"))
+        self.assertEqual(self.runtime.live, {})
+
 
 @unittest.skipUnless(os.name == "nt", "Windows native boundary checks")
 class WindowsTests(unittest.TestCase):
@@ -1111,6 +1216,81 @@ class WindowsTests(unittest.TestCase):
         current = identity(os.getpid())
         self.assertTrue(alive(current))
         self.assertFalse(alive({**current, "created": current["created"] - 1}))
+
+    def test_process_table_follows_a_real_child_to_its_parent(self):
+        child = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+        self.addCleanup(child.kill)
+        table = tuitp_windows.process_table()
+        self.assertEqual(table[child.pid][0], os.getpid())
+        self.assertEqual(table[os.getpid()][1].lower(), Path(sys.executable).name.lower())
+        me, kid = identity(os.getpid()), identity(child.pid)
+        self.assertIn(kid, tuitp_windows.descendants(table, [me]))
+        self.assertTrue(tuitp_windows.started_from(table, kid, [me]))
+        self.assertFalse(tuitp_windows.started_from(table, me, [kid]))
+
+    def test_a_parent_pid_reused_later_is_not_an_ancestor(self):
+        # Process 10 outlived parent 5; a process created later took PID 5.
+        table = {10: (5, "codex.exe"), 5: (1, "cmd.exe")}
+        with patch("tuitp_windows.running", side_effect=lambda pid: {"pid": pid, "created": 50 if pid == 5 else pid}):
+            self.assertFalse(tuitp_windows.started_from(table, {"pid": 10, "created": 10}, [{"pid": 5, "created": 50}]))
+            self.assertEqual(tuitp_windows.descendants(table, [{"pid": 5, "created": 50}]), [{"pid": 5, "created": 50}])
+
+    def test_codex_daemon_roots_are_the_running_processes_of_its_pid_files(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-codex-") as temp:
+            home, me = Path(temp), identity(os.getpid())
+            self.assertEqual(tuitp_windows.codex_daemon_roots(home), {})
+            write_json(home / "app-server-daemon" / "daemon.pid",
+                       {"pid": me["pid"], "processStartTime": str(me["created"])})
+            write_json(home / "app-server-daemon" / "daemon-updater.pid",
+                       {"pid": me["pid"], "processStartTime": str(me["created"] - 1)})  # A reused PID.
+            self.assertEqual(tuitp_windows.codex_daemon_roots(home), {"daemon": me})
+            (home / "app-server-daemon" / "daemon.pid").write_text("not JSON")
+            self.assertEqual(tuitp_windows.codex_daemon_roots(home), {})
+
+    def test_codex_daemon_counts_the_codex_inside_and_outside_the_sessions(self):
+        # Pane 40 runs Codex 50, which started the daemon 100, its code-mode
+        # host 101 and its updater 102. Codex 60 runs in another terminal 70.
+        table = {40: (30, "cmd.exe"), 50: (40, "codex.exe"), 100: (50, "codex.exe"),
+                 101: (100, "codex-code-mode-host.exe"), 102: (50, "codex.exe"), 60: (70, "codex.exe"),
+                 70: (1, "cmd.exe")}
+        runtime = Windows(ROOT / "bin", ROOT / "unused")
+        runtime.daemon_live = True
+
+        def process(pid):
+            return {"pid": pid, "created": pid}
+
+        roots = {"updater": process(102), "daemon": process(100)}
+        with patch("tuitp_windows.codex_daemon_roots", return_value=roots), \
+                patch("tuitp_windows.process_table", return_value=table), \
+                patch("tuitp_windows.running", side_effect=lambda pid: process(pid) if pid in table else None), \
+                patch.object(runtime, "pane_processes", return_value=[process(40)]) as panes:
+            found = runtime.codex_daemon(["one"])
+            panes.assert_called_once_with("one")
+            self.assertEqual(found, {"updater": [process(102)], "daemon": [process(100), process(101)],
+                                     "inside": 1, "outside": 1})
+            del table[60]
+            self.assertEqual(runtime.codex_daemon(["one"])["outside"], 0)
+            table[60] = (70, "codex-x86_64-pc-windows-msvc.exe")  # Codex installed with npm.
+            self.assertEqual(runtime.codex_daemon(["one"])["outside"], 1)
+        with patch("tuitp_windows.codex_daemon_roots", return_value={}):
+            self.assertIsNone(runtime.codex_daemon(["one"]))
+
+    def test_stop_codex_daemon_ends_the_updater_then_the_daemon_then_what_it_started(self):
+        found = {"updater": [{"pid": 102, "created": 102}],
+                 "daemon": [{"pid": 100, "created": 100}, {"pid": 101, "created": 101}, {"pid": 103, "created": 103}]}
+        ended = []
+
+        def terminate(process):
+            ended.append(process["pid"])
+            if process["pid"] >= 101:
+                raise OSError(5, "Access is denied")  # 101 had just ended; 103 still runs.
+
+        runtime = Windows(ROOT / "bin", ROOT / "unused")
+        with patch("tuitp_windows.terminate_exact", side_effect=terminate), \
+                patch("tuitp_windows.running", side_effect=lambda pid: {"pid": pid, "created": pid} if pid == 103 else None):
+            with self.assertRaisesRegex(OSError, r"^process 103: .*Access is denied$"):
+                runtime.stop_codex_daemon(found)
+        self.assertEqual(ended, [102, 100, 101, 103])
 
     def test_snapshot_accepts_saved_exit_one_but_rejects_malformed_and_failed_live(self):
         runtime = Windows(ROOT / "bin", ROOT / "unused")
