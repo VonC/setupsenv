@@ -1,6 +1,7 @@
 """Windows process identity, native commands and managed Windows Terminal clients."""
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor
 import contextlib
 import ctypes
 from ctypes import wintypes
@@ -146,6 +147,94 @@ def terminate_exact(process):
             raise ctypes.WinError(ctypes.get_last_error())
     finally:
         api.CloseHandle(handle)
+
+
+class PROCESSENTRY32W(ctypes.Structure):
+    _fields_ = [("dwSize", wintypes.DWORD), ("cntUsage", wintypes.DWORD), ("th32ProcessID", wintypes.DWORD),
+                ("th32DefaultHeapID", ctypes.c_size_t), ("th32ModuleID", wintypes.DWORD),
+                ("cntThreads", wintypes.DWORD), ("th32ParentProcessID", wintypes.DWORD),
+                ("pcPriClassBase", wintypes.LONG), ("dwFlags", wintypes.DWORD),
+                ("szExeFile", wintypes.WCHAR * 260)]
+
+
+def process_table():
+    """Return {pid: (parent pid, executable name)} of every process, from one Toolhelp snapshot."""
+    api = kernel()
+    api.CreateToolhelp32Snapshot.argtypes = [wintypes.DWORD, wintypes.DWORD]
+    api.CreateToolhelp32Snapshot.restype = wintypes.HANDLE
+    api.Process32FirstW.argtypes = [wintypes.HANDLE, ctypes.POINTER(PROCESSENTRY32W)]
+    api.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(PROCESSENTRY32W)]
+    snapshot = api.CreateToolhelp32Snapshot(0x2, 0)  # TH32CS_SNAPPROCESS
+    if snapshot in (None, wintypes.HANDLE(-1).value):
+        raise ctypes.WinError(ctypes.get_last_error())
+    try:
+        entry = PROCESSENTRY32W()
+        entry.dwSize = ctypes.sizeof(entry)
+        table = {}
+        more = api.Process32FirstW(snapshot, ctypes.byref(entry))
+        while more:
+            table[entry.th32ProcessID] = (entry.th32ParentProcessID, entry.szExeFile)
+            more = api.Process32NextW(snapshot, ctypes.byref(entry))
+        return table
+    finally:
+        api.CloseHandle(snapshot)
+
+
+def running(pid):
+    """Return the identity of a running process, or None when it is gone or cannot be inspected."""
+    try:
+        return identity(pid) if pid else None
+    except OSError:
+        return None
+
+
+def descendants(table, roots):
+    """Return these processes, then every process they started, each one created after its parent.
+
+    Windows keeps a dead parent's PID in its children's records: the creation
+    times tell a child from a process that reused that PID later.
+    """
+    result, queue = [], list(roots)
+    while queue:
+        parent = queue.pop(0)
+        result.append(parent)
+        for pid, (parent_pid, _) in table.items():
+            child = running(pid) if parent_pid == parent["pid"] and pid != parent["pid"] else None
+            if child and child["created"] >= parent["created"] and child not in result + queue:
+                queue.append(child)
+    return result
+
+
+def started_from(table, process, roots):
+    """Whether a process is one of these processes or descends from one, each parent older than its child."""
+    seen = set()
+    while process and process["pid"] not in seen:
+        if process in roots:
+            return True
+        seen.add(process["pid"])
+        parent = running(table.get(process["pid"], (0, ""))[0])
+        if parent and parent["created"] > process["created"]:
+            return False  # A later process reused the dead parent's PID.
+        process = parent
+    return False
+
+
+def codex_home():
+    return Path(os.environ.get("CODEX_HOME") or Path(os.environ["USERPROFILE"]) / ".codex")
+
+
+def codex_daemon_roots(home):
+    """Return the running Codex app-server daemon and its updater, as their pid files name them."""
+    roots = {}
+    for role, name in (("updater", "daemon-updater.pid"), ("daemon", "daemon.pid")):
+        try:
+            record = read_json(home / "app-server-daemon" / name)
+            process = {"pid": int(record["pid"]), "created": int(record["processStartTime"])}
+        except (OSError, ValueError, KeyError, TypeError):
+            continue  # No daemon ran, or this Codex version records another shape.
+        if running(process["pid"]) == process:
+            roots[role] = process
+    return roots
 
 
 @contextlib.contextmanager
@@ -320,6 +409,51 @@ class Windows:
         """Return the names that address the panes of a session, as set-window --name gave them."""
         windows = json.loads(self.command("list-windows", "-s", session, "--json")).get("windows") or []
         return {w.get("custom_name") or w.get("display_name") or "" for w in windows}
+
+    def pane_processes(self, session):
+        windows = json.loads(self.command("list-windows", "-s", session, "--json")).get("windows") or []
+        return [process for process in map(running, (w.get("pid") for w in windows)) if process]
+
+    def codex_daemon(self, sessions):
+        """Find the Codex app-server daemon, and count the Codex processes inside these sessions and outside them.
+
+        Codex panes share one daemon per user, which the first of them starts
+        outside its pane's console, with an updater and a code-mode host:
+        deleting the session of that pane leaves them running.
+        """
+        roots = codex_daemon_roots(codex_home())
+        if not roots:
+            return None
+        table = process_table()
+        found = {role: descendants(table, [root]) for role, root in roots.items()}
+        own = {process["pid"] for processes in found.values() for process in processes}
+        # Any codex*.exe, such as the binary of an npm install: one too many only keeps the daemon.
+        clients = [process for pid, (_, name) in table.items() if name.lower().startswith("codex") and pid not in own
+                   for process in [running(pid)] if process]
+        panes = []
+        if clients and self.daemon_live:  # Without a daemon, no pane runs a program.
+            with ThreadPoolExecutor(max_workers=min(4, len(sessions) or 1)) as pool:
+                panes = [process for processes in pool.map(self.pane_processes, sessions) for process in processes]
+        inside = sum(started_from(table, process, panes) for process in clients)
+        return {**found, "inside": inside, "outside": len(clients) - inside}
+
+    def stop_codex_daemon(self, found):
+        """End the updater first, so that it starts no daemon again, then the daemon, then what it started.
+
+        No Codex uses the daemon any more. 'codex app-server daemon stop' would
+        ask it to stop, but each codex.exe start took 8 to 20s on a workstation
+        with endpoint protection. Codex starts a new daemon on demand, after
+        checking that the one its pid file names still runs.
+        """
+        failed = []
+        for process in found.get("updater", []) + found.get("daemon", []):
+            try:
+                terminate_exact(process)
+            except OSError as error:
+                if running(process["pid"]) == process:  # Not one that ended meanwhile.
+                    failed.append(f"process {process['pid']}: {error}")
+        if failed:
+            raise OSError("; ".join(failed))
 
     def snapshot(self):
         result = run([self.tuios, "ls", "--json"], check=False)

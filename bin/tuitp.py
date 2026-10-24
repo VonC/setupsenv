@@ -83,11 +83,50 @@ def follow_tabs(runtime, wanted):
         print(f"tuitp: tab watcher: {error}", flush=True)
 
 
-def apply_layout(layout, state, live, runtime, save, dry=False):
+def codex_daemon_left(runtime, state, live, names):
+    """Return the Codex app-server daemon that deleting these sessions leaves without a client, and what to say.
+
+    It is stopped when one of these sessions has a Codex pane, and no Codex
+    runs outside them, in another session or another terminal.
+    """
+    names = [name for name in names if name in live]
+    if not names:
+        return None, None
+    try:
+        found = runtime.codex_daemon(names)
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
+        print(f"tuitp: the Codex app-server daemon keeps running, it could not be checked: {error}", flush=True)
+        return None, None
+    declared = any("Codex" in PANE_ROLES.get(state["sessions"].get(name, {}).get("kind"), ()) for name in names)
+    if not found or not (found["inside"] or declared):
+        return None, None
+    if found["outside"]:
+        others = found["outside"]
+        return None, f"KEEP the Codex app-server daemon for {others} Codex process{'es' if others > 1 else ''} " \
+                     "outside the deleted sessions"
+    return found, "STOP the Codex app-server daemon and its helpers: no Codex runs outside the deleted sessions"
+
+
+def stop_codex_daemon(runtime, daemon, dry):
+    found, message = daemon
+    if message:
+        print(("[dry] " if dry else "") + message, flush=True)
+    if found and not dry:
+        try:
+            runtime.stop_codex_daemon(found)
+        except OSError as error:
+            # The sessions are deleted: only the daemon is left.
+            print(f"tuitp: cannot stop the Codex app-server daemon: {error}", flush=True)
+
+
+def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True):
     plan = reconcile_plan(layout, state, live, runtime.tab_alive)
     for line in describe(plan, layout):
         print(("[dry] " if dry else "") + line, flush=True)
+    # Before any deletion, while the Codex processes of these sessions still run.
+    daemon = codex_daemon_left(runtime, state, live, plan["remove"]) if check_codex else (None, None)
     if dry:
+        stop_codex_daemon(runtime, daemon, dry)
         return
     started = time.monotonic()
     if any("Claude" in PANE_ROLES[session.kind] for session in plan["create"] + plan["restore"]):
@@ -172,6 +211,7 @@ def apply_layout(layout, state, live, runtime, save, dry=False):
                 runtime.command("kill-session", name)
             del state["sessions"][name]
             save(state)
+        stop_codex_daemon(runtime, daemon, dry)
         desired_slots = {tab.slot for tab in layout.tabs}
         state["tabs"] = {slot: record for slot, record in state["tabs"].items() if slot in desired_slots}
         for tab in layout.tabs:
@@ -205,6 +245,9 @@ def stop_sessions(layout, state, live, runtime, save, names, dry=False):
         print(prefix + f"CLOSE tab {record['spec']['title']} in tuitp-{record['spec']['window']}", flush=True)
     for name in deleting:
         print(prefix + f"DELETE session {name} and its running processes", flush=True)
+    daemon = codex_daemon_left(runtime, state, live, deleting)
+    if dry:
+        stop_codex_daemon(runtime, daemon, dry)
     for slot in closing:
         del state["tabs"][slot]
     for name in names:
@@ -221,6 +264,7 @@ def stop_sessions(layout, state, live, runtime, save, names, dry=False):
         for name in deleting:
             runtime.command("kill-session", name)
         save(state)
+        stop_codex_daemon(runtime, daemon, dry)
     apply_layout(layout, state, live, runtime, save, dry)
 
 
@@ -358,10 +402,14 @@ def reconcile(args):
             save = lambda value: write_json(state_file, value)
             if names:
                 stop_sessions(layout, state, live, runtime, save, names, dry)
+            elif stop_all:
+                # Stop deletes every session, owned or not: check their Codex once, for all of them.
+                daemon = codex_daemon_left(runtime, state, live, list(live))
+                apply_layout(layout, state, live, runtime, save, dry=dry, check_codex=False)
+                stop_tuios(runtime, state["sessions"], dry)
+                stop_codex_daemon(runtime, daemon, dry)
             else:
                 apply_layout(layout, state, live, runtime, save, dry=dry)
-            if stop_all:
-                stop_tuios(runtime, state["sessions"], dry)
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"tuitp: {error}", file=sys.stderr)
