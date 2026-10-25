@@ -207,7 +207,9 @@ Add `--continue` to the Claude command to resume the latest conversation of
 that folder, or `--resume` to pick one. `codex resume --last` resumes the
 latest Codex session of that folder, and `codex resume` lists them. Without
 `--settings`, Claude starts without the TUIOS hooks and does not show on the
-rail. An agent started by hand gets no startup retry.
+rail. An agent started by hand gets no startup retry, and no resume command:
+type `/resume-session` in Claude, or `$llm-shared:resume-session` in Codex,
+to resume a session paused in that folder.
 
 ## Stop every tab, session and the daemon
 
@@ -223,7 +225,9 @@ every TUIOS session, including the ones `tuitp` did not start, and stops the
 TUIOS daemon. It does not read `tuitp.list`, so it also stops tabs and
 sessions created from an earlier version of the list. The Claude, Codex, and
 CMD processes in those sessions end: save or pause the work they hold first.
-Empty WT windows close with their final tab.
+The next `tuitp` resumes the agents that paused, as
+[Resume the agents paused in a session](#resume-the-agents-paused-in-a-session)
+shows. Empty WT windows close with their final tab.
 
 Nothing is left for TUIOS to restore. The daemon saves every session it still
 holds when it stops, and a new daemon restores those sessions with bare
@@ -376,7 +380,9 @@ startup. A local script can itself call global senv if it needs both.
 
 Successful reconciliation means the layout exists, attachments survived
 initial startup, and new pane commands were submitted. Claude/Codex startup
-and authentication happen interactively; their readiness is not monitored.
+and authentication happen interactively: `tuitp` does not wait for them. Only
+the helper that queues resume commands waits, in the background, for the
+agents it has a command for.
 An agent that exits in error less than a minute after it started failed its
 startup: its pane starts it again after 5 seconds, 3 times in all. Codex
 fails this way when its app-server, just started, times out on its first
