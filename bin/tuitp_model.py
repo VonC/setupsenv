@@ -36,6 +36,8 @@ def safe_path(text: str, base: Path) -> str:
 
 PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
               "claude": ("Claude",), "codex": ("Codex",)}
+# Since TUIOS 0.11.0, on every system, so that a saved session can move between machines.
+DEVICE_NAMES = {"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))}
 
 
 def pane_name(role: str, pane_id: str) -> str:
@@ -123,6 +125,9 @@ def read_list(path: Path) -> Layout:
                     kind = "single"  # Keep compatibility with persisted single-session records.
                 if not re.fullmatch(r"[A-Za-z0-9_][A-Za-z0-9_.-]*", name):
                     raise ValueError(f"Invalid session name: {name!r}")
+                if name.endswith(".") or name.casefold() in DEVICE_NAMES:
+                    raise ValueError(f"Invalid session name: {name!r}: TUIOS refuses a name that ends with a dot "
+                                     "or names a Windows device")
                 if name.casefold() in names:
                     raise ValueError(f"Session {name!r} is declared more than once")
                 if kind not in ("project", "single", "claude", "codex"):
