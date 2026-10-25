@@ -104,6 +104,9 @@ class FakeWindows:
     def fail_tabs(self, records, message):
         self.events.append(("error", message))
 
+    def queue_resume(self, deliveries):
+        self.events.append(("queue-resume", deliveries))
+
     def command(self, *args):
         with self.lock:
             self.events.append(args)
@@ -190,7 +193,9 @@ class ReconciliationTests(unittest.TestCase):
         cases = ["+ FOLDER|one", "=== Empty", "=== A\n+ FOLDER|same\n=== B\n+ FOLDER|same",
                  "=== A\n+ FOLDER|bad name", "=== A\n+ FOLDER|one|invalid",
                  "--- bad window\nFOLDER", "=== A\n+ %TUITP_UNDEFINED%|one",
-                 "=== A\n+ FOLDER|one\n=== A\n+ FOLDER|two", "FOLDER|a|b", "FOLDER&whoami"]
+                 "=== A\n+ FOLDER|one\n=== A\n+ FOLDER|two", "FOLDER|a|b", "FOLDER&whoami",
+                 # TUIOS 0.11.0 refuses these names when it creates the session, after the tabs open.
+                 "=== A\n+ FOLDER|one.", "=== A\n+ FOLDER|con", "=== A\n+ FOLDER|COM1|single", "=== A\n+ FOLDER|Lpt9"]
         for text in cases:
             with self.subTest(text=text), self.assertRaises(ValueError):
                 self.apply(text)
@@ -230,6 +235,57 @@ class ReconciliationTests(unittest.TestCase):
             self.apply("=== Projects\n+ FOLDER|one")
         self.assertIn("tuitp: Claude panes start without TUIOS agent hooks: no hooks", out.getvalue())
         self.assertEqual([e[4] for e in self.events("send-text")], ["Claude", "Codex", "CMD"])
+        self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
+
+    def pause(self, author, role="specification review requestor"):
+        (self.project / ".git").mkdir(exist_ok=True)
+        (self.project / ".reviews").mkdir(exist_ok=True)
+        (self.project / ".reviews" / "a.session-resume.local.md").write_text(
+            f"# {author}: Resume session: Q25\n\n- Session role: {role}\n", encoding="utf-8")
+
+    def test_new_agent_panes_get_their_resume_commands_after_their_startup(self):
+        self.pause("chatgpt")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one||pdf")
+        names = [e[0] for e in self.runtime.events]
+        self.assertLess(max(i for i, n in enumerate(names) if n == "send-keys"), names.index("queue-resume"))
+        self.assertEqual(self.events("queue-resume"), [("queue-resume", [
+            {"session": "one", "window": "Claude pdf", "text": "/review-resume as reviewer"},
+            {"session": "one", "window": "Codex pdf", "text": "$llm-shared:resume-session "}])])
+        self.assertIn("RESUME session one: Claude runs /review-resume as reviewer and Codex runs "
+                      "$llm-shared:resume-session, for the prompt chatgpt paused for 'Q25'\n", out.getvalue())
+        # A running session is not interrupted.
+        self.runtime.events.clear()
+        self.apply("=== Projects\n+ FOLDER|one||pdf")
+        self.assertFalse(self.events("queue-resume"))
+
+    def test_dry_run_and_turned_off_resume(self):
+        self.pause("claude")
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one", dry=True)
+        self.assertIn("[dry] RESUME session one: Claude runs /resume-session and Codex runs "
+                      "$llm-shared:review-resume as reviewer", out.getvalue())
+        self.assertFalse(self.runtime.events)
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out), patch.dict(os.environ, {"TUITP_RESUME": "0"}):
+            self.apply("=== Projects\n+ FOLDER|one")
+        self.assertNotIn("RESUME", out.getvalue())
+        self.assertFalse(self.events("queue-resume"))
+
+    def test_restored_sessions_also_resume_and_a_failed_queue_still_starts_them(self):
+        self.apply("=== Projects\n+ FOLDER|one")
+        self.runtime.live["one"]["saved"] = True  # The daemon stopped after a pause.
+        self.pause("chatgpt")
+        self.runtime.events.clear()
+        out = io.StringIO()
+        with patch.object(self.runtime, "queue_resume", side_effect=OSError("no python")) as queue, \
+                contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one")
+        self.assertEqual([d["text"] for d in queue.call_args.args[0]],
+                         ["/review-resume as reviewer", "$llm-shared:resume-session "])
+        self.assertIn("tuitp: the resume commands are not queued: no python", out.getvalue())
         self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
 
     def test_repeat_has_no_session_or_tab_mutations(self):
