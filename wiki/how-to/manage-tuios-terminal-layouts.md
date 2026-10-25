@@ -8,7 +8,7 @@ including running Claude and Codex processes.
 
 ## Install or upgrade
 
-Use Windows Terminal, TUIOS 0.10.1, and Python 3.10 or newer in
+Use Windows Terminal, TUIOS 0.11.0, and Python 3.10 or newer in
 `%PRGS%\pythons`. `tuitp` runs from any CMD: for its own run, it calls
 `switchpy` on the highest `pythonX.Y.Z` folder there, without a venv, and
 skips that switch when this Python already comes first on the `PATH`. The
@@ -48,6 +48,18 @@ The first reconciliation adopts existing legacy tabs by their exact CMD
 launch command and adopts the declared sessions. It does not restart them.
 This one-time discovery uses Windows CIM process information; if that query
 fails, reconciliation stops before opening tabs or deleting sessions.
+
+The TUIOS daemon keeps running the TUIOS it started with. To upgrade TUIOS,
+pause the agents (`pause-session` in each), run `tuitp stop`, install the new
+TUIOS in `%PRGS%\tuioss\current`, then run `tuitp`: it starts a daemon of the
+new TUIOS, and the paused agents resume, as
+[Resume the agents paused in a session](#resume-the-agents-paused-in-a-session)
+shows. Do not use `tuios restart-server` for these sessions. It brings them
+back with their layouts and new shells, and `tuitp` keeps a running session as
+it is, so their panes stay at a bare prompt. Its Inbox offers to resume each
+agent with `claude --resume <id>` or `codex resume <id>`, without senv and
+without the hooks that show Claude on the rail. After such a restart, run
+`tuitp stop`, then `tuitp`.
 
 ## Declare a layout
 
@@ -91,7 +103,9 @@ Session names must be unique across the whole list. TUIOS tab titles must
 be unique within a window. An ordinary folder row or another `===` / `---`
 line ends a TUIOS group; blank lines do not. A group must have a session.
 Window and session names accept letters, digits, underscores, dots, and
-hyphens. A session's folder and kind cannot be changed while it exists;
+hyphens. TUIOS refuses a session name that ends with a dot or names a Windows
+device (`con`, `prn`, `aux`, `nul`, `com1` to `com9`, `lpt1` to `lpt9`), so
+the list does too. A session's folder and kind cannot be changed while it exists;
 use a new session name to replace it.
 
 An id tells agents apart on the TUIOS rail. The rail shows the session name
@@ -310,6 +324,41 @@ It learns each client when it attaches, and keeps them in `watch.clients.json`
 for a watcher started again on the same daemon. A watcher started while a tab
 showed the session of another tab takes that tab for the other one: close
 that tab, then run `tuitp`, which opens it again.
+
+## Resume the agents paused in a session
+
+When `tuitp` starts the panes of a session, new or restored, it reads the
+llm-shared resume prompt of the session folder: `a.session-resume.local.md`
+in its review artifact home, `.reviews` unless `.review-artifacts.ini`
+declares another. If no resume-session has read that prompt yet, the agent
+that paused it resumes it, and nobody has to type anything:
+
+| Prompt paused by | Pane of that agent | Pane of the other agent |
+| --- | --- | --- |
+| `claude` | Claude runs `/resume-session` | Codex runs `$llm-shared:review-resume as reviewer` when Claude paused as a review requestor |
+| `chatgpt` (Codex) | Codex runs `$llm-shared:resume-session` | Claude runs `/review-resume as reviewer` when Codex paused as a review requestor |
+
+resume-session itself tells the agent whether it goes on as requestor. The
+reviewer waits for that requestor's next request. Each part goes to the first
+pane that the whole list declares for its agent and that folder, so a project
+session works as a `claude` and a `codex` session on one folder do.
+
+A session whose folder has only the other agent's pane resumes nothing: tuitp
+prints a `NOTE` line, as it does for a prompt that names no agent or whose
+receipt resume-session would refuse. A used prompt, or none, changes nothing.
+An agent that already runs is never interrupted. `tuitp dry` prints the same
+`RESUME` and `NOTE` lines:
+
+```text
+RESUME session api: Claude runs /review-resume as reviewer and Codex runs $llm-shared:resume-session, for the prompt chatgpt paused for 'Answer the review of Step 4'
+NOTE session test: no agent resumes the prompt chatgpt paused for 'Fix the parser', since the list declares no Codex pane for C:\projects\test
+```
+
+A helper types each command with `tuios queue`, once the agent reports that it
+is at its prompt: never over a question it waits on, such as "Trust this
+folder?". It waits ten minutes at most, and logs each command it queued in
+`%LOCALAPPDATA%\tuitp\resume.log`. Set `TUITP_RESUME=0` before `tuitp` to start
+the agents without resuming them.
 
 ## Startup and recovery
 

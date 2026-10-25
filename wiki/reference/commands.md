@@ -150,7 +150,11 @@ rail; other Claude sessions do not load them. A session declared with an id
 names its agent panes `Claude <id>` and `Codex <id>`. A run that leaves TUIOS
 tabs open starts a watcher: a session picked on the TUIOS rail of another tab
 opens in its own tab, and the first tab goes back to its session
-(`TUITP_WATCH=0` turns it off).
+(`TUITP_WATCH=0` turns it off). When it starts the panes of a session whose
+folder holds an llm-shared resume prompt that no resume-session read, it
+queues `resume-session` in the pane of the agent that paused it and, after a
+review requestor's pause, `review-resume as reviewer` in the other agent's
+pane (`TUITP_RESUME=0` turns it off).
 An alternate list replaces the
 desired layout using the same per-user state. Removing a managed session
 from the list terminates its processes on the next applied run. With
