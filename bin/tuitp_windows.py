@@ -377,22 +377,30 @@ class Windows:
             return False
         if running:
             terminate_exact(record["process"])
+        process = self.start_helper("tuitp_watch.py", [str(self.tuios)], "watch.log")
+        write_json(record_file, {"process": identity(process.pid), "digest": digest})
+        return True
+
+    def start_helper(self, script, args, log_name):
+        """Start one of tuitp's Python helpers, detached, appending its output to a log in the state folder."""
         # As for stop outside TUIOS: without the TUIOS_* variables of a pane
         # tuitp may run in, and out of its job, so that it outlives the pane.
         env = {name: value for name, value in daemon_environment(os.environ).items()
                if not name.startswith("TUIOS_")}
         env["PYTHONUNBUFFERED"] = "1"
         flags = subprocess.DETACHED_PROCESS | subprocess.CREATE_NEW_PROCESS_GROUP
-        with (self.root / "watch.log").open("ab") as log:
-            argv = [sys.executable, str(self.scripts / "tuitp_watch.py"), str(self.tuios)]
+        with (self.root / log_name).open("ab") as log:
+            argv = [sys.executable, str(self.scripts / script), *args]
             try:
-                process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
-                                           creationflags=flags | subprocess.CREATE_BREAKAWAY_FROM_JOB)
-            except PermissionError:  # A job that refuses breakaway: the watcher ends with it.
-                process = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
-                                           creationflags=flags)
-        write_json(record_file, {"process": identity(process.pid), "digest": digest})
-        return True
+                return subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
+                                        creationflags=flags | subprocess.CREATE_BREAKAWAY_FROM_JOB)
+            except PermissionError:  # A job that refuses breakaway: the helper ends with it.
+                return subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log, env=env,
+                                        creationflags=flags)
+
+    def queue_resume(self, deliveries):
+        """Start the helper that queues each resume command once its agent is at its prompt: tuitp does not wait."""
+        self.start_helper("tuitp_resume.py", [str(self.tuios), json.dumps(deliveries)], "resume.log")
 
     def stop_watcher(self):
         record_file = self.root / "watch.json"

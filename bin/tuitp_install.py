@@ -14,7 +14,7 @@ from tuitp_windows import write_json
 
 
 FILES = ("tuitp.bat", "tuitp.setup.bat", "tuitp.tab.bat", "tuitp.pane.bat",
-         "tuitp.py", "tuitp_model.py", "tuitp_windows.py", "tuitp_host.py", "tuitp_watch.py",
+         "tuitp.py", "tuitp_model.py", "tuitp_windows.py", "tuitp_host.py", "tuitp_watch.py", "tuitp_resume.py",
          "tuitp_tabs.ps1", "tuitp_install.py", "tuitp.list.example")
 # setup.bat copies the old hard-coded launcher here before replacing it.
 LEGACY_DIR = "tuitp-legacy"

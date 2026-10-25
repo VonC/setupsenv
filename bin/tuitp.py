@@ -13,6 +13,7 @@ import uuid
 
 from tuitp_install import LEGACY_DIR, adopt_legacy
 from tuitp_model import PANE_ROLES, Layout, describe, new_state, pane_name, read_list, reconcile_plan
+from tuitp_resume import resume_plan
 from tuitp_windows import Windows, launcher_lock, read_json, timing_summary, write_json
 
 
@@ -121,7 +122,10 @@ def stop_codex_daemon(runtime, daemon, dry):
 
 def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True):
     plan = reconcile_plan(layout, state, live, runtime.tab_alive)
-    for line in describe(plan, layout):
+    # Read only: the panes that start now and the llm-shared sessions paused in their checkouts.
+    resume, notes = ([], []) if os.environ.get("TUITP_RESUME") == "0" else \
+        resume_plan(layout, plan["create"] + plan["restore"])
+    for line in describe(plan, layout) + notes:
         print(("[dry] " if dry else "") + line, flush=True)
     # Before any deletion, while the Codex processes of these sessions still run.
     daemon = codex_daemon_left(runtime, state, live, plan["remove"]) if check_codex else (None, None)
@@ -196,6 +200,12 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
             save(state)
 
         parallel_sessions(runtime, plan["create"] + plan["restore"], session_init, init_done)
+        if resume:
+            try:
+                runtime.queue_resume(resume)
+            except OSError as error:
+                # The panes start: only their resume waits for the person.
+                print(f"tuitp: the resume commands are not queued: {error}", flush=True)
 
         print("[4/4] Close obsolete tabs, then delete removed sessions", flush=True)
         # A move opens the destination before detaching the old client. All
