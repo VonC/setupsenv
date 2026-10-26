@@ -27,6 +27,10 @@ from tuitp_model import Tab
 TIMING = bool(os.environ.get("TUITP_TIMING"))
 _timings = []
 _timings_lock = threading.Lock()
+# TUIOS gives most Claude hooks 5 seconds. Under a heavy CPU load, such as a
+# test run, tuios.exe starts slower than that: Claude discards the state the
+# hook reports and prints a timeout under each prompt.
+HOOK_TIMEOUT = 30
 
 
 @contextlib.contextmanager
@@ -359,7 +363,8 @@ class Windows:
         On Windows, TUIOS cannot read a pane's foreground process: only these
         hooks report a Claude pane's state. In the user's settings, each hook
         would start tuios.exe in every Claude session, outside TUIOS too.
-        Asking TUIOS on each run keeps the hooks current after an upgrade.
+        Asking TUIOS on each run keeps the hooks current after an upgrade, with
+        their timeouts raised to HOOK_TIMEOUT seconds.
         """
         target = self.root / "claude" / "settings.json"
         with tempfile.TemporaryDirectory(prefix="tuitp-claude-") as config:
@@ -371,6 +376,10 @@ class Windows:
             hooks = read_json(settings).get("hooks")
         if not hooks:
             raise RuntimeError("tuios integration install claude-code wrote no hooks")
+        for groups in hooks.values():
+            for hook in (hook for group in groups for hook in group.get("hooks", [])):
+                if isinstance(hook.get("timeout"), (int, float)) and hook["timeout"] < HOOK_TIMEOUT:
+                    hook["timeout"] = HOOK_TIMEOUT
         value = {"hooks": hooks}
         # Rewrite only a change: Claude panes started earlier keep a file they may watch.
         current = shared(lambda: target.read_text(encoding="utf-8")) if target.is_file() else ""
