@@ -990,6 +990,20 @@ class WindowsTests(unittest.TestCase):
             handshake.assert_called_once_with(record)
             self.assertIn("tuitp-side", popen.call_args.args[0])
 
+    def test_tab_opened_from_an_agent_pane_gets_a_plain_environment(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-wt-env-") as temp:
+            runtime = Windows(ROOT / "bin", Path(temp))
+            record = {"spec": asdict(Tab("dev", "Projects", "tuios", sessions=["one"])), "token": "c" * 32}
+            pane = {"TUIOS_ENV": "1", "TUIOS_SESSION": "agent", "TUIOS_PANE_TOKEN": "secret",
+                    "TERM_PROGRAM": "TUIOS", "TERM_PROGRAM_VERSION": "0.1.0", "NO_COLOR": "1", "KEEP": "1"}
+            with patch.dict(os.environ, pane), patch("tuitp_windows.subprocess.Popen") as popen, \
+                    patch.object(runtime, "wait_host", return_value=True):
+                runtime.open_tab(record)
+            env = popen.call_args.kwargs["env"]
+            self.assertFalse([name for name in env if name.startswith("TUIOS_")])
+            self.assertFalse({"TERM_PROGRAM", "TERM_PROGRAM_VERSION", "NO_COLOR"} & set(env))
+            self.assertEqual(env["KEEP"], "1")
+
     def test_daemon_starts_without_the_launcher_venv(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-daemon-") as temp:
             runtime = Windows(ROOT / "bin", Path(temp))
