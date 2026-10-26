@@ -34,8 +34,9 @@ def safe_path(text: str, base: Path) -> str:
     return str(path)
 
 
+# One pane per workspace, in this order. An agent session keeps a CMD beside its agent.
 PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
-              "claude": ("Claude",), "codex": ("Codex",)}
+              "claude": ("Claude", "CMD"), "codex": ("Codex", "CMD")}
 # Since TUIOS 0.11.0, on every system, so that a saved session can move between machines.
 DEVICE_NAMES = {"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))}
 

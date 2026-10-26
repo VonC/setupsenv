@@ -17,14 +17,24 @@ from tuitp_resume import resume_plan
 from tuitp_windows import Windows, launcher_lock, read_json, timing_summary, write_json
 
 
+def new_pane(runtime, session, role):
+    """Add the pane of a role to a session, in the workspace of its rank."""
+    workspace = PANE_ROLES[session.kind].index(role) + 1
+    runtime.command("new-window", pane_name(role, session.id), "-s", session.name, "--workspace",
+                    str(workspace), "--cwd", session.folder, "--no-focus", "--", str(runtime.cmd), "/d", "/v:off")
+
+
 def session_layout(runtime, session):
-    first = PANE_ROLES[session.kind][0]
+    first, *others = PANE_ROLES[session.kind]
     runtime.command("set-window", "-s", session.name, "-w", "0", "--name", pane_name(first, session.id))
-    if session.kind == "project":
-        for workspace, role in ((2, "Codex"), (3, "CMD")):
-            runtime.command("new-window", pane_name(role, session.id), "-s", session.name, "--workspace",
-                            str(workspace), "--cwd", session.folder, "--no-focus", "--", str(runtime.cmd),
-                            "/d", "/v:off")
+    for role in others:
+        new_pane(runtime, session, role)
+
+
+def missing_cmd(runtime, session, row):
+    """Tell whether a running claude or codex session lacks its CMD pane, as one started before these kinds had it."""
+    return (session.kind in ("claude", "codex") and not row.get("saved")
+            and "CMD" not in runtime.pane_names(session.name))
 
 
 def rename_panes(runtime, session, old_id):
@@ -40,18 +50,34 @@ def rename_panes(runtime, session, old_id):
         runtime.command("set-window", "-s", session.name, "-w", old, "--name", new)
 
 
-def session_init(runtime, session):
-    roles = PANE_ROLES[session.kind]
-    helper = runtime.pane_helper()
-    for role in roles:
-        # subprocess passes this entire command as ONE native send-text argv.
-        # The inner quotes belong to the receiving CMD, not the outer shell.
-        command = f'call "{helper}" "{session.folder}" {role.lower()}'
-        if session.kind != "project":
-            command += " local-or-global"
+def start_pane(runtime, session, role, start=None):
+    """Run tuitp.pane.bat in a pane; start is the command its agent starts with."""
+    window = pane_name(role, session.id)
+    # subprocess passes this entire command as ONE native send-text argv.
+    # The inner quotes belong to the receiving CMD, not the outer shell.
+    command = f'call "{runtime.pane_helper()}" "{session.folder}" {role.lower()}'
+    if session.kind != "project":
+        command += " local-or-global"
+    elif start:
+        command += " project"
+    if start:
+        command += f' "{start}"'
+    runtime.command("send-text", "-s", session.name, "-w", window, command)
+    runtime.command("send-keys", "Enter", "-s", session.name, "-w", window)
+
+
+def session_init(runtime, session, starts=None, restored=False):
+    """Start each pane of a session; starts maps a pane to the command its agent starts with."""
+    names = runtime.pane_names(session.name) if restored else None
+    for role in PANE_ROLES[session.kind]:
         window = pane_name(role, session.id)
-        runtime.command("send-text", "-s", session.name, "-w", window, command)
-        runtime.command("send-keys", "Enter", "-s", session.name, "-w", window)
+        if names is not None and window not in names:
+            if role != "CMD":
+                print(f"tuitp: restored session {session.name} has no {window} pane: "
+                      f"tuitp stop {session.name}, then tuitp, gives it one", flush=True)
+                continue
+            new_pane(runtime, session, role)  # Saved before its kind had a CMD pane.
+        start_pane(runtime, session, role, (starts or {}).get(window))
 
 
 def parallel_sessions(runtime, sessions, action, completed):
@@ -125,7 +151,15 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
     # Read only: the panes that start now and the llm-shared sessions paused in their checkouts.
     resume, notes = ([], []) if os.environ.get("TUITP_RESUME") == "0" else \
         resume_plan(layout, plan["create"] + plan["restore"])
-    for line in describe(plan, layout) + notes:
+    started_now = {session.name for session in plan["create"] + plan["restore"]}
+    extend = [session for name, session in layout.sessions.items()
+              if name in live and name not in started_now and missing_cmd(runtime, session, live[name])]
+    starting = plan["open"] or plan["create"] or plan["restore"] or extend
+    # An agent started offline fails or hangs: Codex's shared app-server times
+    # out on its first calls and takes every Codex pane down with it.
+    lines = (["CHECK Internet access with ensure_internet.bat, before starting anything"] if starting else [])
+    lines += [f"ADD a CMD pane to session {session.name}, beside its running agent" for session in extend]
+    for line in lines + describe(plan, layout) + notes:
         print(("[dry] " if dry else "") + line, flush=True)
     # Before any deletion, while the Codex processes of these sessions still run.
     daemon = codex_daemon_left(runtime, state, live, plan["remove"]) if check_codex else (None, None)
@@ -133,6 +167,15 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
         stop_codex_daemon(runtime, daemon, dry)
         return
     started = time.monotonic()
+    if starting:
+        runtime.ensure_internet()  # Raises before any change: nothing starts offline.
+    # An agent that starts with its command runs it again if its startup fails.
+    starts, queued = {}, []
+    for delivery in resume:
+        if delivery.get("start"):
+            starts.setdefault(delivery["session"], {})[delivery["window"]] = delivery["text"]
+        else:
+            queued.append(delivery)
     if any("Claude" in PANE_ROLES[session.kind] for session in plan["create"] + plan["restore"]):
         try:
             runtime.write_claude_hooks()
@@ -199,10 +242,16 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
             state["sessions"][session.name]["status"] = "ready"
             save(state)
 
-        parallel_sessions(runtime, plan["create"] + plan["restore"], session_init, init_done)
-        if resume:
+        restored = {session.name for session in plan["restore"]}
+        parallel_sessions(runtime, plan["create"] + plan["restore"],
+                          lambda runtime, session: session_init(runtime, session, starts.get(session.name),
+                                                                session.name in restored), init_done)
+        for session in extend:
+            new_pane(runtime, session, "CMD")
+            start_pane(runtime, session, "CMD")
+        if queued:
             try:
-                runtime.queue_resume(resume)
+                runtime.queue_resume(queued)
             except OSError as error:
                 # The panes start: only their resume waits for the person.
                 print(f"tuitp: the resume commands are not queued: {error}", flush=True)
@@ -232,7 +281,7 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
         tuios_tabs = any(tab.kind == "tuios" for tab in layout.tabs)
         follow_tabs(runtime, tuios_tabs and os.environ.get("TUITP_WATCH") != "0")
         print(f"Reconciled in {time.monotonic() - started:.1f}s."
-              + (" New pane startup commands submitted." if plan["create"] or plan["restore"] else ""))
+              + (" New pane startup commands submitted." if plan["create"] or plan["restore"] or extend else ""))
     except Exception as error:
         runtime.fail_tabs(opened, str(error))
         # Never continue deletions after creation, layout or startup failures.

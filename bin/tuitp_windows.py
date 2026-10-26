@@ -316,6 +316,21 @@ class Windows:
         from tuitp_model import safe_path
         safe_path(str(self.scripts), self.scripts)
 
+    def ensure_internet(self):
+        """Run the ensure_internet.bat beside tuitp, which restarts the proxy if needed, or raise: nothing starts offline."""
+        script = self.scripts / "ensure_internet.bat"
+        if not script.is_file():
+            raise ValueError(f"Required file is missing: {script}: tuitp starts nothing without checking "
+                             "Internet access")
+        with timed("ensure_internet.bat", "command"):
+            # Its own output tells the person what it checked and repaired. The
+            # console's input too: the 'timeout' waits of its proxy restart refuse
+            # a redirected one, and px would then be tested before it listens.
+            code = subprocess.run([str(self.cmd), "/d", "/c", "call", str(script)], timeout=300).returncode
+        if code:
+            raise RuntimeError(f"no Internet access (ensure_internet.bat exit {code}): nothing started. "
+                               "Run tuitp again once 'ei' succeeds.")
+
     def pane_helper(self):
         """Return a copy of tuitp.pane.bat named after its content, for panes to call.
 

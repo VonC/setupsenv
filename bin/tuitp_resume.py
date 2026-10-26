@@ -12,8 +12,10 @@ runs review-resume as reviewer when the pause was a review requestor's: its
 resume may publish a request. tuitp only reads these files: resume-session and
 review-resume make every check again before they act.
 
-Run as a script, this module is the helper that types each command into its
-pane once the agent there is at its prompt, through `tuios queue`.
+Codex starts with its command as its prompt argument, so that the start its
+pane makes again after a failed startup still runs it. Run as a script, this
+module is the helper that types each Claude command into its pane once Claude
+is at its prompt, through `tuios queue`.
 """
 from __future__ import annotations
 
@@ -35,14 +37,14 @@ PROMPT, RECEIPT = "a.session-resume.local.md", "a.session-resume.used.local.md"
 AGENTS = {"Claude": "claude", "Codex": "chatgpt"}
 # How each agent calls an llm-shared skill. "as reviewer" is the role that
 # review-resume takes only from the person: tuitp asks it on their behalf.
-# Typed at its end, a Codex skill name keeps the skill picker open, which
-# takes the Enter of the queue: a space closes the picker first.
 COMMANDS = {("Claude", "resume"): "/resume-session",
-            ("Codex", "resume"): "$llm-shared:resume-session ",
+            ("Codex", "resume"): "$llm-shared:resume-session",
             ("Claude", "review"): "/review-resume as reviewer",
             ("Codex", "review"): "$llm-shared:review-resume as reviewer"}
+# The agents whose pane starts them with their command, instead of the helper typing it.
+STARTS_WITH = {"Codex"}
 HEADING = re.compile(r"# ([a-z0-9-]+): Resume session: (.*)")
-# Long enough for a Codex that fails its first start twice, or for the person
+# Long enough for a Claude that fails its first start twice, or for the person
 # to answer a "Trust this folder?" question.
 WAIT_MS = 600_000
 
@@ -103,12 +105,13 @@ def waiting_prompt(root: Path):
 
 
 def resume_plan(layout, starting):
-    """Return the commands to queue in the agent panes of the starting sessions, and the lines that describe them.
+    """Return the commands for the agent panes of the starting sessions, and the lines that describe them.
 
     A checkout's prompt goes to the first pane that the whole list declares for
     the agent that paused it, and review-resume to the first pane of the other
     agent. Only the panes of the starting sessions get a command: an agent that
-    already runs is not interrupted.
+    already runs is not interrupted. A command marked "start" is the prompt its
+    agent starts with; the helper queues the others.
     """
     first = {}  # (folder key, agent id) -> (session name, pane role) declared first
     for session in layout.sessions.values():
@@ -141,9 +144,10 @@ def resume_plan(layout, starting):
                 action = "review"
             else:
                 continue
-            text = COMMANDS[role, action]
-            deliveries.append({"session": session.name, "window": pane_name(role, session.id), "text": text})
-            commands.append(f"{role} runs {text.strip()}")
+            text, start = COMMANDS[role, action], role in STARTS_WITH
+            deliveries.append({"session": session.name, "window": pane_name(role, session.id), "text": text,
+                               **({"start": True} if start else {})})
+            commands.append(f"{role} {'starts with' if start else 'runs'} {text}")
         about = f"the prompt {author} paused for {prompt['title']!r}"
         if commands:
             lines.append(f"RESUME session {session.name}: {' and '.join(commands)}, for {about}")
