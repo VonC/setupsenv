@@ -1339,6 +1339,24 @@ class WindowsTests(unittest.TestCase):
                 with self.assertRaisesRegex(RuntimeError, "wrote no hooks"):
                     runtime.write_claude_hooks()
 
+    def test_claude_hooks_get_time_for_a_slow_tuios_start(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-claude-timeout-") as temp:
+            runtime = Windows(Path(temp) / "bin", Path(temp) / "state")
+            hook = {"type": "command", "command": "tuios agent-hook claude-code"}
+            hooks = {"UserPromptSubmit": [{"hooks": [{**hook, "timeout": 5}]}],
+                     "PermissionRequest": [{"hooks": [{**hook, "timeout": 310}]}],
+                     "Stop": [{"hooks": [dict(hook)]}]}
+
+            def install(argv, env=None, **_):
+                (Path(env["CLAUDE_CONFIG_DIR"]) / "settings.json").write_text(json.dumps({"hooks": hooks}))
+
+            with patch("tuitp_windows.run", side_effect=install):
+                written = json.loads(runtime.write_claude_hooks().read_text())["hooks"]
+            # Only a shorter timeout rises; a hook without one keeps Claude's default.
+            self.assertEqual([written[event][0]["hooks"][0].get("timeout") for event in hooks],
+                             [tuitp_windows.HOOK_TIMEOUT, 310, None])
+            self.assertEqual(tuitp_windows.HOOK_TIMEOUT, 30)
+
     def test_only_claude_panes_load_the_hooks_file_when_it_exists(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-pane-hooks-") as temp:
             base = Path(temp)
