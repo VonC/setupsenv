@@ -18,7 +18,9 @@
 === Test
 + %USERPROFILE%\git\test|test|single
 
-# One pane: local senv.bat if present, otherwise global; then the chosen tool.
+# Each pane: local senv.bat if present, otherwise global; then its tool.
+# claude and codex: the agent in workspace 1, a CMD in workspace 2.
+# senv: a CMD alone.
 # + %USERPROFILE%\git\test|test-claude|claude
 # + %USERPROFILE%\git\test|test-codex|codex
 # + %USERPROFILE%\git\test|test-shell|senv

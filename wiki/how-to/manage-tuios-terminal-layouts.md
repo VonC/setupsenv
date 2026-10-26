@@ -90,8 +90,8 @@ C:\projects\tools|Tools shell
 | `folder\|title` | An ordinary CMD tab with a pinned title. |
 | `=== title` | A pinned TUIOS tab containing the following `+` session declarations. |
 | `+ folder\|name` | A project session with Claude, Codex, and CMD in workspaces 1, 2, and 3. |
-| `+ folder\|name\|claude` | One Claude pane, started after local senv if present, otherwise global senv. |
-| `+ folder\|name\|codex` | One Codex pane, with the same senv initialization. |
+| `+ folder\|name\|claude` | A Claude session: Claude in workspace 1 and a CMD in workspace 2, each after local senv if present, otherwise global senv. |
+| `+ folder\|name\|codex` | A Codex session: Codex in workspace 1 and a CMD in workspace 2, with the same senv initialization. |
 | `+ folder\|name\|senv` | One CMD pane running local senv if present, otherwise global senv. |
 | `+ folder\|name\|single` | Backward-compatible alias for `senv`. |
 | `+ folder\|name\|kind\|id` | Names the agent panes `Claude <id>` and `Codex <id>`; CMD panes keep their name. |
@@ -118,11 +118,13 @@ them. `tuitp` finds the panes by these names when it starts them, including
 after TUIOS restores a session: change them through the list, not with
 `tuios set-window`.
 
-For example, `+ %USERPROFILE%\git\test|test|claude` opens Claude alone in
-the test project. If `test` already exists as a managed `single` session,
-use a new name such as `test-claude`, or recover your work and remove the
-old session before rerunning. The launcher preserves existing sessions
-instead of changing their running programs.
+For example, `+ %USERPROFILE%\git\test|test|claude` opens Claude in the test
+project, with a CMD in workspace 2. If `test` already exists as a managed
+`single` session, use a new name such as `test-claude`, or recover your work
+and remove the old session before rerunning. The launcher preserves existing
+sessions instead of changing their running programs. A `claude` or `codex`
+session started before these kinds had a CMD gets one on the next run, beside
+its running agent: `tuitp dry` lists it as `ADD a CMD pane to session <name>`.
 
 The first session in each group is attached initially. TUIOS's session
 switcher can select the others. **TUIOS has a global session list:** grouping
@@ -339,8 +341,8 @@ that paused it resumes it, and nobody has to type anything:
 
 | Prompt paused by | Pane of that agent | Pane of the other agent |
 | --- | --- | --- |
-| `claude` | Claude runs `/resume-session` | Codex runs `$llm-shared:review-resume as reviewer` when Claude paused as a review requestor |
-| `chatgpt` (Codex) | Codex runs `$llm-shared:resume-session` | Claude runs `/review-resume as reviewer` when Codex paused as a review requestor |
+| `claude` | Claude runs `/resume-session` | Codex starts with `$llm-shared:review-resume as reviewer` when Claude paused as a review requestor |
+| `chatgpt` (Codex) | Codex starts with `$llm-shared:resume-session` | Claude runs `/review-resume as reviewer` when Codex paused as a review requestor |
 
 resume-session itself tells the agent whether it goes on as requestor. The
 reviewer waits for that requestor's next request. Each part goes to the first
@@ -354,48 +356,69 @@ An agent that already runs is never interrupted. `tuitp dry` prints the same
 `RESUME` and `NOTE` lines:
 
 ```text
-RESUME session api: Claude runs /review-resume as reviewer and Codex runs $llm-shared:resume-session, for the prompt chatgpt paused for 'Answer the review of Step 4'
+RESUME session api: Claude runs /review-resume as reviewer and Codex starts with $llm-shared:resume-session, for the prompt chatgpt paused for 'Answer the review of Step 4'
 NOTE session test: no agent resumes the prompt chatgpt paused for 'Fix the parser', since the list declares no Codex pane for C:\projects\test
 ```
 
-A helper types each command with `tuios queue`, once the agent reports that it
-is at its prompt: never over a question it waits on, such as "Trust this
-folder?". It waits ten minutes at most, and logs each command it queued in
-`%LOCALAPPDATA%\tuitp\resume.log`. Set `TUITP_RESUME=0` before `tuitp` to start
-the agents without resuming them.
+Codex takes its command as the prompt it starts with, as in
+`codex "$llm-shared:resume-session"`: its pane passes it again to each start
+it makes after a failed startup (see [Startup and recovery](#startup-and-recovery)).
+For Claude, a helper types the command with `tuios queue`, once Claude reports
+that it is at its prompt: never over a question it waits on, such as "Trust
+this folder?". It waits ten minutes at most, and logs each command it queued
+in `%LOCALAPPDATA%\tuitp\resume.log`. Set `TUITP_RESUME=0` before `tuitp` to
+start the agents without resuming them.
 
 ## Startup and recovery
+
+Before it opens a tab or starts a pane, `tuitp` runs the `ensure_internet.bat`
+beside it (`ei`): it checks Internet access, and restarts the px proxy when
+the check fails. Without Internet access, `tuitp` stops before it changes
+anything: an agent started offline fails or hangs, and Codex's shared
+app-server daemon, which times out on its first calls, takes every Codex pane
+down with it. Run `tuitp` again once `ei` succeeds. `tuitp dry` names this
+check with a `CHECK` line, and does not run it.
 
 New tabs appear first, waiting for their sessions. New sessions are created
 sequentially; their layouts are then configured with up to four parallel
 session workers. Only after all layouts exist are startup commands sent.
 For `project`, each pane runs global senv, then project senv if present. The launcher adds
 the TUIOS, Claude, and standalone Codex directories back to PATH after
-activation. Existing sessions never receive automatic startup commands.
-The one-pane kinds (`claude`, `codex`, `senv`, and its alias `single`) run
-the folder's local `senv.bat` if present, otherwise global senv. Tool
-directories are added to PATH after activation, then the selected agent
-starts, or CMD stays open for `senv`. An activation failure prevents agent
-startup. A local script can itself call global senv if it needs both.
+activation. Existing sessions never receive automatic startup commands, except
+the CMD pane added to a `claude` or `codex` session that has none.
+The `claude`, `codex`, `senv`, and `single` kinds run the folder's local
+`senv.bat` in each pane if present, otherwise global senv. Tool directories are
+added to PATH after activation, then the agent starts in its pane, and a CMD
+pane stays at its prompt. An activation failure prevents agent startup. A
+local script can itself call global senv if it needs both.
+
+Codex starts without `SSL_CERT_FILE`: a certificate bundle that senv sets for
+other tools breaks its TLS connections, and its shared app-server daemon keeps
+the environment of the Codex that started it. The CMD of the pane keeps the
+variable for the other tools.
 
 Successful reconciliation means the layout exists, attachments survived
 initial startup, and new pane commands were submitted. Claude/Codex startup
 and authentication happen interactively: `tuitp` does not wait for them. Only
-the helper that queues resume commands waits, in the background, for the
-agents it has a command for.
-An agent that exits in error less than a minute after it started failed its
-startup: its pane starts it again after 5 seconds, 3 times in all. Codex
-fails this way when its app-server, just started, times out on its first
-network call (`account/read failed during TUI bootstrap: ... workspace
-routing discovery timed out`), and later starts succeed. A normal exit, or
-a failure after a minute, leaves the pane at its CMD prompt. To stay at the
-prompt instead of a retry, press Ctrl+C during the 5-second wait and confirm
-the end of the batch job.
+the helper that queues Claude's resume commands waits, in the background, for
+the agents it has a command for.
+An agent that exits in error less than 5 minutes after it started failed its
+startup: its pane starts it again after 5 seconds, 3 times in all, with the
+command it started with. Codex fails this way when its app-server, just
+started, times out on its first network call (`account/read failed during TUI
+bootstrap: ... workspace routing discovery timed out`), which a cold start can
+make last more than a minute. Each failed exit prints
+`tuitp: codex exited <code> after <seconds>s`, followed by the next attempt or
+by why the pane stays at its prompt. A normal exit, or a failure after 5
+minutes, leaves the pane at its CMD prompt. To stay at the prompt instead of a
+retry, press Ctrl+C during the 5-second wait and confirm the end of the batch
+job.
 
 If only saved TUIOS sessions exist, the daemon restores their saved layouts.
 Saved layouts cannot preserve processes across a daemon shutdown: restored
 panes contain new shells. `tuitp` starts the panes of the declared restored
-sessions once, as for new sessions. A session reused from a running daemon
+sessions once, as for new sessions, and adds the CMD pane of a `claude` or
+`codex` session saved without one. A session reused from a running daemon
 keeps its panes as they are, even when their agents have exited: start an
 agent again in its pane as [Restart one agent pane](#restart-one-agent-pane)
 shows, run `tuitp stop NAME` to start that session again from scratch, or
