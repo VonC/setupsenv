@@ -1,6 +1,8 @@
 @echo off
 rem No SETLOCAL: senv activation must persist in this interactive CMD.
 rem Caller supplies validated paths and disables delayed expansion.
+rem tuitp.pane.bat "folder" claude|codex|cmd [project|local-or-global] ["command"]
+rem The command is what the agent starts with, such as its resume skill.
 set "TUITP_PROJECT=%~1"
 set "TUITP_ROLE=%~2"
 if /I "%TUITP_ROLE%"=="claude" goto :initialize
@@ -33,16 +35,24 @@ cd /d "%TUITP_PROJECT%" || exit /b 1
 if /I "%TUITP_ROLE%"=="cmd" exit /b 0
 rem senv is active: the retry counters below need not outlive this script.
 setlocal
-rem An agent exiting in error within a minute failed its startup, as Codex
+rem An agent exiting in error within 5 minutes failed its startup, as Codex
 rem does when its just started app-server times out on a slow first network
-rem call ("workspace routing discovery timed out"): start it again, 3 times
-rem in all. A later failure or a normal exit leaves the pane at its prompt.
+rem call ("workspace routing discovery timed out"), more than a minute after
+rem a cold start: start it again, 3 times in all. A later failure or a normal
+rem exit leaves the pane at its prompt.
 set "attempt=1"
 rem tuitp writes TUIOS's Claude Code hooks to this file, so that only these
 rem panes report their state: in the user's settings, each hook would start
 rem tuios.exe in every Claude session.
 set "agent=%TUITP_ROLE%"
 if /I "%TUITP_ROLE%"=="claude" if exist "%LOCALAPPDATA%\tuitp\claude\settings.json" set agent=claude --settings "%LOCALAPPDATA%\tuitp\claude\settings.json"
+rem Codex reads SSL_CERT_FILE: a certificate bundle that senv sets for other
+rem tools breaks its TLS connections, and its shared app-server daemon keeps
+rem the environment of the Codex that started it.
+if /I "%TUITP_ROLE%"=="codex" set "SSL_CERT_FILE="
+rem Passed again at each start, so that a retry still runs it.
+set "start_with=%~4"
+if defined start_with set agent=%agent% "%start_with%"
 :start_agent
 call :seconds started
 call %agent%
@@ -50,8 +60,9 @@ set "code=%errorlevel%"
 if "%code%"=="0" exit /b 0
 call :seconds ended
 set /a "elapsed=(ended - started + 86400) %% 86400"
-if %elapsed% GEQ 60 exit /b %code%
-if %attempt% GEQ 3 exit /b %code%
+set "left=tuitp: %TUITP_ROLE% exited %code% after %elapsed%s"
+if %elapsed% GEQ 300 (echo %left%, past its startup: left at the prompt. & exit /b %code%)
+if %attempt% GEQ 3 (echo %left%, start %attempt% of 3: left at the prompt. & exit /b %code%)
 set /a "attempt+=1"
 echo tuitp: %TUITP_ROLE% exited %code% after %elapsed%s while starting. Attempt %attempt% of 3 in 5s, Ctrl+C to stop.
 ping -n 6 127.0.0.1 >nul
