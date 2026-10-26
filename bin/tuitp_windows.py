@@ -301,6 +301,21 @@ def daemon_environment(environ):
     return env
 
 
+def tab_environment(environ):
+    """Return the environment of a Windows Terminal tab tuitp opens, as if tuitp ran outside any pane.
+
+    wt.exe gives a new tab the environment of its caller. tuitp run from an
+    agent's shell in a TUIOS pane passed that pane's TUIOS_* variables and
+    TERM_PROGRAM, and the NO_COLOR the agent sets for its own output: the
+    tab's TUIOS client then showed every pane without colors and took no
+    mouse selection.
+    """
+    env = {name: value for name, value in daemon_environment(environ).items() if not name.startswith("TUIOS_")}
+    for name in ("TERM_PROGRAM", "TERM_PROGRAM_VERSION", "NO_COLOR"):
+        env.pop(name, None)
+    return env
+
+
 class Windows:
     def __init__(self, scripts: Path, root: Path):
         self.scripts, self.root = scripts, root
@@ -568,6 +583,7 @@ class Windows:
         with timed(f"open tab {tab.title or tab.folder}, until its host registers"):
             with log_file.open("ab") as log:
                 launcher = subprocess.Popen(argv, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                                            env=tab_environment(os.environ),
                                             creationflags=subprocess.CREATE_NO_WINDOW)
             registered = self.wait_host(record)
         if not registered:
