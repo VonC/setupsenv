@@ -282,6 +282,13 @@ writes them to `%LOCALAPPDATA%\tuitp\claude\settings.json`. Claude panes start
 and done. Asking TUIOS on each run keeps the hooks current after a TUIOS
 upgrade; the file changes only when they do.
 
+TUIOS gives most of these hooks 5 seconds. Under a heavy load, such as a test
+run, `tuios.exe` can start slower than that: Claude then discards what the hook
+reports and prints `hook [...] timed out after 5s` under the prompt. `tuitp`
+raises any shorter timeout to 30 seconds when it writes the file. Claude reads
+its hooks when it starts, so a pane started with the older file keeps 5 seconds
+until its Claude restarts.
+
 Other Claude sessions do not load these hooks. Each hook starts `tuios.exe`,
 which took about a second on a workstation with endpoint protection, and
 Claude waits for its hooks before and after every tool call. For the same
