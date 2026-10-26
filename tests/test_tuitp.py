@@ -40,6 +40,7 @@ class FakeWindows:
         self.codex_clients = {}  # Session name -> its Codex processes.
         self.codex_others = 0  # Codex processes outside every session.
         self.fail = None
+        self.offline = False  # Whether ensure_internet.bat fails.
         self.lock = threading.Lock()
 
     def validate(self, need_tuios):
@@ -50,6 +51,11 @@ class FakeWindows:
 
     def write_claude_hooks(self):
         self.events.append(("claude-hooks",))
+
+    def ensure_internet(self):
+        self.events.append(("internet",))
+        if self.offline:
+            raise RuntimeError("no Internet access (ensure_internet.bat exit 21): nothing started.")
 
     def pane_names(self, session):
         return set(self.panes.get(session, []))
@@ -215,9 +221,34 @@ class ReconciliationTests(unittest.TestCase):
             self.assertTrue(event[-1].startswith(f'call "{self.runtime.pane_helper()}" '))
             self.assertIn("project with spaces", event[-1])
 
+    def test_internet_is_checked_before_anything_starts_and_only_then(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one", dry=True)
+        self.assertIn("[dry] CHECK Internet access with ensure_internet.bat, before starting anything\n", out.getvalue())
+        self.assertFalse(self.runtime.events)  # A dry run repairs no proxy.
+        self.apply("=== Projects\n+ FOLDER|one")
+        self.assertEqual(self.runtime.events[0], ("internet",))
+        self.runtime.events.clear()
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== Projects\n+ FOLDER|one")  # Nothing starts: no check.
+        self.assertFalse(self.events("internet"))
+        self.assertNotIn("CHECK", out.getvalue())
+
+    def test_offline_run_changes_nothing(self):
+        self.runtime.offline = True
+        with self.assertRaisesRegex(RuntimeError, "no Internet access"):
+            self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|cl|claude")
+        self.assertEqual(self.runtime.events, [("internet",)])
+        self.assertIsNone(self.saved)
+        self.runtime.offline = False
+        self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|cl|claude")
+        self.assertEqual([e[1] for e in self.events("new")], ["one", "cl"])
+
     def test_claude_hooks_are_written_before_any_change_only_for_new_claude_panes(self):
         self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex")
-        self.assertEqual(self.runtime.events[0], ("claude-hooks",))
+        self.assertEqual(self.runtime.events[:2], [("internet",), ("claude-hooks",)])
         self.assertEqual(len(self.events("claude-hooks")), 1)
         self.runtime.events.clear()
         self.apply("=== Projects\n+ FOLDER|one\n=== Solo\n+ FOLDER|solo|codex")
@@ -243,6 +274,9 @@ class ReconciliationTests(unittest.TestCase):
         (self.project / ".reviews" / "a.session-resume.local.md").write_text(
             f"# {author}: Resume session: Q25\n\n- Session role: {role}\n", encoding="utf-8")
 
+    def startup(self, window):
+        return next(e[-1] for e in self.events("send-text") if e[4] == window)
+
     def test_new_agent_panes_get_their_resume_commands_after_their_startup(self):
         self.pause("chatgpt")
         out = io.StringIO()
@@ -250,14 +284,30 @@ class ReconciliationTests(unittest.TestCase):
             self.apply("=== Projects\n+ FOLDER|one||pdf")
         names = [e[0] for e in self.runtime.events]
         self.assertLess(max(i for i, n in enumerate(names) if n == "send-keys"), names.index("queue-resume"))
+        # Codex starts with its command: only Claude's is queued.
         self.assertEqual(self.events("queue-resume"), [("queue-resume", [
-            {"session": "one", "window": "Claude pdf", "text": "/review-resume as reviewer"},
-            {"session": "one", "window": "Codex pdf", "text": "$llm-shared:resume-session "}])])
-        self.assertIn("RESUME session one: Claude runs /review-resume as reviewer and Codex runs "
+            {"session": "one", "window": "Claude pdf", "text": "/review-resume as reviewer"}])])
+        self.assertTrue(self.startup("Codex pdf").endswith(' codex project "$llm-shared:resume-session"'))
+        self.assertTrue(self.startup("Claude pdf").endswith(" claude"))
+        self.assertTrue(self.startup("CMD").endswith(" cmd"))
+        self.assertIn("RESUME session one: Claude runs /review-resume as reviewer and Codex starts with "
                       "$llm-shared:resume-session, for the prompt chatgpt paused for 'Q25'\n", out.getvalue())
         # A running session is not interrupted.
         self.runtime.events.clear()
         self.apply("=== Projects\n+ FOLDER|one||pdf")
+        self.assertFalse(self.events("queue-resume") + self.events("send-text"))
+
+    def test_codex_alone_starts_with_its_command_and_queues_nothing(self):
+        self.pause("claude")
+        self.apply("=== Pair\n+ FOLDER|cl|claude\n+ FOLDER|cx|codex")
+        self.assertEqual(self.events("queue-resume"), [("queue-resume", [
+            {"session": "cl", "window": "Claude", "text": "/resume-session"}])])
+        self.assertTrue(self.startup("Codex").endswith(' codex local-or-global "$llm-shared:review-resume as reviewer"'))
+        self.runtime.events.clear()
+        self.pause("chatgpt")
+        self.apply("=== Pair\n+ FOLDER|cl|claude\n+ FOLDER|cx|codex\n=== Other\n+ FOLDER|cx2|codex")
+        # Only the first Codex pane of the checkout resumes: a second one starts plain.
+        self.assertTrue(self.startup("Codex").endswith(" codex local-or-global"))
         self.assertFalse(self.events("queue-resume"))
 
     def test_dry_run_and_turned_off_resume(self):
@@ -265,7 +315,7 @@ class ReconciliationTests(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.apply("=== Projects\n+ FOLDER|one", dry=True)
-        self.assertIn("[dry] RESUME session one: Claude runs /resume-session and Codex runs "
+        self.assertIn("[dry] RESUME session one: Claude runs /resume-session and Codex starts with "
                       "$llm-shared:review-resume as reviewer", out.getvalue())
         self.assertFalse(self.runtime.events)
         out = io.StringIO()
@@ -273,6 +323,7 @@ class ReconciliationTests(unittest.TestCase):
             self.apply("=== Projects\n+ FOLDER|one")
         self.assertNotIn("RESUME", out.getvalue())
         self.assertFalse(self.events("queue-resume"))
+        self.assertTrue(self.startup("Codex").endswith(" codex"))
 
     def test_restored_sessions_also_resume_and_a_failed_queue_still_starts_them(self):
         self.apply("=== Projects\n+ FOLDER|one")
@@ -283,8 +334,8 @@ class ReconciliationTests(unittest.TestCase):
         with patch.object(self.runtime, "queue_resume", side_effect=OSError("no python")) as queue, \
                 contextlib.redirect_stdout(out):
             self.apply("=== Projects\n+ FOLDER|one")
-        self.assertEqual([d["text"] for d in queue.call_args.args[0]],
-                         ["/review-resume as reviewer", "$llm-shared:resume-session "])
+        self.assertEqual([d["text"] for d in queue.call_args.args[0]], ["/review-resume as reviewer"])
+        self.assertTrue(self.startup("Codex").endswith(' codex project "$llm-shared:resume-session"'))
         self.assertIn("tuitp: the resume commands are not queued: no python", out.getvalue())
         self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
 
@@ -295,18 +346,23 @@ class ReconciliationTests(unittest.TestCase):
         self.apply(text)
         self.assertFalse(self.events("new") + self.events("open") + self.events("close") + self.events("send-text"))
 
-    def test_one_pane_kinds_initialize_only_the_selected_role_and_remain_idempotent(self):
-        for kind, role in (("claude", "Claude"), ("codex", "Codex"), ("senv", "CMD"), ("single", "CMD")):
+    def test_agent_kinds_keep_a_cmd_beside_their_agent_and_remain_idempotent(self):
+        for kind, roles in (("claude", ["Claude", "CMD"]), ("codex", ["Codex", "CMD"]), ("senv", ["CMD"]),
+                            ("single", ["CMD"])):
             with self.subTest(kind=kind):
                 self.runtime, self.state = FakeWindows(), new_state()
                 text = f"=== Test\n+ FOLDER|test|{kind}"
                 self.apply(text)
-                self.assertEqual(self.events("set-window"), [("set-window", "-s", "test", "-w", "0", "--name", role)])
-                self.assertFalse(self.events("new-window"))
+                self.assertEqual(self.events("set-window"),
+                                 [("set-window", "-s", "test", "-w", "0", "--name", roles[0])])
+                # The CMD of an agent session takes workspace 2, as Codex does in a project session.
+                self.assertEqual([(e[1], e[e.index("--workspace") + 1]) for e in self.events("new-window")],
+                                 [("CMD", "2")] if len(roles) == 2 else [])
+                self.assertEqual(self.runtime.panes["test"], roles)
                 startup = self.events("send-text")
-                self.assertEqual(len(startup), 1)
-                self.assertEqual(startup[0][4], role)
-                self.assertTrue(startup[0][-1].endswith(f" {role.lower()} local-or-global"))
+                self.assertEqual([e[4] for e in startup], roles)
+                for event, role in zip(startup, roles):
+                    self.assertTrue(event[-1].endswith(f" {role.lower()} local-or-global"))
                 self.runtime.events.clear()
                 self.apply(text)
                 self.assertFalse(self.events("new") + self.events("open") + self.events("send-text"))
@@ -329,10 +385,10 @@ class ReconciliationTests(unittest.TestCase):
                 self.layout("=== P\n" + bad)
         self.apply("=== P\n+ FOLDER|one||pdf\n=== C\n+ FOLDER|cl|claude|t\n+ FOLDER|sh|senv|x")
         self.assertEqual(self.runtime.panes["one"], ["Claude pdf", "Codex pdf", "CMD"])
-        self.assertEqual(self.runtime.panes["cl"], ["Claude t"])
+        self.assertEqual(self.runtime.panes["cl"], ["Claude t", "CMD"])
         self.assertEqual(self.runtime.panes["sh"], ["CMD"])  # CMD panes keep their name.
         self.assertEqual(sorted(e[4] for e in self.events("send-text")),
-                         ["CMD", "CMD", "Claude pdf", "Claude t", "Codex pdf"])
+                         ["CMD", "CMD", "CMD", "Claude pdf", "Claude t", "Codex pdf"])
         self.assertEqual({name: s["id"] for name, s in self.state["sessions"].items()},
                          {"one": "pdf", "cl": "t", "sh": "x"})
 
@@ -685,6 +741,48 @@ class ReconciliationTests(unittest.TestCase):
         self.apply(text)  # The daemon now runs: its sessions are reused as they are.
         self.assertFalse(self.events("send-text"))
 
+    def test_restored_agent_session_saved_without_its_cmd_gets_one(self):
+        self.runtime.live["cl"] = {"name": "cl", "saved": True}
+        self.runtime.panes = {"cl": ["Claude"]}  # Saved before claude sessions had a CMD.
+        self.apply("=== Solo\n+ FOLDER|cl|claude")
+        self.assertEqual([(e[1], e[e.index("--workspace") + 1]) for e in self.events("new-window")], [("CMD", "2")])
+        self.assertEqual([e[4] for e in self.events("send-text")], ["Claude", "CMD"])
+        self.assertEqual(self.state["sessions"]["cl"]["status"], "ready")
+        # Another missing pane is only reported: its agent would start in a pane nobody declared.
+        self.runtime, self.state = FakeWindows(), new_state()
+        self.runtime.live["one"] = {"name": "one", "saved": True}
+        self.runtime.panes = {"one": ["Claude", "CMD"]}
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply("=== P\n+ FOLDER|one")
+        self.assertIn("tuitp: restored session one has no Codex pane: tuitp stop one, then tuitp, gives it one",
+                      out.getvalue())
+        self.assertEqual([e[4] for e in self.events("send-text")], ["Claude", "CMD"])
+
+    def test_running_agent_session_without_its_cmd_gets_one_beside_its_agent(self):
+        self.runtime.live = {name: {"name": name, "saved": False} for name in ("cl", "cx", "one")}
+        # Started before claude and codex sessions had a CMD; a project session's closed CMD stays closed.
+        self.runtime.panes = {"cl": ["Claude t"], "cx": ["Codex"], "one": ["Claude", "Codex"]}
+        self.runtime.daemon_live = True
+        text = "=== P\n+ FOLDER|one\n=== C\n+ FOLDER|cl|claude|t\n+ FOLDER|cx|codex"
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            self.apply(text, dry=True)
+        self.assertIn("[dry] ADD a CMD pane to session cl, beside its running agent\n", out.getvalue())
+        self.assertIn("[dry] ADD a CMD pane to session cx, beside its running agent\n", out.getvalue())
+        self.assertNotIn("session one, beside", out.getvalue())
+        self.assertFalse(self.runtime.events)
+        self.apply(text)
+        self.assertEqual(self.runtime.events[0], ("internet",))
+        self.assertEqual(self.runtime.panes, {"cl": ["Claude t", "CMD"], "cx": ["Codex", "CMD"],
+                                              "one": ["Claude", "Codex"]})
+        self.assertEqual([(e[2], e[4]) for e in self.events("send-text")], [("cl", "CMD"), ("cx", "CMD")])
+        for event in self.events("send-text"):
+            self.assertTrue(event[-1].endswith(" cmd local-or-global"))
+        self.runtime.events.clear()
+        self.apply(text)
+        self.assertFalse(self.events("new-window") + self.events("send-text") + self.events("internet"))
+
     def test_dry_run_names_restored_sessions(self):
         self.runtime.live["saved"] = {"name": "saved", "saved": True}
         out = io.StringIO()
@@ -868,6 +966,14 @@ class ReconciliationTests(unittest.TestCase):
 
 @unittest.skipUnless(os.name == "nt", "Windows native boundary checks")
 class WindowsTests(unittest.TestCase):
+    def setUp(self):
+        # Run from a tuitp pane, the agent inherits the variables of tuitp.pane.bat's SETLOCAL.
+        environ = patch.dict(os.environ)
+        environ.start()
+        self.addCleanup(environ.stop)
+        for name in ("agent", "attempt", "start_with", "code", "started", "ended", "elapsed", "left"):
+            os.environ.pop(name, None)
+
     def test_wt_first_window_waits_for_registration_not_gui_exit(self):
         with tempfile.TemporaryDirectory(prefix="tuitp-wt-") as temp:
             runtime = Windows(ROOT / "bin", Path(temp))
@@ -1047,18 +1153,20 @@ class WindowsTests(unittest.TestCase):
             (profile / "senv.bat").write_text('@echo off\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
             starts, fake = base / "starts.txt", base / "fake_codex.py"
             # The Nth start exits with the Nth code; later starts reuse the last one.
+            # Each start logs the prompt it got.
             fake.write_text("import pathlib, sys\n"
                             "starts = pathlib.Path(sys.argv[1])\n"
-                            "with starts.open('a') as log: log.write('start\\n')\n"
+                            "with starts.open('a') as log: log.write(f'start {sys.argv[3:]}\\n')\n"
                             "codes = [int(c) for c in sys.argv[2].split(',')]\n"
                             "code = codes[min(len(starts.read_text().splitlines()), len(codes)) - 1]\n"
                             "print('CODEX-EXIT', code, flush=True)\n"
                             "sys.exit(code)\n")
-            (local_bin / "codex.bat").write_text(f'@"{sys.executable}" -I "{fake}" "{starts}" %TUITP_TEST_CODES%\n'
+            (local_bin / "codex.bat").write_text(f'@"{sys.executable}" -I "{fake}" "{starts}" %TUITP_TEST_CODES% %*\n'
                                                  '@exit /b %errorlevel%\n')
             helper = ROOT / "bin" / "tuitp.pane.bat"
             cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
             command = (f'"{cmd}" /d /v:off /c call "{helper}" "{project}" codex local-or-global'
+                       ' "$llm-shared:review-resume as reviewer"'
                        ' && (if defined attempt (echo LEAKED) else echo CLEAN)')
             for codes, exit_code, started in (("3,0", 0, 2), ("3", 3, 3)):
                 with self.subTest(codes=codes):
@@ -1066,12 +1174,48 @@ class WindowsTests(unittest.TestCase):
                     env = dict(os.environ, USERPROFILE=str(profile), PRGS=str(base), TUITP_TEST_CODES=codes)
                     result = subprocess.run(command, capture_output=True, text=True, timeout=60, env=env)
                     self.assertEqual(result.returncode, exit_code, result.stdout + result.stderr)
-                    self.assertEqual(len(starts.read_text().splitlines()), started)
+                    self.assertEqual(starts.read_text().splitlines(),
+                                     ["start ['$llm-shared:review-resume as reviewer']"] * started)
                     self.assertIn("codex exited 3 after", result.stdout)
                     self.assertIn(f"Attempt {started} of 3 in 5s, Ctrl+C to stop.", result.stdout)
                     self.assertNotIn(f"Attempt {started + 1} of 3", result.stdout)
                     if exit_code == 0:
                         self.assertIn("CLEAN", result.stdout)
+                    else:
+                        self.assertRegex(result.stdout, r"codex exited 3 after \d+s, start 3 of 3: left at the prompt\.")
+
+    def test_codex_starts_with_its_command_and_without_the_ssl_bundle_of_other_tools(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-start-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            project.mkdir()
+            (profile / "senv.bat").write_text('@echo off\nset "PATH=%SystemRoot%\\System32"\n'
+                                              'set "SSL_CERT_FILE=C:\\bundle.pem"\nexit /b 0\n')
+            for role in ("claude", "codex"):
+                (local_bin / f"{role}.bat").write_text(
+                    f'@echo off\necho {role.upper()}-ARGS [%*] SSL [%SSL_CERT_FILE%]\nexit /b 0\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base),
+                                         "LOCALAPPDATA": str(base / "no state")}):
+                for role, activation, start, expected in (
+                        ("codex", "project", "$llm-shared:resume-session", '"$llm-shared:resume-session"'),
+                        ("codex", "local-or-global", "$llm-shared:review-resume as reviewer",
+                         '"$llm-shared:review-resume as reviewer"'),
+                        ("codex", "local-or-global", None, ""),
+                        ("claude", "local-or-global", "/resume-session", '"/resume-session"')):
+                    with self.subTest(role=role, start=start):
+                        command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} {activation}'
+                        command += f' "{start}"' if start else ""
+                        result = subprocess.run(command + " && set SSL_CERT_FILE", capture_output=True, text=True,
+                                                timeout=20)
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        ssl = "" if role == "codex" else "C:\\bundle.pem"
+                        self.assertIn(f"{role.upper()}-ARGS [{expected}] SSL [{ssl}]", result.stdout)
+                        # Cleared for Codex only: the pane's CMD keeps the bundle for other tools.
+                        self.assertIn("SSL_CERT_FILE=C:\\bundle.pem", result.stdout)
 
     def test_legacy_adoption_matches_exact_launcher_and_closes_only_attachment(self):
         runtime = Windows(Path(r"C:\Tools with spaces"), ROOT / "unused")
@@ -1137,6 +1281,25 @@ class WindowsTests(unittest.TestCase):
             with patch("tuitp_windows.subprocess.Popen"), patch.object(runtime, "wait_host", return_value=True):
                 runtime.open_tab(record)
             self.assertEqual(tuitp_windows.read_json(runtime.host_path(record))["pane"], str(second))
+
+    def test_ensure_internet_runs_the_script_beside_tuitp_and_refuses_offline(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-internet-") as temp:
+            runtime = Windows(Path(temp), Path(temp) / "state")
+            with self.assertRaisesRegex(ValueError, "ensure_internet.bat: tuitp starts nothing"):
+                runtime.ensure_internet()
+            script = Path(temp) / "ensure_internet.bat"
+            script.write_text("@exit /b 0\n")
+            for code in (0, 21):
+                with self.subTest(code=code), \
+                        patch("tuitp_windows.subprocess.run", return_value=Mock(returncode=code)) as native:
+                    if code:
+                        with self.assertRaisesRegex(RuntimeError, r"exit 21\): nothing started"):
+                            runtime.ensure_internet()
+                    else:
+                        runtime.ensure_internet()
+                    # Not captured: its output tells the person what it checked and repaired.
+                    self.assertEqual(native.call_args.args[0], [str(runtime.cmd), "/d", "/c", "call", str(script)])
+                    self.assertNotIn("capture_output", native.call_args.kwargs)
 
     def test_pane_names_read_the_names_tuios_lists(self):
         runtime = Windows(Path(r"C:\bin"), Path(r"C:\state"))

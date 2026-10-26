@@ -127,9 +127,9 @@ class ResumePlanTests(Checkouts):
         deliveries, lines = self.plan("=== Tab\n+ API|api||pdf", api=api)
         self.assertEqual(deliveries, [
             {"session": "api", "window": "Claude pdf", "text": "/review-resume as reviewer"},
-            # The space closes the Codex skill picker, which would take the Enter.
-            {"session": "api", "window": "Codex pdf", "text": "$llm-shared:resume-session "}])
-        self.assertEqual(lines, ["RESUME session api: Claude runs /review-resume as reviewer and Codex runs "
+            # Codex takes its command as the prompt it starts with: the helper queues only Claude's.
+            {"session": "api", "window": "Codex pdf", "text": "$llm-shared:resume-session", "start": True}])
+        self.assertEqual(lines, ["RESUME session api: Claude runs /review-resume as reviewer and Codex starts with "
                                  "$llm-shared:resume-session, for the prompt chatgpt paused for 'Q25 and Q26'"])
 
     def test_the_other_agent_waits_as_reviewer_only_after_a_requestor_pause(self):
@@ -162,7 +162,7 @@ class ResumePlanTests(Checkouts):
         text = "=== A\n+ API|cl|claude\n=== B\n+ API|cx|codex\n+ API|cl2|claude"
         deliveries, lines = self.plan(text, api=api)
         self.assertEqual([(d["session"], d["text"]) for d in deliveries],
-                         [("cl", "/review-resume as reviewer"), ("cx", "$llm-shared:resume-session ")])
+                         [("cl", "/review-resume as reviewer"), ("cx", "$llm-shared:resume-session")])
         self.assertEqual(len(lines), 2)  # cl2 has no part, and no note: Codex holds the prompt.
         # A running session keeps its part: the starting one gets nothing in its place.
         deliveries, lines = self.plan(text, starting=["cl2"], api=api)
