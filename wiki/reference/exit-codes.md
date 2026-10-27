@@ -158,6 +158,8 @@ the `batcolors` macros.
 | 1 | `N` is not a whole number of 1 or more |
 | 2 | no screenshots folder in `lsc.custom.ini` and none known to Windows, or the folder does not exist |
 | 3 | the folder holds no image |
+| 4 | `lsc watch` or `lsc stop`: the watcher did not start, or did not stop, within 10 seconds |
 
 Fewer images than `N` is a warning, not an error: the ones found are copied
-and the exit code is 0.
+and the exit code is 0. `lsc watch` with a watcher already running, and
+`lsc stop` with none, also exit 0.

@@ -155,6 +155,7 @@ will be) in the wiki reference pages:
 | `ctc` | collect Teams Ctrl+A/Ctrl+C selections into `%HOME%\a.tc.copy`; paste the cleaned transcript and stop with Ctrl+V |
 | `ctcr` | reset `%HOME%\a.tc.copy`, then immediately start a new collection |
 | `lsc [N]` | copy the paths of the newest screenshot, or of the `N` newest, quoted, to the clipboard, to paste into an agent prompt |
+| `lsc watch`, `lsc stop` | start or stop a tray icon that copies the path of each new screenshot as it is saved; its menu pauses, resumes or exits it |
 | `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
 | `gcu` | register your name/email in the current repository (see below) |
 | `senve` | edit your personal variables in VSCode; reload with `senv` |

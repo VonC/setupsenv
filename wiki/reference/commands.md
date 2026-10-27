@@ -257,11 +257,14 @@ a conversation in Teams before retrying a missing older day. See the
 
 ## 📸 Screenshots
 
-### `lsc [N]`
+### `lsc [N|watch|stop|status]`
 
 ```text
 lsc
 lsc 3
+lsc watch
+lsc stop
+lsc status
 lsc /?
 ```
 
@@ -273,6 +276,9 @@ becomes an attachment such as `[Image #1]`.
 | --- | --- |
 | none | the newest image |
 | `N` | the `N` newest images, each quoted, separated by one space, oldest first |
+| `watch` | start the tray watcher described below, then return |
+| `stop` | stop the tray watcher |
+| `status` | say whether the tray watcher runs, and where its log is |
 | `/?`, `-h`, `--help` | print usage |
 
 Images are the files ending in `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp` or
@@ -296,6 +302,28 @@ uses the Windows Screenshots folder: the
 `User Shell Folders` key, set once the folder is redirected, else
 `Screenshots` under the Pictures folder. Exit codes are in the
 [exit codes reference](exit-codes.md#lsc).
+
+#### The tray watcher
+
+`lsc watch` starts `last-screenshots-watch.ps1` in a hidden Windows
+PowerShell, waits until it watches the folder (a second or two), and returns.
+From then on, each new image created or renamed in the folder has its quoted
+path put on the clipboard as text, once the file can be opened and 0.4 seconds
+have passed, so the capture tool's own clipboard write comes first. A bitmap
+already on the clipboard stays beside the text: a text field pastes the path,
+an image editor still pastes the picture.
+
+| Tray icon | State |
+| --- | --- |
+| green square, white snip-frame corners | watching |
+| grey square, white pause bars | paused: new images are ignored |
+
+Hover over the icon to see the state and the time of the last copy.
+Right-click it for **Pause**, **Resume** and **Exit**. `lsc watch` while a
+watcher runs leaves it alone; `lsc stop` asks it to exit and waits until it
+has. One watcher runs per Windows session, and it needs no administrator
+rights. It logs its start, copies, pauses and stop in
+`%LOCALAPPDATA%\senv\senv-lsc-watch.log`, rewritten at each start.
 
 ## 🧰 Download and install
 
