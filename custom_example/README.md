@@ -64,6 +64,7 @@ Files shared by all profiles:
 | `senv.custom.doskey` | team-wide doskey aliases |
 | `gsenv.custom.bat` | team-wide additions to the graphical session (`gsenv`) |
 | `senv.custom.all_teams.gcua.list` | default git-hosting services for every profile: setup registers the git identity in every repository whose remotes all match those services |
+| `lsc.custom.ini` | the screenshots folder of `lsc`, under `[screenshots]` as `folder = ...` (seeded with the key commented out: `lsc` then uses the Windows Screenshots folder) |
 
 Files keyed by a profile name (see next section), for a profile `xyz`:
 

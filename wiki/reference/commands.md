@@ -255,6 +255,48 @@ Only messages fetched by the local Teams client are available. Open and scroll
 a conversation in Teams before retrying a missing older day. See the
 [daily-use how-to](../how-to/copy-cached-teams-chats.md).
 
+## 📸 Screenshots
+
+### `lsc [N]`
+
+```text
+lsc
+lsc 3
+lsc /?
+```
+
+Copies the full path of the newest screenshot, between double quotes, to the
+clipboard, and prints it. Pasted into a Claude Code prompt, a quoted image path
+becomes an attachment such as `[Image #1]`.
+
+| Argument | Behavior |
+| --- | --- |
+| none | the newest image |
+| `N` | the `N` newest images, each quoted, separated by one space, oldest first |
+| `/?`, `-h`, `--help` | print usage |
+
+Images are the files ending in `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp` or
+`.webp`, in any case; other files, such as `desktop.ini`, are skipped. The
+newest is the latest modification time, then the greater name. With fewer
+than `N` images, all of them are copied and a warning names the count.
+
+The folder comes from `lsc.custom.ini`, beside `lsc.bat` in `%HOME%\bin`,
+copied there by setup from `custom\lsc.custom.ini`:
+
+```ini
+[screenshots]
+folder = %USERPROFILE%\Pictures\Screenshots
+```
+
+The file is UTF-8, with or without a BOM, so a localized folder name such as
+a OneDrive `Captures d’écran` survives; environment variables are expanded and
+surrounding quotes are dropped. Without the file or the `folder` key, `lsc`
+uses the Windows Screenshots folder: the
+`{B7BEDE81-DF94-4682-A7D8-57A52620B86F}` value of the per-user
+`User Shell Folders` key, set once the folder is redirected, else
+`Screenshots` under the Pictures folder. Exit codes are in the
+[exit codes reference](exit-codes.md#lsc).
+
 ## 🧰 Download and install
 
 ### `dwl <program> [<version>]` (alias `dl`, `download`)

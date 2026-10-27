@@ -147,3 +147,17 @@ code of the last failure.
 | 46 | some threads could not be marked done, or new unread ones arrived |
 
 Nothing to clear, a `dry` run and a cancelled question all exit 0.
+
+## `lsc`
+
+`lsc` prints its errors on standard error, prefixed with `lsc:`, without
+the `batcolors` macros.
+
+| Code | Condition |
+| --- | --- |
+| 1 | `N` is not a whole number of 1 or more |
+| 2 | no screenshots folder in `lsc.custom.ini` and none known to Windows, or the folder does not exist |
+| 3 | the folder holds no image |
+
+Fewer images than `N` is a warning, not an error: the ones found are copied
+and the exit code is 0.

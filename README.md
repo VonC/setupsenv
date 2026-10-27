@@ -154,6 +154,7 @@ will be) in the wiki reference pages:
 | `tc <today\|yesterday\|N\|yyyy-MM-dd\|yyyyMMdd>` | copy locally cached Teams chats for a day to the clipboard, `N` being days ago (`tct [N]`: today, or `N` days ago; `tcy`: yesterday) |
 | `ctc` | collect Teams Ctrl+A/Ctrl+C selections into `%HOME%\a.tc.copy`; paste the cleaned transcript and stop with Ctrl+V |
 | `ctcr` | reset `%HOME%\a.tc.copy`, then immediately start a new collection |
+| `lsc [N]` | copy the paths of the newest screenshot, or of the `N` newest, quoted, to the clipboard, to paste into an agent prompt |
 | `cdg`, `cds`, `cdh`, ... | jump to the key folders; `cdg` is where you clone (`%PROG%\git`) |
 | `gcu` | register your name/email in the current repository (see below) |
 | `senve` | edit your personal variables in VSCode; reload with `senv` |
