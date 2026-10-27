@@ -811,6 +811,12 @@ class ReconciliationTests(unittest.TestCase):
         plain = {"PATH": "a", "PROMPT": "$P$G"}
         self.assertEqual(daemon_environment(plain), plain)
 
+    def test_daemon_environment_drops_the_launcher_venv_choice(self):
+        # tuitp.bat sets it for its own Python; a pane's project senv.bat
+        # would then skip its local venv.
+        env = {"PATH": "a", "SWITCHPY_CHOICE": "No venv", "KEEP": "1"}
+        self.assertEqual(daemon_environment(env), {"PATH": "a", "KEEP": "1"})
+
     def test_manually_closed_tab_reopens_without_reinitializing_session(self):
         self.apply("=== A\n+ FOLDER|one")
         self.runtime.hosts.clear()
