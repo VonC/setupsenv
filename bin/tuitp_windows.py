@@ -283,9 +283,13 @@ def daemon_environment(environ):
 
     Every pane shell, restored ones included, inherits the daemon's
     environment: a venv active where tuitp ran would show in their prompt and
-    lead their PATH before any senv runs.
+    lead their PATH before any senv runs. The SWITCHPY_CHOICE tuitp.bat sets
+    to run its own Python without a venv goes too: switchpy prefers it to the
+    choice a pane's project senv.bat passes, and that project then runs
+    without its local venv.
     """
     env = dict(environ)
+    env.pop("SWITCHPY_CHOICE", None)
     venv = env.pop("VIRTUAL_ENV", None)
     env.pop("VIRTUAL_ENV_PROMPT", None)
     env.pop("_OLD_VIRTUAL_PATH", None)
