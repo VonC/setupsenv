@@ -54,6 +54,27 @@ Two edit aliases drive the whole loop, each with its own reload:
    - after `aliase`: `aliasr` reloads the three doskey layers, nothing else,
    - after `senve`: `senv` re-runs the whole activation, variables included.
 
+## Remove or replace an alias
+
+Reloading the aliases, with `aliasr` or `senv`, adds and replaces macros
+but never deletes one: an alias deleted from `senv.local.doskey` stays in
+every console that loaded it, until that console closes. A macro also wins
+over a script of the same name on `PATH`. So when a script replaces an
+alias, as `codexu.bat` replaced an installer one-liner, do not delete the
+alias:
+
+1. Define it to call the script instead:
+
+   ```text
+   codexu="%HOME%\bin\codexu.bat" $*
+   ```
+
+2. Run `aliasr` in each open console: the new definition replaces the old
+   macro there too.
+
+To drop an alias for good, delete its line, then run `doskey <name>=` in
+each open console, or open new ones.
+
 ## ✅ Check
 
 `alias cdp` shows the new macro; `echo %MY_TOOL_HOME%` shows the variable.

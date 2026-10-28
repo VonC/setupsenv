@@ -16,6 +16,12 @@ overriding earlier ones:
 customization. After `aliase`, `aliasr` is enough to reload the aliases;
 after `senve`, run `senv` to re-apply the variables in the session.
 
+Loading is `DOSKEY /MACROFILE`, which adds and replaces macros and never
+deletes one: a macro deleted from a file stays in each console that loaded
+it, until `doskey <name>=` or the console closes. A macro runs before any
+program or script of the same name on `PATH`
+([remove or replace an alias](../how-to/add-personal-alias-or-env-var.md#remove-or-replace-an-alias)).
+
 ## 🧭 Navigation
 
 | Alias | Target |
