@@ -127,13 +127,31 @@ points at `wtp.list.example`, and exits 0.
 | 41 | unknown argument |
 | 42 | `ensure_internet.bat` missing next to `aiup.bat` |
 | 43 | no Internet access |
-| 44 | the Codex installer could not be downloaded |
-| 45 | the Codex installer failed |
+| 44 | `codexu.bat` missing next to `aiup.bat` |
+| 45 | `codexu` failed: its own code and message are printed before |
 | 46 | the Claude installer could not be downloaded |
 | 47 | the Claude installer failed |
 
-A failed Codex update does not stop the Claude one: `aiup` exits with the
-code of the last failure.
+A failed Claude update does not stop the Codex one: `aiup` exits with the
+code of the last failure. When Internet access cannot be restored,
+`ensure_internet.bat` ends the run itself, with its own code (21 to 23).
+
+## `codexu.bat`
+
+| Code | Condition |
+| --- | --- |
+| 41 | unknown argument |
+| 42 | `ensure_internet.bat` missing next to `codexu.bat` |
+| 43 | no Internet access |
+| 44 | the Codex installer could not be downloaded |
+| 45 | the Codex installer failed |
+| 46 | `codex app-server daemon update --from-cli` failed: the daemon was not updated |
+| 47 | no Codex CLI in `%CODEX_HOME%\packages\standalone\current\bin` after the installer (`%USERPROFILE%\.codex` without `CODEX_HOME`) |
+
+A failed CLI update stops `codexu` before the daemon. A daemon that already
+has the CLI version, and a `dry` run, exit 0. As for `aiup`, when Internet
+access cannot be restored, `ensure_internet.bat` ends the run with its own
+code (21 to 23).
 
 ## `ghclear.bat`
 

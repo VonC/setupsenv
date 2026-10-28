@@ -381,25 +381,66 @@ aiup claude force
 aiup dry
 ```
 
-Checks Internet access with `ensure_internet.bat`, then updates the Codex
-and Claude CLIs with their official PowerShell installers
-(`https://chatgpt.com/codex/install.ps1`, `https://claude.ai/install.ps1`).
-The Codex installer runs with `CODEX_NON_INTERACTIVE=1`, so it asks nothing
-and does not start Codex once done.
+Checks Internet access with `ensure_internet.bat`, updates the Claude CLI
+with its official PowerShell installer (`https://claude.ai/install.ps1`),
+then Codex with `codexu` (below): its CLI, from
+`https://chatgpt.com/codex/install.ps1`, and its app-server daemon. Neither
+asks anything.
 
 | Argument | Behavior |
 | --- | --- |
-| none | update both CLIs |
-| `codex`, `claude` | update only that CLI |
-| `force` | update a CLI even when one of its processes is running |
-| `dry` | print the download and installer commands, change nothing |
+| none | update Claude, then Codex |
+| `codex`, `claude` | update only that one |
+| `force` | update Claude even when one of its processes is running |
+| `dry` | print what would be done, change nothing (`codexu dry` for Codex) |
 
-A CLI with a running process is skipped unless `force` is given, which
+A Claude with a running process is skipped unless `force` is given, which
 means a plain `aiup claude` run from inside a Claude session skips Claude.
+Codex has no such check: its daemon and the daemon's updater are `codex.exe`
+processes too, so one would nearly always be found. Its installer puts each
+version in its own folder, which leaves running sessions alone; `codexu`
+then replaces the daemon package without asking, which can interrupt their
+work.
 When `HTTPS_PROXY` is set, both installers run with it as the PowerShell
 default web proxy: `Invoke-WebRequest` ignores `HTTPS_PROXY`, and without
 it the Codex installer cannot reach `releases.openai.com` and falls back to
 the GitHub API, which allows 60 unauthenticated calls per hour per address.
+
+### `codexu [dry]`
+
+```text
+codexu
+codexu dry
+```
+
+Checks Internet access with `ensure_internet.bat`, updates the Codex CLI
+with its official installer (`HTTPS_PROXY` included, as for `aiup`), then
+the Codex app-server daemon that every Codex session connects to. The
+installer runs with `CODEX_NON_INTERACTIVE=1`, so it asks nothing and does
+not start Codex once done. `codexu dry` prints the versions of the CLI, of
+the daemon package and of the running daemon, then what it would do, and
+changes nothing. `aiup` runs `codexu` for Codex, after Claude.
+
+The CLI and daemon package versions come from the `codex-package.json` of
+each package; only the running daemon is asked, through `codex app-server
+daemon version`, which fails when no daemon runs. The running daemon then
+shows as `-`.
+
+The daemon cannot update itself in a senv session. It keeps the environment
+of the Codex that started it, where the Git `tar` comes before the Windows
+one, and its hourly installer run fails to extract the package: GNU tar
+reads the `C:` of a Windows path as a remote host. Each new Codex then warns
+that "a background Codex service is running" an older version.
+
+`codexu` runs `codex app-server daemon update --from-cli`, which selects the
+CLI package just installed: nothing is downloaded or extracted again. Codex
+asks before it replaces the daemon package, since that can interrupt the
+work of running Codex sessions: `codexu` passes `--yes`, so nothing is
+asked. Run it when those sessions can wait. The daemon is then pinned to
+that version and stops its hourly attempts: run `codexu` again after each
+Codex update (`codex app-server daemon update` returns the daemon to its own
+updates). When the daemon package already has the CLI version, and the
+running daemon too if one runs, `codexu` leaves the daemon alone.
 
 ## 🔀 Version switching
 
