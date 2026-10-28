@@ -2,18 +2,15 @@
 setlocal enabledelayedexpansion
 
 rem aiup.bat - make sure Internet access is there (ensure_internet.bat), then
-rem update the Codex and Claude CLIs. A CLI that still has a running process is
-rem left alone: replacing the binary under a live session is what 'force' is for.
+rem update the Claude CLI, then Codex with codexu.bat: its CLI and its daemon.
+rem A Claude that still has a running process is left alone: replacing the
+rem binary under a live session is what 'force' is for.
 rem
-rem   aiup           ensure_internet, then update both when they are idle
+rem   aiup           ensure_internet, then update both
 rem   aiup codex     only Codex
 rem   aiup claude    only Claude
-rem   aiup force     update even when a session is running
+rem   aiup force     update Claude even when a session is running
 rem   aiup dry       report what would be done, change nothing
-rem
-rem The Codex installer is driven with CODEX_NON_INTERACTIVE=1: its Prompt-YesNo
-rem then answers 'no' without asking, which both skips the [y/N] questions and
-rem keeps the installer from launching Codex once it is done.
 rem
 rem Beware: run from inside a Claude session, 'aiup' always sees claude.exe
 rem running and skips it. Update Claude from a plain cmd tab, or use
@@ -43,6 +40,9 @@ if not defined aiup_want_codex if not defined aiup_want_claude (
    set "aiup_want_claude=1"
 )
 
+rem codexu gets the PATH aiup was called with: it gives it back to the Codex
+rem daemon it restarts.
+set "aiup_path=%PATH%"
 rem The installers reach the network through curl.exe and powershell.exe, both
 rem of which live in System32; senv rebuilds PATH, so make sure it is in front.
 set "PATH=%WINDIR%\System32;%PATH%"
@@ -59,8 +59,8 @@ if defined aiup_proxy set "aiup_through= through proxy '%HTTPS_PROXY%'"
 call :ensure_internet
 if errorlevel 1 exit /b %ERRORLEVEL%
 
-if defined aiup_want_codex call :update_codex
 if defined aiup_want_claude call :update_claude
+if defined aiup_want_codex call :update_codex
 
 if not "%aiup_rc%"=="0" (
    %_error% "aiup finished with errorlevel '%aiup_rc%'"
@@ -82,40 +82,31 @@ if errorlevel 1 (
 exit /b 0
 
 
+rem No running check for Codex: its daemon and the daemon's updater are
+rem codex.exe processes too, so one would nearly always be found. The installer
+rem puts each version in its own folder, which leaves running sessions alone;
+rem codexu then replaces the daemon package without asking, which can
+rem interrupt their work.
 :update_codex
-call :running "codex.exe"
-if not errorlevel 1 (
-   if not defined aiup_force (
-      %_warning% "Codex is running (PID !aiup_pids!); leaving it alone. Use 'aiup codex force' to update anyway"
-      exit /b 0
-   )
-   %_warning% "Codex is running (PID !aiup_pids!); updating anyway because 'force' was given"
-)
-
-if defined aiup_dry (
-   %_info% "dry: curl.exe -L https://chatgpt.com/codex/install.ps1 -o '%TEMP%\codex-install.ps1'"
-   %_info% "dry: CODEX_NON_INTERACTIVE=1 powershell.exe -File '%TEMP%\codex-install.ps1'!aiup_through!"
-   exit /b 0
-)
-
-%_task% "Must download the Codex installer"
-curl.exe --progress-bar -L https://chatgpt.com/codex/install.ps1 -o "%TEMP%\codex-install.ps1"
-if errorlevel 1 (
-   %_error% "Unable to download the Codex installer"
+if not exist "%script_dir%\codexu.bat" (
+   %_error% "Missing Codex updater: '%script_dir%\codexu.bat'"
    set "aiup_rc=44"
    exit /b 44
 )
+set "aiup_codexu="
+if defined aiup_dry set "aiup_codexu=dry"
 
-%_task% "Must run the Codex installer without any confirmation!aiup_through!"
-set "CODEX_NON_INTERACTIVE=1"
-call :run_installer "%TEMP%\codex-install.ps1"
-set "aiup_step=!ERRORLEVEL!"
-set "CODEX_NON_INTERACTIVE="
-if not "!aiup_step!"=="0" (
-   %_error% "Codex installer failed with errorlevel '!aiup_step!'"
+%_task% "Must update the Codex CLI and its daemon with codexu"
+setlocal
+set "PATH=%aiup_path%"
+call "%script_dir%\codexu.bat" %aiup_codexu%
+endlocal & set "aiup_step=%ERRORLEVEL%"
+if not "%aiup_step%"=="0" (
+   %_error% "codexu failed with errorlevel '%aiup_step%'"
    set "aiup_rc=45"
    exit /b 45
 )
+if defined aiup_dry exit /b 0
 %_ok% "Codex is up to date"
 exit /b 0
 
