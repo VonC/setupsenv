@@ -1,4 +1,4 @@
-"""Which resume command each agent pane that tuitp starts gets, and how it is queued. No TUIOS runs."""
+"""Which resume command each agent pane that tuitp starts gets, and how it is typed. No TUIOS runs."""
 from __future__ import annotations
 
 import hashlib
@@ -187,35 +187,52 @@ class ResumePlanTests(Checkouts):
 
 
 class DeliverTests(unittest.TestCase):
+    TARGET = ["-s", "api", "-w", "Claude"]
+    MARK = ["tuios.exe", "set-agent-state", "needs_input", *TARGET, "--kind", "question", "--if-state", "idle,done",
+            "-m", "tuitp could not have /resume-session taken here: look at the pane"]
+
     def deliver(self, *results):
-        calls, lines = [], []
+        calls, lines, self.slept = [], [], []
         replies = iter(results)
         def run(argv, **kwargs):
             calls.append(argv)
             return next(replies)
-        deliver("tuios.exe", [{"session": "api", "window": "Codex pdf", "text": "$llm-shared:resume-session"}],
-                lines.append, run=run, wait_ms=5)
+        deliver("tuios.exe", [{"session": "api", "window": "Claude", "text": "/resume-session"}],
+                lines.append, run=run, wait_ms=5, settle_s=3, sleep=self.slept.append)
         return calls, lines
 
-    def test_it_queues_once_the_agent_is_at_its_prompt(self):
-        ok = subprocess.CompletedProcess([], 0, '{"id": "q1"}', "")
-        calls, lines = self.deliver(ok, ok)
+    def test_it_types_once_the_agent_is_at_its_prompt_and_settled(self):
+        taken = subprocess.CompletedProcess([], 0, '{"success": true, "settled_by": "timeout", "state": "working"}', "")
+        calls, lines = self.deliver(subprocess.CompletedProcess([], 0, "", ""), taken)
         self.assertEqual(calls, [
-            ["tuios.exe", "wait-for", "agent-state", "-s", "api", "-w", "Codex pdf", "--until", "idle,done",
-             "--timeout", "5"],
-            ["tuios.exe", "queue", "-s", "api", "-w", "Codex pdf", "--json", "--", "$llm-shared:resume-session"]])
-        self.assertEqual(lines, ['api/Codex pdf: queued $llm-shared:resume-session {"id": "q1"}'])
+            ["tuios.exe", "wait-for", "agent-state", *self.TARGET, "--until", "idle,done", "--timeout", "5"],
+            ["tuios.exe", "ask-agent", *self.TARGET, "--stall-timeout", "60000", "--timeout", "100000",
+             "--lines", "1", "--json", "--", "/resume-session"]])
+        self.assertEqual(self.slept, [3])
+        self.assertEqual(lines, ["api/Claude: /resume-session taken, the agent is working"])
 
-    def test_no_agent_at_its_prompt_queues_nothing(self):
+    def test_no_agent_at_its_prompt_types_nothing(self):
         calls, lines = self.deliver(subprocess.CompletedProcess([], 1, "", "timeout\n"))
-        self.assertEqual(len(calls), 1)
-        self.assertEqual(lines, ["api/Codex pdf: no agent at its prompt, $llm-shared:resume-session not queued: "
-                                 "timeout"])
+        self.assertEqual((len(calls), self.slept), (1, []))
+        self.assertEqual(lines, ["api/Claude: no agent at its prompt, /resume-session not typed: timeout"])
 
-    def test_a_refused_queue_is_logged(self):
-        calls, lines = self.deliver(subprocess.CompletedProcess([], 0, "", ""),
-                                    subprocess.CompletedProcess([], 2, "", "agent_blocked"))
-        self.assertEqual(lines, ["api/Codex pdf: cannot queue $llm-shared:resume-session: agent_blocked"])
+    def test_a_command_not_taken_puts_a_question_in_the_inbox(self):
+        stalled = subprocess.CompletedProcess([], 1, json.dumps(
+            {"error": "ask-agent failed: within 60s it did not turn working or needs_input.\nMost likely cause: ...",
+             "success": False}), "")
+        ok = subprocess.CompletedProcess([], 0, "", "")
+        calls, lines = self.deliver(ok, stalled, ok)
+        self.assertEqual(calls[2], self.MARK)
+        self.assertEqual(lines, ["api/Claude: /resume-session not taken: "
+                                 "ask-agent failed: within 60s it did not turn working or needs_input."])
+
+    def test_a_refused_ask_and_a_failed_question_are_logged(self):
+        ok = subprocess.CompletedProcess([], 0, "", "")
+        calls, lines = self.deliver(ok, subprocess.CompletedProcess([], 2, "", "agent_blocked\n"),
+                                    subprocess.CompletedProcess([], 1, "", "no daemon\n"))
+        self.assertEqual(calls[2], self.MARK)
+        self.assertEqual(lines, ["api/Claude: /resume-session not taken: agent_blocked",
+                                 "api/Claude: no Inbox question: no daemon"])
 
 
 class QueueResumeProcessTests(unittest.TestCase):
