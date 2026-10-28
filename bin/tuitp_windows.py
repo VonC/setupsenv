@@ -442,7 +442,7 @@ class Windows:
                                         creationflags=flags)
 
     def queue_resume(self, deliveries):
-        """Start the helper that queues each resume command once its agent is at its prompt: tuitp does not wait."""
+        """Start the helper that types each resume command once its agent is at its prompt: tuitp does not wait."""
         self.start_helper("tuitp_resume.py", [str(self.tuios), json.dumps(deliveries)], "resume.log")
 
     def stop_watcher(self):

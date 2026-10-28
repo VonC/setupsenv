@@ -15,7 +15,7 @@ review-resume make every check again before they act.
 Codex starts with its command as its prompt argument, so that the start its
 pane makes again after a failed startup still runs it. Run as a script, this
 module is the helper that types each Claude command into its pane once Claude
-is at its prompt, through `tuios queue`.
+is at its prompt, through `tuios ask-agent`.
 """
 from __future__ import annotations
 
@@ -47,6 +47,17 @@ HEADING = re.compile(r"# ([a-z0-9-]+): Resume session: (.*)")
 # Long enough for a Claude that fails its first start twice, or for the person
 # to answer a "Trust this folder?" question.
 WAIT_MS = 600_000
+# Once at its prompt, a Claude just started gets this long before its command
+# is typed: every agent of the run starts at once, and the load drops after.
+SETTLE_S = 15
+# A Claude shows it took a command through its prompt hook, which starts
+# tuios.exe: with every agent starting, that came 5 to 18 s after Enter on
+# 2026-10-28, past the 5 s that tuios queue allows, which then warned for
+# nothing.
+STALL_MS = 60_000
+# Past this, ask-agent stops waiting for the turn to end, a command taken
+# counting as delivered: its 30 s wait for the agent to rest, then STALL_MS.
+ASK_MS = 100_000
 
 
 def artifact_home(root: Path) -> Path:
@@ -111,7 +122,7 @@ def resume_plan(layout, starting):
     the agent that paused it, and review-resume to the first pane of the other
     agent. Only the panes of the starting sessions get a command: an agent that
     already runs is not interrupted. A command marked "start" is the prompt its
-    agent starts with; the helper queues the others.
+    agent starts with; the helper types the others.
     """
     first = {}  # (folder key, agent id) -> (session name, pane role) declared first
     for session in layout.sessions.values():
@@ -161,30 +172,44 @@ def resume_plan(layout, starting):
     return deliveries, lines
 
 
-def deliver(tuios, deliveries, log, run=subprocess.run, wait_ms=WAIT_MS):
-    """Queue each command in its pane once the agent there is at rest, all panes at once."""
-    def one(item):
-        pane = f"{item['session']}/{item['window']}"
-        target = ["-s", item["session"], "-w", item["window"]]
-        # Before the agent runs, the pane is a CMD that activates senv: queue
-        # only once its agent reports, so that nothing lands in that CMD.
-        waited = run([tuios, "wait-for", "agent-state", *target, "--until", "idle,done", "--timeout", str(wait_ms)],
-                     capture_output=True, text=True, encoding="utf-8", errors="replace",
-                     creationflags=subprocess.CREATE_NO_WINDOW)
-        if waited.returncode:
-            log(f"{pane}: no agent at its prompt, {item['text']} not queued: {(waited.stderr or waited.stdout).strip()}")
-            return
-        # queue types it once the agent rests a second, never over a question
-        # it waits on, and opens an Inbox item if the agent does not take it.
-        queued = run([tuios, "queue", *target, "--json", "--", item["text"]],
-                     capture_output=True, text=True, encoding="utf-8", errors="replace",
-                     creationflags=subprocess.CREATE_NO_WINDOW)
-        if queued.returncode:
-            log(f"{pane}: cannot queue {item['text']}: {(queued.stderr or queued.stdout).strip()}")
-        else:
-            log(f"{pane}: queued {item['text']} {queued.stdout.strip()}")
+def deliver(tuios, deliveries, log, run=subprocess.run, wait_ms=WAIT_MS, settle_s=SETTLE_S, sleep=time.sleep):
+    """Type each command in its pane once the agent there is at rest and settled, all panes at once."""
+    def call(*argv):
+        return run([tuios, *argv], capture_output=True, text=True, encoding="utf-8", errors="replace",
+                   creationflags=subprocess.CREATE_NO_WINDOW)
 
-    with ThreadPoolExecutor(max_workers=min(4, len(deliveries) or 1)) as pool:
+    def one(item):
+        pane, text = f"{item['session']}/{item['window']}", item["text"]
+        target = ["-s", item["session"], "-w", item["window"]]
+        # Before the agent runs, the pane is a CMD that activates senv: type
+        # only once its agent reports, so that nothing lands in that CMD.
+        waited = call("wait-for", "agent-state", *target, "--until", "idle,done", "--timeout", str(wait_ms))
+        if waited.returncode:
+            log(f"{pane}: no agent at its prompt, {text} not typed: {(waited.stderr or waited.stdout).strip()}")
+            return
+        sleep(settle_s)
+        # ask-agent types it once the agent is not mid-turn, never over a
+        # question it waits on, then waits STALL_MS for the agent to take it.
+        asked = call("ask-agent", *target, "--stall-timeout", str(STALL_MS), "--timeout", str(ASK_MS),
+                     "--lines", "1", "--json", "--", text)
+        try:
+            answer = json.loads(asked.stdout)
+        except ValueError:
+            answer = {}
+        if not asked.returncode and answer.get("success"):
+            log(f"{pane}: {text} taken, the agent is {answer.get('state')}")
+            return
+        error = (answer.get("error") or asked.stderr or asked.stdout).strip()
+        log(f"{pane}: {text} not taken: {error.splitlines()[0] if error else f'exit {asked.returncode}'}")
+        # As tuios queue would, put a question in the Inbox, unless the agent
+        # works or already waits on a question of its own.
+        marked = call("set-agent-state", "needs_input", *target, "--kind", "question", "--if-state", "idle,done",
+                      "-m", f"tuitp could not have {text} taken here: look at the pane")
+        if marked.returncode:
+            log(f"{pane}: no Inbox question: {(marked.stderr or marked.stdout).strip()}")
+
+    # Each ask stays open while the turn it starts runs: one worker per pane.
+    with ThreadPoolExecutor(max_workers=len(deliveries) or 1) as pool:
         list(pool.map(one, deliveries))
 
 
