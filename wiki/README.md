@@ -39,6 +39,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - 🧰 [Manage Python virtual environments](how-to/manage-python-virtual-environments.md)
 - 🖥️ [Open project tabs in Windows Terminal](how-to/open-project-tabs-in-windows-terminal.md)
 - 🖥️ [Manage TUIOS sessions and Terminal layouts](how-to/manage-tuios-terminal-layouts.md)
+- 🧰 [Update Claude and Codex](how-to/update-claude-and-codex.md)
 - 🔑 [Load an SSH signing key without administrator rights](how-to/use-ssh-agent.md)
 - 📦 [Update senv and diagnose version drift](how-to/update-senv-and-diagnose-version-drift.md)
 - 🖥️ [Find why senv is slow to start](how-to/find-why-senv-is-slow-to-start.md)
@@ -69,3 +70,4 @@ Background and reasoning: why senv is built the way it is.
 - 🖥️ [Anatomy of a session](explanation/anatomy-of-a-session.md)
 - 📦 [Distribution model](explanation/distribution-model.md)
 - 📦 [Why senv detects and wakes network drives](explanation/why-drive-detection.md)
+- 🖥️ [Why tuitp types resume commands with ask-agent](explanation/why-tuitp-types-resume-commands-with-ask-agent.md)

@@ -370,11 +370,70 @@ NOTE session test: no agent resumes the prompt chatgpt paused for 'Fix the parse
 Codex takes its command as the prompt it starts with, as in
 `codex "$llm-shared:resume-session"`: its pane passes it again to each start
 it makes after a failed startup (see [Startup and recovery](#startup-and-recovery)).
-For Claude, a helper types the command with `tuios queue`, once Claude reports
-that it is at its prompt: never over a question it waits on, such as "Trust
-this folder?". It waits ten minutes at most, and logs each command it queued
-in `%LOCALAPPDATA%\tuitp\resume.log`. Set `TUITP_RESUME=0` before `tuitp` to
-start the agents without resuming them.
+For Claude, a helper that `tuitp` leaves running in the background types the
+command, for all Claude panes at once:
+
+1. It waits for Claude to report that it is at its prompt, ten minutes at
+   most: it never types into the CMD that starts Claude, nor over a question
+   Claude waits on, such as "Trust this folder?".
+2. It waits 15 seconds more: every agent of the run starts at the same time,
+   and the machine is less busy once they have.
+3. It types the command with `tuios ask-agent`, which again checks that
+   Claude rests and waits on no question of its own.
+4. Claude has 60 seconds to show that it took the command. It shows it
+   through a hook that starts `tuios.exe`, which a busy machine delays: up
+   to 18 seconds were measured, past the 5 seconds that `tuios queue`
+   allowed before it warned for nothing.
+5. If Claude shows nothing in that time, the helper puts a question in the
+   TUIOS Inbox for that pane: "tuitp could not have /resume-session taken
+   here: look at the pane".
+
+Why it works this way:
+[why tuitp types resume commands with ask-agent](../explanation/why-tuitp-types-resume-commands-with-ask-agent.md).
+Set `TUITP_RESUME=0` before `tuitp` to start the agents without resuming
+them.
+
+### Check that each Claude took its command
+
+The helper logs one line per command in `%LOCALAPPDATA%\tuitp\resume.log`:
+
+```cmd
+type %LOCALAPPDATA%\tuitp\resume.log
+```
+
+```text
+2026-10-28 10:45:55 api/Claude: /resume-session taken, the agent is working
+2026-10-28 10:46:40 web/Claude: /review-resume as reviewer not taken: ask-agent failed: the prompt was pasted and Enter was sent, and within 1m0s it did not turn working or needs_input; its state is idle.
+```
+
+`taken, the agent is working` or `done` is the normal outcome. Any other
+line comes with an Inbox question, except `no agent at its prompt ... not
+typed`, where Claude never reached its prompt in ten minutes and nothing was
+typed: look at that pane. [Commands](../reference/commands.md#the-resume-helper)
+lists every line.
+
+To see what one Claude did with its command, read its activity:
+
+```cmd
+tuios agent-log -s api -w "Claude" --limit 256
+```
+
+A `state working` line followed by `prompt /resume-session` shows that it
+took it, and when.
+
+### Answer the question "tuitp could not have ... taken here"
+
+The question appears in the TUIOS Inbox (prefix key then `i`, or `o` for the
+oldest item), under Questions. Open the pane it names, then:
+
+- Claude runs the command: nothing to do. The question leaves the Inbox by
+  itself as soon as Claude reports that it works.
+- The command sits in Claude's input box: press Enter in the pane.
+- The pane shows something else (an error, a menu, a stopped Claude): deal
+  with it, then type the command yourself.
+
+The command was most likely typed already: do not type it again without
+looking at the pane.
 
 ## Startup and recovery
 
@@ -407,7 +466,7 @@ variable for the other tools.
 Successful reconciliation means the layout exists, attachments survived
 initial startup, and new pane commands were submitted. Claude/Codex startup
 and authentication happen interactively: `tuitp` does not wait for them. Only
-the helper that queues Claude's resume commands waits, in the background, for
+the helper that types Claude's resume commands waits, in the background, for
 the agents it has a command for.
 An agent that exits in error less than 5 minutes after it started failed its
 startup: its pane starts it again after 5 seconds, 3 times in all, with the

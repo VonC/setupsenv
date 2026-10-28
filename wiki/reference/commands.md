@@ -154,7 +154,7 @@ opens in its own tab, and the first tab goes back to its session
 folder holds an llm-shared resume prompt that no resume-session read, it
 gives `resume-session` to the agent that paused it and, after a review
 requestor's pause, `review-resume as reviewer` to the other agent: Codex starts
-with its command, and a helper queues Claude's (`TUITP_RESUME=0` turns it off).
+with its command, and a helper types Claude's (`TUITP_RESUME=0` turns it off).
 Before it opens a tab or starts a pane, it runs `ensure_internet.bat` (`ei`),
 and stops without changing anything when Internet access is missing. A
 `claude` or `codex` session has its agent in workspace 1 and a CMD in
@@ -170,6 +170,34 @@ Runs from any CMD: it switches itself, without a venv, to the highest
 venv stay as they were. Requires Windows Terminal and TUIOS. List syntax, migration,
 startup behavior, and recovery:
 [manage TUIOS terminal layouts](../how-to/manage-tuios-terminal-layouts.md).
+
+#### The resume helper
+
+`bin\tuitp_resume.py`, which `tuitp` starts detached, outside TUIOS, when it
+starts Claude panes that have a resume command. It handles every pane at
+once, one worker each, and always exits 0. Its output goes to
+`%LOCALAPPDATA%\tuitp\resume.log`. For each pane:
+
+| Step | Command | Limit |
+| --- | --- | --- |
+| wait for Claude at its prompt | `tuios wait-for agent-state -s <session> -w <pane> --until idle,done --timeout 600000` | 10 minutes |
+| let the run's startup pass | none | 15 seconds |
+| type the command | `tuios ask-agent -s <session> -w <pane> --stall-timeout 60000 --timeout 100000 --lines 1 --json -- <command>` | 30 seconds for a turn in progress to end, 60 seconds for Claude to take the command, 100 seconds in all |
+| when not taken | `tuios set-agent-state needs_input -s <session> -w <pane> --kind question --if-state idle,done -m "tuitp could not have <command> taken here: look at the pane"` | only on a pane in `idle` or `done` |
+
+`ask-agent` counts as taken an exit 0 with `"success": true`, the turn
+finished (`state` `done`) or still running at 100 seconds (`settled_by`
+`timeout`, `state` `working`).
+
+| Log line | Meaning |
+| --- | --- |
+| `<session>/<pane>: <command> taken, the agent is <state>` | Claude took it; `<state>` is `done` or `working` |
+| `<session>/<pane>: <command> not taken: <first line of the tuios error>` | typed with no sign within 60 seconds, or refused (`agent_blocked`, a turn still running after 30 seconds); the Inbox question follows |
+| `<session>/<pane>: no agent at its prompt, <command> not typed: <reason>` | no `idle` or `done` within 10 minutes; nothing typed, no question |
+| `<session>/<pane>: no Inbox question: <reason>` | the `set-agent-state` of the line before failed |
+
+Background:
+[why tuitp types resume commands with ask-agent](../explanation/why-tuitp-types-resume-commands-with-ask-agent.md).
 
 ### `fsenv`
 
@@ -440,7 +468,8 @@ asked. Run it when those sessions can wait. The daemon is then pinned to
 that version and stops its hourly attempts: run `codexu` again after each
 Codex update (`codex app-server daemon update` returns the daemon to its own
 updates). When the daemon package already has the CLI version, and the
-running daemon too if one runs, `codexu` leaves the daemon alone.
+running daemon too if one runs, `codexu` leaves the daemon alone. Steps and
+checks: [update Claude and Codex](../how-to/update-claude-and-codex.md).
 
 ## 🔀 Version switching
 
