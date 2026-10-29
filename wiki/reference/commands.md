@@ -120,12 +120,23 @@ prompt. Arguments are passed through.
 Runs `senv`, then `gsenv.custom.bat` and `gsenv.local.bat` if present, then
 starts VSCode if it is not already running.
 
+### `vsc`
+
+Opens the current project's `.vscode/*.code-workspace` in VSCode. If no workspace
+exists, creates `.vscode/<project-folder>.code-workspace`, including the `.vscode`
+directory. A selected workspace that is empty or contains only whitespace is
+initialized the same way. The generated workspace contains one folder with
+`"path": ".."`, relative to `.vscode`; no absolute folder path is written.
+Existing nonempty workspaces are preserved. If the project-named workspace is
+absent, the only available workspace is used; multiple alternatives still require
+the user to choose one.
+
 ### `lsenv`
 
 Re-activates the session from `%PRGS%\senv\bin\senv.bat` (the repository
 copy, "local" developer mode) instead of `%HOME%\bin`.
 
-### `tuitp [dry] [stop [<session>...]] [--list <path>]`
+### `tuitp [dry] [stop [<session>...] | resume] [--list <path>]`
 
 Reconciles `tuitp.list` beside the launcher with named Windows Terminal
 windows, ordinary CMD tabs, and persistent TUIOS session groups. Keeps
@@ -155,6 +166,15 @@ folder holds an llm-shared resume prompt that no resume-session read, it
 gives `resume-session` to the agent that paused it and, after a review
 requestor's pause, `review-resume as reviewer` to the other agent: Codex starts
 with its command, and a helper types Claude's (`TUITP_RESUME=0` turns it off).
+`resume` reconciles the list too, as after a Windows restart, but each agent
+pane it starts, in the sessions it creates or restores, resumes the
+conversation it ran last with `claude --resume <id>` or `codex resume <id>`,
+and gets no resume-session or review-resume command. A Claude pane resumes
+the conversation TUIOS recorded for it, else the newest one started in its
+folder; a Codex pane, among the threads started in its folder, the one whose
+last activity is the pane's, else the one its title names, else the newest.
+Only conversations started before TUIOS last saved the session count, and
+each one resumes in one pane. `dry resume` lists them.
 Before it opens a tab or starts a pane, it runs `ensure_internet.bat` (`ei`),
 and stops without changing anything when Internet access is missing. A
 `claude` or `codex` session has its agent in workspace 1 and a CMD in

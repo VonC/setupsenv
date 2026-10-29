@@ -338,6 +338,56 @@ for a watcher started again on the same daemon. A watcher started while a tab
 showed the session of another tab takes that tab for the other one: close
 that tab, then run `tuitp`, which opens it again.
 
+## Resume the conversations after a Windows restart
+
+A Windows restart, such as an update's, ends the TUIOS daemon and every
+program in its panes. TUIOS has saved the sessions, so the next `tuitp`
+restores them and starts their panes again, each agent on a new conversation.
+`tuitp resume` starts each agent on the conversation that pane ran instead,
+and sends no resume-session or review-resume command. Make it the first
+`tuitp` after the restart: a plain `tuitp` restores the sessions too, and the
+new conversations of their panes replace what TUIOS recorded.
+
+```cmd
+tuitp dry resume
+tuitp resume
+```
+
+`tuitp dry resume` lists the conversation of each Claude and Codex pane, and
+changes nothing:
+
+```text
+RESUME Claude api of session api: claude --resume 0b1c4f2e-8d3a-4e5f-9a6b-7c8d9e0f1a2b, 'Fix the parser', last active 2026-10-29 10:53 (TUIOS recorded it in this pane)
+RESUME Codex api of session api: codex resume 019f2c3d-4e5f-7a6b-8c7d-9e0f1a2b3c4d, 'Review step 4', last active 2026-10-29 10:49 (its last activity is the pane's)
+NOTE Claude web of session web starts a new conversation: the one TUIOS recorded there, 4a7e9c21-3b5d-4f60-8e12-6c9d0b7a5f34, has no transcript, so it never got a message; the newest Claude conversation of its folder is 7d2e8f15-9c4b-4a36-b5e7-1f0c3a6d8e92, 'Parse the dates', last active 2026-10-28 22:29: claude --resume 7d2e8f15-9c4b-4a36-b5e7-1f0c3a6d8e92 in that pane resumes it
+```
+
+Each pane starts as usual, through senv, with the hooks and the startup
+retries, and with `claude --resume <id>` or `codex resume <id>`:
+
+| Pane | Conversation it resumes |
+| --- | --- |
+| Claude | the one TUIOS recorded for that pane through its Claude Code hooks, `agent_session_id` in `%LOCALAPPDATA%\tuios\sessions\<session>.json`; without a record, the newest conversation started with `claude` in its folder |
+| Codex | among the Codex threads started from a terminal in its folder: the one whose last activity is the pane's, else the one the pane's title names, else the newest |
+
+TUIOS records no Codex conversation: its Codex hooks would go to
+`%USERPROFILE%\.codex\hooks.json`, for every Codex. tuitp compares instead the
+pane's last Codex activity, which TUIOS saved, with the threads of Codex's
+`state_<n>.sqlite`. When it cannot read that file, it reads the rollouts of
+the last 30 days, newest first.
+
+tuitp reads all this before it starts the TUIOS daemon, which restores the
+sessions and rewrites their files. Only the conversations started before
+TUIOS last saved the session count, so an agent run in that folder after the
+restart is never taken, and each conversation resumes in one pane only. A
+Claude pane whose recorded conversation never got a message has no
+transcript: it starts a new conversation, as it was, and its `NOTE` line
+names the newest conversation of its folder. A session that TUIOS no longer
+saves, such as one that `tuitp stop` deleted, has no record: its panes resume
+the newest conversations of their folder. A running session keeps its
+agents. The Inbox of TUIOS may offer to resume these panes: ignore it, tuitp
+already resumed them.
+
 ## Resume the agents paused in a session
 
 When `tuitp` starts the panes of a session, new or restored, it reads the
