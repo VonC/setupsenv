@@ -35,9 +35,7 @@ if exist "%workspace_file%" goto:_workspace_found
 
 REM Check if there are any .code-workspace files in the .vscode folder
 if not exist "%cd%\.vscode\*.code-workspace" (
-  call:unset
-  %_fatal% "workspace file not found: '%workspace_file%'" 3
-  goto:eof
+  goto:_workspace_found
 )
 
 REM Count .code-workspace files
@@ -72,6 +70,15 @@ goto:eof
 
 
 :_workspace_found
+rem Initialize missing or blank workspaces; folder paths stay relative to .vscode.
+rem Pass the filename through the environment so path characters are not PowerShell code.
+powershell.exe -NoLogo -NoProfile -NonInteractive -Command "$ErrorActionPreference = 'Stop'; $workspace = $env:workspace_file; if (-not [IO.File]::Exists($workspace) -or [string]::IsNullOrWhiteSpace([IO.File]::ReadAllText($workspace))) { [void][IO.Directory]::CreateDirectory([IO.Path]::GetDirectoryName($workspace)); $content = @{ folders = @(@{ path = '..' }) } | ConvertTo-Json -Depth 3; [IO.File]::WriteAllText($workspace, $content + [Environment]::NewLine, [Text.UTF8Encoding]::new($false)) }"
+if errorlevel 1 (
+  %_error% "Unable to initialize workspace file: '%workspace_file%'"
+  call:unset
+  exit /b 3
+)
+
 if exist "%cd%\senv.bat" (
   %_task% "Must call '%cd%\senv.bat'"
   call "%cd%\senv.bat"
