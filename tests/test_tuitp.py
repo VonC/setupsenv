@@ -817,6 +817,11 @@ class ReconciliationTests(unittest.TestCase):
         env = {"PATH": "a", "SWITCHPY_CHOICE": "No venv", "KEEP": "1"}
         self.assertEqual(daemon_environment(env), {"PATH": "a", "KEEP": "1"})
 
+    def test_daemon_environment_drops_the_launcher_console_id(self):
+        # Panes sharing the launcher's SENV_UID share switchver's temp files.
+        env = {"PATH": "a", "SENV_UID": "10764", "KEEP": "1"}
+        self.assertEqual(daemon_environment(env), {"PATH": "a", "KEEP": "1"})
+
     def test_manually_closed_tab_reopens_without_reinitializing_session(self):
         self.apply("=== A\n+ FOLDER|one")
         self.runtime.hosts.clear()
@@ -1160,6 +1165,28 @@ class WindowsTests(unittest.TestCase):
                         result = subprocess.run(command, capture_output=True, text=True, timeout=20)
                         self.assertEqual(result.returncode, 7)
                         self.assertNotIn("-STARTED", result.stdout)
+
+    def test_pane_drops_the_console_id_it_inherits_before_any_senv(self):
+        # The launcher's SENV_UID reaches each pane through the daemon; a
+        # one-pane entry with its own senv.bat never runs the global senv.bat
+        # that clears it, and panes sharing it share switchver's temp files.
+        with tempfile.TemporaryDirectory(prefix="tuitp-uid-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            profile.mkdir()
+            project.mkdir()
+            for script, name in ((profile / "senv.bat", "GLOBAL"), (project / "senv.bat", "LOCAL")):
+                script.write_text(f'@echo off\necho {name}-UID-[%SENV_UID%]\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base), "SENV_UID": "10764"}):
+                for mode in ("", " local-or-global"):
+                    with self.subTest(mode=mode or "project"):
+                        command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" cmd{mode}'
+                        result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+                        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                        self.assertIn("LOCAL-UID-[]", result.stdout)
+                        self.assertNotIn("10764", result.stdout)
 
     def test_agent_failing_at_startup_starts_again_three_times_in_all(self):
         # Codex exits at once when its app-server times out on a slow first
