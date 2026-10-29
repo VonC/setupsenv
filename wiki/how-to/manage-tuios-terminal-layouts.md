@@ -458,6 +458,13 @@ added to PATH after activation, then the agent starts in its pane, and a CMD
 pane stays at its prompt. An activation failure prevents agent startup. A
 local script can itself call global senv if it needs both.
 
+Each pane clears `SENV_UID` before it activates anything. A pane inherits the
+environment of the TUIOS daemon, which held the `SENV_UID` of the CMD that ran
+`tuitp`, and only global senv clears it: panes that ran only a local
+`senv.bat` kept that one id and shared their `switch*` temp files, so one of
+them could end with an empty `PATH` and never start its agent. The daemon no
+longer receives the id either, for the panes opened by hand.
+
 Codex starts without `SSL_CERT_FILE`: a certificate bundle that senv sets for
 other tools breaks its TLS connections, and its shared app-server daemon keeps
 the environment of the Codex that started it. The CMD of the pane keeps the

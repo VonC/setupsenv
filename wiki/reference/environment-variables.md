@@ -20,7 +20,7 @@ in which they are applied.
 | Variable | Value | Meaning |
 | --- | --- | --- |
 | `PATH` | rebuilt | minimal Windows folders, then `%HOME%\bin`, then the portable Git folders, then per-tool additions |
-| `SENV_UID` | cleared at every activation, then set to the PID of the terminal's `cmd.exe` by `senv_uid.bat` when the first `switch*` or `ppath` command needs it (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; cleared because every tab opened from an activated terminal would otherwise carry that terminal's id, and looked up on first use because the lookup takes 1 to 2s |
+| `SENV_UID` | cleared at every activation and by each `tuitp` pane before it activates, then set to the PID of the terminal's `cmd.exe` by `senv_uid.bat` when the first `switch*` or `ppath` command needs it (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; cleared because every tab opened from an activated terminal would otherwise carry that terminal's id, and looked up on first use because the lookup takes 1 to 2s |
 | `GH` | `%PRGS%\gits\current` | portable Git root |
 | `LANG`, `LC_ALL` | `en_US.UTF-8`, `C.UTF-8` | locale |
 | `TERM` | `msys` | terminal type for the Git tools |
