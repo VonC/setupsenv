@@ -339,6 +339,46 @@ class ReconciliationTests(unittest.TestCase):
         self.assertIn("tuitp: the resume commands are not queued: no python", out.getvalue())
         self.assertEqual(self.saved["sessions"]["one"]["status"], "ready")
 
+    def test_resume_starts_each_agent_on_its_conversation_and_types_no_resume_command(self):
+        self.pause("chatgpt")  # Ignored: resume restores conversations, not pauses.
+        claude, solo = "11111111-2222-4333-8444-555555555555", "21111111-2222-4333-8444-555555555555"
+        codex = "01a10000-0000-7000-8000-000000000001"
+        found = ([{"session": "one", "window": "Claude pdf", "resume": claude},
+                  {"session": "cl", "window": "Claude", "resume": solo},
+                  {"session": "cx", "window": "Codex", "resume": codex}],
+                 ["RESUME Claude pdf of session one: claude --resume ..."])
+        out = io.StringIO()
+        with patch("tuitp.conversation_plan", return_value=found) as plan, contextlib.redirect_stdout(out):
+            layout = self.layout("=== Projects\n+ FOLDER|one||pdf\n=== Pair\n+ FOLDER|cl|claude\n+ FOLDER|cx|codex")
+            tuitp.apply_layout(layout, self.state, {}, self.runtime, lambda state: None, conversations=True)
+        self.assertEqual([s.name for s in plan.call_args.args[1]], ["one", "cl", "cx"])
+        self.assertTrue(self.startup("Claude pdf").endswith(f' claude project "" "{claude}"'))
+        self.assertTrue(self.startup("Codex pdf").endswith(" codex"))  # No conversation found: a new one.
+        self.assertTrue(self.startup("Claude").endswith(f' claude local-or-global "" "{solo}"'))
+        self.assertTrue(self.startup("Codex").endswith(f' codex local-or-global "" "{codex}"'))
+        self.assertFalse(self.events("queue-resume"))
+        self.assertIn("RESUME Claude pdf of session one: claude --resume ...\n", out.getvalue())
+        self.assertNotIn("resume-session", out.getvalue())
+
+    def test_resume_on_the_command_line(self):
+        self.path.write_text(f"=== Projects\n+ {self.project}|one\n", encoding="utf-8")
+        with patch("tuitp.conversation_plan", return_value=([], ["NOTE checked"])) as plan:
+            code, out = self.main("dry", "resume", "--list", str(self.path))
+        self.assertEqual(code, 0)
+        self.assertIn("[dry] NOTE checked\n", out)
+        self.assertEqual(plan.call_count, 1)
+        for words in (["resume", "stop"], ["resume", "one"], ["resume", "resume"]):
+            with self.subTest(words=words), contextlib.redirect_stderr(io.StringIO()) as err, \
+                    self.assertRaises(SystemExit) as exit:
+                self.main(*words)
+            self.assertEqual(exit.exception.code, 2)
+            self.assertIn(f"unknown mode {' '.join(words)}", err.getvalue())
+        # After stop, every word names a session, resume included.
+        with patch("tuitp.conversation_plan") as plan:
+            code, out = self.main("dry", "stop", "resume", "--list", str(self.path))
+        self.assertEqual(code, 1)
+        plan.assert_not_called()
+
     def test_repeat_has_no_session_or_tab_mutations(self):
         text = "=== Projects\n+ FOLDER|one"
         self.apply(text)
@@ -1247,15 +1287,21 @@ class WindowsTests(unittest.TestCase):
             cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
             with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base),
                                          "LOCALAPPDATA": str(base / "no state")}):
-                for role, activation, start, expected in (
-                        ("codex", "project", "$llm-shared:resume-session", '"$llm-shared:resume-session"'),
-                        ("codex", "local-or-global", "$llm-shared:review-resume as reviewer",
+                conversation = "01a10000-0000-7000-8000-000000000001"
+                for role, activation, start, resume, expected in (
+                        ("codex", "project", "$llm-shared:resume-session", None, '"$llm-shared:resume-session"'),
+                        ("codex", "local-or-global", "$llm-shared:review-resume as reviewer", None,
                          '"$llm-shared:review-resume as reviewer"'),
-                        ("codex", "local-or-global", None, ""),
-                        ("claude", "local-or-global", "/resume-session", '"/resume-session"')):
-                    with self.subTest(role=role, start=start):
+                        ("codex", "local-or-global", None, None, ""),
+                        ("claude", "local-or-global", "/resume-session", None, '"/resume-session"'),
+                        # tuitp resume: the conversation, after an empty command.
+                        ("codex", "project", "", conversation, f"resume {conversation}"),
+                        ("claude", "local-or-global", "", conversation, f"--resume {conversation}"),
+                        ("codex", "project", "Go on", conversation, f'resume {conversation} "Go on"')):
+                    with self.subTest(role=role, start=start, resume=resume):
                         command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} {activation}'
-                        command += f' "{start}"' if start else ""
+                        command += f' "{start}"' if start or resume else ""
+                        command += f' "{resume}"' if resume else ""
                         result = subprocess.run(command + " && set SSL_CERT_FILE", capture_output=True, text=True,
                                                 timeout=20)
                         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
