@@ -11,6 +11,12 @@ if /I "%TUITP_ROLE%"=="cmd" goto :initialize
 echo ERROR: Expected claude, codex or cmd.
 exit /b 2
 :initialize
+rem A pane is a new console, but it inherits the SENV_UID of the console that
+rem ran tuitp, through the TUIOS daemon. Only the global senv.bat clears it,
+rem and a one-pane entry with its own senv.bat never runs that one: on
+rem 2026-10-29, four panes shared one id, and so the switchver temp files, and
+rem one of them got an empty PATH. senv_uid.bat looks this pane's id up again.
+set "SENV_UID="
 cd /d "%TUITP_PROJECT%" || exit /b 1
 rem One-pane list entries prefer the project's activation when it exists.
 if /I "%~3"=="local-or-global" goto :local_or_global

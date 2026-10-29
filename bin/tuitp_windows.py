@@ -286,10 +286,12 @@ def daemon_environment(environ):
     lead their PATH before any senv runs. The SWITCHPY_CHOICE tuitp.bat sets
     to run its own Python without a venv goes too: switchpy prefers it to the
     choice a pane's project senv.bat passes, and that project then runs
-    without its local venv.
+    without its local venv. SENV_UID goes as well: it names the launcher's
+    console, and panes sharing it share the temp files of switchver.
     """
     env = dict(environ)
     env.pop("SWITCHPY_CHOICE", None)
+    env.pop("SENV_UID", None)
     venv = env.pop("VIRTUAL_ENV", None)
     env.pop("VIRTUAL_ENV_PROMPT", None)
     env.pop("_OLD_VIRTUAL_PATH", None)
