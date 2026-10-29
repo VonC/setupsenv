@@ -11,6 +11,7 @@ import subprocess
 import time
 import uuid
 
+from tuitp_conversations import conversation_plan
 from tuitp_install import LEGACY_DIR, adopt_legacy
 from tuitp_model import PANE_ROLES, Layout, describe, new_state, pane_name, read_list, reconcile_plan
 from tuitp_resume import resume_plan
@@ -50,24 +51,26 @@ def rename_panes(runtime, session, old_id):
         runtime.command("set-window", "-s", session.name, "-w", old, "--name", new)
 
 
-def start_pane(runtime, session, role, start=None):
-    """Run tuitp.pane.bat in a pane; start is the command its agent starts with."""
+def start_pane(runtime, session, role, start=None, resume=None):
+    """Run tuitp.pane.bat in a pane; start is the command its agent starts with, resume the conversation it resumes."""
     window = pane_name(role, session.id)
     # subprocess passes this entire command as ONE native send-text argv.
     # The inner quotes belong to the receiving CMD, not the outer shell.
     command = f'call "{runtime.pane_helper()}" "{session.folder}" {role.lower()}'
     if session.kind != "project":
         command += " local-or-global"
-    elif start:
+    elif start or resume:
         command += " project"
-    if start:
-        command += f' "{start}"'
+    if start or resume:
+        command += f' "{start or ""}"'
+    if resume:
+        command += f' "{resume}"'
     runtime.command("send-text", "-s", session.name, "-w", window, command)
     runtime.command("send-keys", "Enter", "-s", session.name, "-w", window)
 
 
 def session_init(runtime, session, starts=None, restored=False):
-    """Start each pane of a session; starts maps a pane to the command its agent starts with."""
+    """Start each pane of a session; starts maps a pane to the start_pane arguments of its agent."""
     names = runtime.pane_names(session.name) if restored else None
     for role in PANE_ROLES[session.kind]:
         window = pane_name(role, session.id)
@@ -77,7 +80,7 @@ def session_init(runtime, session, starts=None, restored=False):
                       f"tuitp stop {session.name}, then tuitp, gives it one", flush=True)
                 continue
             new_pane(runtime, session, role)  # Saved before its kind had a CMD pane.
-        start_pane(runtime, session, role, (starts or {}).get(window))
+        start_pane(runtime, session, role, **(starts or {}).get(window, {}))
 
 
 def parallel_sessions(runtime, sessions, action, completed):
@@ -146,11 +149,18 @@ def stop_codex_daemon(runtime, daemon, dry):
             print(f"tuitp: cannot stop the Codex app-server daemon: {error}", flush=True)
 
 
-def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True):
+def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True, conversations=False):
+    """Reconcile the layout; with conversations, the agents that start resume their last conversation."""
     plan = reconcile_plan(layout, state, live, runtime.tab_alive)
-    # Read only: the panes that start now and the llm-shared sessions paused in their checkouts.
-    resume, notes = ([], []) if os.environ.get("TUITP_RESUME") == "0" else \
-        resume_plan(layout, plan["create"] + plan["restore"])
+    # Read only: the panes that start now, and the llm-shared sessions paused in
+    # their checkouts or the conversations they ran, before the daemon restores
+    # a saved session and rewrites what TUIOS recorded for its panes.
+    if conversations:
+        resume, notes = conversation_plan(layout, plan["create"] + plan["restore"])
+    elif os.environ.get("TUITP_RESUME") == "0":
+        resume, notes = [], []
+    else:
+        resume, notes = resume_plan(layout, plan["create"] + plan["restore"])
     started_now = {session.name for session in plan["create"] + plan["restore"]}
     extend = [session for name, session in layout.sessions.items()
               if name in live and name not in started_now and missing_cmd(runtime, session, live[name])]
@@ -169,11 +179,13 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
     started = time.monotonic()
     if starting:
         runtime.ensure_internet()  # Raises before any change: nothing starts offline.
-    # An agent that starts with its command runs it again if its startup fails.
+    # An agent that starts with its command or conversation gets it again if its startup fails.
     starts, queued = {}, []
     for delivery in resume:
-        if delivery.get("start"):
-            starts.setdefault(delivery["session"], {})[delivery["window"]] = delivery["text"]
+        if delivery.get("resume"):
+            starts.setdefault(delivery["session"], {})[delivery["window"]] = {"resume": delivery["resume"]}
+        elif delivery.get("start"):
+            starts.setdefault(delivery["session"], {})[delivery["window"]] = {"start": delivery["text"]}
         else:
             queued.append(delivery)
     if any("Claude" in PANE_ROLES[session.kind] for session in plan["create"] + plan["restore"]):
@@ -392,20 +404,29 @@ def load_state(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", nargs="*", metavar="dry|stop|session",
+    parser.add_argument("mode", nargs="*", metavar="dry|stop|resume|session",
                         help="dry: preview without changing tabs or sessions; stop: close every "
                              "managed tab, delete every TUIOS session and stop the daemon, "
                              "whatever the list says; stop followed by session names: close their "
-                             "tabs and delete only these sessions, then reconcile the list")
+                             "tabs and delete only these sessions, then reconcile the list; resume: "
+                             "reconcile the list, and start each agent pane it starts on the "
+                             "conversation it ran last, as after a Windows restart, instead of "
+                             "resume-session")
     parser.add_argument("--list", type=Path, help="layout file (default: adjacent tuitp.list)")
     args = parser.parse_args(argv)
     args.dry = "dry" in args.mode
     words = [word for word in args.mode if word != "dry"]
     # Words after stop name the sessions to stop: stop alone stops them all.
     args.stop, args.sessions = words[:1] == ["stop"], list(dict.fromkeys(words[1:]))
-    if words and not args.stop:
-        parser.error(f"unknown mode {', '.join(sorted(set(words) - {'stop'}))}: "
-                     "expected dry, stop or both, then session names after stop")
+    args.resume = words == ["resume"]
+    if words and not (args.stop or args.resume):
+        parser.error(f"unknown mode {' '.join(words)}: expected dry, stop or resume, "
+                     "dry with either, then session names after stop")
+    # A conversation title can hold a character that the code page of a log
+    # file or a console lacks: print a replacement, not an error.
+    for stream in (sys.stdout, sys.stderr):
+        if hasattr(stream, "reconfigure"):
+            stream.reconfigure(errors="replace")
     started = time.monotonic()
     try:
         return reconcile(args)
@@ -468,7 +489,7 @@ def reconcile(args):
                 stop_tuios(runtime, state["sessions"], dry)
                 stop_codex_daemon(runtime, daemon, dry)
             else:
-                apply_layout(layout, state, live, runtime, save, dry=dry)
+                apply_layout(layout, state, live, runtime, save, dry=dry, conversations=args.resume)
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as error:
         print(f"tuitp: {error}", file=sys.stderr)

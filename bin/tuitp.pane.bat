@@ -1,8 +1,9 @@
 @echo off
 rem No SETLOCAL: senv activation must persist in this interactive CMD.
 rem Caller supplies validated paths and disables delayed expansion.
-rem tuitp.pane.bat "folder" claude|codex|cmd [project|local-or-global] ["command"]
-rem The command is what the agent starts with, such as its resume skill.
+rem tuitp.pane.bat "folder" claude|codex|cmd [project|local-or-global] ["command"] ["conversation"]
+rem The command is what the agent starts with, such as its resume skill, and
+rem the conversation the id of the one it resumes, as tuitp resume gives it.
 set "TUITP_PROJECT=%~1"
 set "TUITP_ROLE=%~2"
 if /I "%TUITP_ROLE%"=="claude" goto :initialize
@@ -58,6 +59,9 @@ rem the environment of the Codex that started it.
 if /I "%TUITP_ROLE%"=="codex" set "SSL_CERT_FILE="
 rem Passed again at each start, so that a retry still runs it.
 set "start_with=%~4"
+set "conversation=%~5"
+if defined conversation if /I "%TUITP_ROLE%"=="claude" set agent=%agent% --resume %conversation%
+if defined conversation if /I "%TUITP_ROLE%"=="codex" set agent=%agent% resume %conversation%
 if defined start_with set agent=%agent% "%start_with%"
 :start_agent
 call :seconds started
