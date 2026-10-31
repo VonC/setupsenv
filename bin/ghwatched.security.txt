@@ -1,0 +1,24 @@
+# Security words for 'ghwatched @security': one or more per line, comma
+# separated, '#' starts a comment. A word matches where a word of the name,
+# topics or description starts with it, ignoring case: 'vulnerab' finds
+# vulnerability and vulnerabilities; '=cve' only the whole word cve.
+
+# Vulnerabilities and supply chain
+secur, cybersec, infosec, appsec, secops, devsecops
+vulnerab, =cve, exploit, sast, dast, sbom
+supply-chain, supply chain, sigstore, cosign, attestation, provenance
+
+# Secrets
+secret, leak, vault, password, credential
+
+# Offensive and defensive tooling
+pentest, penetration, malware, threat, forensic, intrusion, osint
+red-team, redteam, blue-team, privesc, privilege, ransomware, phishing
+antivirus, hardening, firewall, xss, sanitiz
+
+# Identity and access
+authentication, authorization, authn, authz, oauth, openid, sso
+mfa, 2fa, totp, webauthn, rbac, access-control
+
+# Cryptography and certificates
+crypto, encrypt, signing, signature, certificate, pki, =tls
