@@ -616,6 +616,30 @@ undone; a thread comes back only with new activity, so `ghclear dry` shows
 what would go first. The run ends by checking each `DELETE` succeeded and
 that nothing unread is left.
 
+### `ghwatched [-Names] [<word>|=<word>|@<list>] ...`
+
+Lists the starred GitHub repositories watched with a custom setting
+(releases, security alerts...), one per line as
+`owner/name | topics | description`, an archived one marked `(archived)`.
+It only reads, through the same `gh.exe` as `ghclear`; `-Gh <path>` drives
+another one. The work is done by `ghwatched.ps1`; `ghwatched -h` prints the
+usage.
+
+| Argument | Behavior |
+| --- | --- |
+| none | every custom-watched starred repository |
+| `<word>` | keep a repository when a word of its name, topics or description starts with `<word>`, ignoring case |
+| `=<word>` | the whole word only: `=pip` finds `pip`, not `pipeline` |
+| `<a>,<b>` | several words in one argument |
+| `@<list>` | words read from a file, one or more per line, `#` for comments: a path, or `ghwatched.<list>.txt` next to the script |
+| `-Names` | print only `owner/name` |
+
+One matching word is enough to keep a repository. `@security` is shipped
+(`bin\ghwatched.security.txt`); a list of your own goes in `%HOME%\bin`.
+The count goes to standard error, so `ghwatched -Names @security > x.txt`
+writes only the names. A repository watched without a star is not listed:
+see [why ghwatched looks among your stars](../explanation/why-ghwatched-looks-among-your-stars.md).
+
 ## 🩺 Diagnostics
 
 ### `alias [-l] [<pattern>]`

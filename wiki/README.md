@@ -45,6 +45,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - 🖥️ [Find why senv is slow to start](how-to/find-why-senv-is-slow-to-start.md)
 - 📦 [Sanitize the history before publishing](how-to/sanitize-history-before-publishing.md)
 - ⚡ [Copy cached Teams chats to the clipboard](how-to/copy-cached-teams-chats.md)
+- 🧰 [Find the GitHub repositories you watch for releases or security alerts](how-to/find-custom-watched-github-repositories.md)
 
 ## 📖 Reference
 
@@ -71,3 +72,4 @@ Background and reasoning: why senv is built the way it is.
 - 📦 [Distribution model](explanation/distribution-model.md)
 - 📦 [Why senv detects and wakes network drives](explanation/why-drive-detection.md)
 - 🖥️ [Why tuitp types resume commands with ask-agent](explanation/why-tuitp-types-resume-commands-with-ask-agent.md)
+- 🧰 [Why ghwatched looks among your stars](explanation/why-ghwatched-looks-among-your-stars.md)

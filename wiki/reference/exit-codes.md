@@ -166,6 +166,20 @@ code (21 to 23).
 
 Nothing to clear, a `dry` run and a cancelled question all exit 0.
 
+## `ghwatched`
+
+`ghwatched` prints its errors on standard error, prefixed with
+`ghwatched:`, without the `batcolors` macros.
+
+| Code | Condition |
+| --- | --- |
+| 1 | words were given and no repository matches them |
+| 41 | a `@<list>` file does not exist, or the arguments hold no word |
+| 42 | no `gh.exe` found, or `-Gh` names a missing file |
+| 44 | the starred repositories could not be read; `gh`'s message follows |
+
+A listing, filtered or not, with at least one repository exits 0.
+
 ## `lsc`
 
 `lsc` prints its errors on standard error, prefixed with `lsc:`, without
