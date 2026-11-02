@@ -1140,6 +1140,26 @@ set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
 
+:dwl_trivy
+set "repo=aquasecurity/trivy"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/aquasecurity/trivy/releases/download/v0.76.1/trivy_0.76.1_windows-64bit.zip
+set "file=trivy_%version%_windows-64bit.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
+:dwl_grype
+set "repo=anchore/grype"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/anchore/grype/releases/download/v0.121.1/grype_0.121.1_windows_amd64.zip
+set "file=grype_%version%_windows_amd64.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
 :dwl_postman
 set "repo=portapps/postman-portable"
 if "%version%"=="latest" ( call :get_latest_version_from_github )

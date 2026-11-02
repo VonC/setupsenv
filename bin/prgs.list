@@ -49,3 +49,5 @@ tailwind/tailwindcss/tailw~#~tailwindcsss~tailwindcss-*-windows-x64.exe
 ffmpeg/ffm/ffmp~#~ffmpegs~ffmpeg-*-essentials_build.zip
 Codex/cdx~#~codexs~codex-rust-v*-x86_64-pc-windows-msvc.zip~global
 TUIOS/tuios~#~tuioss~tuios_*_Windows_x86_64.tar.gz
+Trivy/trivy~#~trivys~trivy_*_windows-64bit.zip
+Grype/grype~#~grypes~grype_*_windows_amd64.zip
