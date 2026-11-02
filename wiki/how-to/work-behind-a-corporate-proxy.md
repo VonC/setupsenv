@@ -52,6 +52,12 @@ Sessions then point at that local port.
 
 Scripts that need the network (`dwl`, `gsh`) call `ei` themselves.
 
+A working proxy can still refuse a whole category of sites with
+`403 Forbidden` and an HTML page of its own. Container registries are a
+common one, which stops the tools that download from them, such as Trivy
+and its vulnerability database (Grype is the fallback): see
+[scan a project's dependencies](scan-dependencies-for-vulnerabilities.md#behind-a-proxy-that-blocks-container-registries).
+
 ## ✅ Check
 
 `ti` reports success, and `curl -I https://github.com` answers from a senv

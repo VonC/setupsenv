@@ -46,6 +46,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - 📦 [Sanitize the history before publishing](how-to/sanitize-history-before-publishing.md)
 - ⚡ [Copy cached Teams chats to the clipboard](how-to/copy-cached-teams-chats.md)
 - 🧰 [Find the GitHub repositories you watch for releases or security alerts](how-to/find-custom-watched-github-repositories.md)
+- 🧰 [Scan a project's dependencies for vulnerabilities](how-to/scan-dependencies-for-vulnerabilities.md)
 
 ## 📖 Reference
 

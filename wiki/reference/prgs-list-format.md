@@ -90,6 +90,8 @@ matches, the pattern field of every line is tried against the given string
 | ffmpeg | ffm, ffmp | `ffmpegs` | |
 | Codex | cdx | `codexs` | |
 | TUIOS | tuios | `tuioss` | |
+| Trivy | trivy | `trivys` | |
+| Grype | grype | `grypes` | |
 
 Programs marked `global` in the file: Gum, Git, Peazip, Sysinternals Suite,
 VSCode, Notepad++, Git-Cliff, Git_Cred, jq, Codex. An empty "Fixed versions"
