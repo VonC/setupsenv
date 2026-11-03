@@ -12,12 +12,13 @@ Related pages: [doskey aliases](doskey-aliases.md),
 
 ## 🖥️ Session
 
-### `senv [global|all]`
+### `senv [global|all|aliases]`
 
 ```text
 senv
 senv global
 senv all
+senv aliases
 ```
 
 Doskey alias for `call "%USERPROFILE%\senv.bat" $*`. That generated
@@ -27,11 +28,19 @@ one (project-specific senv), otherwise `%HOME%\bin\senv.bat`. The
 `%HOMEDRIVE%` only call the launcher back, so the launcher ignores them
 and runs the global activation from these two folders.
 
+Before a project `senv.bat`, the launcher loads the global, team, personal
+and profile aliases with `%HOME%\bin\senv_doskey.bat`, the file the global
+activation loads them with. Doskey macros belong to one console, and a new
+console inherits none: without that step, a console where only the project
+`senv.bat` ran, such as a `tuitp` pane, had none of them (`ll` among them).
+The project's own aliases load after and win.
+
 | Argument | Behavior |
 | --- | --- |
-| none | project `senv.bat` if the current folder has one, else global |
+| none | global aliases, then the project `senv.bat` if the current folder has one, else global |
 | `global` | always the global activation, current folder ignored |
 | `all` | global activation first, then the project `senv.bat` on top ([Windows Terminal how-to](../how-to/open-project-tabs-in-windows-terminal.md)) |
+| `aliases` | only the global, team, personal and profile aliases, in the current console |
 
 The activator:
 

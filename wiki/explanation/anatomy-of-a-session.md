@@ -24,11 +24,14 @@ from `custom_example\` so there is always a place to answer them.
 `senv.user_profile.tpl.bat` becomes `%USERPROFILE%\senv.bat` with the real
 `HOME` substituted in. This tiny launcher holds the per-project trick: if
 the current directory has its own `senv.bat`, that one runs instead of the
-global one. Two arguments bend that rule when the default replacement is
-not what a caller wants: `global` ignores the current folder, and `all`
-runs the global activation first, then the project one on top: the mode a
-Windows Terminal project tab uses. Keeping the launcher generated means a
-HOME migration only has to patch one file.
+global one. Only the global aliases still load first: doskey macros belong
+to one console, a new console inherits none, and a project `senv.bat`
+loads only its own. Two arguments bend that rule when the default
+replacement is not what a caller wants: `global` ignores the current
+folder, and `all` runs the global activation first, then the project one on
+top: the mode a Windows Terminal project tab uses. A third, `aliases`, loads
+the global aliases alone. Keeping the launcher generated means a HOME
+migration only has to patch one file.
 
 **`bin\*` is copied into `%HOME%\bin`, and `*.custom.*` files follow.**
 The session never runs scripts out of the repository; it runs the copies in

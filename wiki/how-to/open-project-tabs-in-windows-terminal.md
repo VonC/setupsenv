@@ -7,7 +7,9 @@ the **global** senv applied first and the **project** `senv.bat` applied on
 top, instead of the default behavior where a project `senv.bat` replaces
 the global activation.
 
-The launcher `%USERPROFILE%\senv.bat` takes two optional arguments:
+Even in that default, the launcher loads the global aliases before the
+project `senv.bat`, since a new console inherits none. Two of its optional
+arguments matter for tabs:
 
 - `senv global`: always run the global activation, even if the current
   folder has its own `senv.bat`,

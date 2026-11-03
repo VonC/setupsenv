@@ -2,8 +2,10 @@
 
 <img src="../assets/logo-senv-aliases-transparent.png" alt="" height="90" align="right">
 
-Aliases are loaded by `senv.bat` from four macro files, later files
-overriding earlier ones:
+Aliases are loaded by `bin\senv_doskey.bat` from four macro files, later
+files overriding earlier ones. The global activation `senv.bat` calls it,
+and so does the `%USERPROFILE%\senv.bat` launcher (`senv aliases`, and
+before a project `senv.bat`):
 
 1. `%HOME%\bin\senv.doskey`: global (this page),
 2. `%HOME%\bin\senv.custom.doskey`: team,
@@ -21,6 +23,13 @@ deletes one: a macro deleted from a file stays in each console that loaded
 it, until `doskey <name>=` or the console closes. A macro runs before any
 program or script of the same name on `PATH`
 ([remove or replace an alias](../how-to/add-personal-alias-or-env-var.md#remove-or-replace-an-alias)).
+
+Macros belong to one console. A console opened from an activated one
+inherits its variables, so its `PATH` tools work, but none of its macros.
+That is why the launcher loads the four files before a project `senv.bat`,
+which loads only the project's own aliases: a `tuitp` pane, or `senv` typed
+in a project folder of a new console, gets the global aliases first and the
+project's on top. `senv aliases` loads the four files alone.
 
 ## 🧭 Navigation
 

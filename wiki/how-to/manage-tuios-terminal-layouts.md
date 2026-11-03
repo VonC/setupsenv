@@ -503,7 +503,12 @@ the TUIOS, Claude, and standalone Codex directories back to PATH after
 activation. Existing sessions never receive automatic startup commands, except
 the CMD pane added to a `claude` or `codex` session that has none.
 The `claude`, `codex`, `senv`, and `single` kinds run the folder's local
-`senv.bat` in each pane if present, otherwise global senv. Tool directories are
+`senv.bat` in each pane if present, otherwise global senv. Before a local
+`senv.bat`, the pane runs `senv aliases` (`%USERPROFILE%\senv.bat aliases`):
+a pane is a new console, which inherits the variables of the CMD that ran
+`tuitp` but none of its doskey macros, and a local `senv.bat` loads only its
+own, so the global, team and personal aliases (`ll` among them) were
+missing there. The local aliases load after and win. Tool directories are
 added to PATH after activation, then the agent starts in its pane, and a CMD
 pane stays at its prompt. An activation failure prevents agent startup. A
 local script can itself call global senv if it needs both.
