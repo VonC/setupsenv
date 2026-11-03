@@ -1179,7 +1179,8 @@ class WindowsTests(unittest.TestCase):
                 for has_local in (False, True):
                     source = "LOCAL" if has_local else "GLOBAL"
                     global_script = profile / "senv.bat"
-                    global_script.write_text('@echo off\necho PREP-GLOBAL\nset "TUITP_TEST_ACTIVE=GLOBAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+                    global_script.write_text('@echo off\nif /I "%~1"=="aliases" (echo PREP-ALIASES& exit /b 0)\n'
+                                             'echo PREP-GLOBAL\nset "TUITP_TEST_ACTIVE=GLOBAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
                     local_script = project / "senv.bat"
                     if has_local:
                         local_script.write_text('@echo off\necho PREP-LOCAL\nset "TUITP_TEST_ACTIVE=LOCAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
@@ -1191,6 +1192,13 @@ class WindowsTests(unittest.TestCase):
                             self.assertIn(f"TUITP_TEST_ACTIVE={source}", result.stdout)
                             self.assertIn("PREP-" + source, result.stdout)
                             self.assertNotIn("PREP-" + ("GLOBAL" if has_local else "LOCAL"), result.stdout)
+                            # A pane is a new console with no doskey macros: before a local
+                            # senv.bat, the launcher loads the global aliases, which the
+                            # global senv.bat loads by itself.
+                            if has_local:
+                                self.assertLess(result.stdout.index("PREP-ALIASES"), result.stdout.index("PREP-LOCAL"))
+                            else:
+                                self.assertNotIn("PREP-ALIASES", result.stdout)
                             for agent in ("claude", "codex"):
                                 marker = agent.upper() + "-STARTED-" + source
                                 if role == agent:
@@ -1205,6 +1213,26 @@ class WindowsTests(unittest.TestCase):
                         result = subprocess.run(command, capture_output=True, text=True, timeout=20)
                         self.assertEqual(result.returncode, 7)
                         self.assertNotIn("-STARTED", result.stdout)
+
+    def test_one_pane_startup_runs_local_senv_even_when_the_aliases_fail(self):
+        # A missing or broken alias file must not keep the agent from starting.
+        with tempfile.TemporaryDirectory(prefix="tuitp-aliases-") as temp:
+            base = Path(temp)
+            profile, project = base / "user profile", base / "project (with spaces)"
+            local_bin = profile / ".local" / "bin"
+            local_bin.mkdir(parents=True)
+            project.mkdir()
+            (local_bin / "claude.bat").write_text('@echo off\necho CLAUDE-STARTED\nexit /b 0\n')
+            (profile / "senv.bat").write_text('@echo off\nif /I "%~1"=="aliases" exit /b 5\nexit /b 9\n')
+            (project / "senv.bat").write_text('@echo off\necho PREP-LOCAL\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            helper = ROOT / "bin" / "tuitp.pane.bat"
+            cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+            command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" claude local-or-global'
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base)}):
+                result = subprocess.run(command, capture_output=True, text=True, timeout=20)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("PREP-LOCAL", result.stdout)
+            self.assertIn("CLAUDE-STARTED", result.stdout)
 
     def test_pane_drops_the_console_id_it_inherits_before_any_senv(self):
         # The launcher's SENV_UID reaches each pane through the daemon; a

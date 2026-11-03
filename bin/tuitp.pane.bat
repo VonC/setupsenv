@@ -29,7 +29,13 @@ call "%TUITP_PROJECT%\senv.bat"
 if errorlevel 1 exit /b %errorlevel%
 goto :launch
 :local_or_global
+rem A pane is a new console: it inherits the variables of the launcher, never its
+rem doskey macros. The global senv.bat loads the global, team and personal
+rem aliases ('ll' and co.); a project senv.bat loads only its own. So before the
+rem project's activation, 'senv.bat aliases' loads them, and the project's own
+rem aliases, loaded after, still win.
 if exist "%TUITP_PROJECT%\senv.bat" (
+    call "%USERPROFILE%\senv.bat" aliases
     call "%TUITP_PROJECT%\senv.bat"
 ) else (
     call "%USERPROFILE%\senv.bat" global
