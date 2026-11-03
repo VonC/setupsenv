@@ -168,33 +168,14 @@ set "admPath="
 
 set "vscodei="
 
-DOSKEY /MACROFILE="%HOME%\bin\senv.doskey"
-if errorlevel 1 (
-   %_warning% "Issue setting global (all) aliases from '%HOME%\bin\senv.doskey'"
-)
-set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.doskey"
-DOSKEY /MACROFILE="%HOME%\bin\senv.custom.doskey"
-if errorlevel 1 (
-   %_warning% "Issue setting custom (team) aliases from '%HOME%\bin\senv.custom.doskey'"
-)
-set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.custom.doskey"
-DOSKEY /MACROFILE="%HOME%\bin\senv.local.doskey"
-if errorlevel 1 (
-   %_warning% "Issue setting local (personal) aliases from '%HOME%\bin\senv.local.doskey'"
-)
-set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.local.doskey"
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
 )
-if exist "%script_dir_bin%\profile" (
-   if exist "%HOME%\bin\senv.custom.%senv_profile%.doskey" (
-      DOSKEY /MACROFILE="%HOME%\bin\senv.custom.%senv_profile%.doskey"
-      if errorlevel 1 (
-         %_warning% "Issue setting custom (profile) aliases from '%HOME%\bin\senv.custom.%senv_profile%.doskey'"
-      )
-   )
-)
-set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.custom.profile.doskey"
+rem The aliases load in senv_doskey.bat, which adds the four "doskey ..." timing
+rem marks. The %USERPROFILE%\senv.bat launcher calls it too, before a project
+rem senv.bat that runs instead of this one: doskey macros are per console, and a
+rem new console inherits none, so without it such a console lacked 'll' and co.
+call "%HOME%\bin\senv_doskey.bat"
 set "script_dir_bin="
 call:senv_t_end
 if "%internalsenvcall%"=="1" (
