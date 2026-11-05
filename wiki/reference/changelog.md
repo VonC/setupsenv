@@ -187,9 +187,10 @@ absolute path inside, and fills a selected workspace file that is empty.
   Manager and `curl.exe` from `mingw64` to `ucrt64`. On 2.56, the `gits`
   install hook did not find the Git version and set `credential.helper` to
   `manager-core`, which no current Git ships: every HTTPS fetch or push would
-  have asked for a password, or failed. It now keeps `manager`, and the session
-  `PATH` and `testinternet` use `ucrt64`, or `mingw64` with an older Git, the
-  folder now in `GH_MINGW`.
+  have asked for a password, or failed. It now keeps `manager`, while an older
+  Git still gets the helper it ships, and the session `PATH` and
+  `testinternet` use `ucrt64`, or `mingw64` with an older Git, the folder now
+  in `GH_MINGW`.
 
 ## 📚 New documentation
 

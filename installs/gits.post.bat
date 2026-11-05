@@ -116,9 +116,11 @@ for /f "tokens=2 delims= " %%a in ('findstr /C:"-git-doc-html " "%PRGS%\gits\cur
     set "fullversion=%%a"
 )
 :: Without a version, the empty comparisons below would pick 'manager-core',
-:: which no Git since 2.40 ships.
+:: which no Git since 2.40 ships: the helper the installed Git ships decides,
+:: 'manager-core' only for an older Git, always under mingw64.
 if not defined fullversion (
-    %_warning% "Install: no Git version in '%PRGS%\gits\current\etc\package-versions.txt', keep 'manager' as credential helper"
+    if exist "%PRGS%\gits\current\mingw64\bin\git-credential-manager-core.exe" set "mgrname=manager-core"
+    %_warning% "Install: no Git version in '%PRGS%\gits\current\etc\package-versions.txt', use '!mgrname!' as credential helper"
     goto:credential_helper
 )
 :: Extract the major and minor version numbers
