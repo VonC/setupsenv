@@ -109,9 +109,17 @@ if not defined PRGS (
 
 @echo off
 set "mgrname=manager"
-:: The command to get the version string
-for /f "tokens=2 delims= " %%a in ('findstr "mingw-w64-x86_64-git-doc-html" "%PRGS%\gits\current\etc\package-versions.txt"') do (
+set "fullversion="
+:: The command to get the version string. Git for Windows 2.56 renamed its
+:: packages from mingw-w64-x86_64-* to mingw-w64-ucrt-x86_64-*.
+for /f "tokens=2 delims= " %%a in ('findstr /C:"-git-doc-html " "%PRGS%\gits\current\etc\package-versions.txt"') do (
     set "fullversion=%%a"
+)
+:: Without a version, the empty comparisons below would pick 'manager-core',
+:: which no Git since 2.40 ships.
+if not defined fullversion (
+    %_warning% "Install: no Git version in '%PRGS%\gits\current\etc\package-versions.txt', keep 'manager' as credential helper"
+    goto:credential_helper
 )
 :: Extract the major and minor version numbers
 for /f "tokens=1,2 delims=." %%b in ("!fullversion!") do (
@@ -129,11 +137,15 @@ if "%mgrname%"=="manager" (
     %_info% "Install: Keep 'manager' as credential helper for Git !major!.!minor!"
 )
 
+:credential_helper
 if not exist "%PRGS%\gits\current\bin\git.exe" %_fatal% "git.exe missing at '%PRGS%\gits\current\bin'" 23
 where git >NUL 2>NUL
 if errorlevel 1 (
     set "GH=%PRGS%\gits\current"
-    set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+    rem Git for Windows 2.56 moved its programs from mingw64 to ucrt64.
+    set "GH_MINGW=!GH!\ucrt64"
+    if not exist "!GH_MINGW!\bin\git.exe" set "GH_MINGW=!GH!\mingw64"
+    set "PATH=%script_dir_bin%;!GH!\bin;!GH!\cmd;!GH!\usr\bin;!GH_MINGW!\bin;!GH_MINGW!\libexec\git-core;%PATH%"
 ) else (
     %_ok% "git.exe is on the PATH"
 )

@@ -22,9 +22,9 @@
 [gc]
 	writeCommitGraph = true
 [credential "helperselector"]
-	selected = manager-core
+	selected = manager
 [credential]
-	helper = manager-core
+	helper = manager
 [init]
 	defaultBranch = main
 [rerere]
