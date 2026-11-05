@@ -8,7 +8,11 @@ param(
     [switch]$NoClipboard,
 
     # The name of the watcher's mutex, stop event and log; tests use their own.
-    [string]$Instance = 'senv-lsc-watch'
+    [string]$Instance = 'senv-lsc-watch',
+
+    # The Windows Screenshots folder, read from the registry when empty;
+    # tests pass their own.
+    [string]$KnownFolder
 )
 
 $ErrorActionPreference = 'Stop'
@@ -41,7 +45,8 @@ function Show-Usage {
     Write-Host ("The folder is read from '{0}':" -f $Ini)
     Write-Host '  [screenshots]'
     Write-Host '  folder = %USERPROFILE%\Pictures\Screenshots'
-    Write-Host 'Without that key, the Windows Screenshots folder is used.'
+    Write-Host 'Without that key, or when its folder does not exist on this machine,'
+    Write-Host 'the Windows Screenshots folder is used.'
 }
 
 function Write-Problem([string]$message) {
@@ -68,6 +73,7 @@ function Get-IniFolder([string]$path) {
 }
 
 function Get-KnownScreenshotsFolder {
+    if ($KnownFolder) { return [Environment]::ExpandEnvironmentVariables($KnownFolder) }
     $folders = Get-ItemProperty -LiteralPath $ShellFoldersKey -ErrorAction SilentlyContinue
     if ($folders -and $folders.$ScreenshotsFolderId) { return $folders.$ScreenshotsFolderId }
     if ($folders -and $folders.'My Pictures') {
@@ -77,20 +83,30 @@ function Get-KnownScreenshotsFolder {
     return $null
 }
 
+function Test-Folder([string]$path) {
+    return [bool]$path -and (Test-Path -LiteralPath $path -PathType Container)
+}
+
+# A team ini can name a folder that only some machines have, a OneDrive one
+# for instance: the other machines use their Windows Screenshots folder.
 function Resolve-ScreenshotsFolder {
-    $folder = Get-IniFolder $Ini
-    if (-not $folder) {
-        $folder = Get-KnownScreenshotsFolder
-        if (-not $folder) {
-            Write-Problem "no screenshots folder: set 'folder' under [screenshots] in '$Ini'"
-            return $null
+    $configured = Get-IniFolder $Ini
+    if (Test-Folder $configured) { return $configured }
+    $known = Get-KnownScreenshotsFolder
+    if (Test-Folder $known) {
+        if ($configured) {
+            Write-Problem "'$configured' not found, using the Windows Screenshots folder '$known'"
         }
+        return $known
     }
-    if (-not (Test-Path -LiteralPath $folder -PathType Container)) {
-        Write-Problem "screenshots folder not found: '$folder'"
-        return $null
+    if ($configured) {
+        Write-Problem "screenshots folder not found: '$configured', and no Windows Screenshots folder either"
+    } elseif ($known) {
+        Write-Problem "screenshots folder not found: '$known'"
+    } else {
+        Write-Problem "no screenshots folder: set 'folder' under [screenshots] in '$Ini'"
     }
-    return $folder
+    return $null
 }
 
 # The worker holds a mutex named after the instance for as long as it runs.

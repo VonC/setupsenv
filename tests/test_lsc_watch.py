@@ -34,9 +34,12 @@ class LscWatchTests(unittest.TestCase):
         self.addCleanup(self.lsc, "stop")
 
     def lsc(self, *args, ini=None):
+        # The Windows folder is pinned to a missing one, so no test watches
+        # the real screenshots.
         command = [
             "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(SCRIPT),
             *args, "-Ini", str(ini or self.ini), "-Instance", self.instance, "-NoClipboard",
+            "-KnownFolder", str(self.root / "no-known"),
         ]
         return subprocess.run(
             command, capture_output=True, encoding="utf-8", timeout=60, env=self.env,

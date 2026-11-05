@@ -44,11 +44,13 @@ class LscTests(unittest.TestCase):
         os.utime(path, (stamp, stamp))
         return path
 
-    def lsc(self, *args, ini=None):
+    def lsc(self, *args, ini=None, known=None):
         command = [
             "powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(SCRIPT),
             *args, "-Ini", str(ini or self.ini), "-NoClipboard",
         ]
+        if known:
+            command += ["-KnownFolder", str(known)]
         return subprocess.run(
             command, capture_output=True, encoding="utf-8", timeout=30,
         )
@@ -120,13 +122,34 @@ class LscTests(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertIn("no image in", result.stderr)
 
-    def test_missing_folder_exits_with_two(self):
+    def test_missing_folders_exit_with_two(self):
         missing = self.root / "gone"
         ini = self.write_ini("[screenshots]\nfolder = " + str(missing) + "\n", "gone.ini")
-        result = self.lsc(ini=ini)
+        result = self.lsc(ini=ini, known=self.root / "no-known")
         self.assertEqual(result.returncode, 2)
+        self.assertEqual(result.stdout, "")
         self.assertIn("screenshots folder not found", result.stderr)
         self.assertIn(str(missing), result.stderr)
+        self.assertIn("no Windows Screenshots folder either", result.stderr)
+
+    def test_missing_folder_falls_back_to_the_windows_folder(self):
+        known = self.root / "known"
+        known.mkdir()
+        shot = self.image("Screenshot 2026-11-05 091512.png", 1, known)
+        missing = self.root / "OneDrive" / "Captures d’écran"
+        ini = self.write_ini("[screenshots]\nfolder = " + str(missing) + "\n", "team.ini")
+        cases = {"missing folder": ini, "no key": self.write_ini("[screenshots]\n", "empty.ini"),
+                 "no ini": self.root / "absent.ini"}
+        for case, path in cases.items():
+            with self.subTest(case=case):
+                result = self.lsc(ini=path, known=known)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(result.stdout.strip(), self.quoted(shot))
+                if case == "missing folder":
+                    self.assertIn("not found, using the Windows Screenshots folder", result.stderr)
+                    self.assertIn(str(missing), result.stderr)
+                else:
+                    self.assertEqual(result.stderr, "")
 
     def test_localized_folder_from_utf8_with_and_without_bom(self):
         folder = self.root / LOCALIZED
