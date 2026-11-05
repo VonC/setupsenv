@@ -3,10 +3,18 @@ setlocal enabledelayedexpansion
 
 rem codexu.bat - make sure Internet access is there (ensure_internet.bat), then
 rem update the Codex CLI, then the Codex app-server daemon that every Codex
-rem session connects to, so that both run the same version.
+rem session connects to, so that both run the same version. Last, remove the
+rem old Codex releases (codexu-prune.ps1).
 rem
-rem   codexu       update the CLI, then the daemon when it runs another version
-rem   codexu dry   print the versions and what would be done, change nothing
+rem   codexu         update the CLI, then the daemon when it runs another
+rem                  version, then remove the old releases
+rem   codexu prune   only remove the old releases
+rem   codexu dry     print the versions and what would be done, change nothing
+rem   codexu dry prune   print only which releases would be removed
+rem
+rem The installer adds a folder of about 450 MB per version and removes none.
+rem codexu keeps the 2 newest releases of the CLI and of the daemon package,
+rem plus the one 'current' points to, and any release still in use.
 rem
 rem aiup.bat runs it for Codex, after Claude, with the PATH aiup was called
 rem with.
@@ -28,11 +36,14 @@ for %%i in ("%script_dir%\..") do set "senv_dir=%%~fi"
 call "%senv_dir%\batcolors\echos_macros.bat"
 
 set "codexu_dry="
+set "codexu_prune_only="
+set "codexu_keep=2"
 
 :parse_args
 if "%~1"=="" goto:args_parsed
 if /I "%~1"=="dry" ( set "codexu_dry=1" & shift & goto:parse_args )
-%_fatal% "Unknown argument '%~1'; expected nothing or 'dry'" 41
+if /I "%~1"=="prune" ( set "codexu_prune_only=1" & shift & goto:parse_args )
+%_fatal% "Unknown argument '%~1'; expected nothing, 'dry' or 'prune'" 41
 
 :args_parsed
 set "codexu_home=%USERPROFILE%\.codex"
@@ -55,6 +66,7 @@ if defined codexu_proxy set "codexu_through= through proxy '%HTTPS_PROXY%'"
 
 call :versions
 if defined codexu_dry goto:dry
+if defined codexu_prune_only goto:prune_only
 
 call :ensure_internet
 if errorlevel 1 exit /b %ERRORLEVEL%
@@ -62,15 +74,54 @@ call :update_cli
 if errorlevel 1 exit /b %ERRORLEVEL%
 call :update_daemon
 if errorlevel 1 exit /b %ERRORLEVEL%
+rem Codex is up to date by now: a cleanup problem is only a warning.
+call :prune
+if errorlevel 1 (
+   %_warning% "Old Codex releases remain; run 'codexu prune' once they are no longer in use"
+)
+%_ok% "codexu finished"
+exit /b 0
+
+
+:prune_only
+call :prune
+if errorlevel 1 exit /b %ERRORLEVEL%
 %_ok% "codexu finished"
 exit /b 0
 
 
 :dry
-%_info% "dry: ensure_internet.bat"
-%_info% "dry: curl.exe -L https://chatgpt.com/codex/install.ps1 -o '%TEMP%\codex-install.ps1'"
-%_info% "dry: CODEX_NON_INTERACTIVE=1 powershell.exe -File '%TEMP%\codex-install.ps1'!codexu_through!"
-%_info% "dry: codex app-server daemon update --from-cli --yes, unless the daemon then runs the CLI version"
+if not defined codexu_prune_only (
+   %_info% "dry: ensure_internet.bat"
+   %_info% "dry: curl.exe -L https://chatgpt.com/codex/install.ps1 -o '%TEMP%\codex-install.ps1'"
+   %_info% "dry: CODEX_NON_INTERACTIVE=1 powershell.exe -File '%TEMP%\codex-install.ps1'!codexu_through!"
+   %_info% "dry: codex app-server daemon update --from-cli --yes, unless the daemon then runs the CLI version"
+)
+call :prune
+exit /b %ERRORLEVEL%
+
+
+rem Removes the Codex releases that are not among the codexu_keep newest, that
+rem 'current' does not point to and that are not in use (codexu-prune.ps1);
+rem with codexu_dry, lists them only. A dry run before an update lists what
+rem the releases on disk now give: the update itself adds one.
+:prune
+if not exist "%script_dir%\codexu-prune.ps1" (
+   %_error% "Missing release cleanup: '%script_dir%\codexu-prune.ps1'"
+   exit /b 48
+)
+set "codexu_prune_dry="
+if defined codexu_dry (
+   set "codexu_prune_dry=-DryRun"
+   %_info% "dry: remove the Codex releases older than the !codexu_keep! newest, unless in use or current"
+) else (
+   %_task% "Must remove the Codex releases older than the !codexu_keep! newest, unless in use or current"
+)
+powershell.exe -NoLogo -NoProfile -ExecutionPolicy Bypass -File "%script_dir%\codexu-prune.ps1" -CodexHome "%codexu_home%" -Keep %codexu_keep% %codexu_prune_dry%
+if errorlevel 1 (
+   %_error% "Some old Codex releases could not be removed; see the lines above"
+   exit /b 48
+)
 exit /b 0
 
 
