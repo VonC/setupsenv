@@ -60,6 +60,7 @@ Exact, dry descriptions of commands, formats and conventions.
 - ⚡ [Doskey aliases](reference/doskey-aliases.md)
 - 🧰 [Git configuration](reference/git-configuration.md)
 - 🖥️ [Exit codes](reference/exit-codes.md)
+- 📰 [Changelog: what changed since the published build](reference/changelog.md)
 
 ## 💡 Explanation
 

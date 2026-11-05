@@ -11,14 +11,29 @@ see [Create a team profile](create-a-team-profile.md).
 
 ## 📋 Steps
 
-1. Commit your work: `adm\build.bat` refuses to run with a dirty `git status`
+1. Rewrite the two changelogs, `wiki\reference\changelog.md` for senv and
+   `custom\changelog.md` for custom, with the changes since the build on the
+   share. Its `version` file names the commits of that build, custom first,
+   then senv:
+
+   ```cmd
+   type "<share>\version"
+   git log --oneline <senv-commit>..HEAD
+   git -C custom log --oneline <custom-commit>..HEAD
+   ```
+
+   Each page replaces its previous content: it describes this publication
+   only, with an example per change. Keep the senv one free of company,
+   project and host names, which belong to custom.
+
+2. Commit your work: `adm\build.bat` refuses to run with a dirty `git status`
    in `senv` or in `custom`. Two knobs relax this during tests:
 
    - `set SENV_BUILD_SKIP_STATUS=1` skips the check entirely,
    - `SENV_BUILD_ERROR_MODE=custom|senv|both` selects which repository must
      be clean.
 
-2. Build one profile:
+3. Build one profile:
 
    ```cmd
    adm\build.bat xyz
@@ -38,10 +53,10 @@ see [Create a team profile](create-a-team-profile.md).
      `remote_setup.bat` and `ss.bat` come from `adm\custom\`; a file with
      the same name in `custom\` takes precedence.
 
-3. Build every profile at once with `adm\build_all.bat` (failures are logged
+4. Build every profile at once with `adm\build_all.bat` (failures are logged
    to `builds\build_all.log`).
 
-4. Publish tool archives, independently of the senv build:
+5. Publish tool archives, independently of the senv build:
 
    - `adm\publish.bat <archive-pattern> [profile|local|all]`: pushes one
      downloaded archive to every profile share whose list contains that tool.
