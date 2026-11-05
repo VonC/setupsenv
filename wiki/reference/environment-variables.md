@@ -22,6 +22,7 @@ in which they are applied.
 | `PATH` | rebuilt | minimal Windows folders, then `%HOME%\bin`, then the portable Git folders, then per-tool additions |
 | `SENV_UID` | cleared at every activation and by each `tuitp` pane before it activates, then set to the PID of the terminal's `cmd.exe` by `senv_uid.bat` when the first `switch*` or `ppath` command needs it (random fallback) | per-terminal id, suffixes the transient files of `switch*` and `ppath` so concurrent tabs never share them; cleared because every tab opened from an activated terminal would otherwise carry that terminal's id, and looked up on first use because the lookup takes 1 to 2s |
 | `GH` | `%PRGS%\gits\current` | portable Git root |
+| `GH_MINGW` | `%GH%\ucrt64` from Git for Windows 2.56, `%GH%\mingw64` before | folder of Git's own programs (`git.exe`, Git Credential Manager, `curl.exe`); its `bin` and `libexec\git-core` follow `%GH%\usr\bin` in `PATH` |
 | `LANG`, `LC_ALL` | `en_US.UTF-8`, `C.UTF-8` | locale |
 | `TERM` | `msys` | terminal type for the Git tools |
 | `pz`, `sz` | peazip paths | `pz` GUI folder, `sz` the `7z.exe` used by all extraction |

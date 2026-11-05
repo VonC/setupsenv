@@ -154,8 +154,8 @@ at setup time. With neither file, there is no automatic stamping.
 
 | Option | Value | Effect |
 | --- | --- | --- |
-| `credential.helper` | `manager-core` | Git Credential Manager stores and serves HTTPS credentials |
-| `credential.helperselector.selected` | `manager-core` | pre-selects that helper, no popup on first use |
+| `credential.helper` | `manager` | Git Credential Manager stores and serves HTTPS credentials |
+| `credential.helperselector.selected` | `manager` | pre-selects that helper, no popup on first use |
 
 The `gits` install hook re-applies the baseline options (`core.fscache`,
 `rerere.enabled`, `http.sslBackend`) with `git config --global` on every

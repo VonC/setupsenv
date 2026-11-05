@@ -183,6 +183,13 @@ absolute path inside, and fills a selected workspace file that is empty.
 - Reconnecting a share drive waits 5 seconds without needing a console:
   `adm\build_all.bat`, run from a script, no longer stops every profile build
   with `FATAL 118` when a drive needs reconnecting.
+- Ready for Git for Windows 2.56, which moved `git.exe`, Git Credential
+  Manager and `curl.exe` from `mingw64` to `ucrt64`. On 2.56, the `gits`
+  install hook did not find the Git version and set `credential.helper` to
+  `manager-core`, which no current Git ships: every HTTPS fetch or push would
+  have asked for a password, or failed. It now keeps `manager`, and the session
+  `PATH` and `testinternet` use `ucrt64`, or `mingw64` with an older Git, the
+  folder now in `GH_MINGW`.
 
 ## 📚 New documentation
 
