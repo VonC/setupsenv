@@ -16,8 +16,12 @@ if exist "%script_dir%\testinternet.urls" (
 )
 :got_url
 
+rem Git for Windows 2.56 moved curl from mingw64 to ucrt64.
+set "curl_exe=%PRGS%\gits\current\ucrt64\bin\curl.exe"
+if not exist "%curl_exe%" set "curl_exe=%PRGS%\gits\current\mingw64\bin\curl.exe"
+
 %_task% "Must check HTTP code by querying %url%"
-"%PRGS%\gits\current\mingw64\bin\curl.exe" -Lks -o /dev/null -m 3 -w %%{http_code} %url% > "%TEMP%\http_code.txt"
+"%curl_exe%" -Lks -o /dev/null -m 3 -w %%{http_code} %url% > "%TEMP%\http_code.txt"
 set /p code=<"%TEMP%\http_code.txt"
 del "%TEMP%\http_code.txt"
 if "%code%" == "200" (
@@ -42,7 +46,7 @@ if "%code%" == "504" call:internet_ok "Server Error[504]: Gateway Timeout"
 if defined warning ( goto:eof )
 
 %_warning% "Code HTTP '%code%', check errorlevel:"
-"%PRGS%\gits\current\mingw64\bin\curl.exe" -Lks -o /dev/null -m 3 -w %%{http_code}\n %url%
+"%curl_exe%" -Lks -o /dev/null -m 3 -w %%{http_code}\n %url%
 set "err=%ERRORLEVEL%"
 %_error% "Code HTTP '%code%', errorlevel '%err%'"
 if not "%err%" == "0" (

@@ -62,7 +62,11 @@ if "%PROG%"=="" ( call:fatal "PROG (data folder) must be defined" 104 )
 set "senv_t_m=%senv_t_m%;%TIME%=senv.local.pre.bat"
 
 set "GH=%PRGS%\gits\current"
-set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+rem Git for Windows 2.56 moved its programs, Git Credential Manager and curl
+rem among them, from mingw64 to ucrt64.
+set "GH_MINGW=%GH%\ucrt64"
+if not exist "%GH_MINGW%\bin\git.exe" set "GH_MINGW=%GH%\mingw64"
+set "PATH=%script_dir_bin%;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH_MINGW%\bin;%GH_MINGW%\libexec\git-core;%PATH%"
 
 set LANG=en_US.UTF-8
 set LC_ALL=C.UTF-8

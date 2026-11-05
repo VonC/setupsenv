@@ -21,8 +21,11 @@ set "SSHCMD=ssh.exe"
 if not "%SSHGIT%"=="" (
     set "SSHCMD=%PRGS%\gits\%SSHGIT%\usr\bin\ssh.exe"
     set "GH=%PRGS%\gits\%SSHGIT%"
+    rem Git for Windows 2.56 moved its programs from mingw64 to ucrt64.
+    set "GH_MINGW=!GH!\ucrt64"
+    if not exist "!GH_MINGW!\bin\git.exe" set "GH_MINGW=!GH!\mingw64"
     set "PATH=C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\"
-    set "PATH=%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+    set "PATH=!GH!\bin;!GH!\cmd;!GH!\usr\bin;!GH_MINGW!\bin;!GH_MINGW!\libexec\git-core;%PATH%"
 )
 if not "%SSHDIR%"=="" ( set "SSHCMD=%SSHDIR%\ssh.exe" )
 echo SSHCMD='%SSHCMD%' param '%1' p='%p%' e='%e%'

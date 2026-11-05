@@ -566,7 +566,10 @@ set "GH=%PRGS%\gits\current"
 if not exist "%GH%\bin\git.exe" (
     %_fatal% "git.exe missing at '%GH%\bin': unable to activate Git PATH" 96
 )
-set "PATH=%HOME%\bin;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH%\mingw64\bin;%GH%\mingw64\libexec\git-core;%PATH%"
+rem Git for Windows 2.56 moved its programs from mingw64 to ucrt64.
+set "GH_MINGW=%GH%\ucrt64"
+if not exist "%GH_MINGW%\bin\git.exe" set "GH_MINGW=%GH%\mingw64"
+set "PATH=%HOME%\bin;%GH%\bin;%GH%\cmd;%GH%\usr\bin;%GH_MINGW%\bin;%GH_MINGW%\libexec\git-core;%PATH%"
 where git >NUL 2>NUL
 if errorlevel 1 (
     %_fatal% "git.exe still not found on PATH after activating '%GH%'" 97
