@@ -463,20 +463,48 @@ default web proxy: `Invoke-WebRequest` ignores `HTTPS_PROXY`, and without
 it the Codex installer cannot reach `releases.openai.com` and falls back to
 the GitHub API, which allows 60 unauthenticated calls per hour per address.
 
-### `codexu [dry]`
+### `codexu [dry] [prune]`
 
 ```text
 codexu
+codexu prune
 codexu dry
+codexu dry prune
 ```
 
 Checks Internet access with `ensure_internet.bat`, updates the Codex CLI
 with its official installer (`HTTPS_PROXY` included, as for `aiup`), then
-the Codex app-server daemon that every Codex session connects to. The
-installer runs with `CODEX_NON_INTERACTIVE=1`, so it asks nothing and does
-not start Codex once done. `codexu dry` prints the versions of the CLI, of
-the daemon package and of the running daemon, then what it would do, and
-changes nothing. `aiup` runs `codexu` for Codex, after Claude.
+the Codex app-server daemon that every Codex session connects to, then
+removes the old Codex releases. The installer runs with
+`CODEX_NON_INTERACTIVE=1`, so it asks nothing and does not start Codex once
+done. `codexu dry` prints the versions of the CLI, of the daemon package and
+of the running daemon, then what it would do, including the releases it
+would remove, and changes nothing. `aiup` runs `codexu` for Codex, after
+Claude.
+
+| Argument | Behavior |
+| --- | --- |
+| none | update the CLI and the daemon, then remove the old releases |
+| `prune` | only remove the old releases: no Internet check, no update |
+| `dry` | print the versions and what would be done, change nothing |
+| `dry prune` | print only the releases that would be removed |
+
+The Codex installer puts each version in its own folder, about 450 MB, and
+never removes one. `codexu-prune.ps1`, next to `codexu.bat`, keeps the 2
+newest versions in `%CODEX_HOME%\packages\standalone\releases` (the CLI) and
+in `packages\app-server-daemon\releases` (the daemon package), read from
+each release's `codex-package.json`, then removes the others, except:
+
+- the release that `current` points to,
+- a release in use: one of its files cannot be opened for exclusive access,
+  as when a Codex session still runs it; the next `codexu` removes it,
+- a release whose version cannot be read.
+
+A release is renamed `.prune.<name>` before it is removed, so that a removal
+stopped half way never looks like a release: the next run removes the rest.
+A `.staging.*` folder older than a day, left by an update that never
+finished, goes too. After an update, a release that could not be removed is
+a warning, not a failure; `codexu prune` exits with 48.
 
 The CLI and daemon package versions come from the `codex-package.json` of
 each package; only the running daemon is asked, through `codex app-server

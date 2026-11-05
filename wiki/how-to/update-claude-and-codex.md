@@ -47,9 +47,25 @@ running daemon for its own.
 
 A new Codex says "A background Codex service is running v0.162.1, older than
 your Codex CLI" when the daemon did not follow a CLI update. Under senv, the
-daemon cannot update itself (see [commands](../reference/commands.md#codexu-dry)):
+daemon cannot update itself (see [commands](../reference/commands.md#codexu-dry-prune)):
 run `codexu`, then check as above. A daemon package already at the CLI
 version, with no older daemon running, is left alone.
+
+## Free the space of old Codex versions
+
+Each Codex update adds a folder of about 450 MB under
+`%USERPROFILE%\.codex\packages`, and the installer removes none. `codexu`
+removes them after each update, keeping the 2 newest versions of the CLI and
+of the daemon package. To clean up without updating:
+
+```cmd
+codexu dry prune
+codexu prune
+```
+
+The first command lists what would be removed, the second removes it. A
+version that a running Codex session still uses is kept (`keep ..., in
+use`): run `codexu prune` again once that session is closed.
 
 ## When codexu asks "Start Codex now?"
 

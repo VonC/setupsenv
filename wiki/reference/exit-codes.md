@@ -147,9 +147,12 @@ code of the last failure. When Internet access cannot be restored,
 | 45 | the Codex installer failed |
 | 46 | `codex app-server daemon update --from-cli` failed: the daemon was not updated |
 | 47 | no Codex CLI in `%CODEX_HOME%\packages\standalone\current\bin` after the installer (`%USERPROFILE%\.codex` without `CODEX_HOME`) |
+| 48 | `codexu prune` or a `dry` run: `codexu-prune.ps1` missing next to `codexu.bat`, or an old release could not be removed |
 
 A failed CLI update stops `codexu` before the daemon. A daemon that already
-has the CLI version, and a `dry` run, exit 0. As for `aiup`, when Internet
+has the CLI version, and a `dry` run, exit 0. After an update, an old
+release that could not be removed is only a warning: `codexu` exits 0, and
+a release still in use is kept without one. As for `aiup`, when Internet
 access cannot be restored, `ensure_internet.bat` ends the run with its own
 code (21 to 23).
 
