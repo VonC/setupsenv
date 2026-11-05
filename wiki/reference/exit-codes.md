@@ -191,7 +191,7 @@ the `batcolors` macros.
 | Code | Condition |
 | --- | --- |
 | 1 | `N` is not a whole number of 1 or more |
-| 2 | no screenshots folder in `lsc.custom.ini` and none known to Windows, or the folder does not exist |
+| 2 | neither the folder of `lsc.custom.ini` nor the Windows Screenshots folder exists |
 | 3 | the folder holds no image |
 | 4 | `lsc watch` or `lsc stop`: the watcher did not start, or did not stop, within 10 seconds |
 

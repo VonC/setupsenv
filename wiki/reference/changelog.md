@@ -78,8 +78,9 @@ attachment. `lsc` puts that quoted path on the clipboard.
 | `lsc stop`, `lsc status` | end the tray watcher, or tell whether it runs |
 
 The folder comes from `lsc.custom.ini`, for a machine where OneDrive moves
-the screenshots, else from the Windows Screenshots folder. See the
-[command reference](commands.md#-screenshots).
+the screenshots, else from the Windows Screenshots folder. When the folder
+of `lsc.custom.ini` does not exist on a machine, `lsc` uses the Windows one
+and says so. See the [command reference](commands.md#-screenshots).
 
 ### `aiup` and `codexu`: update Claude and Codex in one command
 

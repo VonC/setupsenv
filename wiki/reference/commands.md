@@ -357,8 +357,17 @@ surrounding quotes are dropped. Without the file or the `folder` key, `lsc`
 uses the Windows Screenshots folder: the
 `{B7BEDE81-DF94-4682-A7D8-57A52620B86F}` value of the per-user
 `User Shell Folders` key, set once the folder is redirected, else
-`Screenshots` under the Pictures folder. Exit codes are in the
-[exit codes reference](exit-codes.md#lsc).
+`Screenshots` under the Pictures folder.
+
+A team file can name a folder that only some machines have, such as a
+OneDrive one. On a machine without it, `lsc` uses the Windows Screenshots
+folder and says so on standard error:
+
+```text
+lsc: 'C:\Users\you\OneDrive\Pictures\Screenshots' not found, using the Windows Screenshots folder 'C:\Users\you\Pictures\Screenshots'
+```
+
+Exit codes are in the [exit codes reference](exit-codes.md#lsc).
 
 #### The tray watcher
 
