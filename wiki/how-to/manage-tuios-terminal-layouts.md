@@ -8,7 +8,7 @@ including running Claude and Codex processes.
 
 ## Install or upgrade
 
-Use Windows Terminal, TUIOS 0.11.0, and Python 3.10 or newer in
+Use Windows Terminal, TUIOS (latest: `dwl tuios`/`inst tuios`), and Python 3.10 or newer in
 `%PRGS%\pythons`. `tuitp` runs from any CMD: for its own run, it calls
 `switchpy` on the highest `pythonX.Y.Z` folder there, without a venv, and
 skips that switch when this Python already comes first on the `PATH`. The
