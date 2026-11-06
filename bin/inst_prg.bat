@@ -310,6 +310,23 @@ if exist "%PRGS%\%prgs_folder%\%tar_folder%" (
 :_skip_tar_extraction
 
 :_check_post_install
+rem The symlink first, then the post hooks, as setup.bat does: a hook
+rem configures the version 'current' points to. Run before the switch,
+rem gits.post.bat configured the previous Git on an upgrade and left the new
+rem one with its shipped credential helper-selector.
+%_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
+call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
+
+rem custom\gits.post.bat starts by restoring %HOME%\.gitconfig from
+rem .gitconfig.ori: refresh that backup first, as setup.bat does before each
+rem install, or the restore would undo every global setting changed since the
+rem last setup.
+if /i "%prgs_folder%"=="gits" (
+    if exist "%HOME%\.gitconfig" (
+        call "%PRGS%\senv\installs\gits.config.utils.bat" :save_gitconfig Inst '%prgs_folder%'
+    )
+)
+
 rem Post hooks live in three places, resolved the same way as setup.bat's
 rem :check_post so a hook fires whether a program arrives through the
 rem profile install list or through a manual 'inst <prg>': the senv
@@ -341,10 +358,6 @@ if /i not "%install_dir_sf%"=="%senv_installs_sf%" (
 )
 set "install_dir_sf="
 set "senv_installs_sf="
-
-:_check_symlink
-%_task% "Must check symlink '%sln%' for '%prg_folder%' in '%PRGS%\%prgs_folder%'"
-call "%script_dir%\check_prg_symlink.bat" "%prgs_folder%" "%prg_folder%" "%sln%"
 
 if exist "%install_dir%\%prgs_folder%.alias.bat" (
     %_task% "Must check alias in '%install_dir%' for '%prgs_folder%'"

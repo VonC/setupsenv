@@ -16,8 +16,10 @@ looked up, in that order, for each kind:
 - `<tool>s.install.bat`: replaces the default extraction; used for
   non-archive assets (example: `vscodes.install.bat` runs the installer
   silently, `riffs.install.bat` copies a bare exe into a versioned folder),
-- `<tool>s.post.bat`: after extraction, before the junction; reshapes the
-  tree or configures the tool,
+- `<tool>s.post.bat`: after extraction and the junction, so `current`
+  already points at the new version; reshapes the tree or configures the
+  tool (example: `gcms.post.bat` puts a standalone Git Credential Manager
+  in use by the current Git),
 - `<tool>s.sln.bat`: computes the junction name from the extracted folder
   (versioned families),
 - `<tool>s.alias.bat`: after the junction; adds doskey aliases,

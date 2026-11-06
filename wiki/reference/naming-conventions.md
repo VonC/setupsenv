@@ -35,7 +35,7 @@ For a family folder `<tool>s`, hook scripts are looked up by name in
 | --- | --- |
 | `<tool>s.pre.bat` | before the install |
 | `<tool>s.install.bat` | instead of the default 7-Zip extraction |
-| `<tool>s.post.bat` | after extraction, before the junction |
+| `<tool>s.post.bat` | after extraction and the junction: `current` already points at the new version |
 | `<tool>s.sln.bat` | during junction creation, prints the junction name |
 | `<tool>s.alias.bat` | after the junction, adds doskey aliases |
 | `<tool>s.test.bat` | manual diagnostics only |
