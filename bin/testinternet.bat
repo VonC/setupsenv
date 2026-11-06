@@ -20,8 +20,13 @@ rem Git for Windows 2.56 moved curl from mingw64 to ucrt64.
 set "curl_exe=%PRGS%\gits\current\ucrt64\bin\curl.exe"
 if not exist "%curl_exe%" set "curl_exe=%PRGS%\gits\current\mingw64\bin\curl.exe"
 
+rem 15s: the local proxy (px) sometimes takes more than 3s to answer the
+rem CONNECT, and ensure_internet.bat restarts px on a failure here.
+set "curl_timeout=15"
+rem NUL, not /dev/null: this curl is a native Windows program, it cannot write
+rem to /dev/null and exits 23 even after a 200.
 %_task% "Must check HTTP code by querying %url%"
-"%curl_exe%" -Lks -o /dev/null -m 3 -w %%{http_code} %url% > "%TEMP%\http_code.txt"
+"%curl_exe%" -Lks -o NUL -m %curl_timeout% -w %%{http_code} %url% > "%TEMP%\http_code.txt"
 set /p code=<"%TEMP%\http_code.txt"
 del "%TEMP%\http_code.txt"
 if "%code%" == "200" (
@@ -46,7 +51,7 @@ if "%code%" == "504" call:internet_ok "Server Error[504]: Gateway Timeout"
 if defined warning ( goto:eof )
 
 %_warning% "Code HTTP '%code%', check errorlevel:"
-"%curl_exe%" -Lks -o /dev/null -m 3 -w %%{http_code}\n %url%
+"%curl_exe%" -Lks -o NUL -m %curl_timeout% -w %%{http_code}\n %url%
 set "err=%ERRORLEVEL%"
 %_error% "Code HTTP '%code%', errorlevel '%err%'"
 if not "%err%" == "0" (
