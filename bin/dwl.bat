@@ -351,6 +351,20 @@ set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
 call :curl
 goto:eof
 
+:dwl_gcm
+rem Standalone Git Credential Manager, for a GCM newer than the one Git for
+rem Windows bundles. The zip is the portable build: git-credential-manager.exe
+rem and its native DLLs, nothing to install (GCM 3 is compiled ahead of time,
+rem no .NET runtime needed). installs\gcms.post.bat puts it in use.
+set "repo=git-ecosystem/git-credential-manager"
+if "%version%"=="latest" ( call :get_latest_version_from_github )
+%_info% "Dwl (%prgname%)'%repo%' version '%version%'"
+rem https://github.com/git-ecosystem/git-credential-manager/releases/download/v3.0.2/gcm-win-x64-3.0.2.zip
+set "file=gcm-win-x64-%version%.zip"
+set "url=https://github.com/%repo%/releases/download/v%version%/%file%"
+call :curl
+goto:eof
+
 :dwl_go
 rem <td class="filename"><a class="download" href="/dl/go1.23.2.windows-amd64.zip">go1.23.2.windows-amd64.zip</a></td>
 if defined version ( if not "%version%"=="latest" ( goto:go_version_set ) )

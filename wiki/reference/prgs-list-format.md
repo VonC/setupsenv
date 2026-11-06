@@ -42,6 +42,7 @@ matches, the pattern field of every line is tried against the given string
 | --- | --- | --- | --- |
 | Gum | | `gums` | |
 | Git | | `gits` | |
+| GCM (Git Credential Manager) | gcm | `gcms` | |
 | Go | golang | `gos` | |
 | GH (GitHub CLI) | gh | `ghs` | |
 | JDK (Java) | java, jdk | `javas` | 11-24, `21-LTS` |
