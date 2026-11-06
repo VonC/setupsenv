@@ -158,34 +158,42 @@ git config --global core.fscache true
 git config --global rerere.enabled true
 git config --global http.sslBackend schannel
 
-git config --system credential.helper 1>NUL 2>NUL
-if errorlevel 1 (
-    git config --system credential.helper %mgrname%
-) else (
-    git config --system credential.helper | grep -i "selector" 1>NUL 2>NUL
-    if errorlevel 0 (
-        git config --system credential.helper %mgrname%
-    ) else (
-        git config --system credential.helper | grep "credential-manager" 1>NUL 2>NUL
-        if errorlevel 0 (
-            git config --system credential.helper %mgrname%
-        ) else (
-            git config --system credential.helper | grep "bin" 1>NUL 2>NUL
-            if errorlevel 0 (
-                git config --system credential.helper %mgrname%
-            ) else (
-                git config --system credential.helper | grep "git-core" 1>NUL 2>NUL
-                if errorlevel 0 (
-                    git config --system credential.helper %mgrname%
-                )
-            )
-        )
-    )
+rem The system helper is the name '%mgrname%', never a path: Git then runs
+rem 'git credential-manager', the GCM gcms.post.bat can upgrade in place. Replace
+rem a missing helper, the helper-selector Git for Windows 2.56 ships (its dialog
+rem writes the full path of the helper picked), and any other GCM name or path;
+rem keep a different helper chosen on purpose (wincred, store...).
+rem for /f, not findstr /X: findstr anchors a line end on a CR, and git prints
+rem LF-only lines.
+set "system_helpers="
+for /f "delims=" %%h in ('git config --system --get-all credential.helper 2^>NUL') do set "system_helpers=!system_helpers!|%%h"
+if not defined system_helpers goto:set_system_helper
+if /i "!system_helpers!"=="|%mgrname%" (
+    %_ok% "System credential helper already '%mgrname%'"
+    goto:system_helper_done
 )
+git config --system --get-all credential.helper | findstr /I "selector manager bin git-core" 1>NUL 2>NUL
+if not errorlevel 1 goto:set_system_helper
+%_info% "Keep the system credential helper chosen on purpose (not a credential manager)"
+goto:system_helper_done
+:set_system_helper
+git config --system --replace-all credential.helper %mgrname%
+if errorlevel 1 (
+    %_error% "Unable to set the system credential helper to '%mgrname%'"
+) else (
+    %_ok% "System credential helper set to '%mgrname%'"
+)
+:system_helper_done
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 git config --global credential.helper %mgrname%
 "%PRGS%\gits\current\usr\bin\cat.exe" "%HOME%\.gitconfig" 1>NUL
 git config --global credential.helperselector.selected %mgrname%
+
+rem A standalone GCM ('inst gcm') replaces the GCM this Git bundles when it is
+rem newer: each new Git folder starts again with its bundled GCM.
+if exist "%installs_dir%\gcms.post.bat" (
+    call "%installs_dir%\gcms.post.bat"
+)
 
 :gitpath
 set "GITPATH=%HOME%"

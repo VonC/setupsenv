@@ -157,6 +157,16 @@ at setup time. With neither file, there is no automatic stamping.
 | `credential.helper` | `manager` | Git Credential Manager stores and serves HTTPS credentials |
 | `credential.helperselector.selected` | `manager` | pre-selects that helper, no popup on first use |
 
+The `gits` install hook sets `credential.helper` to `manager` at both levels:
+in `%HOME%\.gitconfig`, and in the Git folder's own `etc\gitconfig` (the
+system level). It is always that name, never a path. The hook replaces the
+`helper-selector` Git for Windows 2.56 ships there, whose dialog writes the
+full path of the helper picked, and any other credential manager name or
+path; a different helper chosen on purpose (`wincred`, `store`) stays. With
+the name, Git runs `git credential-manager`, the program a standalone Git
+Credential Manager can replace: see
+[Update Git and its credential manager](../how-to/update-git-and-its-credential-manager.md).
+
 The `gits` install hook re-applies the baseline options (`core.fscache`,
 `rerere.enabled`, `http.sslBackend`) with `git config --global` on every
 install or update, so existing HOMEs converge without waiting for a fresh
