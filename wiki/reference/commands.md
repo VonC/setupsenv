@@ -429,7 +429,8 @@ Archives are searched in order: `%PRGS%\setup`, `%USERPROFILE%\Downloads`,
 `latest`, the archive with the highest version in those folders wins, versions
 compared in natural order (`0.10.1` after `0.9.5`), whatever their download
 order; creation time only separates copies of the same version. Hooks from
-`installs\` and `custom\` run around the extraction (see
+`installs\` and `custom\` run around the extraction, the `.post.bat` ones
+once the junction points at the new version, as during setup (see
 [naming conventions](naming-conventions.md)). `inst_prg -h` (or `--help`,
 `/?`) prints the manual page.
 
@@ -714,7 +715,8 @@ Running processes (`tasklist`) filtered through `grep -ai <name>`.
 ### `ti` (`testinternet.bat`)
 
 Tests internet access with the portable `curl` against a rotating test URL
-(`testinternet.urls`). Exit 0 when reachable.
+(`testinternet.urls`). Exit 0 when reachable. It waits up to 15 seconds: the
+local proxy can take more than 3 seconds to open a connection.
 
 ### `ei` (`ensure_internet.bat`)
 

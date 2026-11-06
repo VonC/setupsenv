@@ -40,6 +40,7 @@ Recipes for a precise goal, for readers who already know the basics.
 - 🖥️ [Open project tabs in Windows Terminal](how-to/open-project-tabs-in-windows-terminal.md)
 - 🖥️ [Manage TUIOS sessions and Terminal layouts](how-to/manage-tuios-terminal-layouts.md)
 - 🧰 [Update Claude and Codex](how-to/update-claude-and-codex.md)
+- 🧰 [Update Git and its credential manager](how-to/update-git-and-its-credential-manager.md)
 - 🔑 [Load an SSH signing key without administrator rights](how-to/use-ssh-agent.md)
 - 📦 [Update senv and diagnose version drift](how-to/update-senv-and-diagnose-version-drift.md)
 - 🖥️ [Find why senv is slow to start](how-to/find-why-senv-is-slow-to-start.md)

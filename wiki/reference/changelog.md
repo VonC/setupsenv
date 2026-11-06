@@ -6,7 +6,7 @@ What changed in senv since the build on the team share. This page is
 rewritten at each publication (see
 [Build and publish a profile archive](../how-to/build-and-publish-a-profile-archive.md)):
 it covers one step only, here from the build of 2026-10-05 (senv `ecf619e`)
-to 2026-11-05. Once a build is published, `up` or `upa` brings it to your
+to 2026-11-06. Once a build is published, `up` or `upa` brings it to your
 machine (see
 [Update senv and diagnose version drift](../how-to/update-senv-and-diagnose-version-drift.md)).
 The changes of the private `custom` layer are in `custom\changelog.md`.
@@ -143,6 +143,24 @@ blocks container registries, Trivy cannot download its database
 (`403 Forbidden`): use Grype, whose database comes from a plain HTTPS site.
 See [Scan dependencies for vulnerabilities](../how-to/scan-dependencies-for-vulnerabilities.md).
 
+### `dwl gcm`, `inst gcm`: a Git Credential Manager newer than Git's
+
+Bitbucket Cloud refuses a Git Credential Manager (GCM) older than 3.0.0 from
+2026-11-30, and Git for Windows 2.56.0.4 bundles GCM 2.9.1. Install GCM 3:
+
+```cmd
+dwl gcm
+inst gcm
+git credential-manager --version
+```
+
+The last command prints `3.0.2+...`. The hook of `inst gcm` copies the
+standalone GCM over the bundled one in Git's `ucrt64\bin`, keeping each
+replaced file as `<name>.bundled`: Git looks there before `PATH`, so the
+credential helper stays `manager`. `inst git` does it again for a new Git,
+and stops doing it once Git bundles a GCM at least as recent. See
+[Update Git and its credential manager](../how-to/update-git-and-its-credential-manager.md).
+
 ### `tct N` and `tc yyyyMMdd`: older Teams chats
 
 `tct 2` copies the cached Teams chats of 2 days ago, and `tc 20261017` is
@@ -191,12 +209,27 @@ absolute path inside, and fills a selected workspace file that is empty.
   Git still gets the helper it ships, and the session `PATH` and
   `testinternet` use `ucrt64`, or `mingw64` with an older Git, the folder now
   in `GH_MINGW`.
+- `inst <program>` runs the post-install hooks once `current` points at the
+  new version, as setup does. They used to run before: `inst git` configured
+  the previous Git, and the new one kept the `helper-selector` it ships,
+  whose dialog then wrote a full path as the system `credential.helper`.
+  `inst git` also saves `%HOME%\.gitconfig` to `.gitconfig.ori` first, the
+  copy the team hook restores it from, so it can no longer bring back an old
+  global configuration.
+- The `gits` install hook sets the system `credential.helper` to the name
+  `manager`, also over a full path or several helpers, and keeps a different
+  helper chosen on purpose (`wincred`).
+- `ti` (testinternet) waits up to 15 seconds instead of 3: the local proxy
+  sometimes takes longer to open a connection, and `ei` then restarted it for
+  nothing. Its `curl` also writes to `NUL`, not `/dev/null`, which a Windows
+  `curl` cannot open (exit 23 even on success).
 
 ## 📚 New documentation
 
 - How-to:
   [Manage TUIOS terminal layouts](../how-to/manage-tuios-terminal-layouts.md),
   [Update Claude and Codex](../how-to/update-claude-and-codex.md),
+  [Update Git and its credential manager](../how-to/update-git-and-its-credential-manager.md),
   [Use an SSH agent](../how-to/use-ssh-agent.md),
   [Scan dependencies for vulnerabilities](../how-to/scan-dependencies-for-vulnerabilities.md),
   [Find the GitHub repositories you watch](../how-to/find-custom-watched-github-repositories.md),
