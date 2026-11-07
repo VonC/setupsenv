@@ -47,8 +47,10 @@ least as recent, the hook keeps the bundled one, and `%PRGS%\gcms` can go.
 For a whole team, add the line `gcm-win-x64-*.zip gcms` to the profile's
 `custom\install_<profile>.list` (see
 [install_&lt;profile&gt;.list format](../reference/install-list-format.md)):
-`setup.bat` installs it after Git, and publishing the profile copies the zip
-to the team share.
+`setup.bat` installs it after Git. A profile build does not copy the zip:
+publish it to the team shares first with
+`adm\publish.bat gcm-win-x64-3.0.2.zip all`, or `setup.bat` stops with
+FATAL 112 on `gcms`.
 
 Why a copy and not `PATH`: Git runs the `manager` helper as
 `git credential-manager`, and looks for `git-credential-manager.exe` in its
