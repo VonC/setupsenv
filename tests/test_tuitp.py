@@ -49,6 +49,9 @@ class FakeWindows:
     def pane_helper(self):
         return Path(r"C:\Local App Data\tuitp\panes\tuitp.pane.0123456789ab.bat")
 
+    def gate_folder(self):
+        return Path(r"C:\Local App Data\tuitp\gates")
+
     def write_claude_hooks(self):
         self.events.append(("claude-hooks",))
 
@@ -218,8 +221,54 @@ class ReconciliationTests(unittest.TestCase):
         self.assertTrue(all(s["status"] == "ready" for s in self.saved["sessions"].values()))
         for event in self.events("send-text"):
             self.assertEqual(len(event), 6)
-            self.assertTrue(event[-1].startswith(f'call "{self.runtime.pane_helper()}" '))
+            self.assertRegex(event[-1], r'^(set "TUITP_SENV_\w+=[^"]+" & )+call ')
+            self.assertIn(f' & call "{self.runtime.pane_helper()}" ', event[-1])
             self.assertIn("project with spaces", event[-1])
+
+    def gates(self):
+        """Map each started pane to the senv gate files of its startup command: (wait, signal)."""
+        found = {}
+        for event in self.events("send-text"):
+            command = event[-1]
+            wait = re.search(r'set "TUITP_SENV_WAIT=([^"]+)"', command)
+            signal = re.search(r'set "TUITP_SENV_SIGNAL=([^"]+)"', command)
+            found[event[2], event[4]] = (wait[1] if wait else None, signal[1] if signal else None)
+        return found
+
+    def test_panes_of_one_folder_activate_senv_one_after_the_other(self):
+        # A fresh checkout: three panes creating one venv at once raced, and none started its agent.
+        self.apply("=== Projects\n+ FOLDER|one\n+ FOLDER|two|single")
+        gates = self.gates()
+        self.assertEqual(set(gates), {("one", "Claude"), ("one", "Codex"), ("one", "CMD"), ("two", "CMD")})
+        signals = [signal for _, signal in gates.values()]
+        self.assertEqual(len(set(signals)), 4)
+        self.assertTrue(all(Path(signal).parent == self.runtime.gate_folder() for signal in signals))
+        # One chain across both sessions of the folder: one pane starts at once, each other one after another.
+        first = [pane for pane, (wait, _) in gates.items() if wait is None]
+        self.assertEqual(len(first), 1)
+        after = {wait: pane for pane, (wait, _) in gates.items() if wait}
+        chain, pane = [first[0]], first[0]
+        while gates[pane][1] in after:
+            pane = after[gates[pane][1]]
+            chain.append(pane)
+        self.assertEqual(len(chain), 4)
+        # Within a session, in pane order.
+        self.assertLess(chain.index(("one", "Claude")), chain.index(("one", "Codex")))
+        self.assertLess(chain.index(("one", "Codex")), chain.index(("one", "CMD")))
+        # Each run uses files of its own.
+        self.runtime, self.state = FakeWindows(), new_state()
+        self.apply("=== Projects\n+ FOLDER|one")
+        self.assertFalse({signal for _, signal in self.gates().values()} & set(signals))
+
+    def test_panes_of_other_folders_start_at_once(self):
+        other = self.folder / "other"
+        other.mkdir()
+        self.apply(f"=== Projects\n+ FOLDER|one|claude\n+ {other}|two|codex")
+        gates = self.gates()
+        self.assertEqual(gates[("one", "Claude")][0], None)
+        self.assertEqual(gates[("two", "Codex")][0], None)
+        self.assertEqual(gates[("one", "CMD")][0], gates[("one", "Claude")][1])
+        self.assertEqual(gates[("two", "CMD")][0], gates[("two", "Codex")][1])
 
     def test_internet_is_checked_before_anything_starts_and_only_then(self):
         out = io.StringIO()
@@ -819,6 +868,8 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual([(e[2], e[4]) for e in self.events("send-text")], [("cl", "CMD"), ("cx", "CMD")])
         for event in self.events("send-text"):
             self.assertTrue(event[-1].endswith(" cmd local-or-global"))
+            # Its agent activated senv long ago: nothing to wait for.
+            self.assertTrue(event[-1].startswith("call "))
         self.runtime.events.clear()
         self.apply(text)
         self.assertFalse(self.events("new-window") + self.events("send-text") + self.events("internet"))
@@ -1256,6 +1307,70 @@ class WindowsTests(unittest.TestCase):
                         self.assertIn("LOCAL-UID-[]", result.stdout)
                         self.assertNotIn("10764", result.stdout)
 
+    def senv_gate_pane(self, base, project_senv, env):
+        """Run a CMD pane on a project whose senv.bat is project_senv, with env added; return the result."""
+        profile, project = base / "user profile", base / "project (with spaces)"
+        profile.mkdir(exist_ok=True)
+        project.mkdir(exist_ok=True)
+        (profile / "senv.bat").write_text('@echo off\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+        (project / "senv.bat").write_text(project_senv)
+        helper = ROOT / "bin" / "tuitp.pane.bat"
+        cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
+        # The variables of the gate must not outlive the pane's activation;
+        # && keeps the exit code of a failed one.
+        command = (f'"{cmd}" /d /v:off /c call "{helper}" "{project}" cmd'
+                   ' && (set TUITP_SENV 2>nul || echo NO-GATE-VARIABLES)')
+        full = dict(os.environ, USERPROFILE=str(profile), PRGS=str(base), **env)
+        return subprocess.run(command, capture_output=True, text=True, timeout=30, env=full)
+
+    def test_pane_activates_senv_once_the_previous_pane_of_its_folder_ended(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-gate-") as temp:
+            base = Path(temp)
+            gate = base / "gates" / "run.1.done"
+            gate.parent.mkdir()
+            senv = (f'@echo off\nif exist "{gate}" (echo GATE-OPEN) else (echo GATE-CLOSED)\n'
+                    'set "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
+            opener = threading.Timer(1.5, gate.write_text, args=("0\n",))
+            opener.start()
+            self.addCleanup(opener.cancel)
+            result = self.senv_gate_pane(base, senv, {"TUITP_SENV_WAIT": str(gate)})
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("tuitp: waiting for the previous pane of this folder to end its senv activation.",
+                          result.stdout)
+            self.assertIn("GATE-OPEN", result.stdout)
+            self.assertNotIn("GATE-CLOSED", result.stdout)
+            self.assertIn("NO-GATE-VARIABLES", result.stdout)
+            # Already ended: no wait, no message.
+            result = self.senv_gate_pane(base, senv, {"TUITP_SENV_WAIT": str(gate)})
+            self.assertIn("GATE-OPEN", result.stdout)
+            self.assertNotIn("waiting", result.stdout)
+
+    def test_pane_waiting_too_long_for_the_previous_pane_activates_anyway(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-gate-") as temp:
+            base = Path(temp)
+            senv = '@echo off\necho PREP-LOCAL\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n'
+            result = self.senv_gate_pane(base, senv, {"TUITP_SENV_WAIT": str(base / "never.done"),
+                                                      "TUITP_SENV_TIMEOUT": "1"})
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertIn("did not end its senv activation within 1s: activating here anyway.", result.stdout)
+            self.assertIn("PREP-LOCAL", result.stdout)
+            self.assertIn("NO-GATE-VARIABLES", result.stdout)
+
+    def test_pane_signals_the_end_of_its_senv_activation_whatever_its_result(self):
+        # A failed first activation must not keep the next pane waiting 10 minutes.
+        with tempfile.TemporaryDirectory(prefix="tuitp-gate-") as temp:
+            base = Path(temp)
+            signal = base / "run.1.done"
+            for code in (0, 7):
+                with self.subTest(code=code):
+                    signal.unlink(missing_ok=True)
+                    senv = f'@echo off\nset "PATH=%SystemRoot%\\System32"\nexit /b {code}\n'
+                    result = self.senv_gate_pane(base, senv, {"TUITP_SENV_SIGNAL": str(signal)})
+                    self.assertEqual(result.returncode, code, result.stdout + result.stderr)
+                    self.assertEqual(signal.read_text().strip(), str(code))
+                    if not code:
+                        self.assertIn("NO-GATE-VARIABLES", result.stdout)
+
     def test_agent_failing_at_startup_starts_again_three_times_in_all(self):
         # Codex exits at once when its app-server times out on a slow first
         # network call. Each retry waits 5 seconds, hence the longer timeouts.
@@ -1378,6 +1493,21 @@ class WindowsTests(unittest.TestCase):
                 self.assertEqual(tuitp_host.host(manifest), 0)
             child.terminate.assert_called_once()
             native.assert_not_called()
+
+    def test_gate_folder_drops_the_files_of_runs_older_than_a_day(self):
+        with tempfile.TemporaryDirectory(prefix="tuitp-gates-") as temp:
+            runtime = Windows(Path(temp) / "bin", Path(temp) / "state")
+            folder = runtime.gate_folder()
+            self.assertEqual(folder, Path(temp) / "state" / "gates")
+            old, recent, other = folder / "a.1.done", folder / "b.1.done", folder / "notes.txt"
+            for path in (old, recent, other):
+                path.write_text("0\n")
+            os.utime(old, (0, 0))
+            os.utime(other, (0, 0))
+            self.assertEqual(runtime.gate_folder(), folder)
+            self.assertFalse(old.exists())
+            self.assertTrue(recent.exists())
+            self.assertTrue(other.exists())  # Only gate files go.
 
     def test_panes_call_a_copy_that_a_pane_script_update_leaves_alone(self):
         # CMD resumes a running batch file at a byte offset: an in-place update
