@@ -8,6 +8,7 @@ import os
 from pathlib import Path
 import sys
 import subprocess
+import threading
 import time
 import uuid
 
@@ -51,8 +52,35 @@ def rename_panes(runtime, session, old_id):
         runtime.command("set-window", "-s", session.name, "-w", old, "--name", new)
 
 
-def start_pane(runtime, session, role, start=None, resume=None):
-    """Run tuitp.pane.bat in a pane; start is the command its agent starts with, resume the conversation it resumes."""
+class SenvGates:
+    """Chain the senv activations of the panes that one run starts in the same folder.
+
+    The first activation of a fresh checkout creates its venv and initializes
+    its submodules: on 2026-11-07, the Claude, Codex and CMD panes of a new
+    worktree did it at once, raced on both, and none started its agent. Each
+    pane now waits for the file that the pane started before it in that folder
+    writes once its activation ends (tuitp.pane.bat), across sessions too.
+    """
+
+    def __init__(self, folder):
+        self.folder, self.run = Path(folder), uuid.uuid4().hex[:12]
+        self.lock, self.last, self.count = threading.Lock(), {}, 0
+
+    def claim(self, folder):
+        """Return the file this pane waits for (None for the first one) and the file it writes."""
+        place = os.path.normcase(os.path.abspath(folder))
+        with self.lock:
+            self.count += 1
+            signal = self.folder / f"{self.run}.{self.count}.done"
+            wait, self.last[place] = self.last.get(place), signal
+        return wait, signal
+
+
+def start_pane(runtime, session, role, start=None, resume=None, gate=None):
+    """Run tuitp.pane.bat in a pane; start is the command its agent starts with, resume the conversation it resumes.
+
+    gate is the (wait, signal) pair of SenvGates.claim that orders its senv activation.
+    """
     window = pane_name(role, session.id)
     # subprocess passes this entire command as ONE native send-text argv.
     # The inner quotes belong to the receiving CMD, not the outer shell.
@@ -65,12 +93,20 @@ def start_pane(runtime, session, role, start=None, resume=None):
         command += f' "{start or ""}"'
     if resume:
         command += f' "{resume}"'
+    if gate:
+        wait, signal = gate
+        command = f'set "TUITP_SENV_SIGNAL={signal}" & {command}'
+        if wait:
+            command = f'set "TUITP_SENV_WAIT={wait}" & {command}'
     runtime.command("send-text", "-s", session.name, "-w", window, command)
     runtime.command("send-keys", "Enter", "-s", session.name, "-w", window)
 
 
-def session_init(runtime, session, starts=None, restored=False):
-    """Start each pane of a session; starts maps a pane to the start_pane arguments of its agent."""
+def session_init(runtime, session, starts=None, restored=False, gates=None):
+    """Start each pane of a session; starts maps a pane to the start_pane arguments of its agent.
+
+    gates, a SenvGates, makes each pane activate senv after the one started before it in its folder.
+    """
     names = runtime.pane_names(session.name) if restored else None
     for role in PANE_ROLES[session.kind]:
         window = pane_name(role, session.id)
@@ -80,7 +116,8 @@ def session_init(runtime, session, starts=None, restored=False):
                       f"tuitp stop {session.name}, then tuitp, gives it one", flush=True)
                 continue
             new_pane(runtime, session, role)  # Saved before its kind had a CMD pane.
-        start_pane(runtime, session, role, **(starts or {}).get(window, {}))
+        gate = gates.claim(session.folder) if gates else None
+        start_pane(runtime, session, role, **(starts or {}).get(window, {}), gate=gate)
 
 
 def parallel_sessions(runtime, sessions, action, completed):
@@ -255,9 +292,10 @@ def apply_layout(layout, state, live, runtime, save, dry=False, check_codex=True
             save(state)
 
         restored = {session.name for session in plan["restore"]}
+        gates = SenvGates(runtime.gate_folder()) if plan["create"] or plan["restore"] else None
         parallel_sessions(runtime, plan["create"] + plan["restore"],
                           lambda runtime, session: session_init(runtime, session, starts.get(session.name),
-                                                                session.name in restored), init_done)
+                                                                session.name in restored, gates), init_done)
         for session in extend:
             new_pane(runtime, session, "CMD")
             start_pane(runtime, session, "CMD")

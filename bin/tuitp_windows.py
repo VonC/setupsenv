@@ -378,6 +378,26 @@ class Windows:
                 temporary.unlink(missing_ok=True)
         return target
 
+    def gate_folder(self):
+        """Return the folder of the files that order the senv activations of panes, tuitp.SenvGates.
+
+        A pane writes its file once its activation ends, and the next pane of
+        its folder waits for it at most 10 minutes: a file older than a day
+        has no pane left waiting, and goes.
+        """
+        folder = self.root / "gates"
+        folder.mkdir(parents=True, exist_ok=True)
+        from tuitp_model import safe_path
+        safe_path(str(folder), folder)  # CMD receives this path in a SET.
+        old = time.time() - 86400
+        for gate in folder.glob("*.done"):
+            try:
+                if gate.stat().st_mtime < old:
+                    gate.unlink()
+            except OSError:
+                pass  # Written or removed meanwhile: the next run tries again.
+        return folder
+
     def write_claude_hooks(self):
         """Write TUIOS's Claude Code hooks to the settings file that tuitp.pane.bat gives Claude.
 

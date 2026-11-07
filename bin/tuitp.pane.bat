@@ -19,15 +19,53 @@ rem 2026-10-29, four panes shared one id, and so the switchver temp files, and
 rem one of them got an empty PATH. senv_uid.bat looks this pane's id up again.
 set "SENV_UID="
 cd /d "%TUITP_PROJECT%" || exit /b 1
+rem The panes of one folder activate senv one after the other. On a fresh
+rem checkout, the first activation creates the venv and initializes the
+rem submodules: on 2026-11-07, three panes doing it at once raced on both, and
+rem none started its agent. tuitp sets TUITP_SENV_WAIT to the file that the
+rem previous pane writes once its activation ends, and TUITP_SENV_SIGNAL to the
+rem one this pane writes, whatever the activation's result.
+call :await_senv
+call :activate "%~3"
+set "TUITP_SENV_CODE=%errorlevel%"
+if defined TUITP_SENV_SIGNAL (>"%TUITP_SENV_SIGNAL%" echo %TUITP_SENV_CODE%) 2>nul
+set "TUITP_SENV_SIGNAL="
+if not "%TUITP_SENV_CODE%"=="0" (set "TUITP_SENV_CODE=" & exit /b %TUITP_SENV_CODE%)
+set "TUITP_SENV_CODE="
+goto :launch
+
+:await_senv
+if not defined TUITP_SENV_WAIT exit /b 0
+rem At most 10 minutes: a first activation can install every dependency.
+if not defined TUITP_SENV_TIMEOUT set "TUITP_SENV_TIMEOUT=600"
+set "TUITP_SENV_WAITED=0"
+if exist "%TUITP_SENV_WAIT%" goto :senv_turn
+echo tuitp: waiting for the previous pane of this folder to end its senv activation.
+:senv_wait
+if exist "%TUITP_SENV_WAIT%" goto :senv_turn
+if %TUITP_SENV_WAITED% GEQ %TUITP_SENV_TIMEOUT% (
+    echo tuitp: the previous pane did not end its senv activation within %TUITP_SENV_TIMEOUT%s: activating here anyway.
+    goto :senv_turn
+)
+ping -n 2 127.0.0.1 >nul
+set /a "TUITP_SENV_WAITED+=1"
+goto :senv_wait
+:senv_turn
+set "TUITP_SENV_WAIT="
+set "TUITP_SENV_WAITED="
+set "TUITP_SENV_TIMEOUT="
+exit /b 0
+
+:activate
 rem One-pane list entries prefer the project's activation when it exists.
-if /I "%~3"=="local-or-global" goto :local_or_global
+if /I "%~1"=="local-or-global" goto :local_or_global
 call "%USERPROFILE%\senv.bat" global
 if errorlevel 1 exit /b %errorlevel%
 cd /d "%TUITP_PROJECT%" || exit /b 1
-if not exist "%TUITP_PROJECT%\senv.bat" goto :launch
+if not exist "%TUITP_PROJECT%\senv.bat" exit /b 0
 call "%TUITP_PROJECT%\senv.bat"
 if errorlevel 1 exit /b %errorlevel%
-goto :launch
+exit /b 0
 :local_or_global
 rem A pane is a new console: it inherits the variables of the launcher, never its
 rem doskey macros. The global senv.bat loads the global, team and personal
@@ -41,6 +79,8 @@ if exist "%TUITP_PROJECT%\senv.bat" (
     call "%USERPROFILE%\senv.bat" global
 )
 if errorlevel 1 exit /b %errorlevel%
+exit /b 0
+
 :launch
 if not defined PRGS set "PRGS=C:\Public\SOFTWARE"
 set "PATH=%PRGS%\tuioss\current;%USERPROFILE%\.local\bin;%USERPROFILE%\.codex\packages\standalone\current\bin;%PATH%"
