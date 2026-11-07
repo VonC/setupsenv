@@ -6,7 +6,7 @@ What changed in senv since the build on the team share. This page is
 rewritten at each publication (see
 [Build and publish a profile archive](../how-to/build-and-publish-a-profile-archive.md)):
 it covers one step only, here from the build of 2026-10-05 (senv `ecf619e`)
-to 2026-11-06. Once a build is published, `up` or `upa` brings it to your
+to 2026-11-07. Once a build is published, `up` or `upa` brings it to your
 machine (see
 [Update senv and diagnose version drift](../how-to/update-senv-and-diagnose-version-drift.md)).
 The changes of the private `custom` layer are in `custom\changelog.md`.
@@ -56,7 +56,10 @@ What you get with it:
 - A click on an agent of another session, on the TUIOS rail, brings forward
   the tab of that session instead of showing it in the current tab.
 - Each pane activates senv on its own: the global aliases, then the folder's
-  `senv.bat` with its own venv, and its own `SENV_UID`.
+  `senv.bat` with its own venv, and its own `SENV_UID`. The panes of one
+  folder do it one after the other, so a new worktree creates its venv and
+  its submodules once: started together, its three panes raced on both, and
+  none started its agent.
 - `set TUITP_TIMING=1` before `tuitp` prints how long each `tuios` call took.
 - `dwl tuios` then `inst tuios` install the latest TUIOS.
 

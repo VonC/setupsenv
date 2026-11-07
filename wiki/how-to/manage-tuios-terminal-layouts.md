@@ -520,6 +520,19 @@ environment of the TUIOS daemon, which held the `SENV_UID` of the CMD that ran
 them could end with an empty `PATH` and never start its agent. The daemon no
 longer receives the id either, for the panes opened by hand.
 
+The panes that one run starts in the same folder activate senv one after the
+other, in pane order (Claude, Codex, then CMD), across sessions too. Each
+waits for the previous one to end its activation, failed or not, at most 10
+minutes, and prints `tuitp: waiting for the previous pane of this folder to
+end its senv activation.` meanwhile. On a fresh checkout, such as a new
+worktree, the first activation creates the venv and initializes the
+submodules: three panes doing it at once raced on both, and none started its
+agent. A Codex therefore starts a few seconds after the Claude of its
+session. `tuitp` sets the order through two variables of the pane command,
+`TUITP_SENV_WAIT` and `TUITP_SENV_SIGNAL`: files of
+`%LOCALAPPDATA%\tuitp\gates`, removed after a day. The CMD pane added beside
+a running agent waits for nothing.
+
 Codex starts without `SSL_CERT_FILE`: a certificate bundle that senv sets for
 other tools breaks its TLS connections, and its shared app-server daemon keeps
 the environment of the Codex that started it. The CMD of the pane keeps the
