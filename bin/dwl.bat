@@ -127,28 +127,47 @@ if errorlevel 1 (
 %_task% "Must get latest version from github for repo '%repo%'"
 set "url=https://api.github.com/repos/%repo%/releases/latest"
 set "version="
-set "cmd=curl -IkLs -o NUL -w %%{url_effective} https://github.com/%repo%/releases/latest"
+set "tag="
+set "gu="
+set "http_code="
+rem A network glitch must not read as a version. When GitHub answers 502, or
+rem nothing at all, the effective URL stays on releases/latest: it holds no
+rem tag, and the download would then ask for version 'v='. curl retries the
+rem transient answers (408, 429, 5xx) and the dropped connections; whatever
+rem still is not an HTTP 200 on a releases/tag URL stops here.
+set "cmd=curl -IkLs --retry 3 --retry-delay 2 --retry-all-errors -o NUL -w "%%{http_code} %%{url_effective}" https://github.com/%repo%/releases/latest"
 echo.%cmd%
-for /f "tokens=* delims=" %%a in ('%cmd%') do ( set gu=%%a)
-if errorlevel 1 (
-    %_fatal% "Cannot get latest version from github for repo '%repo%' with cmd '%cmd%'" 1
+for /f "tokens=1,2" %%a in ('%cmd%') do ( set "http_code=%%a" & set "gu=%%b" )
+if not "%http_code%"=="200" (
+    %_fatal% "No latest release from github for repo '%repo%': HTTP code '%http_code%', URL '%gu%'. A network glitch, or a repo without releases: try again later" 1
 )
-rem echo.Latest version URL='%gu%'
-for /f "tokens=1,2,3,4,5,6,7,8 delims=/" %%a in ("%gu%") do set version=%%g
-set "tag=%version%"
-set "version=%version:v=%"
+set "tag=!gu:*/releases/tag/=!"
+if "!tag!"=="!gu!" (
+    %_fatal% "No release tag in the latest release URL '%gu%' of repo '%repo%': try again later" 1
+)
+if not defined tag (
+    %_fatal% "Empty release tag in the latest release URL '%gu%' of repo '%repo%'" 1
+)
+set "version=!tag:v=!"
+if not defined version (
+    %_fatal% "Release tag '%tag%' of repo '%repo%' leaves no version" 1
+)
 
 rem Check if version starts with "nightly"
 if not "%version:~0,7%"=="nightly" ( goto:version_found )
 %_warn% "Version '%version%' is a nightly build. This may not be what you want."
 %_task% "Must query more recent release to get a proper version."
-set "cmd=curl -kLs https://api.github.com/repos/%repo%/releases?per_page=1 ^^| grep releases/tag"
+set "cmd=curl -kLs --retry 3 --retry-delay 2 --retry-all-errors https://api.github.com/repos/%repo%/releases?per_page=1 ^^| grep releases/tag"
 echo.!cmd!
+set "tag_line="
 for /f "tokens=* delims=" %%a in ('!cmd!') do (
   set "tag_line=%%a"
   goto:break_tag_line
 )
 :break_tag_line
+if not defined tag_line (
+    %_fatal% "No release in the github API answer for repo '%repo%': a network glitch? Try again later" 1
+)
 
 rem Extract tag from the result
 for /f "tokens=7 delims=/" %%a in ("!tag_line!") do (
