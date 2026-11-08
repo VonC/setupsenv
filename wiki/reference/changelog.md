@@ -6,7 +6,7 @@ What changed in senv since the build on the team share. This page is
 rewritten at each publication (see
 [Build and publish a profile archive](../how-to/build-and-publish-a-profile-archive.md)):
 it covers one step only, here from the build of 2026-10-05 (senv `ecf619e`)
-to 2026-11-07. Once a build is published, `up` or `upa` brings it to your
+to 2026-11-08. Once a build is published, `up` or `upa` brings it to your
 machine (see
 [Update senv and diagnose version drift](../how-to/update-senv-and-diagnose-version-drift.md)).
 The changes of the private `custom` layer are in `custom\changelog.md`.
@@ -226,6 +226,14 @@ absolute path inside, and fills a selected workspace file that is empty.
   sometimes takes longer to open a connection, and `ei` then restarted it for
   nothing. Its `curl` also writes to `NUL`, not `/dev/null`, which a Windows
   `curl` cannot open (exit 23 even on success).
+- `dwl <program>` stops when GitHub does not give its latest release. After a
+  `502` from GitHub, `dwl tuios` looked for version `v=` and failed on the
+  download with `FATAL 191`. It now tries 3 more times, 2 seconds apart, then
+  stops before any download, with the HTTP code and the URL:
+
+  ```text
+   FATAL 1 : No latest release from github for repo 'Gaurav-Gosain/tuios': HTTP code '502', URL 'https://github.com/Gaurav-Gosain/tuios/releases/latest'. A network glitch, or a repo without releases: try again later
+  ```
 
 ## 📚 New documentation
 
