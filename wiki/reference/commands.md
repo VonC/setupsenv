@@ -404,7 +404,10 @@ Downloads the portable archive of a program into `%PRGS%\setup`.
 
 The download is skipped when the target file already exists in
 `%PRGS%\setup`. Requires internet access (checked by
-`ensure_internet.bat`) and `gum`.
+`ensure_internet.bat`) and `gum`. `dwl` exits 0 only when the archive is in
+`%PRGS%\setup`: it stops with `FATAL 192` when the program section named no
+archive (nothing was downloaded), and with `FATAL 193` when the named archive
+is missing (see [exit codes](exit-codes.md#dwlbat)).
 
 Utility form:
 
@@ -428,7 +431,10 @@ Archives are searched in order: `%PRGS%\setup`, `%USERPROFILE%\Downloads`,
 `%setupsdir%` (team share), `%USERPROFILE%\senv_setups\setups`. With
 `latest`, the archive with the highest version in those folders wins, versions
 compared in natural order (`0.10.1` after `0.9.5`), whatever their download
-order; creation time only separates copies of the same version. Hooks from
+order; creation time only separates copies of the same version. A Node major
+(`inst node 22`) works the same way: the highest `node-v22.*` archive wins,
+so `node-v22.23.4` is installed over `node-v22.9.0`, and `node-v20.22.0`
+never matches. Hooks from
 `installs\` and `custom\` run around the extraction, the `.post.bat` ones
 once the junction points at the new version, as during setup (see
 [naming conventions](naming-conventions.md)). `inst_prg -h` (or `--help`,
@@ -437,7 +443,10 @@ once the junction points at the new version, as during setup (see
 ### `div <program> [<version>]` (`dwl_inst_ver.bat`)
 
 `dwl` then `inst_prg` in one step. `<version>` defaults to `latest`.
-Exits 111 when the download fails, 112 when the install fails.
+`inst_prg` installs the archive that `dwl` names, and only once it is in
+`%PRGS%\setup`, never an older archive left there. Exits 111 when the download
+fails, 113 when `dwl` names no archive or the named one is missing, 112 when
+the install fails.
 
 ### `aiup [codex] [claude] [force] [dry]`
 

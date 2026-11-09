@@ -13,6 +13,18 @@ given code.
 | 2 | missing program name (usage error) |
 | 111 | download failed (`dwl.bat` returned an error) |
 | 112 | install failed (`inst_prg.bat` returned an error) |
+| 113 | `dwl.bat` named no archive, or the named archive is missing from `%PRGS%\setup` |
+
+## `dwl.bat`
+
+The download step. Earlier stops, such as a program that `dwl` does not
+support or a latest version it cannot find, mostly exit with 1.
+
+| Code | Condition |
+| --- | --- |
+| 191 | `curl` failed to download the archive |
+| 192 | the program section named no archive: nothing was downloaded |
+| 193 | the named archive is missing from `%PRGS%\setup` after the download |
 
 ## `setup.bat`
 

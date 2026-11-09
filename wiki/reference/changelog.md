@@ -6,7 +6,7 @@ What changed in senv since the build on the team share. This page is
 rewritten at each publication (see
 [Build and publish a profile archive](../how-to/build-and-publish-a-profile-archive.md)):
 it covers one step only, here from the build of 2026-10-05 (senv `ecf619e`)
-to 2026-11-08. Once a build is published, `up` or `upa` brings it to your
+to 2026-11-09. Once a build is published, `up` or `upa` brings it to your
 machine (see
 [Update senv and diagnose version drift](../how-to/update-senv-and-diagnose-version-drift.md)).
 The changes of the private `custom` layer are in `custom\changelog.md`.
@@ -234,6 +234,16 @@ absolute path inside, and fills a selected workspace file that is empty.
   ```text
    FATAL 1 : No latest release from github for repo 'Gaurav-Gosain/tuios': HTTP code '502', URL 'https://github.com/Gaurav-Gosain/tuios/releases/latest'. A network glitch, or a repo without releases: try again later
   ```
+
+- `div node 22` installs the latest Node 22. `dwl node 22` reported success
+  without downloading anything, so `div node 22` kept Node 22.9.0 while
+  22.23.4 was out. `dwl.bat` had lost its Windows line endings, and `cmd`
+  then jumps to the wrong label; the senv tests now check that every batch
+  file keeps them. `dwl` now stops when no archive is in `%PRGS%\setup` after
+  the download (`FATAL 192` or `193`), and `div` installs only the archive
+  `dwl` names (`FATAL 113` otherwise), never an older one left in setup.
+  `inst node 22` takes the highest `node-v22.*` archive: it used to stop on
+  two matches once 22.23.4 sat next to 22.9.0.
 
 ## 📚 New documentation
 
