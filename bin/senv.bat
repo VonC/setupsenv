@@ -81,12 +81,9 @@ set "EDITOR="%PRGS%\npps\current\notepad++.exe" -multiInst -notabbar -nosession 
 set "DL=%USERPROFILE%\Downloads"
 set "DWL=%USERPROFILE%\Downloads"
 
-rem One doskey call either way: each one starts doskey.exe, ~0.1s.
+rem The 'npp' alias loads in senv_doskey.bat, with the other aliases.
 if exist "%PRGS%\npps\settings" (
    set "EDITOR="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" -multiInst -notabbar -nosession -noPlugin"
-   doskey npp="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" $*
-) else (
-   doskey npp="%PRGS%\npps\current\notepad++.exe" $*
 )
 
 if exist "%PRGS%\gos\current" (
@@ -115,7 +112,7 @@ rem senv.local.bat, so either of them overrides the value, the way
 rem senv.custom.bat overrides the GOPROXY above: senv.custom.bat for a team
 rem that shares its profiles, senv.local.bat for a single machine.
 set "WTP_PROFILE=senv"
-set "senv_t_m=%senv_t_m%;%TIME%=base variables, npp alias, Go"
+set "senv_t_m=%senv_t_m%;%TIME%=base variables, Go"
 
 rem https://stackoverflow.com/questions/284776/how-to-convert-the-value-of-username-to-lowercase-within-a-windows-batch-scrip
 set "senv_dir=%script_dir_bin%"
@@ -175,10 +172,13 @@ set "vscodei="
 if exist "%script_dir_bin%\profile" (
    for /f "delims=" %%x in (%script_dir_bin%\profile) do set senv_profile=%%x
 )
-rem The aliases load in senv_doskey.bat, which adds the four "doskey ..." timing
+rem The aliases load in senv_doskey.bat, which adds the five "doskey ..." timing
 rem marks. The %USERPROFILE%\senv.bat launcher calls it too, before a project
 rem senv.bat that runs instead of this one: doskey macros are per console, and a
 rem new console inherits none, so without it such a console lacked 'll' and co.
+rem Define no shared alias here, 'npp' included: it would miss from such a
+rem console (tests/test_senv_aliases.py checks it). Only the maintainer aliases
+rem above stay, since their scripts are on PATH in local mode only.
 call "%HOME%\bin\senv_doskey.bat"
 set "script_dir_bin="
 call:senv_t_end

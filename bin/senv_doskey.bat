@@ -14,10 +14,24 @@ rem
 rem DOSKEY /MACROFILE adds and replaces macros, never deletes one. Each file adds
 rem its "time=step" mark to senv_t_m, but only inside a timed senv.bat run: the
 rem variable is cleared once senv.bat ends. A missing file is reported, not fatal.
+rem
+rem 'npp' (Notepad++) loads here too, before the files, so a team or personal
+rem 'npp=' line still replaces it. senv.bat defined it until 2026-11-09, and a
+rem project console, which never runs senv.bat, answered 'npp' is not recognized.
+rem One doskey call either way: each one starts doskey.exe, ~0.1s. Without PRGS,
+rem the macro would point at '\npps\...': no 'npp' then.
 set "senv_doskey_profile="
 if exist "%~dp0profile" (
    for /f "usebackq delims=" %%x in ("%~dp0profile") do set "senv_doskey_profile=%%x"
 )
+if defined PRGS (
+   if exist "%PRGS%\npps\settings" (
+      DOSKEY npp="%PRGS%\npps\current\notepad++.exe" -settingsDir="%PRGS%\npps\settings" $*
+   ) else (
+      DOSKEY npp="%PRGS%\npps\current\notepad++.exe" $*
+   )
+)
+if defined senv_t_m set "senv_t_m=%senv_t_m%;%TIME%=doskey npp"
 DOSKEY /MACROFILE="%~dp0senv.doskey"
 if errorlevel 1 call:warn "Issue setting global (all) aliases from '%~dp0senv.doskey'"
 if defined senv_t_m set "senv_t_m=%senv_t_m%;%TIME%=doskey senv.doskey"
