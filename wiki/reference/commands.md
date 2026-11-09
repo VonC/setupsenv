@@ -28,12 +28,12 @@ one (project-specific senv), otherwise `%HOME%\bin\senv.bat`. The
 `%HOMEDRIVE%` only call the launcher back, so the launcher ignores them
 and runs the global activation from these two folders.
 
-Before a project `senv.bat`, the launcher loads the global, team, personal
-and profile aliases with `%HOME%\bin\senv_doskey.bat`, the file the global
-activation loads them with. Doskey macros belong to one console, and a new
-console inherits none: without that step, a console where only the project
-`senv.bat` ran, such as a `tuitp` pane, had none of them (`ll` among them).
-The project's own aliases load after and win.
+Before a project `senv.bat`, the launcher loads `npp` and the global, team,
+personal and profile aliases with `%HOME%\bin\senv_doskey.bat`, the file the
+global activation loads them with. Doskey macros belong to one console, and
+a new console inherits none: without that step, a console where only the
+project `senv.bat` ran, such as a `tuitp` pane, had none of them (`ll` among
+them). The project's own aliases load after and win.
 
 | Argument | Behavior |
 | --- | --- |
@@ -68,12 +68,13 @@ the same lines to `%TEMP%\senv.timing.log` (see
 | `detect local senv` | local-mode and `publish_profile.bat` detection |
 | `batcolors macros` | `batcolors\echos_macros.bat` |
 | `senv.local.pre.bat` | `PATH` reset, maintainer aliases (local mode), `senv.local.pre.bat`, `PRGS`/`HOME`/`PROG` checks |
-| `base variables, npp alias, Go` | Git on `PATH`, locale, editor, `npp` alias, Go, `WTP_PROFILE` |
+| `base variables, Go` | Git on `PATH`, locale, editor, Go, `WTP_PROFILE` |
 | `usernamel` | lowercase user name, cached in `%USERPROFILE%\usernamel` |
 | `senv.custom.bat` | team layer, or `senv.custom.full.<profile>.bat` |
 | `senv.local.bat` | personal layer |
 | `senv.custom.profile.bat` | `senv.custom.<profile>.bat` |
-| `doskey senv.doskey` | `installs` on `PATH`, global aliases |
+| `doskey npp` | `installs` on `PATH`, `npp` alias |
+| `doskey senv.doskey` | global aliases |
 | `doskey senv.custom.doskey` | team aliases |
 | `doskey senv.local.doskey` | personal aliases |
 | `doskey senv.custom.profile.doskey` | profile aliases |

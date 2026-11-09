@@ -137,8 +137,9 @@ programs. A batch built-in such as `set`, `if` or a `for` over a list costs
 a millisecond or less. Starting a program costs about a tenth of a second
 for a small one such as `doskey.exe` or `where.exe`, and over a second for
 `powershell`. `senv.bat` therefore lets `cmd` do the work itself wherever it
-can: `%%~$PATH:i` searches the `PATH` in place of `where`, and the `npp`
-alias is defined by a single `doskey` call. The four alias layers remain
+can: `%%~$PATH:i` searches the `PATH` in place of `where`, and
+`senv_doskey.bat` defines the `npp` alias with a single `doskey` call. The
+four alias layers remain
 four `doskey` starts, nearly half of the total, because
 `doskey /macrofile` reads one file per call.
 

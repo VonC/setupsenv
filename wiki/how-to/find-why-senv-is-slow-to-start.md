@@ -33,11 +33,12 @@ Each step now prints how long it took and the running total:
 [senv timing]   0.00s (total   0.00s) detect local senv
 [senv timing]   0.03s (total   0.03s) batcolors macros
 [senv timing]   0.03s (total   0.06s) senv.local.pre.bat
-[senv timing]   0.10s (total   0.16s) base variables, npp alias, Go
-[senv timing]   0.00s (total   0.16s) usernamel
-[senv timing]   0.03s (total   0.19s) senv.custom.bat
-[senv timing]   0.11s (total   0.30s) senv.local.bat
-[senv timing]   0.05s (total   0.35s) senv.custom.profile.bat
+[senv timing]   0.00s (total   0.06s) base variables, Go
+[senv timing]   0.00s (total   0.06s) usernamel
+[senv timing]   0.03s (total   0.09s) senv.custom.bat
+[senv timing]   0.11s (total   0.20s) senv.local.bat
+[senv timing]   0.05s (total   0.25s) senv.custom.profile.bat
+[senv timing]   0.10s (total   0.35s) doskey npp
 [senv timing]   0.07s (total   0.42s) doskey senv.doskey
 [senv timing]   0.08s (total   0.50s) doskey senv.custom.doskey
 [senv timing]   0.07s (total   0.57s) doskey senv.local.doskey

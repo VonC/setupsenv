@@ -193,7 +193,8 @@ absolute path inside, and fills a selected workspace file that is empty.
   ran answered `'ll' is not recognized`. `%USERPROFILE%\senv.bat` now loads
   the global, team and personal aliases before the project `senv.bat`, whose
   own aliases still win, and `senv aliases` loads them in the current
-  console.
+  console. `npp` now loads with them: `senv.bat` defined it, so a project
+  console still answered `'npp' is not recognized` until `hsenv`.
 - `inst <program>` takes the highest version, not the newest download:
   with `tuios_0.10.0` downloaded 18 seconds after `0.10.1`, `inst tuios`
   installed 0.10.0. It now installs 0.10.1.

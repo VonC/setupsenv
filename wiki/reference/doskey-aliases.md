@@ -12,6 +12,10 @@ before a project `senv.bat`):
 3. `%HOME%\bin\senv.local.doskey`: personal (holds `cdi`, `cdis`),
 4. `%HOME%\bin\senv.custom.<profile>.doskey`: profile.
 
+Before these files, `senv_doskey.bat` defines `npp`, Notepad++ from
+`%PRGS%\npps\current`, with `-settingsDir="%PRGS%\npps\settings"` when that
+folder exists. A file that defines `npp=` replaces it.
+
 `aliasr` reloads the first three; `alias [pattern]` lists what is loaded.
 `senve` and `aliase` open the two personal files (`senv.local.bat`,
 `senv.local.doskey`) in VSCode: they are the usual entry point for any
