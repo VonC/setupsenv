@@ -26,11 +26,20 @@ if defined usage (
 set "usage="
 
 %_task% "Try and download prg_name '%prg_name%' at prg_version '%prg_version%'"
+rem dwl.bat names the archive it left in %PRGS%\setup in dwl_file. Without
+rem that archive, inst_prg.bat would install whatever older one matches.
+set "dwl_file="
 call "%script_dir%\dwl.bat" %prg_name% %prg_version%
 if errorlevel 1 (
     %_fatal% "Unable to download prg_name '%prg_name%' at prg_version '%prg_version%'" 111
 )
-%_ok% "prg_name '%prg_name%' at prg_version '%prg_version%' downloaded"
+if not defined dwl_file (
+    %_fatal% "dwl named no archive for prg_name '%prg_name%' at prg_version '%prg_version%': nothing to install" 113
+)
+if not exist "%PRGS%\setup\%dwl_file%" (
+    %_fatal% "'%dwl_file%' is missing from '%PRGS%\setup' after the download of prg_name '%prg_name%' at prg_version '%prg_version%'" 113
+)
+%_ok% "prg_name '%prg_name%' at prg_version '%prg_version%' downloaded: '%dwl_file%'"
 %_task% "Try and install prg_name '%prg_name%' at prg_version '%prg_version%'"
 call "%HOME%\bin\inst_prg.bat" %prg_name% %prg_version%
 if errorlevel 1 (

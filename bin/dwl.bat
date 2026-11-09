@@ -20,6 +20,7 @@ set "file="
 set "target_local_file="
 set "url="
 set "cmd="
+set "dwl_file="
 
 if "%~1"=="--get-latest-version" (
   %_info% "get latest version"
@@ -96,6 +97,18 @@ if errorlevel 1 (
   %_fatal% "Program '%prgname%' not supported by '%script_dir%\dwl.bat'" 1
 )
 call :dwl_%prgname%
+rem Each program section names the archive it leaves in setup_dir in dwl_file:
+rem :curl does, after a download or when the file is already there. No name,
+rem or no such file, means the section stopped without an archive: dwl must
+rem not end as a success then, and dwl_inst_ver.bat would install whatever
+rem older archive matches.
+if not defined dwl_file (
+    %_fatal% "No archive in '%setup_dir%' for '%prgname%' version '%version%': the download did not run" 192
+)
+if not exist "%setup_dir%\%dwl_file%" (
+    %_fatal% "'%dwl_file%' is missing from '%setup_dir%' after the download of '%prgname%' version '%version%'" 193
+)
+endlocal & set "dwl_file=%dwl_file%"
 goto:eof
 
 :: dwl --get-latest-version github charmbracelet/gum
@@ -204,6 +217,7 @@ call :template
 
 if exist "%setup_dir%\%target_local_file%" (
     %_ok% "'%target_local_file%' Already downloaded in setup_dir '%setup_dir%'"
+    set "dwl_file=%target_local_file%"
     goto:eof
 )
 
@@ -226,6 +240,7 @@ if not "%ERRORLEVEL%" == "0" (
   )
 )
 %_ok% "'%target_local_file%' downloaded to '%setup_dir%'"
+set "dwl_file=%target_local_file%"
 goto:eof
 
 :ReplaceText
@@ -528,10 +543,14 @@ rem and may already be present in a setups folder. If so, pick it up instead of 
 set "python_zip=python-%version%-amd64.zip"
 if exist "%setup_dir%\%python_zip%" (
   %_ok% "'%python_zip%' already in setup_dir '%setup_dir%': no installer download needed"
+  set "dwl_file=%python_zip%"
   goto:eof
 )
 call :find_setups_zip "%python_zip%"
-if exist "%setup_dir%\%python_zip%" ( goto:eof )
+if exist "%setup_dir%\%python_zip%" (
+  set "dwl_file=%python_zip%"
+  goto:eof
+)
 rem https://www.python.org/ftp/python/3.12.7/python-3.12.7-amd64.exe
 rem python.org ships a Windows installer only while a cycle stays in its bugfix phase.
 rem Once the cycle turns security-only, https://www.python.org/ftp/python/<version>/
@@ -1002,6 +1021,7 @@ set "url=https://github.com/%repo%/releases/download/%version%/%file%"
 set "target_local_file=%version%-win64.exe"
 if exist "%setup_dir%\%version%-win64.zip" (
   %_ok% "File '%setup_dir%\%version%-win64.zip' already exists"
+  set "dwl_file=%version%-win64.zip"
   goto:eof
 )
 call :curl
@@ -1010,6 +1030,7 @@ copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\"
 copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq-win64.exe"
 copy "%setup_dir%\%target_local_file%" ""%setup_dir%\%version%-win64\jq.exe"
 "%sz%" a -w"%setup_dir%" "%setup_dir%\%version%-win64.zip" "%setup_dir%\%version%-win64"
+set "dwl_file=%version%-win64.zip"
 goto:eof
 
 :dwl_xrmtoolbox
