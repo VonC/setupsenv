@@ -92,6 +92,7 @@ if "%prg_id%"=="sqldeveloper" (
     if "%~2"=="" ( set "prg_pattern=sqldeveloper-*.*-x64.zip-latest" )
     if "%~2"=="latest" ( set "prg_pattern=sqldeveloper-*.*-x64.zip-latest" )
 )
+if "%prg_id%"=="node" ( call:node_release_line "%~2" )
 %_info% "prg_name='%prg_name%', prg_pattern='%prg_pattern%'"
 
 pushd "%USERPROFILE%\Downloads"
@@ -400,6 +401,19 @@ if errorlevel 1 (
 )
 set "prg_folder=sqldeveloper-%sqldeveloper_version%-x64"
 %_ok% "SQL Developer version '%sqldeveloper_version%' derived from archive '%fname%'"
+goto:eof
+
+:node_release_line
+rem A Node major such as '22' names a release line. The generic pattern
+rem 'node-v*22*-win-x64.zip' also matches 'node-v20.22.0-win-x64.zip', and
+rem stops on two matches once a newer 22.x sits next to an older one: the
+rem highest 'node-v22.*' archive wins instead, as with 'latest'.
+set "node_line=%~1"
+if not defined node_line ( goto:eof )
+echo.%node_line%| findstr /R /X "[0-9][0-9]*" >nul
+if errorlevel 1 ( exit /b 0 )
+set "prg_pattern=node-v%node_line%.*-win-x64.zip-latest"
+%_info% "Node release line '%node_line%': the highest 'node-v%node_line%.*' archive wins"
 goto:eof
 
 :symlink_name
