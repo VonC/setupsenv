@@ -85,9 +85,14 @@ cdp=cd /d %PROG%\git\myproject
 
 ## Git
 
+`gla` and `glab` omit TUIOS checkpoint refs from the graph. The exclusion
+comes before `--all`; checkpoint refs stay available for restoration.
+
 | Alias | Expansion |
 | --- | --- |
-| `gl`, `gla`, `glab` | `git lg -10` / `--all` / `--all --branches` |
+| `gl` | `git lg -10` |
+| `gla` | `git lg --exclude=refs/tuios/* --all` |
+| `glab` | `git lg --exclude=refs/tuios/* --all --branches` |
 | `gc`, `gca`, `gcam`, `gcamm` | commit / amend / amend no-edit / amend with message |
 | `gcie` | initial empty commit |
 | `gcm` | emptied on purpose: replaced by `gcm.bat` |
