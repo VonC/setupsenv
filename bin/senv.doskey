@@ -21,8 +21,8 @@ hsenv=call "%USERPROFILE%\senv.bat" global $*
 vscode="%PRGS%\vscodes\current\bin\code.cmd" $*
 
 gl=git lg -10
-gla=git lg --all
-glab=git lg --all --branches
+gla=git lg --exclude=refs/tuios/* --all
+glab=git lg --exclude=refs/tuios/* --all --branches
 gcie=git commit --allow-empty -m "Initial empty commit"
 gc=git commit $*
 gcam=git commit --amend --no-edit
