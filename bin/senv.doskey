@@ -23,6 +23,7 @@ vscode="%PRGS%\vscodes\current\bin\code.cmd" $*
 gl=git lg -10
 gla=git lg --exclude=refs/tuios/* --all
 glab=git lg --exclude=refs/tuios/* --all --branches
+glabs=git lg --exclude=refs/tuios/* --all --simplify-by-decoration --decorate-refs-exclude=refs/tuios/* $*
 gcie=git commit --allow-empty -m "Initial empty commit"
 gc=git commit $*
 gcam=git commit --amend --no-edit
