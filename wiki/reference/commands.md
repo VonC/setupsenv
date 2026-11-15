@@ -616,7 +616,7 @@ drive, and re-runs `s.bat` there.
 
 ## Git
 
-### `sshagent [load|status]`
+### `sshagent [load|status|ensure|tool]`
 
 Starts or reuses a user SSH agent and loads the private key configured in
 `%LOCALAPPDATA%\senv\ssh-agent.local.json`. Its passphrase, if any, is
@@ -625,9 +625,26 @@ exists, and prompted for locally otherwise. A passphrase file inside a Git
 working tree must be ignored there, or the command stops. Exports the
 agent environment into the calling CMD;
 use `call` from another batch script. An already loaded key is reused.
-`status` only checks the agent and key. No service or administrator rights
-are required. Setup, expiry and alternate config paths:
+`status` only checks the agent and key. `ensure` recovers them without a
+prompt, using the private passphrase file if the key needs loading. `tool`
+only resolves the configured SSH executable. No service or administrator
+rights are required. Setup, expiry and alternate config paths:
 [use an SSH agent](../how-to/use-ssh-agent.md).
+
+### `sshagent-start.bat`
+
+Optional CMD startup hook for `senv.local.bat`, including tuitp panes. Calls
+`sshagent ensure` without prompting when an agent config exists and imports
+the recovered agent environment. Skips unconfigured stations; reports recovery
+failures but returns success so terminal activation continues. Git signing
+still requires the key. See [SSH agent setup](../how-to/use-ssh-agent.md).
+
+### `ssh-sign.bat`
+
+Git SSH signing adapter, selected once with `gpg.ssh.program`. Recovers the
+agent and key before signing, including from LLM tool processes with no
+agent environment. Verification does not load a key. Configuration:
+[automatic signing recovery](../how-to/use-ssh-agent.md#recover-the-agent-automatically-when-git-signs).
 
 ### `gcu`
 

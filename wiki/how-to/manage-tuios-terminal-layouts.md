@@ -18,6 +18,11 @@ Python of an activated senv CMD. The TUIOS executable is expected at
 `cmd.exe`: the first pane created by `tuios new --detach` uses that shell.
 Claude and Codex must already be installed and authenticated.
 
+`tuitp` prefers the ZIP-installed Windows Terminal at
+`%PRGS%\terminals\current\WindowsTerminal.exe`. If that file is missing,
+it uses `%LOCALAPPDATA%\Microsoft\WindowsApps\wt.exe`. If neither file
+exists, it stops with exit code 1 and an error naming both paths.
+
 From the senv repository, run:
 
 ```cmd
@@ -586,6 +591,23 @@ then WT's default. The profile must use `closeOnExit: "automatic"`,
 `"graceful"`, or `"always"`, so exiting the managed host closes its tab.
 `"never"` deliberately retains ended tabs and prevents automatic removal.
 Run the launcher and its WT windows at the same elevation.
+
+## SSH key errors during pane startup
+
+If a pane reports `Agent is running; configured key ... is not loaded`, check
+the SSH hook in `%HOME%\bin\senv.local.bat`. A call to `sshagent status` only
+checks the key and fails after its lifetime expires. Replace it with:
+
+```cmd
+if exist "%~dp0sshagent-start.bat" call "%~dp0sshagent-start.bat"
+```
+
+Install `sshagent-start.bat` with the other SSH helpers as described in
+[SSH agent setup](use-ssh-agent.md). It reloads expired keys without prompting
+when the private passphrase file is available. If recovery fails, startup
+continues with a diagnostic; Git signing still requires a valid key and
+retries recovery at signing time. Existing panes are reused by tuitp; restart
+an already stopped agent using [Restart one agent pane](#restart-one-agent-pane).
 
 ## Find what makes a run slow
 
