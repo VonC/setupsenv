@@ -5,7 +5,7 @@ set "_senv_agent_mode=%~1"
 if not defined _senv_agent_mode set "_senv_agent_mode=load"
 if /i "%_senv_agent_mode%"=="help" goto :usage
 if /i "%_senv_agent_mode%"=="--help" goto :usage
-if /i not "%_senv_agent_mode%"=="load" if /i not "%_senv_agent_mode%"=="status" goto :badusage
+if /i not "%_senv_agent_mode%"=="load" if /i not "%_senv_agent_mode%"=="status" if /i not "%_senv_agent_mode%"=="ensure" if /i not "%_senv_agent_mode%"=="tool" goto :badusage
 if not "%~2"=="" goto :badusage
 set "_senv_agent_config=%SENV_SSH_AGENT_CONFIG%"
 if not defined _senv_agent_config set "_senv_agent_config=%LOCALAPPDATA%\senv\ssh-agent.local.json"
@@ -15,13 +15,20 @@ set "_senv_agent_rc=%errorlevel%"
 if not "%_senv_agent_rc%"=="0" goto :failed
 set "_senv_agent_sock="
 set "_senv_agent_pid="
+set "_senv_agent_keygen="
 for /f "usebackq tokens=1,* delims==" %%A in ("%_senv_agent_output%") do (
     if "%%A"=="SSH_AUTH_SOCK" set "_senv_agent_sock=%%B"
     if "%%A"=="SSH_AGENT_PID" set "_senv_agent_pid=%%B"
+    if "%%A"=="SENV_SSH_KEYGEN" set "_senv_agent_keygen=%%B"
 )
 del /q "%_senv_agent_output%" >nul 2>&1
+if not defined _senv_agent_keygen (echo ERROR: No SSH executable was returned. & exit /b 1)
+if /i "%_senv_agent_mode%"=="tool" goto :tool
 if not defined _senv_agent_sock (echo ERROR: No agent environment was returned. & exit /b 1)
-endlocal & set "SSH_AUTH_SOCK=%_senv_agent_sock%" & set "SSH_AGENT_PID=%_senv_agent_pid%" & exit /b 0
+endlocal & set "SSH_AUTH_SOCK=%_senv_agent_sock%" & set "SSH_AGENT_PID=%_senv_agent_pid%" & set "SENV_SSH_KEYGEN=%_senv_agent_keygen%" & exit /b 0
+
+:tool
+endlocal & set "SENV_SSH_KEYGEN=%_senv_agent_keygen%" & exit /b 0
 
 :failed
 if exist "%_senv_agent_output%" del /q "%_senv_agent_output%" >nul 2>&1
@@ -33,9 +40,11 @@ call :usage
 exit /b 2
 
 :usage
-echo Usage: sshagent [load^|status]
+echo Usage: sshagent [load^|status^|ensure^|tool]
 echo   load    Start or reuse a user SSH agent and load the configured private key.
 echo   status  Check the agent and key without starting an agent or prompting.
+echo   ensure  Recover the agent/key without prompting; require the passphrase file if locked.
+echo   tool    Resolve the configured SSH executable without accessing the key or agent.
 echo Config: %%LOCALAPPDATA%%\senv\ssh-agent.local.json
 echo Override: SENV_SSH_AGENT_CONFIG
 echo Passphrase: read from ^<privateKey^>.passphrase when that private file exists, else prompted.

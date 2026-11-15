@@ -1,7 +1,7 @@
 # Windows PowerShell 5.1 helper for sshagent.bat. No service or administrator needed.
 [CmdletBinding()]
 param(
-    [ValidateSet('load', 'status')][string]$Mode = 'load',
+    [ValidateSet('load', 'status', 'ensure', 'tool')][string]$Mode = 'load',
     [Parameter(Mandatory = $true)][string]$ConfigPath,
     [Parameter(Mandatory = $true)][string]$OutputPath
 )
@@ -160,13 +160,6 @@ try {
         throw "Private config missing: $ConfigPath. Copy sshagent.example.json there and set privateKey."
     }
     $config = Get-Content -LiteralPath $ConfigPath -Raw -Encoding UTF8 | ConvertFrom-Json
-    $keyPath = Expand-LocalPath $config.privateKey
-    if ($keyPath.EndsWith('.pub', [StringComparison]::OrdinalIgnoreCase)) {
-        throw 'privateKey must name the private key, not the .pub file.'
-    }
-    foreach ($path in @($keyPath, "$keyPath.pub")) {
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Key file missing: $path" }
-    }
     $gitBin = $config.gitBin
     if (-not $gitBin) { $gitBin = '%PRGS%\gits\current\usr\bin' }
     $gitBin = Resolve-PhysicalPath (Expand-LocalPath $gitBin)
@@ -174,6 +167,20 @@ try {
         if (-not (Test-Path -LiteralPath (Join-Path $gitBin $tool) -PathType Leaf)) {
             throw "Git for Windows tool missing: $tool in $gitBin"
         }
+    }
+    $keygen = Join-Path $gitBin 'ssh-keygen.exe'
+    if ($keygen -match '[\x00-\x1f"%!^]') { throw 'Git tool path cannot be exported safely to CMD.' }
+    if ($Mode -eq 'tool') {
+        # Verification needs the matching SSH executable, never a private key.
+        [IO.File]::WriteAllLines($OutputPath, @("SENV_SSH_KEYGEN=$keygen"), [Text.UTF8Encoding]::new($false))
+        exit 0
+    }
+    $keyPath = Expand-LocalPath $config.privateKey
+    if ($keyPath.EndsWith('.pub', [StringComparison]::OrdinalIgnoreCase)) {
+        throw 'privateKey must name the private key, not the .pub file.'
+    }
+    foreach ($path in @($keyPath, "$keyPath.pub")) {
+        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) { throw "Key file missing: $path" }
     }
     $script:agentAdd = Join-Path $gitBin 'ssh-add.exe'
     $lifetime = 3600
@@ -243,6 +250,9 @@ try {
             Write-Host "sshagent: loading $fingerprint for $lifetime seconds with the passphrase in $passphrasePath."
             Add-KeyWithPassphraseFile $keyPath $passphrasePath $lifetime
         } else {
+            if ($Mode -eq 'ensure') {
+                throw 'Signing key is not loaded and no private passphrase file is available. Run sshagent load in an interactive CMD to unlock it, then retry.'
+            }
             Write-Host "sshagent: loading $fingerprint for $lifetime seconds. Enter the passphrase locally if asked."
             & $script:agentAdd -t $lifetime $keyPath
             if ($LASTEXITCODE -ne 0) { throw 'Key loading failed or was cancelled. Run sshagent to retry.' }
@@ -253,7 +263,7 @@ try {
         }
     } else { Write-Host "sshagent: configured key $fingerprint is already loaded." }
     Assert-AgentEnvironment
-    [IO.File]::WriteAllLines($OutputPath, @("SSH_AUTH_SOCK=$env:SSH_AUTH_SOCK", "SSH_AGENT_PID=$env:SSH_AGENT_PID"), [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllLines($OutputPath, @("SSH_AUTH_SOCK=$env:SSH_AUTH_SOCK", "SSH_AGENT_PID=$env:SSH_AGENT_PID", "SENV_SSH_KEYGEN=$keygen"), [Text.UTF8Encoding]::new($false))
     exit 0
 } catch {
     [Console]::Error.WriteLine("sshagent: ERROR: " + $_.Exception.Message)
