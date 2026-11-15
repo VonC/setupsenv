@@ -325,13 +325,22 @@ def tab_environment(environ):
 class Windows:
     def __init__(self, scripts: Path, root: Path):
         self.scripts, self.root = scripts, root
-        self.wt = Path(os.environ["LOCALAPPDATA"]) / "Microsoft/WindowsApps/wt.exe"
-        self.tuios = Path(os.environ.get("PRGS", r"C:\Public\SOFTWARE")) / "tuioss/current/tuios.exe"
+        prgs = Path(os.environ.get("PRGS", r"C:\Public\SOFTWARE"))
+        self.wt_candidates = (
+            prgs / "terminals/current/WindowsTerminal.exe",
+            Path(os.environ["LOCALAPPDATA"]) / "Microsoft/WindowsApps/wt.exe",
+        )
+        self.wt = next((path for path in self.wt_candidates if path.is_file()), self.wt_candidates[-1])
+        self.tuios = prgs / "tuioss/current/tuios.exe"
         self.cmd = Path(os.environ["SystemRoot"]) / "System32/cmd.exe"
         self.daemon_live = False
 
     def validate(self, need_tuios):
-        paths = [self.wt, self.cmd, Path(os.environ["USERPROFILE"]) / "senv.bat",
+        if not self.wt.is_file():
+            raise ValueError("Windows Terminal not found. Checked: "
+                             + "; ".join(str(path) for path in self.wt_candidates)
+                             + ". Run 'inst term' or install Windows Terminal from the Store.")
+        paths = [self.cmd, Path(os.environ["USERPROFILE"]) / "senv.bat",
                  self.scripts / "tuitp_host.py", self.scripts / "tuitp.pane.bat"]
         if need_tuios:
             paths.append(self.tuios)

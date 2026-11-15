@@ -12,6 +12,7 @@ then set it as the default profile.
 - The font comes from a setups folder when one holds it, and is downloaded only
   as a last resort: the nerd-fonts repository is often unreachable.
 - Upserts profile by GUID first, then by name (to avoid duplicates).
+- Updates existing Store/Preview settings and always configures unpackaged Terminal.
 #>
 
 Set-StrictMode -Version Latest
@@ -45,91 +46,32 @@ function Get-WindowsTerminalSettingsCandidates {
     )
 }
 
-function Get-WindowsTerminalSettingsPath {
+function Initialize-WindowsTerminalSettingsPaths {
     $candidates = Get-WindowsTerminalSettingsCandidates
-
-    foreach ($p in $candidates) {
-        if (Test-Path -LiteralPath $p) { return $p }
-    }
-    return $null
-}
-
-function Get-WindowsTerminalExecutablePath {
-    $candidates = @()
-
-    if ($env:PRGS) {
-        $candidates += (Join-Path $env:PRGS "terminals\current\WindowsTerminal.exe")
-    }
-
-    $candidates += (Join-Path $env:LOCALAPPDATA "Microsoft\WindowsApps\wt.exe")
-    $candidates += "wt.exe"
-
-    foreach ($p in $candidates) {
-        try {
-            if ($p -eq "wt.exe") {
-                $cmd = Get-Command wt.exe -ErrorAction Stop
-                if ($cmd -and $cmd.Source) { return $cmd.Source }
-            } elseif (Test-Path -LiteralPath $p) {
-                return $p
-            }
-        } catch {
-            # Continue trying other candidates.
-        }
-    }
-
-    return $null
-}
-
-function Initialize-WindowsTerminalSettingsIfMissing {
-    $existing = Get-WindowsTerminalSettingsPath
-    if ($existing) { return $existing }
-
-    $wtExe = Get-WindowsTerminalExecutablePath
-    if ($wtExe) {
-        Write-Info "settings.json is missing. Bootstrapping Windows Terminal with a hidden one-shot launch..."
-        try {
-            $proc = Start-Process -FilePath $wtExe -ArgumentList @("new-tab", "cmd /c exit") -WindowStyle Hidden -PassThru -ErrorAction Stop
-
-            # Wait briefly for first-run initialization.
-            $deadline = (Get-Date).AddSeconds(10)
-            do {
-                Start-Sleep -Milliseconds 250
-                $existing = Get-WindowsTerminalSettingsPath
-                if ($existing) {
-                    Write-Ok "Windows Terminal generated settings.json."
-                    return $existing
-                }
-            } while ((Get-Date) -lt $deadline)
-
-            if ($proc -and -not $proc.HasExited) {
-                Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
-            }
-        } catch {
-            Write-WarnMsg "Unable to start Windows Terminal silently: $($_.Exception.Message)"
-        }
-    } else {
-        Write-WarnMsg "No Windows Terminal executable found in known locations."
-    }
-
-    # Fallback: create a minimal valid settings file so post-install can proceed unattended.
-    $fallbackPath = (Get-WindowsTerminalSettingsCandidates)[2]
-    $parentDir = Split-Path -Parent $fallbackPath
+    # ZIP installations use this path independently of the Store installation.
+    # Create it even when a Store settings file already exists. Windows Terminal
+    # merges its built-in defaults with these minimal user settings on launch.
+    $unpackagedPath = $candidates[2]
+    $parentDir = Split-Path -Parent $unpackagedPath
     if (-not (Test-Path -LiteralPath $parentDir)) {
         New-Item -Path $parentDir -ItemType Directory -Force | Out-Null
     }
 
-    if (-not (Test-Path -LiteralPath $fallbackPath)) {
-        Write-Info "Creating a bootstrap settings.json at: $fallbackPath"
+    if (-not (Test-Path -LiteralPath $unpackagedPath)) {
+        Write-Info "Creating a bootstrap settings.json at: $unpackagedPath"
         $bootstrapSettings = [pscustomobject]@{
             '$schema' = 'https://aka.ms/terminal-profiles-schema'
             profiles  = [pscustomobject]@{ list = @() }
         }
         $bootstrapSettings |
             ConvertTo-Json -Depth 10 |
-            Set-Content -LiteralPath $fallbackPath -Encoding UTF8
+            Set-Content -LiteralPath $unpackagedPath -Encoding UTF8
     }
 
-    return $fallbackPath
+    # Do not create Store/Preview settings for installations that are absent.
+    foreach ($path in $candidates) {
+        if (Test-Path -LiteralPath $path -PathType Leaf) { $path }
+    }
 }
 
 function Get-SetupsFolders {
@@ -271,11 +213,11 @@ function New-FileBackup {
 function Initialize-SettingsProfilesList {
     param([Parameter(Mandatory)] [object]$Settings)
 
-    if (-not $Settings.PSObject.Properties.Name.Contains("profiles") -or $null -eq $Settings.profiles) {
+    if (-not $Settings.PSObject.Properties["profiles"] -or $null -eq $Settings.profiles) {
         $Settings | Add-Member -MemberType NoteProperty -Name profiles -Value ([pscustomobject]@{ list = @() }) -Force
     }
 
-    if (-not $Settings.profiles.PSObject.Properties.Name.Contains("list") -or $null -eq $Settings.profiles.list) {
+    if (-not $Settings.profiles.PSObject.Properties["list"] -or $null -eq $Settings.profiles.list) {
         $Settings.profiles | Add-Member -MemberType NoteProperty -Name list -Value @() -Force
     }
 }
@@ -283,22 +225,10 @@ function Initialize-SettingsProfilesList {
 # --- 1) Ensure font is installed ---
 Install-UserFontIfMissing -FontRegDisplayName $FontRegName -FontFile $FontFileName -DownloadUrl $FontUrl
 
-# --- 2) Locate Windows Terminal settings ---
-$settingsPath = Initialize-WindowsTerminalSettingsIfMissing
-if (-not $settingsPath) {
-    throw "Windows Terminal settings.json not found. Open Windows Terminal once, then rerun this script."
-}
-Write-Info "Using settings file: $settingsPath"
+# --- 2) Locate/create Windows Terminal settings ---
+$settingsPaths = @(Initialize-WindowsTerminalSettingsPaths)
 
-# --- 3) Load settings JSON ---
-try {
-    $raw = Get-Content -LiteralPath $settingsPath -Raw -Encoding UTF8
-    $settings = $raw | ConvertFrom-Json
-} catch {
-    throw "Failed to parse settings.json. If it contains comments/trailing commas (JSONC), remove them temporarily or re-save via Windows Terminal UI first. Error: $($_.Exception.Message)"
-}
-
-# --- 4) Build dedicated senv profile ---
+# --- 3) Build dedicated senv profile ---
 if (-not (Test-Path -LiteralPath $SenvBatPath)) {
     Write-WarnMsg "Note: '$SenvBatPath' does not exist yet. The profile will be created, but launching it will fail until that file exists."
 }
@@ -320,51 +250,66 @@ $newProfile = [pscustomobject]@{
     startingDirectory = "%USERPROFILE%"
 }
 
-# --- 5) Ensure profiles/list exists ---
-Initialize-SettingsProfilesList -Settings $settings
-$profiles = @($settings.profiles.list)
+function Update-WindowsTerminalSettings {
+    param([Parameter(Mandatory)] [string]$SettingsPath)
 
-# --- 6) Upsert by GUID first, then by name (dedicated senv profile) ---
-$updated = $false
-
-for ($i = 0; $i -lt $profiles.Count; $i++) {
-    if ($profiles[$i].guid -eq $ProfileGuid) {
-        $profiles[$i] = $newProfile
-        $updated = $true
-        Write-Ok "Updated existing profile by GUID: $ProfileName"
-        break
+    Write-Info "Using settings file: $SettingsPath"
+    try {
+        $raw = Get-Content -LiteralPath $SettingsPath -Raw -Encoding UTF8
+        $settings = $raw | ConvertFrom-Json
+    } catch {
+        throw "Failed to parse '$SettingsPath'. If it contains comments/trailing commas (JSONC), remove them temporarily or re-save via Windows Terminal UI first. Error: $($_.Exception.Message)"
     }
-}
 
-if (-not $updated) {
+    Initialize-SettingsProfilesList -Settings $settings
+    $profiles = @($settings.profiles.list)
+
+    # Upsert by GUID first, then by name (dedicated senv profile).
+    $updated = $false
+
     for ($i = 0; $i -lt $profiles.Count; $i++) {
-        if ($profiles[$i].name -eq $ProfileName) {
+        if ($profiles[$i].PSObject.Properties["guid"] -and $profiles[$i].guid -eq $ProfileGuid) {
             $profiles[$i] = $newProfile
             $updated = $true
-            Write-Ok "Updated existing profile by name: $ProfileName"
+            Write-Ok "Updated existing profile by GUID: $ProfileName"
             break
         }
     }
+
+    if (-not $updated) {
+        for ($i = 0; $i -lt $profiles.Count; $i++) {
+            if ($profiles[$i].PSObject.Properties["name"] -and $profiles[$i].name -eq $ProfileName) {
+                $profiles[$i] = $newProfile
+                $updated = $true
+                Write-Ok "Updated existing profile by name: $ProfileName"
+                break
+            }
+        }
+    }
+
+    if (-not $updated) {
+        $profiles += $newProfile
+        Write-Ok "Added new dedicated profile: $ProfileName"
+    }
+
+    $settings.profiles.list = $profiles
+
+    # Set senv as default, including in new settings files.
+    $settings | Add-Member -MemberType NoteProperty -Name defaultProfile -Value $ProfileGuid -Force
+    Write-Ok "Set '$ProfileName' as the default Windows Terminal profile."
+
+    New-FileBackup -Path $SettingsPath
+
+    # WARNING: ConvertTo-Json rewrites formatting and removes comments.
+    $settings |
+        ConvertTo-Json -Depth 100 |
+        Set-Content -LiteralPath $SettingsPath -Encoding UTF8
+
+    Write-Ok "Windows Terminal settings saved successfully."
 }
 
-if (-not $updated) {
-    $profiles += $newProfile
-    Write-Ok "Added new dedicated profile: $ProfileName"
+foreach ($settingsPath in $settingsPaths) {
+    Update-WindowsTerminalSettings -SettingsPath $settingsPath
 }
 
-$settings.profiles.list = $profiles
-
-# --- 7) Set senv as default (always) ---
-$settings.defaultProfile = $ProfileGuid
-Write-Ok "Set '$ProfileName' as the default Windows Terminal profile."
-
-# --- 8) Backup + save ---
-New-FileBackup -Path $settingsPath
-
-# WARNING: ConvertTo-Json rewrites formatting and removes comments.
-$settings |
-    ConvertTo-Json -Depth 100 |
-    Set-Content -LiteralPath $settingsPath -Encoding UTF8
-
-Write-Ok "Windows Terminal settings saved successfully."
 Write-Info "Done."

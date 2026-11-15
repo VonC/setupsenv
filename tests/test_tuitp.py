@@ -1066,6 +1066,44 @@ class ReconciliationTests(unittest.TestCase):
         self.assertEqual(self.runtime.live, {})
 
 
+class TerminalSelectionTests(unittest.TestCase):
+    def setUp(self):
+        environ = patch.dict(os.environ, {
+            "PRGS": str(ROOT / "Programs with spaces"),
+            "LOCALAPPDATA": str(ROOT / "Local App Data"),
+            "SystemRoot": str(ROOT / "Windows"),
+            "USERPROFILE": str(ROOT / "User"),
+        }, clear=True)
+        environ.start()
+        self.addCleanup(environ.stop)
+        self.local = Path(os.environ["PRGS"]) / "terminals/current/WindowsTerminal.exe"
+        self.appdata = Path(os.environ["LOCALAPPDATA"]) / "Microsoft/WindowsApps/wt.exe"
+
+    def test_local_terminal_is_preferred_and_appdata_is_the_fallback(self):
+        for files, expected in (({self.local, self.appdata}, self.local),
+                                ({self.local}, self.local), ({self.appdata}, self.appdata)):
+            with self.subTest(files=files), patch.object(Path, "is_file", lambda path: path in files):
+                runtime = Windows(ROOT / "bin", ROOT / "unused")
+                self.assertEqual(runtime.wt, expected)
+
+    def test_no_terminal_returns_fatal_exit_with_both_searched_paths(self):
+        out, err = io.StringIO(), io.StringIO()
+        with patch.object(Path, "is_file", return_value=False), \
+                patch.object(Path, "exists", return_value=False), \
+                patch("tuitp.adopt_legacy", return_value=False), \
+                patch("tuitp.launcher_lock", contextlib.nullcontext), \
+                patch("tuitp.load_state", return_value=new_state()), \
+                patch("tuitp_windows.subprocess.Popen") as launch, \
+                contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):
+            code = tuitp.main(["dry", "stop"])
+        self.assertEqual(code, 1)
+        self.assertIn("tuitp: Windows Terminal not found.", err.getvalue())
+        self.assertIn(str(self.local), err.getvalue())
+        self.assertIn(str(self.appdata), err.getvalue())
+        self.assertIn("inst term", err.getvalue())
+        launch.assert_not_called()
+
+
 @unittest.skipUnless(os.name == "nt", "Windows native boundary checks")
 class WindowsTests(unittest.TestCase):
     def setUp(self):

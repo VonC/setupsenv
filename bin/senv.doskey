@@ -19,6 +19,7 @@ senv=call "%USERPROFILE%\senv.bat" $*
 hsenv=call "%USERPROFILE%\senv.bat" global $*
 
 vscode="%PRGS%\vscodes\current\bin\code.cmd" $*
+term=start "" "%PRGS%\terminals\current\WindowsTerminal.exe" -w new $*
 
 gl=git lg -10
 gla=git lg --exclude=refs/tuios/* --all
