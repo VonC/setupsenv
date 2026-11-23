@@ -1,15 +1,16 @@
 @echo off
 rem No SETLOCAL: senv activation must persist in this interactive CMD.
 rem Caller supplies validated paths and disables delayed expansion.
-rem tuitp.pane.bat "folder" claude|codex|cmd [project|local-or-global] ["command"] ["conversation"]
+rem tuitp.pane.bat "folder" claude|codex|antigravity|cmd [project|local-or-global] ["command"] ["conversation"]
 rem The command is what the agent starts with, such as its resume skill, and
 rem the conversation the id of the one it resumes, as tuitp resume gives it.
 set "TUITP_PROJECT=%~1"
 set "TUITP_ROLE=%~2"
 if /I "%TUITP_ROLE%"=="claude" goto :initialize
 if /I "%TUITP_ROLE%"=="codex" goto :initialize
+if /I "%TUITP_ROLE%"=="antigravity" goto :initialize
 if /I "%TUITP_ROLE%"=="cmd" goto :initialize
-echo ERROR: Expected claude, codex or cmd.
+echo ERROR: Expected claude, codex, antigravity or cmd.
 exit /b 2
 :initialize
 rem A pane is a new console, but it inherits the SENV_UID of the console that
@@ -98,6 +99,10 @@ rem tuitp writes TUIOS's Claude Code hooks to this file, so that only these
 rem panes report their state: in the user's settings, each hook would start
 rem tuios.exe in every Claude session.
 set "agent=%TUITP_ROLE%"
+if /I "%TUITP_ROLE%"=="antigravity" (
+    set "agent=agy"
+    set "PATH=%LOCALAPPDATA%\agy\bin;%PATH%"
+)
 if /I "%TUITP_ROLE%"=="claude" if exist "%LOCALAPPDATA%\tuitp\claude\settings.json" set agent=claude --settings "%LOCALAPPDATA%\tuitp\claude\settings.json"
 rem Codex reads SSL_CERT_FILE: a certificate bundle that senv sets for other
 rem tools breaks its TLS connections, and its shared app-server daemon keeps

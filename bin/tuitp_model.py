@@ -36,7 +36,8 @@ def safe_path(text: str, base: Path) -> str:
 
 # One pane per workspace, in this order. An agent session keeps a CMD beside its agent.
 PANE_ROLES = {"project": ("Claude", "Codex", "CMD"), "single": ("CMD",),
-              "claude": ("Claude", "CMD"), "codex": ("Codex", "CMD")}
+              "claude": ("Claude", "CMD"), "codex": ("Codex", "CMD"),
+              "antigravity": ("Antigravity", "CMD")}
 # Since TUIOS 0.11.0, on every system, so that a saved session can move between machines.
 DEVICE_NAMES = {"con", "prn", "aux", "nul", *(f"com{n}" for n in range(1, 10)), *(f"lpt{n}" for n in range(1, 10))}
 
@@ -114,7 +115,7 @@ def read_list(path: Path) -> Layout:
                     raise ValueError("A '+' session must follow an '=== <tab title>' line")
                 fields = [part.strip() for part in line[1:].split("|")]
                 if len(fields) > 4:
-                    raise ValueError("Expected + folder|session-name|project-claude-codex-senv-or-single|id")
+                    raise ValueError("Expected + folder|session-name|kind|id")
                 folder = safe_path(fields[0], path.parent)
                 # An empty name or kind keeps its default, so that an id needs neither.
                 name = fields[1] if len(fields) > 1 and fields[1] else Path(folder).name
@@ -131,8 +132,8 @@ def read_list(path: Path) -> Layout:
                                      "or names a Windows device")
                 if name.casefold() in names:
                     raise ValueError(f"Session {name!r} is declared more than once")
-                if kind not in ("project", "single", "claude", "codex"):
-                    raise ValueError("Session kind must be 'project', 'claude', 'codex', 'senv' or 'single'")
+                if kind not in PANE_ROLES:
+                    raise ValueError("Session kind must be 'project', 'claude', 'codex', 'antigravity', 'senv' or 'single'")
                 names.add(name.casefold())
                 layout.sessions[name] = Session(name, folder, kind, pane_id)
                 group.sessions.append(name)

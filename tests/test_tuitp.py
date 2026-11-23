@@ -436,8 +436,8 @@ class ReconciliationTests(unittest.TestCase):
         self.assertFalse(self.events("new") + self.events("open") + self.events("close") + self.events("send-text"))
 
     def test_agent_kinds_keep_a_cmd_beside_their_agent_and_remain_idempotent(self):
-        for kind, roles in (("claude", ["Claude", "CMD"]), ("codex", ["Codex", "CMD"]), ("senv", ["CMD"]),
-                            ("single", ["CMD"])):
+        for kind, roles in (("claude", ["Claude", "CMD"]), ("codex", ["Codex", "CMD"]),
+                            ("antigravity", ["Antigravity", "CMD"]), ("senv", ["CMD"]), ("single", ["CMD"])):
             with self.subTest(kind=kind):
                 self.runtime, self.state = FakeWindows(), new_state()
                 text = f"=== Test\n+ FOLDER|test|{kind}"
@@ -1260,11 +1260,17 @@ class WindowsTests(unittest.TestCase):
             project.mkdir()
             local_bin = profile / ".local" / "bin"
             local_bin.mkdir(parents=True)
-            for role in ("claude", "codex"):
-                (local_bin / f"{role}.bat").write_text(f'@echo off\necho {role.upper()}-STARTED-%TUITP_TEST_ACTIVE%\nexit /b 0\n')
+            local_app_data = profile / "AppData" / "Local"
+            agy_bin = local_app_data / "agy" / "bin"
+            agy_bin.mkdir(parents=True)
+            agents = {"claude": local_bin / "claude.bat", "codex": local_bin / "codex.bat",
+                      "antigravity": agy_bin / "agy.bat"}
+            for role, executable in agents.items():
+                executable.write_text(f'@echo off\necho {role.upper()}-STARTED-%TUITP_TEST_ACTIVE%\nexit /b 0\n')
             helper = ROOT / "bin" / "tuitp.pane.bat"
             cmd = Path(os.environ["SystemRoot"]) / "System32" / "cmd.exe"
-            with patch.dict(os.environ, {"USERPROFILE": str(profile), "PRGS": str(base)}):
+            with patch.dict(os.environ, {"USERPROFILE": str(profile), "LOCALAPPDATA": str(local_app_data),
+                                         "PRGS": str(base)}):
                 for has_local in (False, True):
                     source = "LOCAL" if has_local else "GLOBAL"
                     global_script = profile / "senv.bat"
@@ -1273,7 +1279,7 @@ class WindowsTests(unittest.TestCase):
                     local_script = project / "senv.bat"
                     if has_local:
                         local_script.write_text('@echo off\necho PREP-LOCAL\nset "TUITP_TEST_ACTIVE=LOCAL"\nset "PATH=%SystemRoot%\\System32"\nexit /b 0\n')
-                    for role in ("claude", "codex", "cmd"):
+                    for role in (*agents, "cmd"):
                         with self.subTest(local=has_local, role=role):
                             command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} local-or-global && set TUITP_TEST_ACTIVE'
                             result = subprocess.run(command, capture_output=True, text=True, timeout=20)
@@ -1288,7 +1294,7 @@ class WindowsTests(unittest.TestCase):
                                 self.assertLess(result.stdout.index("PREP-ALIASES"), result.stdout.index("PREP-LOCAL"))
                             else:
                                 self.assertNotIn("PREP-ALIASES", result.stdout)
-                            for agent in ("claude", "codex"):
+                            for agent in agents:
                                 marker = agent.upper() + "-STARTED-" + source
                                 if role == agent:
                                     self.assertIn(marker, result.stdout)
@@ -1297,7 +1303,7 @@ class WindowsTests(unittest.TestCase):
                                     self.assertNotIn(agent.upper() + "-STARTED", result.stdout)
                     failing_script = local_script if has_local else global_script
                     failing_script.write_text('@echo off\nexit /b 7\n')
-                    for role in ("claude", "codex", "cmd"):
+                    for role in (*agents, "cmd"):
                         command = f'"{cmd}" /d /v:off /c call "{helper}" "{project}" {role} local-or-global'
                         result = subprocess.run(command, capture_output=True, text=True, timeout=20)
                         self.assertEqual(result.returncode, 7)

@@ -97,9 +97,10 @@ C:\projects\tools|Tools shell
 | `+ folder\|name` | A project session with Claude, Codex, and CMD in workspaces 1, 2, and 3. |
 | `+ folder\|name\|claude` | A Claude session: Claude in workspace 1 and a CMD in workspace 2, each after local senv if present, otherwise global senv. |
 | `+ folder\|name\|codex` | A Codex session: Codex in workspace 1 and a CMD in workspace 2, with the same senv initialization. |
+| `+ folder\|name\|antigravity` | Starts the installed Antigravity CLI (`agy`) in workspace 1 and a CMD in workspace 2. Each uses local senv when available, otherwise global senv. |
 | `+ folder\|name\|senv` | One CMD pane running local senv if present, otherwise global senv. |
 | `+ folder\|name\|single` | Backward-compatible alias for `senv`. |
-| `+ folder\|name\|kind\|id` | Names the agent panes `Claude <id>` and `Codex <id>`; CMD panes keep their name. |
+| `+ folder\|name\|kind\|id` | Appends the id to each agent pane name, for example `Antigravity <id>`. The CMD pane keeps its name. |
 | `+ folder\|name\|\|id` | An empty name or kind keeps its default: here a project session with an id. |
 | `+ folder` | A project session named after the folder's final component. |
 | Blank line or `# comment` | Ignored. |
@@ -507,7 +508,7 @@ For `project`, each pane runs global senv, then project senv if present. The lau
 the TUIOS, Claude, and standalone Codex directories back to PATH after
 activation. Existing sessions never receive automatic startup commands, except
 the CMD pane added to a `claude` or `codex` session that has none.
-The `claude`, `codex`, `senv`, and `single` kinds run the folder's local
+The `claude`, `codex`, `antigravity`, `senv`, and `single` kinds run the folder's local
 `senv.bat` in each pane if present, otherwise global senv. Before a local
 `senv.bat`, the pane runs `senv aliases` (`%USERPROFILE%\senv.bat aliases`):
 a pane is a new console, which inherits the variables of the CMD that ran
